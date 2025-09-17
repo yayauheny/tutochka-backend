@@ -2,9 +2,10 @@ package yayauheny.by.service
 
 import yayauheny.by.model.CityCreateDto
 import yayauheny.by.model.CityResponseDto
+import yayauheny.by.model.PageResponseDto
+import yayauheny.by.model.PaginationDto
 import yayauheny.by.repository.CityRepository
 import yayauheny.by.repository.CountryRepository
-import java.time.Instant
 import java.util.UUID
 
 class CityService(
@@ -12,17 +13,17 @@ class CityService(
     private val countryRepository: CountryRepository
 ) {
     
-    suspend fun getAllCities(): List<CityResponseDto> = 
-        cityRepository.findAll()
+    suspend fun getAllCities(pagination: PaginationDto): PageResponseDto<CityResponseDto> =
+        cityRepository.findAll(pagination)
     
     suspend fun getCityById(id: UUID): CityResponseDto? = 
         cityRepository.findById(id)
     
-    suspend fun getCitiesByCountry(countryId: UUID): List<CityResponseDto> = 
-        cityRepository.findByCountryId(countryId)
+    suspend fun getCitiesByCountry(countryId: UUID, pagination: PaginationDto): PageResponseDto<CityResponseDto> =
+        cityRepository.findByCountryId(countryId, pagination)
     
-    suspend fun searchCitiesByName(name: String): List<CityResponseDto> = 
-        cityRepository.findByName(name)
+    suspend fun searchCitiesByName(name: String, pagination: PaginationDto): PageResponseDto<CityResponseDto> =
+        cityRepository.findByName(name, pagination)
     
     suspend fun createCity(createDto: CityCreateDto): CityResponseDto {
         countryRepository.findById(createDto.countryId) ?: 
@@ -33,8 +34,7 @@ class CityService(
             throw IllegalArgumentException("City with this name already exists in the country")
         }
         
-        val now = Instant.now()
-        val cityDto = createDto.toResponseDto(UUID.randomUUID(), now, now)
+        val cityDto = createDto.toResponseDto(UUID.randomUUID())
         return cityRepository.save(cityDto)
     }
     
@@ -53,11 +53,7 @@ class CityService(
                 throw IllegalArgumentException("City with English name '${updateDto.nameEn}' already exists in the country")
             }
             
-            val updatedDto = updateDto.toResponseDto(
-                id = existing.id,
-                createdAt = existing.createdAt,
-                updatedAt = Instant.now()
-            )
+            val updatedDto = updateDto.toResponseDto(id = existing.id)
             cityRepository.save(updatedDto)
         }
     
@@ -65,18 +61,12 @@ class CityService(
         cityRepository.deleteById(id)
 }
 
-private fun CityCreateDto.toResponseDto(
-    id: UUID,
-    createdAt: Instant,
-    updatedAt: Instant
-) = CityResponseDto(
+private fun CityCreateDto.toResponseDto(id: UUID) = CityResponseDto(
     id = id,
     countryId = countryId,
     nameRu = nameRu,
     nameEn = nameEn,
     region = region,
     lat = lat,
-    lon = lon,
-    createdAt = createdAt,
-    updatedAt = updatedAt
+    lon = lon
 )

@@ -12,6 +12,7 @@ mockk = "1.13.8"
 kotlinxCoroutinesTest = "1.7.3"
 junitJupiter = "5.10.1"
 junitPlatform = "1.10.1"
+swagger = "2.2.15"
 
 [plugins]
 kotlinJvm = { id = "org.jetbrains.kotlin.jvm", version.ref = "kotlin" }
@@ -49,6 +50,12 @@ hikaricp = { module = "com.zaxxer:HikariCP", version.ref = "hikaricp" }
 koinKtor = { module = "io.insert-koin:koin-ktor", version.ref = "koin" }
 koinLogger = { module = "io.insert-koin:koin-logger-slf4j", version.ref = "koin" }
 
+# Swagger/OpenAPI
+swaggerCore = { module = "io.swagger.core.v3:swagger-core", version.ref = "swagger" }
+swaggerAnnotations = { module = "io.swagger.core.v3:swagger-annotations", version.ref = "swagger" }
+swaggerModels = { module = "io.swagger.core.v3:swagger-models", version.ref = "swagger" }
+swaggerJaxrs2 = { module = "io.swagger.core.v3:swagger-jaxrs2", version.ref = "swagger" }
+
 # Logging
 logbackClassic = { module = "ch.qos.logback:logback-classic", version.ref = "logback" }
 
@@ -74,6 +81,7 @@ ktorServerBundle = [
 ]
 exposedBundle = ["exposedCore", "exposedDao", "exposedJdbc", "exposedJavaDateTime", "exposedJson"]
 koinBundle = ["koinKtor", "koinLogger"]
+swaggerBundle = ["swaggerCore", "swaggerAnnotations", "swaggerModels", "swaggerJaxrs2"]
 testcontainersBundle = ["testcontainersPostgres", "testcontainersKotlin"]
 testingBundle = ["junitJupiter", "junitPlatformLauncher", "mockk", "kotlinxCoroutinesTest"]
 liquibaseBundle = ["liquibaseCore", "postgresql", "picocli"]

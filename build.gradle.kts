@@ -16,6 +16,7 @@ dependencies {
     implementation(libs.bundles.ktorServerBundle)
     implementation(libs.bundles.koinBundle)
     implementation(libs.bundles.exposedBundle)
+    implementation(libs.bundles.swaggerBundle)
     implementation(libs.postgis)
     implementation(libs.hikaricp)
     implementation(libs.logbackClassic)

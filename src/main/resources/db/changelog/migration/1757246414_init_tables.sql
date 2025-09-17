@@ -12,8 +12,8 @@ CREATE TABLE countries
 (
     id      UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     code    VARCHAR(10)  NOT NULL UNIQUE,
-    name_ru VARCHAR(255) NOT NULL UNIQUE,
-    name_en VARCHAR(255) NOT NULL UNIQUE
+    name_ru VARCHAR(255) NOT NULL,
+    name_en VARCHAR(255) NOT NULL
 );
 -- rollback DROP TABLE countries;
 
@@ -26,9 +26,10 @@ CREATE TABLE cities
     name_ru    VARCHAR(255) NOT NULL,
     name_en    VARCHAR(255) NOT NULL,
     region     VARCHAR(255),
-    lat        DOUBLE PRECISION,
-    lon        DOUBLE PRECISION,
-    CONSTRAINT cities_unique_country_name UNIQUE (country_id, name)
+    lat        DOUBLE PRECISION NOT NULL,
+    lon        DOUBLE PRECISION NOT NULL,
+    CONSTRAINT cities_unique_country_name_ru UNIQUE (country_id, name_ru),
+    CONSTRAINT cities_unique_country_name_en UNIQUE (country_id, name_en)
 );
 -- rollback DROP TABLE cities;
 
@@ -38,18 +39,19 @@ CREATE TABLE restrooms
 (
     id                 UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     city_id            UUID                   REFERENCES cities (id) ON DELETE SET NULL,
-    code               VARCHAR(255)           NOT NULL,
-    description        VARCHAR(255),
     name               VARCHAR(255),
-    work_time          VARCHAR(255),
+    description        VARCHAR(255),
+    address            VARCHAR(255)           NOT NULL,
+    phones             JSONB,
+    work_time          JSONB,
     fee_type           VARCHAR(20)            NOT NULL,
     accessibility_type VARCHAR(20)            NOT NULL,
     coordinates        GEOGRAPHY(Point, 4326) NOT NULL,
-    data_source        VARCHAR(50)            NOT NULL,
-    amenities          JSONB            DEFAULT '[]'::jsonb,
-    created_at         TIMESTAMP              NOT NULL,
-    updated_at         TIMESTAMP              NOT NULL,
-    CONSTRAINT restrooms_unique_code_in_city UNIQUE (city_id, code)
+    data_source        VARCHAR(20)            NOT NULL,
+    status             VARCHAR(20)            NOT NULL,
+    amenities          JSONB            DEFAULT '{}'::jsonb,
+    created_at         TIMESTAMP              NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at         TIMESTAMP              NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
 -- rollback DROP TABLE restrooms;
 
@@ -57,23 +59,3 @@ CREATE TABLE restrooms
 -- changeset yayauheny:create-restrooms-coordinates-index
 CREATE INDEX idx_restrooms_coordinates ON restrooms USING GIST (coordinates);
 -- rollback DROP INDEX IF EXISTS idx_restrooms_coordinates;
-
-
--- changeset yayauheny:create-restrooms-city-id-index
-CREATE INDEX idx_restrooms_city_id ON restrooms (city_id);
--- rollback DROP INDEX IF EXISTS idx_restrooms_city_id;
-
-
--- changeset yayauheny:create-restrooms-fee-type-index
-CREATE INDEX idx_restrooms_fee_type ON restrooms (fee_type);
--- rollback DROP INDEX IF EXISTS idx_restrooms_fee_type;
-
-
--- changeset yayauheny:create-restrooms-accessibility-type-index
-CREATE INDEX idx_restrooms_accessibility ON restrooms (accessibility_type);
--- rollback DROP INDEX IF EXISTS idx_restrooms_accessibility;
-
-
--- changeset yayauheny:create-cities-country-id-index
-CREATE INDEX idx_cities_country_id ON cities (country_id);
--- rollback DROP INDEX IF EXISTS idx_cities_country_id;

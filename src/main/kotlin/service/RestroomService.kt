@@ -1,21 +1,24 @@
 package yayauheny.by.service
 
+import yayauheny.by.model.PageResponseDto
+import yayauheny.by.model.PaginationDto
 import yayauheny.by.model.RestroomCreateDto
 import yayauheny.by.model.RestroomResponseDto
+import yayauheny.by.model.enums.RestroomStatus
 import yayauheny.by.repository.RestroomRepository
 import java.time.Instant
 import java.util.UUID
 
 class RestroomService(private val restroomRepository: RestroomRepository) {
     
-    suspend fun getAllRestrooms(): List<RestroomResponseDto> = 
-        restroomRepository.findAll()
-    
+    suspend fun getAllRestrooms(pagination: PaginationDto): PageResponseDto<RestroomResponseDto> =
+        restroomRepository.findAll(pagination)
+        
     suspend fun getRestroomById(id: UUID): RestroomResponseDto? = 
         restroomRepository.findById(id)
     
-    suspend fun getRestroomsByCity(cityId: UUID): List<RestroomResponseDto> = 
-        restroomRepository.findByCityId(cityId)
+    suspend fun getRestroomsByCity(cityId: UUID, pagination: PaginationDto): PageResponseDto<RestroomResponseDto> =
+        restroomRepository.findByCityId(cityId, pagination)
     
     suspend fun findNearestRestrooms(
         latitude: Double, 
@@ -51,15 +54,17 @@ private fun RestroomCreateDto.toResponseDto(
 ) = RestroomResponseDto(
     id = id,
     cityId = cityId,
-    code = code,
-    description = description,
     name = name,
+    description = description,
+    address = address,
+    phones = phones,
     workTime = workTime,
     feeType = feeType,
     accessibilityType = accessibilityType,
     lat = lat,
     lon = lon,
     dataSource = dataSource,
+    status = RestroomStatus.ACTIVE,
     amenities = amenities,
     createdAt = createdAt,
     updatedAt = updatedAt

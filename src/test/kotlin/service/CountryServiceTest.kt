@@ -1,8 +1,13 @@
-package yayauheny.by.service
+package service
 
 import io.mockk.coEvery
 import io.mockk.coVerify
 import io.mockk.mockk
+import java.util.UUID
+import kotlin.test.assertEquals
+import kotlin.test.assertFalse
+import kotlin.test.assertNull
+import kotlin.test.assertTrue
 import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.DisplayName
 import org.junit.jupiter.api.Nested
@@ -10,14 +15,11 @@ import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertThrows
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.ValueSource
+import yayauheny.by.model.CountryResponseDto
+import yayauheny.by.model.PaginationDto
 import yayauheny.by.repository.CountryRepository
+import yayauheny.by.service.CountryService
 import yayauheny.by.testdata.CountryTestData
-import java.time.Instant
-import java.util.UUID
-import kotlin.test.assertEquals
-import kotlin.test.assertFalse
-import kotlin.test.assertNull
-import kotlin.test.assertTrue
 
 @DisplayName("CountryService Tests")
 class CountryServiceTest {
@@ -32,13 +34,64 @@ class CountryServiceTest {
         @Test
         @DisplayName("should_retrieve_all_countries")
         fun should_retrieve_all_countries() = runTest {
-            val countries = CountryTestData.createCountryList(3)
-            coEvery { countryRepository.findAll() } returns countries
+            val pagination = PaginationDto(page = 0, size = 10)
+            val expectedPage = yayauheny.by.model.PageResponseDto(
+                content = CountryTestData.createCountryList(3),
+                page = 0,
+                size = 10,
+                totalElements = 3L,
+                totalPages = 1,
+                first = true,
+                last = true
+            )
+            coEvery { countryRepository.findAll(pagination) } returns expectedPage
             
-            val result = countryService.getAllCountries()
+            val result = countryService.getAllCountries(pagination)
             
-            assertEquals(countries, result)
-            coVerify { countryRepository.findAll() }
+            assertEquals(expectedPage, result)
+            coVerify { countryRepository.findAll(pagination) }
+        }
+
+        @Test
+        @DisplayName("should_retrieve_paginated_countries")
+        fun should_retrieve_paginated_countries() = runTest {
+            val pagination = PaginationDto(page = 0, size = 3)
+            val expectedPage = yayauheny.by.model.PageResponseDto(
+                content = CountryTestData.createCountryList(3),
+                page = 0,
+                size = 3,
+                totalElements = 5L,
+                totalPages = 2,
+                first = true,
+                last = false
+            )
+            coEvery { countryRepository.findAll(pagination) } returns expectedPage
+            
+            val result = countryService.getAllCountries(pagination)
+            
+            assertEquals(expectedPage, result)
+            coVerify { countryRepository.findAll(pagination) }
+        }
+
+        @Test
+        @DisplayName("should_handle_empty_pagination")
+        fun should_handle_empty_pagination() = runTest {
+            val pagination = PaginationDto(page = 0, size = 10)
+            val expectedPage = yayauheny.by.model.PageResponseDto(
+                content = emptyList<CountryResponseDto>(),
+                page = 0,
+                size = 10,
+                totalElements = 0L,
+                totalPages = 0,
+                first = true,
+                last = true
+            )
+            coEvery { countryRepository.findAll(pagination) } returns expectedPage
+            
+            val result = countryService.getAllCountries(pagination)
+            
+            assertEquals(expectedPage, result)
+            coVerify { countryRepository.findAll(pagination) }
         }
         
         @Test
@@ -174,8 +227,8 @@ class CountryServiceTest {
             val existingCountry = CountryTestData.createCountryResponseDto()
             val updateDto = CountryTestData.createCountryCreateDto(code = existingCountry.code)
             val updatedCountry = existingCountry.copy(
-                name = updateDto.name,
-                updatedAt = Instant.now()
+                nameRu = updateDto.nameRu,
+                nameEn = updateDto.nameEn
             )
             coEvery { countryRepository.findById(existingCountry.id) } returns existingCountry
             coEvery { countryRepository.save(any()) } returns updatedCountry
@@ -193,9 +246,9 @@ class CountryServiceTest {
             val existingCountry = CountryTestData.createCountryResponseDto()
             val updateDto = CountryTestData.createCountryCreateDto(code = "NEW")
             val updatedCountry = existingCountry.copy(
-                name = updateDto.name,
-                code = updateDto.code,
-                updatedAt = Instant.now()
+                nameRu = updateDto.nameRu,
+                nameEn = updateDto.nameEn,
+                code = updateDto.code
             )
             coEvery { countryRepository.findById(existingCountry.id) } returns existingCountry
             coEvery { countryRepository.existsByCode("NEW") } returns false

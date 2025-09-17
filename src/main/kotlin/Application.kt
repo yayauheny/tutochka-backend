@@ -6,6 +6,8 @@ import io.ktor.server.plugins.calllogging.CallLogging
 import io.ktor.server.plugins.defaultheaders.DefaultHeaders
 import org.koin.ktor.plugin.Koin
 import org.koin.logger.slf4jLogger
+import yayauheny.by.config.configureRouting
+import yayauheny.by.di.controllerModule
 import yayauheny.by.di.databaseConfigModule
 import yayauheny.by.di.serviceModule
 
@@ -17,7 +19,8 @@ fun Application.module() {
         modules(
             listOf(
                 databaseConfigModule,
-                serviceModule
+                serviceModule,
+                controllerModule
             )
         )
     }

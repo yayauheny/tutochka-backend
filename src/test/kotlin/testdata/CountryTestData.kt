@@ -2,38 +2,38 @@ package yayauheny.by.testdata
 
 import yayauheny.by.model.CountryCreateDto
 import yayauheny.by.model.CountryResponseDto
-import java.time.Instant
 import java.util.UUID
 
 object CountryTestData {
     
     fun createCountryCreateDto(
-        name: String = "United States",
+        nameRu: String = "Соединенные Штаты",
+        nameEn: String = "United States",
         code: String = "US"
     ) = CountryCreateDto(
-        name = name,
+        nameRu = nameRu,
+        nameEn = nameEn,
         code = code
     )
     
     fun createCountryResponseDto(
         id: UUID = UUID.randomUUID(),
-        name: String = "United States",
-        code: String = "US",
-        createdAt: Instant = Instant.now(),
-        updatedAt: Instant = Instant.now()
+        nameRu: String = "Соединенные Штаты",
+        nameEn: String = "United States",
+        code: String = "US"
     ) = CountryResponseDto(
         id = id,
-        name = name,
-        code = code,
-        createdAt = createdAt,
-        updatedAt = updatedAt
+        nameRu = nameRu,
+        nameEn = nameEn,
+        code = code
     )
     
     fun createCountryList(count: Int): List<CountryResponseDto> = 
         (1..count).map { index ->
             createCountryResponseDto(
                 id = UUID.randomUUID(),
-                name = "Country $index",
+                nameRu = "Страна $index",
+                nameEn = "Country $index",
                 code = "C$index"
             )
         }

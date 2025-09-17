@@ -2,16 +2,20 @@ package yayauheny.by.repository
 
 import org.jetbrains.exposed.sql.transactions.experimental.newSuspendedTransaction
 import yayauheny.by.entity.RestroomEntity
+import yayauheny.by.model.PageResponseDto
+import yayauheny.by.model.PaginationDto
 import yayauheny.by.model.RestroomResponseDto
 import yayauheny.by.enums.DataSourceType
+import yayauheny.by.model.enums.RestroomStatus
 import yayauheny.by.table.RestroomsTable
 import yayauheny.by.util.toJsonObject
+import yayauheny.by.util.toMap
 import java.util.UUID
 
 interface RestroomRepository {
-    suspend fun findAll(): List<RestroomResponseDto>
+    suspend fun findAll(pagination: PaginationDto): PageResponseDto<RestroomResponseDto>
     suspend fun findById(id: UUID): RestroomResponseDto?
-    suspend fun findByCityId(cityId: UUID): List<RestroomResponseDto>
+    suspend fun findByCityId(cityId: UUID, pagination: PaginationDto): PageResponseDto<RestroomResponseDto>
     suspend fun findNearestByLocation(latitude: Double, longitude: Double, limit: Int = 5): List<RestroomResponseDto>
     suspend fun save(restroom: RestroomResponseDto): RestroomResponseDto
     suspend fun deleteById(id: UUID): Boolean
@@ -19,9 +23,26 @@ interface RestroomRepository {
 
 class RestroomRepositoryImpl : RestroomRepository {
     
-    override suspend fun findAll(): List<RestroomResponseDto> = 
+    override suspend fun findAll(pagination: PaginationDto): PageResponseDto<RestroomResponseDto> = 
         newSuspendedTransaction { 
-            RestroomEntity.all().map { it.toResponseDto() } 
+            val totalCount = RestroomEntity.all().count()
+            val totalPages = if (totalCount == 0L) 0 else ((totalCount - 1) / pagination.size + 1).toInt()
+            val offset = pagination.page * pagination.size
+            
+            val content = RestroomEntity.all()
+                .limit(pagination.size)
+                .offset(offset.toLong())
+                .map { it.toResponseDto() }
+            
+            PageResponseDto(
+                content = content,
+                page = pagination.page,
+                size = pagination.size,
+                totalElements = totalCount,
+                totalPages = totalPages,
+                first = pagination.page == 0,
+                last = pagination.page >= totalPages - 1
+            )
         }
     
     override suspend fun findById(id: UUID): RestroomResponseDto? = 
@@ -29,10 +50,27 @@ class RestroomRepositoryImpl : RestroomRepository {
             RestroomEntity.findById(id)?.toResponseDto() 
         }
     
-    override suspend fun findByCityId(cityId: UUID): List<RestroomResponseDto> = 
+    override suspend fun findByCityId(cityId: UUID, pagination: PaginationDto): PageResponseDto<RestroomResponseDto> = 
         newSuspendedTransaction { 
-            RestroomEntity.find { RestroomsTable.cityId eq cityId }
+            val query = RestroomEntity.find { RestroomsTable.cityId eq cityId }
+            val totalCount = query.count()
+            val totalPages = if (totalCount == 0L) 0 else ((totalCount - 1) / pagination.size + 1).toInt()
+            val offset = pagination.page * pagination.size
+            
+            val content = query
+                .limit(pagination.size)
+                .offset(offset.toLong())
                 .map { it.toResponseDto() }
+            
+            PageResponseDto(
+                content = content,
+                page = pagination.page,
+                size = pagination.size,
+                totalElements = totalCount,
+                totalPages = totalPages,
+                first = pagination.page == 0,
+                last = pagination.page >= totalPages - 1
+            )
         }
     
     override suspend fun findNearestByLocation(latitude: Double, longitude: Double, limit: Int): List<RestroomResponseDto> = 
@@ -60,28 +98,32 @@ class RestroomRepositoryImpl : RestroomRepository {
     }
     
     private fun RestroomEntity.updateFromDto(dto: RestroomResponseDto) {
-        code = dto.code
-        description = dto.description
         name = dto.name
-        workTime = dto.workTime
+        description = dto.description
+        address = dto.address
+        phones = dto.phones?.toMap()
+        workTime = dto.workTime?.toMap()
         feeType = dto.feeType
         accessibilityType = dto.accessibilityType
-        dataSource = DataSourceType.valueOf(dto.dataSource)
+        dataSource = dto.dataSource
+        status = dto.status
         amenities = dto.amenities.toMap()
     }
     
     private fun RestroomEntity.toResponseDto() = RestroomResponseDto(
         id = id.value,
         cityId = city?.id?.value,
-        code = code,
-        description = description,
         name = name,
-        workTime = workTime,
+        description = description,
+        address = address,
+        phones = phones?.toJsonObject(),
+        workTime = workTime?.toJsonObject(),
         feeType = feeType,
         accessibilityType = accessibilityType,
         lat = coordinates.latitude,
         lon = coordinates.longitude,
-        dataSource = dataSource.name,
+        dataSource = dataSource,
+        status = status,
         amenities = amenities.toJsonObject(),
         createdAt = createdAt,
         updatedAt = updatedAt

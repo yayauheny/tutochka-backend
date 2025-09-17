@@ -3,12 +3,14 @@ package yayauheny.by.repository
 import org.jetbrains.exposed.sql.transactions.experimental.newSuspendedTransaction
 import yayauheny.by.entity.CountryEntity
 import yayauheny.by.model.CountryResponseDto
+import yayauheny.by.model.PageResponseDto
+import yayauheny.by.model.PaginationDto
 import yayauheny.by.table.CountriesTable
 import java.time.Instant
 import java.util.UUID
 
 interface CountryRepository {
-    suspend fun findAll(): List<CountryResponseDto>
+    suspend fun findAll(pagination: PaginationDto): PageResponseDto<CountryResponseDto>
     suspend fun findById(id: UUID): CountryResponseDto?
     suspend fun findByCode(code: String): CountryResponseDto?
     suspend fun save(country: CountryResponseDto): CountryResponseDto
@@ -18,9 +20,26 @@ interface CountryRepository {
 
 class CountryRepositoryImpl : CountryRepository {
     
-    override suspend fun findAll(): List<CountryResponseDto> = 
+    override suspend fun findAll(pagination: PaginationDto): PageResponseDto<CountryResponseDto> = 
         newSuspendedTransaction { 
-            CountryEntity.all().map { it.toResponseDto() } 
+            val totalCount = CountryEntity.all().count()
+            val totalPages = if (totalCount == 0L) 0 else ((totalCount - 1) / pagination.size + 1).toInt()
+            val offset = pagination.page * pagination.size
+            
+            val content = CountryEntity.all()
+                .limit(pagination.size)
+                .offset(offset.toLong())
+                .map { it.toResponseDto() }
+            
+            PageResponseDto(
+                content = content,
+                page = pagination.page,
+                size = pagination.size,
+                totalElements = totalCount,
+                totalPages = totalPages,
+                first = pagination.page == 0,
+                last = pagination.page >= totalPages - 1
+            )
         }
     
     override suspend fun findById(id: UUID): CountryResponseDto? = 
@@ -57,14 +76,14 @@ class CountryRepositoryImpl : CountryRepository {
     
     private fun CountryEntity.updateFromDto(dto: CountryResponseDto) {
         code = dto.code
-        name = dto.name
+        nameRu = dto.nameRu
+        nameEn = dto.nameEn
     }
     
     private fun CountryEntity.toResponseDto() = CountryResponseDto(
         id = id.value,
-        name = name,
-        code = code,
-        createdAt = Instant.now(),
-        updatedAt = Instant.now()
+        nameRu = nameRu,
+        nameEn = nameEn,
+        code = code
     )
 }

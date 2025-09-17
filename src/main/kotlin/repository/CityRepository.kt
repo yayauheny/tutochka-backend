@@ -6,15 +6,17 @@ import org.jetbrains.exposed.sql.or
 import yayauheny.by.entity.CityEntity
 import yayauheny.by.entity.CountryEntity
 import yayauheny.by.model.CityResponseDto
+import yayauheny.by.model.PageResponseDto
+import yayauheny.by.model.PaginationDto
 import yayauheny.by.table.CitiesTable
 import java.time.Instant
 import java.util.UUID
 
 interface CityRepository {
-    suspend fun findAll(): List<CityResponseDto>
+    suspend fun findAll(pagination: PaginationDto): PageResponseDto<CityResponseDto>
     suspend fun findById(id: UUID): CityResponseDto?
-    suspend fun findByCountryId(countryId: UUID): List<CityResponseDto>
-    suspend fun findByName(name: String): List<CityResponseDto>
+    suspend fun findByCountryId(countryId: UUID, pagination: PaginationDto): PageResponseDto<CityResponseDto>
+    suspend fun findByName(name: String, pagination: PaginationDto): PageResponseDto<CityResponseDto>
     suspend fun save(city: CityResponseDto): CityResponseDto
     suspend fun deleteById(id: UUID): Boolean
     suspend fun existsByCountryAndName(countryId: UUID, name: String): Boolean
@@ -22,9 +24,26 @@ interface CityRepository {
 
 class CityRepositoryImpl : CityRepository {
     
-    override suspend fun findAll(): List<CityResponseDto> = 
+    override suspend fun findAll(pagination: PaginationDto): PageResponseDto<CityResponseDto> = 
         newSuspendedTransaction { 
-            CityEntity.all().map { it.toResponseDto() } 
+            val totalCount = CityEntity.all().count()
+            val totalPages = if (totalCount == 0L) 0 else ((totalCount - 1) / pagination.size + 1).toInt()
+            val offset = pagination.page * pagination.size
+            
+            val content = CityEntity.all()
+                .limit(pagination.size)
+                .offset(offset.toLong())
+                .map { it.toResponseDto() }
+            
+            PageResponseDto(
+                content = content,
+                page = pagination.page,
+                size = pagination.size,
+                totalElements = totalCount,
+                totalPages = totalPages,
+                first = pagination.page == 0,
+                last = pagination.page >= totalPages - 1
+            )
         }
     
     override suspend fun findById(id: UUID): CityResponseDto? = 
@@ -32,17 +51,52 @@ class CityRepositoryImpl : CityRepository {
             CityEntity.findById(id)?.toResponseDto() 
         }
     
-    override suspend fun findByCountryId(countryId: UUID): List<CityResponseDto> = 
+    override suspend fun findByCountryId(countryId: UUID, pagination: PaginationDto): PageResponseDto<CityResponseDto> = 
         newSuspendedTransaction { 
-            CityEntity.find { CitiesTable.country eq countryId }
+            val query = CityEntity.find { CitiesTable.country eq countryId }
+            val totalCount = query.count()
+            val totalPages = if (totalCount == 0L) 0 else ((totalCount - 1) / pagination.size + 1).toInt()
+            val offset = pagination.page * pagination.size
+            
+            val content = query
+                .limit(pagination.size)
+                .offset(offset.toLong())
                 .map { it.toResponseDto() }
+            
+            PageResponseDto(
+                content = content,
+                page = pagination.page,
+                size = pagination.size,
+                totalElements = totalCount,
+                totalPages = totalPages,
+                first = pagination.page == 0,
+                last = pagination.page >= totalPages - 1
+            )
         }
     
-    override suspend fun findByName(name: String): List<CityResponseDto> = 
+    override suspend fun findByName(name: String, pagination: PaginationDto): PageResponseDto<CityResponseDto> = 
         newSuspendedTransaction { 
-            CityEntity.find { 
+            val query = CityEntity.find { 
                 (CitiesTable.nameRu like "%$name%") or (CitiesTable.nameEn like "%$name%")
-            }.map { it.toResponseDto() }
+            }
+            val totalCount = query.count()
+            val totalPages = if (totalCount == 0L) 0 else ((totalCount - 1) / pagination.size + 1).toInt()
+            val offset = pagination.page * pagination.size
+            
+            val content = query
+                .limit(pagination.size)
+                .offset(offset.toLong())
+                .map { it.toResponseDto() }
+            
+            PageResponseDto(
+                content = content,
+                page = pagination.page,
+                size = pagination.size,
+                totalElements = totalCount,
+                totalPages = totalPages,
+                first = pagination.page == 0,
+                last = pagination.page >= totalPages - 1
+            )
         }
     
     override suspend fun save(city: CityResponseDto): CityResponseDto = 
@@ -84,9 +138,7 @@ class CityRepositoryImpl : CityRepository {
         nameRu = nameRu,
         nameEn = nameEn,
         region = region,
-        lat = lat,
-        lon = lon,
-        createdAt = Instant.now(),
-        updatedAt = Instant.now()
+        lat = lat!!,
+        lon = lon!!
     )
 }

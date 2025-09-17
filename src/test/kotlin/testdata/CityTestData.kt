@@ -3,7 +3,6 @@ package yayauheny.by.testdata
 import yayauheny.by.model.CityCreateDto
 import yayauheny.by.model.CityResponseDto
 import yayauheny.by.model.CountryResponseDto
-import java.time.Instant
 import java.util.UUID
 
 object CityTestData {
@@ -31,9 +30,7 @@ object CityTestData {
         nameEn: String = "New York",
         region: String? = "NY",
         lat: Double = 40.7128,
-        lon: Double = -74.0060,
-        createdAt: Instant = Instant.now(),
-        updatedAt: Instant = Instant.now()
+        lon: Double = -74.0060
     ) = CityResponseDto(
         id = id,
         countryId = countryId,
@@ -41,23 +38,19 @@ object CityTestData {
         nameEn = nameEn,
         region = region,
         lat = lat,
-        lon = lon,
-        createdAt = createdAt,
-        updatedAt = updatedAt
+        lon = lon
     )
     
     fun createCountryResponseDto(
         id: UUID = UUID.randomUUID(),
-        name: String = "United States",
-        code: String = "US",
-        createdAt: Instant = Instant.now(),
-        updatedAt: Instant = Instant.now()
+        nameRu: String = "Соединенные Штаты",
+        nameEn: String = "United States",
+        code: String = "US"
     ) = CountryResponseDto(
         id = id,
-        name = name,
-        code = code,
-        createdAt = createdAt,
-        updatedAt = updatedAt
+        nameRu = nameRu,
+        nameEn = nameEn,
+        code = code
     )
     
     fun createCityList(count: Int): List<CityResponseDto> = 

@@ -8,7 +8,7 @@ import yayauheny.by.enums.DataSourceType
 import yayauheny.by.enums.FeeType
 import yayauheny.by.model.enums.RestroomStatus
 
-data class RestroomResponseDto(
+data class Restroom(
     val id: UUID,
     val cityId: UUID?,
     val name: String?,
@@ -18,8 +18,7 @@ data class RestroomResponseDto(
     val workTime: JsonObject?,
     val feeType: FeeType,
     val accessibilityType: AccessibilityType,
-    val lat: Double,
-    val lon: Double,
+    val coordinates: GeoPoint,
     val dataSource: DataSourceType,
     val status: RestroomStatus,
     val amenities: JsonObject,

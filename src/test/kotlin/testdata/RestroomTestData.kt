@@ -8,6 +8,7 @@ import yayauheny.by.enums.DataSourceType
 import yayauheny.by.enums.FeeType
 import yayauheny.by.model.RestroomCreateDto
 import yayauheny.by.model.RestroomResponseDto
+import yayauheny.by.model.enums.RestroomStatus
 import java.time.Instant
 import java.util.UUID
 
@@ -15,21 +16,23 @@ object RestroomTestData {
     
     fun createRestroomCreateDto(
         cityId: UUID = UUID.randomUUID(),
-        code: String = "REST001",
-        description: String = "Public restroom",
         name: String = "Central Park Restroom",
-        workTime: String = "24/7",
+        description: String = "Public restroom in Central Park",
+        address: String = "123 Central Park, New York, NY",
+        phones: JsonObject? = createBasicPhones(),
+        workTime: JsonObject? = createBasicWorkTime(),
         feeType: FeeType = FeeType.FREE,
         accessibilityType: AccessibilityType = AccessibilityType.DISABLED,
         lat: Double = 40.7829,
         lon: Double = -73.9654,
-        dataSource: String = DataSourceType.MANUAL.name,
+        dataSource: DataSourceType = DataSourceType.MANUAL,
         amenities: JsonObject = createBasicAmenities()
     ) = RestroomCreateDto(
         cityId = cityId,
-        code = code,
-        description = description,
         name = name,
+        description = description,
+        address = address,
+        phones = phones,
         workTime = workTime,
         feeType = feeType,
         accessibilityType = accessibilityType,
@@ -42,30 +45,34 @@ object RestroomTestData {
     fun createRestroomResponseDto(
         id: UUID = UUID.randomUUID(),
         cityId: UUID = UUID.randomUUID(),
-        code: String = "REST001",
-        description: String = "Public restroom",
         name: String = "Central Park Restroom",
-        workTime: String = "24/7",
+        description: String = "Public restroom in Central Park",
+        address: String = "123 Central Park, New York, NY",
+        phones: JsonObject? = createBasicPhones(),
+        workTime: JsonObject? = createBasicWorkTime(),
         feeType: FeeType = FeeType.FREE,
         accessibilityType: AccessibilityType = AccessibilityType.DISABLED,
         lat: Double = 40.7829,
         lon: Double = -73.9654,
-        dataSource: String = DataSourceType.MANUAL.name,
+        dataSource: DataSourceType = DataSourceType.MANUAL,
+        status: RestroomStatus = RestroomStatus.ACTIVE,
         amenities: JsonObject = createBasicAmenities(),
         createdAt: Instant = Instant.now(),
         updatedAt: Instant = Instant.now()
     ) = RestroomResponseDto(
         id = id,
         cityId = cityId,
-        code = code,
-        description = description,
         name = name,
+        description = description,
+        address = address,
+        phones = phones,
         workTime = workTime,
         feeType = feeType,
         accessibilityType = accessibilityType,
         lat = lat,
         lon = lon,
         dataSource = dataSource,
+        status = status,
         amenities = amenities,
         createdAt = createdAt,
         updatedAt = updatedAt
@@ -76,7 +83,7 @@ object RestroomTestData {
             createRestroomResponseDto(
                 id = UUID.randomUUID(),
                 name = "Restroom $index",
-                code = "REST${index.toString().padStart(3, '0')}"
+                address = "Address $index"
             )
         }
     
@@ -116,8 +123,23 @@ object RestroomTestData {
         return createDto to responseDto
     }
     
-    private fun createBasicAmenities(): JsonObject = buildJsonObject {
+    fun createBasicAmenities(): JsonObject = buildJsonObject {
         put("wifi", JsonPrimitive("false"))
         put("free", JsonPrimitive("true"))
+    }
+    
+    private fun createBasicPhones(): JsonObject = buildJsonObject {
+        put("main", JsonPrimitive("+1-555-123-4567"))
+        put("emergency", JsonPrimitive("+1-555-911"))
+    }
+    
+    private fun createBasicWorkTime(): JsonObject = buildJsonObject {
+        put("monday", JsonPrimitive("09:00-18:00"))
+        put("tuesday", JsonPrimitive("09:00-18:00"))
+        put("wednesday", JsonPrimitive("09:00-18:00"))
+        put("thursday", JsonPrimitive("09:00-18:00"))
+        put("friday", JsonPrimitive("09:00-18:00"))
+        put("saturday", JsonPrimitive("10:00-16:00"))
+        put("sunday", JsonPrimitive("closed"))
     }
 }

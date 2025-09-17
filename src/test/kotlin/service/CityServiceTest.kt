@@ -1,8 +1,13 @@
-package yayauheny.by.service
+package service
 
 import io.mockk.coEvery
 import io.mockk.coVerify
 import io.mockk.mockk
+import java.util.UUID
+import kotlin.test.assertEquals
+import kotlin.test.assertFalse
+import kotlin.test.assertNull
+import kotlin.test.assertTrue
 import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.DisplayName
 import org.junit.jupiter.api.Nested
@@ -10,18 +15,10 @@ import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertThrows
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.ValueSource
-import yayauheny.by.model.CityCreateDto
-import yayauheny.by.model.CityResponseDto
-import yayauheny.by.model.CountryResponseDto
 import yayauheny.by.repository.CityRepository
 import yayauheny.by.repository.CountryRepository
+import yayauheny.by.service.CityService
 import yayauheny.by.testdata.CityTestData
-import java.time.Instant
-import java.util.UUID
-import kotlin.test.assertEquals
-import kotlin.test.assertFalse
-import kotlin.test.assertNull
-import kotlin.test.assertTrue
 
 @DisplayName("CityService Tests")
 class CityServiceTest {
@@ -37,13 +34,22 @@ class CityServiceTest {
         @Test
         @DisplayName("should_retrieve_all_cities")
         fun should_retrieve_all_cities() = runTest {
-            val cities = CityTestData.createCityList(3)
-            coEvery { cityRepository.findAll() } returns cities
+            val pagination = yayauheny.by.model.PaginationDto(page = 0, size = 10)
+            val expectedPage = yayauheny.by.model.PageResponseDto(
+                content = CityTestData.createCityList(3),
+                page = 0,
+                size = 10,
+                totalElements = 3L,
+                totalPages = 1,
+                first = true,
+                last = true
+            )
+            coEvery { cityRepository.findAll(pagination) } returns expectedPage
             
-            val result = cityService.getAllCities()
+            val result = cityService.getAllCities(pagination)
             
-            assertEquals(cities, result)
-            coVerify { cityRepository.findAll() }
+            assertEquals(expectedPage, result)
+            coVerify { cityRepository.findAll(pagination) }
         }
         
         @Test
@@ -74,26 +80,44 @@ class CityServiceTest {
         @DisplayName("should_retrieve_cities_by_country_id")
         fun should_retrieve_cities_by_country_id() = runTest {
             val countryId = UUID.randomUUID()
-            val cities = CityTestData.createCityList(2)
-            coEvery { cityRepository.findByCountryId(countryId) } returns cities
+            val pagination = yayauheny.by.model.PaginationDto(page = 0, size = 10)
+            val expectedPage = yayauheny.by.model.PageResponseDto(
+                content = CityTestData.createCityList(2),
+                page = 0,
+                size = 10,
+                totalElements = 2L,
+                totalPages = 1,
+                first = true,
+                last = true
+            )
+            coEvery { cityRepository.findByCountryId(countryId, pagination) } returns expectedPage
             
-            val result = cityService.getCitiesByCountry(countryId)
+            val result = cityService.getCitiesByCountry(countryId, pagination)
             
-            assertEquals(cities, result)
-            coVerify { cityRepository.findByCountryId(countryId) }
+            assertEquals(expectedPage, result)
+            coVerify { cityRepository.findByCountryId(countryId, pagination) }
         }
         
         @Test
         @DisplayName("should_search_cities_by_name")
         fun should_search_cities_by_name() = runTest {
             val searchName = "New York"
-            val cities = CityTestData.createCityList(2)
-            coEvery { cityRepository.findByName(searchName) } returns cities
+            val pagination = yayauheny.by.model.PaginationDto(page = 0, size = 10)
+            val expectedPage = yayauheny.by.model.PageResponseDto(
+                content = CityTestData.createCityList(2),
+                page = 0,
+                size = 10,
+                totalElements = 2L,
+                totalPages = 1,
+                first = true,
+                last = true
+            )
+            coEvery { cityRepository.findByName(searchName, pagination) } returns expectedPage
             
-            val result = cityService.searchCitiesByName(searchName)
+            val result = cityService.searchCitiesByName(searchName, pagination)
             
-            assertEquals(cities, result)
-            coVerify { cityRepository.findByName(searchName) }
+            assertEquals(expectedPage, result)
+            coVerify { cityRepository.findByName(searchName, pagination) }
         }
     }
     
@@ -190,8 +214,7 @@ class CityServiceTest {
             val updateDto = CityTestData.createCityCreateDto(countryId = country.id)
             val updatedCity = existingCity.copy(
                 nameRu = updateDto.nameRu,
-                nameEn = updateDto.nameEn,
-                updatedAt = Instant.now()
+                nameEn = updateDto.nameEn
             )
             coEvery { cityRepository.findById(existingCity.id) } returns existingCity
             coEvery { countryRepository.findById(country.id) } returns country
