@@ -1,3 +1,3 @@
-package yayauheny.by.enums
+package model.enums
 
 enum class FeeType { FREE, PAID }

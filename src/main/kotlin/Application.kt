@@ -11,7 +11,9 @@ import yayauheny.by.di.controllerModule
 import yayauheny.by.di.databaseConfigModule
 import yayauheny.by.di.serviceModule
 
-fun main(args: Array<String>) = io.ktor.server.netty.EngineMain.main(args)
+fun main(args: Array<String>) =
+    io.ktor.server.netty.EngineMain
+        .main(args)
 
 fun Application.module() {
     install(Koin) {

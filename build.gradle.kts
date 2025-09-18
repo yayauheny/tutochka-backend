@@ -3,6 +3,7 @@ plugins {
     alias(libs.plugins.ktorPlugin)
     alias(libs.plugins.serializationPlugin)
     alias(libs.plugins.liquibasePlugin)
+    alias(libs.plugins.ktlintPlugin)
 }
 
 group = "yayauheny.by"
@@ -34,11 +35,36 @@ tasks.test {
     useJUnitPlatform()
 }
 
+ktlint {
+    version.set("1.3.1")
+    debug.set(false)
+    verbose.set(true)
+    android.set(false)
+    outputToConsole.set(true)
+    outputColorName.set("RED")
+    ignoreFailures.set(false)
+    enableExperimentalRules.set(false)
+
+    filter {
+        exclude("**/generated/**")
+        include("**/kotlin/**")
+    }
+}
+
+tasks.named("build") {
+    dependsOn("ktlintCheck")
+}
+
+tasks.named("compileKotlin") {
+    dependsOn("ktlintFormat")
+}
+
 liquibase {
     activities.register("main") {
-        this.arguments = mapOf(
-            "defaultsFile" to "$projectDir/liquibase/liquibase.properties"
-        )
+        this.arguments =
+            mapOf(
+                "defaultsFile" to "$projectDir/liquibase/liquibase.properties"
+            )
     }
     runList = "main"
 }

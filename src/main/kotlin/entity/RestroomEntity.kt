@@ -1,16 +1,15 @@
 package yayauheny.by.entity
 
-import java.util.UUID
 import org.jetbrains.exposed.dao.UUIDEntity
 import org.jetbrains.exposed.dao.UUIDEntityClass
 import org.jetbrains.exposed.dao.id.EntityID
-import yayauheny.by.entity.RestroomEntity.Companion.referrersOn
-import yayauheny.by.model.Restroom
-import yayauheny.by.table.CitiesTable
 import yayauheny.by.table.RestroomsTable
 import yayauheny.by.util.toJsonObject
+import java.util.UUID
 
-class RestroomEntity(id: EntityID<UUID>) : UUIDEntity(id) {
+class RestroomEntity(
+    id: EntityID<UUID>
+) : UUIDEntity(id) {
     companion object : UUIDEntityClass<RestroomEntity>(RestroomsTable)
 
     var city by CityEntity optionalReferencedOn RestroomsTable.cityId
@@ -28,8 +27,8 @@ class RestroomEntity(id: EntityID<UUID>) : UUIDEntity(id) {
     var createdAt by RestroomsTable.createdAt
     var updatedAt by RestroomsTable.updatedAt
 
-    fun toRestroom(): Restroom {
-        return Restroom(
+    fun toRestroom(): RestroomEntity =
+        RestroomEntity(
             id = id.value,
             cityId = city?.id?.value,
             name = name,
@@ -46,5 +45,4 @@ class RestroomEntity(id: EntityID<UUID>) : UUIDEntity(id) {
             createdAt = createdAt,
             updatedAt = updatedAt
         )
-    }
 }

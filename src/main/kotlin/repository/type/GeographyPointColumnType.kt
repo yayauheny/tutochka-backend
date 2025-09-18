@@ -28,10 +28,13 @@ class GeographyPointColumnType : ColumnType<GeoPoint>() {
         }
     }
 
-    override fun notNullValueToDB(value: GeoPoint): Any =
-        "POINT(${value.longitude} ${value.latitude})"
+    override fun notNullValueToDB(value: GeoPoint): Any = "POINT(${value.longitude} ${value.latitude})"
 
-    override fun setParameter(stmt: PreparedStatementApi, index: Int, value: Any?) {
+    override fun setParameter(
+        stmt: PreparedStatementApi,
+        index: Int,
+        value: Any?
+    ) {
         if (value is GeoPoint) {
             stmt[index] = valueToDB(value) as String
         } else {

@@ -19,26 +19,25 @@ data class DatabaseConfig(
     val idleTimeout: Long = "DB_IDLE_TIMEOUT".envLong(600000L),
     val maxLifetime: Long = "DB_MAX_LIFETIME".envLong(1800000L)
 ) {
-    
     fun createDatabase(): Database = Database.connect(createDataSource())
-    
-    private fun createDataSource(): HikariDataSource = HikariDataSource(
-        HikariConfig().apply {
-            jdbcUrl = "jdbc:postgresql://$host:$port/$name"
-            username = user
-            password = this@DatabaseConfig.password
-            driverClassName = "org.postgresql.Driver"
-            maximumPoolSize = maxPoolSize
-            minimumIdle = minIdle
-            connectionTimeout = connectionTimeout
-            idleTimeout = idleTimeout
-            maxLifetime = maxLifetime
-            connectionTestQuery = "SELECT 1"
-            validationTimeout = 5000L
-            leakDetectionThreshold = 60000L
-            isAutoCommit = true
-            poolName = "TutochkaPool"
-        }
-    )
-}
 
+    private fun createDataSource(): HikariDataSource =
+        HikariDataSource(
+            HikariConfig().apply {
+                jdbcUrl = "jdbc:postgresql://$host:$port/$name"
+                username = user
+                password = this@DatabaseConfig.password
+                driverClassName = "org.postgresql.Driver"
+                maximumPoolSize = maxPoolSize
+                minimumIdle = minIdle
+                connectionTimeout = connectionTimeout
+                idleTimeout = idleTimeout
+                maxLifetime = maxLifetime
+                connectionTestQuery = "SELECT 1"
+                validationTimeout = 5000L
+                leakDetectionThreshold = 60000L
+                isAutoCommit = true
+                poolName = "TutochkaPool"
+            }
+        )
+}

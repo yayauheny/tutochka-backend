@@ -6,7 +6,6 @@ import yayauheny.by.model.CountryResponseDto
 import java.util.UUID
 
 object CityTestData {
-    
     fun createCityCreateDto(
         countryId: UUID = UUID.randomUUID(),
         nameRu: String = "Нью-Йорк",
@@ -22,7 +21,7 @@ object CityTestData {
         lat = lat,
         lon = lon
     )
-    
+
     fun createCityResponseDto(
         id: UUID = UUID.randomUUID(),
         countryId: UUID = UUID.randomUUID(),
@@ -40,7 +39,7 @@ object CityTestData {
         lat = lat,
         lon = lon
     )
-    
+
     fun createCountryResponseDto(
         id: UUID = UUID.randomUUID(),
         nameRu: String = "Соединенные Штаты",
@@ -52,8 +51,8 @@ object CityTestData {
         nameEn = nameEn,
         code = code
     )
-    
-    fun createCityList(count: Int): List<CityResponseDto> = 
+
+    fun createCityList(count: Int): List<CityResponseDto> =
         (1..count).map { index ->
             createCityResponseDto(
                 id = UUID.randomUUID(),

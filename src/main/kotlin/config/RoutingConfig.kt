@@ -12,7 +12,7 @@ fun Application.configureRouting() {
     val countryController by inject<CountryController>()
     val cityController by inject<CityController>()
     val restroomController by inject<RestroomController>()
-    
+
     routing {
         route("/api/v1") {
             with(countryController) { countryRoutes() }

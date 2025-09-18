@@ -1,15 +1,15 @@
 package yayauheny.by.table
 
-import java.time.Instant
 import kotlinx.serialization.json.Json
+import model.enums.AccessibilityType
+import model.enums.DataSourceType
+import model.enums.FeeType
 import org.jetbrains.exposed.dao.id.UUIDTable
 import org.jetbrains.exposed.sql.javatime.timestamp
 import org.jetbrains.exposed.sql.json.jsonb
-import yayauheny.by.enums.AccessibilityType
-import yayauheny.by.enums.DataSourceType
-import yayauheny.by.enums.FeeType
 import yayauheny.by.model.enums.RestroomStatus
 import yayauheny.by.repository.type.GeographyPointColumnType
+import java.time.Instant
 
 object RestroomsTable : UUIDTable("restrooms") {
     val cityId = reference("city_id", CitiesTable).nullable()

@@ -23,12 +23,24 @@ To build or run the project, use one of the following tasks:
 | Task                          | Description                                                          |
 | -------------------------------|---------------------------------------------------------------------- |
 | `./gradlew test`              | Run the tests                                                        |
-| `./gradlew build`             | Build everything                                                     |
+| `./gradlew build`             | Build everything (includes ktlint check)                            |
 | `buildFatJar`                 | Build an executable JAR of the server with all dependencies included |
 | `buildImage`                  | Build the docker image to use with the fat JAR                       |
 | `publishImageToLocalRegistry` | Publish the docker image locally                                     |
 | `run`                         | Run the server                                                       |
 | `runDocker`                   | Run using the local docker image                                     |
+
+## Code Formatting
+
+This project uses [ktlint](https://ktlint.github.io/) for code formatting and style checking. The following tasks are available:
+
+| Task                          | Description                                                          |
+| -------------------------------|---------------------------------------------------------------------- |
+| `./gradlew ktlintCheck`       | Check code style without making changes                              |
+| `./gradlew ktlintFormat`      | Format code according to ktlint rules                                |
+| `./gradlew ktlintGenerateBaseline` | Generate baseline file for ignoring existing violations            |
+
+**Note**: ktlint formatting is automatically applied before compilation and ktlint checking is enforced during the build process to ensure consistent code style.
 
 If the server starts successfully, you'll see the following output:
 

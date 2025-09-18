@@ -1,7 +1,6 @@
 package yayauheny.by.controller
 
 import io.ktor.http.HttpStatusCode
-import io.ktor.server.application.call
 import io.ktor.server.request.receive
 import io.ktor.server.response.respond
 import io.ktor.server.routing.Route
@@ -13,8 +12,9 @@ import yayauheny.by.service.CityService
 import yayauheny.by.util.createPaginationFromQuery
 import yayauheny.by.util.getUuidFromPath
 
-class CityController(private val cityService: CityService) {
-
+class CityController(
+    private val cityService: CityService
+) {
     fun Route.cityRoutes() {
         route("/cities") {
             get {
@@ -39,9 +39,10 @@ class CityController(private val cityService: CityService) {
             }
 
             get("/search") {
-                val name = call.request.queryParameters["name"] ?: return@get call.respond(
-                    HttpStatusCode.BadRequest
-                )
+                val name =
+                    call.request.queryParameters["name"] ?: return@get call.respond(
+                        HttpStatusCode.BadRequest
+                    )
                 val pagination = call.createPaginationFromQuery()
                 val pageResponse = cityService.searchCitiesByName(name, pagination)
                 call.respond(HttpStatusCode.OK, pageResponse)

@@ -20,10 +20,13 @@ fun ApplicationCall.getStringFromPath(paramName: String): String {
 }
 
 fun ApplicationCall.getDoubleFromQuery(paramName: String): Double {
-    return request.queryParameters[paramName]?.toDoubleOrNull() 
+    return request.queryParameters[paramName]?.toDoubleOrNull()
         ?: throw IllegalArgumentException("Missing or invalid $paramName parameter")
 }
 
-fun ApplicationCall.getIntFromQuery(paramName: String, default: Int = 5): Int {
+fun ApplicationCall.getIntFromQuery(
+    paramName: String,
+    default: Int = 5
+): Int {
     return request.queryParameters[paramName]?.toIntOrNull() ?: default
 }

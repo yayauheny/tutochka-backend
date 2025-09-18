@@ -1,10 +1,10 @@
 package yayauheny.by.model
 
-import java.util.UUID
 import kotlinx.serialization.json.JsonObject
-import yayauheny.by.enums.AccessibilityType
-import yayauheny.by.enums.DataSourceType
-import yayauheny.by.enums.FeeType
+import model.enums.AccessibilityType
+import model.enums.DataSourceType
+import model.enums.FeeType
+import java.util.UUID
 
 data class RestroomCreateDto(
     val cityId: UUID?,

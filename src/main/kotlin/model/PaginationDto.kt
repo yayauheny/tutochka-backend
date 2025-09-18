@@ -18,7 +18,8 @@ data class PaginationDto(
 
 @Schema(description = "Sort direction")
 enum class SortDirection {
-    ASC, DESC
+    ASC,
+    DESC
 }
 
 @Schema(description = "Paginated response")

@@ -1,12 +1,12 @@
 package yayauheny.by.model
 
+import kotlinx.serialization.json.JsonObject
+import model.enums.AccessibilityType
+import model.enums.DataSourceType
+import model.enums.FeeType
+import yayauheny.by.model.enums.RestroomStatus
 import java.time.Instant
 import java.util.UUID
-import kotlinx.serialization.json.JsonObject
-import yayauheny.by.enums.AccessibilityType
-import yayauheny.by.enums.DataSourceType
-import yayauheny.by.enums.FeeType
-import yayauheny.by.model.enums.RestroomStatus
 
 data class RestroomResponseDto(
     val id: UUID,

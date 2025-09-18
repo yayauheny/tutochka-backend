@@ -13,12 +13,14 @@ kotlinxCoroutinesTest = "1.7.3"
 junitJupiter = "5.10.1"
 junitPlatform = "1.10.1"
 swagger = "2.2.15"
+ktlint = "12.1.1"
 
 [plugins]
 kotlinJvm = { id = "org.jetbrains.kotlin.jvm", version.ref = "kotlin" }
 ktorPlugin = { id = "io.ktor.plugin", version.ref = "ktor" }
 serializationPlugin = { id = "org.jetbrains.kotlin.plugin.serialization", version.ref = "kotlin" }
 liquibasePlugin = { id = "org.liquibase.gradle", version.ref = "liquibase" }
+ktlintPlugin = { id = "org.jlleitschuh.gradle.ktlint", version.ref = "ktlint" }
 
 [libraries]
 # Ktor server
