@@ -4,5 +4,6 @@ import org.jetbrains.exposed.dao.id.UUIDTable
 
 object CountriesTable : UUIDTable("countries") {
     val code = varchar("code", 10)
-    val name = varchar("name", 255)
+    val nameRu = varchar("name_ru", 255)
+    val nameEn = varchar("name_en", 255)
 }

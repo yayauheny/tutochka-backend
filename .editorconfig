@@ -1,0 +1,24 @@
+root = true
+
+[*.{kt,kts}]
+indent_style = space
+indent_size = 4
+# max_line_length = 120
+insert_final_newline = true
+trim_trailing_whitespace = true
+ktlint_standard_trailing-comma-on-call-site = disabled
+ktlint_standard_trailing-comma-on-declaration-site = disabled
+
+# Отключение принуждения к использованию = вместо {}
+ktlint_standard_function-expression-body = disabled
+
+# Другие часто отключаемые правила
+ktlint_standard_no-wildcard-imports = disabled
+ktlint_standard_import-ordering = disabled
+
+# Основное - отключение trailing commas
+ij_kotlin_allow_trailing_comma = false
+ij_kotlin_allow_trailing_comma_on_call_site = false
+
+# Стандартный стиль Kotlin
+ij_kotlin_code_style_defaults = KOTLIN_OFFICIAL
