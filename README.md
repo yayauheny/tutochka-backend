@@ -1,39 +1,231 @@
-# tutochka-backend
+# 🚽 ТуТочка (Tutochka) Backend
 
-This project was created using the [Ktor Project Generator](https://start.ktor.io).
+> **A REST API for finding public restrooms and toilets worldwide**
 
-Here are some useful links to get you started:
+[![Kotlin](https://img.shields.io/badge/Kotlin-2.1.10-blue.svg)](https://kotlinlang.org/)
+[![Ktor](https://img.shields.io/badge/Ktor-3.2.3-green.svg)](https://ktor.io/)
+[![PostgreSQL](https://img.shields.io/badge/PostgreSQL-42.7.7-blue.svg)](https://postgresql.org/)
+[![License](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 
-- [Ktor Documentation](https://ktor.io/docs/home.html)
-- [Ktor GitHub page](https://github.com/ktorio/ktor)
-- The [Ktor Slack chat](https://app.slack.com/client/T09229ZC6/C0A974TJ9). You'll need to [request an invite](https://surveys.jetbrains.com/s3/kotlin-slack-sign-up) to join.
+---
 
-## Features
+## 📖 About / О проекте
 
-Here's a list of features included in this project:
+### English
+**TuTochka** is a comprehensive REST API service designed to help people find public restrooms around the world. The service provides location-based search functionality, detailed restroom information including accessibility features, working hours, and amenities.
 
-| Name                                               | Description                                                 |
-| ----------------------------------------------------|------------------------------------------------------------- |
-| [Routing](https://start.ktor.io/p/routing-default) | Allows to define structured routes and associated handlers. |
+**Key Features:**
+- 🌍 **Global Coverage** - Support for countries and cities worldwide
+- 📍 **Location-Based Search** - Find nearest restrooms by coordinates
+- ♿ **Accessibility Info** - Detailed accessibility and amenity information
+- 📱 **RESTful API** - Clean, well-documented REST endpoints
+- 🔍 **Advanced Search** - Filter by fee type, accessibility, and more
+- 📊 **Pagination** - Efficient data retrieval with pagination support
 
-## Building & Running
+### Русский
+**ТуТочка** — это комплексный REST API сервис, предназначенный для помощи людям в поиске общественных туалетов по всему миру. Сервис предоставляет функциональность поиска на основе местоположения, подробную информацию о туалетах, включая доступность, рабочие часы и удобства.
 
-To build or run the project, use one of the following tasks:
+**Основные возможности:**
+- 🌍 **Глобальное покрытие** - Поддержка стран и городов по всему миру
+- 📍 **Поиск по местоположению** - Поиск ближайших туалетов по координатам
+- ♿ **Информация о доступности** - Подробная информация о доступности и удобствах
+- 📱 **RESTful API** - Чистые, хорошо документированные REST endpoints
+- 🔍 **Расширенный поиск** - Фильтрация по типу оплаты, доступности и другим параметрам
+- 📊 **Пагинация** - Эффективное получение данных с поддержкой пагинации
 
-| Task                          | Description                                                          |
-| -------------------------------|---------------------------------------------------------------------- |
-| `./gradlew test`              | Run the tests                                                        |
-| `./gradlew build`             | Build everything                                                     |
-| `buildFatJar`                 | Build an executable JAR of the server with all dependencies included |
-| `buildImage`                  | Build the docker image to use with the fat JAR                       |
-| `publishImageToLocalRegistry` | Publish the docker image locally                                     |
-| `run`                         | Run the server                                                       |
-| `runDocker`                   | Run using the local docker image                                     |
+---
 
-If the server starts successfully, you'll see the following output:
+## 🛠️ Tech Stack / Технологический стек
 
+### Backend Framework
+- **Kotlin 2.1.10** - Modern, concise programming language
+- **Ktor 3.2.3** - Asynchronous web framework for Kotlin
+- **Koin 3.5.6** - Lightweight dependency injection framework
+
+### Database & ORM
+- **PostgreSQL** - Robust, open-source relational database
+- **Exposed 0.61.0** - Kotlin SQL framework
+- **PostGIS** - Spatial database extension for location data
+- **HikariCP 5.1.0** - High-performance JDBC connection pool
+
+### Development & Quality
+- **Liquibase 2.2.2** - Database schema migration tool
+- **ktlint** - Kotlin code style checker and formatter
+- **JUnit 5** - Testing framework
+- **MockK** - Kotlin mocking library
+- **Testcontainers** - Integration testing with Docker
+
+### API Documentation
+- **OpenAPI 3.0** - API specification and documentation
+- **Swagger** - Interactive API documentation
+
+---
+
+## 🚀 Quick Start / Быстрый старт
+
+### Prerequisites / Требования
+- **Java 17+** / **JDK 17+**
+- **PostgreSQL 13+** with PostGIS extension
+- **Docker** (optional, for containerized setup)
+
+### Environment Variables / Переменные окружения
+
+Create a `.env` file in the project root:
+
+```bash
+# Database Configuration / Конфигурация базы данных
+DB_HOST=localhost
+DB_PORT=5432
+DB_NAME=tutochka
+DB_USER=your_username
+DB_PASSWORD=your_password
+
+# Application Configuration / Конфигурация приложения
+APP_PORT=8080
+APP_ENV=development
 ```
-2024-12-04 14:32:45.584 [main] INFO  Application - Application started in 0.303 seconds.
-2024-12-04 14:32:45.682 [main] INFO  Application - Responding at http://0.0.0.0:8080
+
+### Installation & Running / Установка и запуск
+
+1. **Clone the repository / Клонируйте репозиторий:**
+   ```bash
+   git clone <repository-url>
+   cd tutochka-backend
+   ```
+
+2. **Setup Database / Настройте базу данных:**
+   ```bash
+   # Create database / Создайте базу данных
+   createdb tutochka
+   
+   # Enable PostGIS extension / Включите расширение PostGIS
+   psql -d tutochka -c "CREATE EXTENSION IF NOT EXISTS postgis;"
+   ```
+
+3. **Run Database Migrations / Запустите миграции базы данных:**
+   ```bash
+   ./gradlew liquibaseUpdate
+   ```
+
+4. **Start the Application / Запустите приложение:**
+   ```bash
+   # Development mode / Режим разработки
+   ./gradlew run
+   
+   # Or build and run / Или соберите и запустите
+   ./gradlew build
+   java -jar build/libs/tutochka-backend-0.0.1.jar
+   ```
+
+5. **Access the API / Получите доступ к API:**
+   - **API Base URL:** `http://localhost:8080/api/v1`
+   - **Swagger UI:** `http://localhost:8080/swagger-ui.html`
+
+---
+
+## 📚 API Endpoints / API Endpoints
+
+### Core Endpoints / Основные endpoints
+
+| Method | Endpoint | Description / Описание |
+|--------|----------|----------------------|
+| `GET` | `/countries` | Get all countries / Получить все страны |
+| `GET` | `/countries/{id}` | Get country by ID / Получить страну по ID |
+| `GET` | `/cities` | Get all cities / Получить все города |
+| `GET` | `/cities/{id}` | Get city by ID / Получить город по ID |
+| `GET` | `/restrooms` | Get all restrooms / Получить все туалеты |
+| `GET` | `/restrooms/nearest` | Find nearest restrooms / Найти ближайшие туалеты |
+| `GET` | `/restrooms/city/{cityId}` | Get restrooms by city / Получить туалеты по городу |
+
+### Example Usage / Пример использования
+
+```bash
+# Find nearest restrooms / Найти ближайшие туалеты
+curl "http://localhost:8080/api/v1/restrooms/nearest?lat=55.7558&lon=37.6176&limit=5"
+
+# Get restrooms in a city / Получить туалеты в городе
+curl "http://localhost:8080/api/v1/restrooms/city/123e4567-e89b-12d3-a456-426614174000?page=0&size=10"
 ```
 
+---
+
+## 🧪 Development / Разработка
+
+### Code Quality / Качество кода
+
+```bash
+# Format code / Форматировать код
+./gradlew ktlintFormat
+
+# Check code style / Проверить стиль кода
+./gradlew ktlintCheck
+
+# Run tests / Запустить тесты
+./gradlew test
+
+# Build project / Собрать проект
+./gradlew build
+```
+
+### Database Management / Управление базой данных
+
+```bash
+# Apply migrations / Применить миграции
+./gradlew liquibaseUpdate
+
+# Rollback migrations / Откатить миграции
+./gradlew liquibaseRollback
+
+# Generate migration / Сгенерировать миграцию
+./gradlew liquibaseDiffChangeLog
+```
+
+---
+
+## 🐳 Docker Support / Поддержка Docker
+
+```bash
+# Build Docker image / Собрать Docker образ
+./gradlew buildImage
+
+# Run with Docker Compose / Запустить с Docker Compose
+docker-compose up -d
+```
+
+---
+
+## 📖 Documentation / Документация
+
+- **API Documentation:** Available at `/swagger-ui.html` when running
+- **Database Schema:** See `DATABASE_SETUP.md` for detailed database setup
+- **Code Style:** Follows ktlint standards with automatic formatting
+
+---
+
+## 🤝 Contributing / Участие в разработке
+
+1. Fork the repository / Сделайте форк репозитория
+2. Create a feature branch / Создайте ветку для функции
+3. Make your changes / Внесите изменения
+4. Run tests and formatting / Запустите тесты и форматирование
+5. Submit a pull request / Отправьте pull request
+
+---
+
+## 📄 License / Лицензия
+
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+
+---
+
+## 📞 Support / Поддержка
+
+- **Email:** support@tutochka.by
+- **Issues:** [GitHub Issues](https://github.com/your-org/tutochka-backend/issues)
+
+---
+
+<div align="center">
+  <p>Made with ❤️ for better public restroom accessibility</p>
+  <p>Сделано с ❤️ для лучшей доступности общественных туалетов</p>
+</div>

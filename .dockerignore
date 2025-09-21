@@ -1,0 +1,41 @@
+# Git
+.git
+.gitignore
+
+# IDE
+.idea
+.vscode
+*.iml
+
+# Build outputs
+build/
+.gradle/
+gradle-app.setting
+!gradle-wrapper.jar
+
+# Documentation
+README.md
+DATABASE_SETUP.md
+*.md
+
+# Docker
+Dockerfile
+.dockerignore
+docker/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+
+# Temporary files
+*.tmp
+*.temp
+
+# Test files
+src/test/
+
+# Cursor
+.cursor/

@@ -10,10 +10,11 @@ import yayauheny.by.repository.CountryRepositoryImpl
 import yayauheny.by.repository.RestroomRepository
 import yayauheny.by.repository.RestroomRepositoryImpl
 
-val databaseConfigModule = module {
-    single<DatabaseConfig> { DatabaseConfig() }
-    single<Database> { get<DatabaseConfig>().createDatabase() }
-    single<CountryRepository> { CountryRepositoryImpl() }
-    single<CityRepository> { CityRepositoryImpl() }
-    single<RestroomRepository> { RestroomRepositoryImpl() }
-}
+val databaseConfigModule =
+    module {
+        single<DatabaseConfig> { DatabaseConfig() }
+        single<Database> { get<DatabaseConfig>().createDatabase() }
+        single<CountryRepository> { CountryRepositoryImpl() }
+        single<CityRepository> { CityRepositoryImpl() }
+        single<RestroomRepository> { RestroomRepositoryImpl() }
+    }
