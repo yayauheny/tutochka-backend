@@ -87,12 +87,4 @@ class CountryRepositoryImpl : CountryRepository {
         nameRu = dto.nameRu
         nameEn = dto.nameEn
     }
-
-    private fun CountryEntity.toResponseDto() =
-        CountryResponseDto(
-            id = id.value,
-            nameRu = nameRu,
-            nameEn = nameEn,
-            code = code
-        )
 }

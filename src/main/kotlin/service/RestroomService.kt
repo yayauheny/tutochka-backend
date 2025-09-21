@@ -2,6 +2,7 @@ package yayauheny.by.service
 
 import java.time.Instant
 import java.util.UUID
+import yayauheny.by.model.NearestRestroomResponseDto
 import yayauheny.by.model.PageResponseDto
 import yayauheny.by.model.PaginationDto
 import yayauheny.by.model.RestroomCreateDto
@@ -25,7 +26,7 @@ class RestroomService(
         latitude: Double,
         longitude: Double,
         limit: Int = 5
-    ): List<RestroomResponseDto> = restroomRepository.findNearestByLocation(latitude, longitude, limit)
+    ): List<NearestRestroomResponseDto> = restroomRepository.findNearestByLocation(latitude, longitude, limit)
 
     suspend fun createRestroom(createDto: RestroomCreateDto): RestroomResponseDto {
         val now = Instant.now()
@@ -53,7 +54,8 @@ class RestroomService(
 private fun RestroomCreateDto.toResponseDto(
     id: UUID,
     createdAt: Instant,
-    updatedAt: Instant
+    updatedAt: Instant,
+    distanceMeters: Double? = null
 ) = RestroomResponseDto(
     id = id,
     cityId = cityId,
@@ -70,5 +72,6 @@ private fun RestroomCreateDto.toResponseDto(
     status = RestroomStatus.ACTIVE,
     amenities = amenities,
     createdAt = createdAt,
-    updatedAt = updatedAt
+    updatedAt = updatedAt,
+    distanceMeters = distanceMeters
 )

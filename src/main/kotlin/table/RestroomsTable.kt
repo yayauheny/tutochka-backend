@@ -24,7 +24,7 @@ object RestroomsTable : UUIDTable("restrooms") {
     val coordinates = registerColumn("coordinates", GeographyPointColumnType())
     val dataSource = enumerationByName("data_source", 20, DataSourceType::class)
     val status = enumerationByName("status", 20, RestroomStatus::class)
-    val amenities = jsonb<JsonObject>("amenities", Json)
+    val amenities = jsonb<JsonObject>("amenities", Json).default(JsonObject(emptyMap()))
     val createdAt = timestamp("created_at").clientDefault { Instant.now() }
     val updatedAt = timestamp("updated_at").clientDefault { Instant.now() }
 }

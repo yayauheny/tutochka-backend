@@ -160,15 +160,4 @@ class CityRepositoryImpl : CityRepository {
         lat = dto.lat
         lon = dto.lon
     }
-
-    private fun CityEntity.toResponseDto() =
-        CityResponseDto(
-            id = id.value,
-            countryId = country.id.value,
-            nameRu = nameRu,
-            nameEn = nameEn,
-            region = region,
-            lat = lat!!,
-            lon = lon!!
-        )
 }

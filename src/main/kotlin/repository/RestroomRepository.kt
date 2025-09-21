@@ -1,12 +1,22 @@
 package yayauheny.by.repository
 
 import java.util.UUID
+import kotlinx.serialization.json.Json
+import kotlinx.serialization.json.JsonObject
+import org.jetbrains.exposed.sql.DoubleColumnType
+import org.jetbrains.exposed.sql.IntegerColumnType
 import org.jetbrains.exposed.sql.transactions.experimental.newSuspendedTransaction
 import yayauheny.by.entity.RestroomEntity
 import yayauheny.by.model.GeoPoint
+import yayauheny.by.model.NearestRestroomResponseDto
 import yayauheny.by.model.PageResponseDto
 import yayauheny.by.model.PaginationDto
 import yayauheny.by.model.RestroomResponseDto
+import yayauheny.by.model.enums.AccessibilityType
+import yayauheny.by.model.enums.DataSourceType
+import yayauheny.by.model.enums.FeeType
+import yayauheny.by.model.enums.RestroomStatus
+import yayauheny.by.repository.type.GeographyPointColumnType
 import yayauheny.by.table.RestroomsTable
 
 interface RestroomRepository {
@@ -23,7 +33,7 @@ interface RestroomRepository {
         latitude: Double,
         longitude: Double,
         limit: Int = 5
-    ): List<RestroomResponseDto>
+    ): List<NearestRestroomResponseDto>
 
     suspend fun save(restroom: RestroomResponseDto): RestroomResponseDto
 
@@ -34,7 +44,8 @@ class RestroomRepositoryImpl : RestroomRepository {
     override suspend fun findAll(pagination: PaginationDto): PageResponseDto<RestroomResponseDto> =
         newSuspendedTransaction {
             val totalCount = RestroomEntity.all().count()
-            val totalPages = if (totalCount == 0L) 0 else ((totalCount - 1) / pagination.size + 1).toInt()
+            val totalPages =
+                if (totalCount == 0L) 0 else ((totalCount - 1) / pagination.size + 1).toInt()
             val offset = pagination.page * pagination.size
 
             val content =
@@ -42,7 +53,7 @@ class RestroomRepositoryImpl : RestroomRepository {
                     .all()
                     .limit(pagination.size)
                     .offset(offset.toLong())
-                    .map { it.toResponseDto() }
+                    .map { it.toRestroomResponseDto() }
 
             PageResponseDto(
                 content = content,
@@ -57,7 +68,7 @@ class RestroomRepositoryImpl : RestroomRepository {
 
     override suspend fun findById(id: UUID): RestroomResponseDto? =
         newSuspendedTransaction {
-            RestroomEntity.findById(id)?.toResponseDto()
+            RestroomEntity.findById(id)?.toRestroomResponseDto()
         }
 
     override suspend fun findByCityId(
@@ -67,14 +78,15 @@ class RestroomRepositoryImpl : RestroomRepository {
         newSuspendedTransaction {
             val query = RestroomEntity.find { RestroomsTable.cityId eq cityId }
             val totalCount = query.count()
-            val totalPages = if (totalCount == 0L) 0 else ((totalCount - 1) / pagination.size + 1).toInt()
+            val totalPages =
+                if (totalCount == 0L) 0 else ((totalCount - 1) / pagination.size + 1).toInt()
             val offset = pagination.page * pagination.size
 
             val content =
                 query
                     .limit(pagination.size)
                     .offset(offset.toLong())
-                    .map { it.toResponseDto() }
+                    .map { it.toRestroomResponseDto() }
 
             PageResponseDto(
                 content = content,
@@ -91,25 +103,70 @@ class RestroomRepositoryImpl : RestroomRepository {
         latitude: Double,
         longitude: Double,
         limit: Int
-    ): List<RestroomResponseDto> =
+    ): List<NearestRestroomResponseDto> =
         newSuspendedTransaction {
-            // TODO: refactor
-            val allRestrooms =
-                RestroomEntity
-                    .all()
-                    .limit(limit)
-                    .map { it.toResponseDto() }
-                    .sortedBy { calculateDistance(latitude, longitude, it.lat, it.lon) }
-                    .take(limit)
+            val sql =
+                """
+                SELECT id, city_id, name, description, address, phones, work_time,
+                       fee_type, accessibility_type, coordinates, data_source, status, amenities,
+                       created_at, updated_at,
+                       ST_Distance(coordinates, ST_SetSRID(ST_MakePoint(?, ?), 4326)::geography) AS distance_meters
+                FROM restrooms
+                WHERE status = ?
+                ORDER BY coordinates <-> ST_SetSRID(ST_MakePoint(?, ?), 4326)::geography
+                LIMIT ?
+                """.trimIndent()
 
-            allRestrooms
+            val args =
+                listOf(
+                    DoubleColumnType() to longitude, // 1
+                    DoubleColumnType() to latitude, // 2
+                    RestroomsTable.status.columnType to RestroomStatus.ACTIVE, // 3
+                    DoubleColumnType() to longitude, // 4
+                    DoubleColumnType() to latitude, // 5
+                    IntegerColumnType() to limit // 6
+                )
+
+            exec(sql, args) { rs ->
+                val geoType = GeographyPointColumnType()
+                val out = mutableListOf<NearestRestroomResponseDto>()
+                while (rs.next()) {
+                    val gp: GeoPoint = geoType.valueFromDB(rs.getObject("coordinates")) ?: GeoPoint(0.0, 0.0)
+                    val phonesStr = rs.getString("phones")
+                    val workTimeStr = rs.getString("work_time")
+                    val amenitiesStr = rs.getString("amenities")
+
+                    out.add(
+                        NearestRestroomResponseDto(
+                            id = rs.getObject("id", java.util.UUID::class.java),
+                            cityId = rs.getObject("city_id", java.util.UUID::class.java),
+                            name = rs.getString("name"),
+                            description = rs.getString("description"),
+                            address = rs.getString("address"),
+                            phones = phonesStr?.let { Json.parseToJsonElement(it) as? JsonObject },
+                            workTime = workTimeStr?.let { Json.parseToJsonElement(it) as? JsonObject },
+                            feeType = FeeType.valueOf(rs.getString("fee_type")),
+                            accessibilityType = AccessibilityType.valueOf(rs.getString("accessibility_type")),
+                            lat = gp.latitude,
+                            lon = gp.longitude,
+                            dataSource = DataSourceType.valueOf(rs.getString("data_source")),
+                            status = RestroomStatus.valueOf(rs.getString("status")),
+                            amenities = amenitiesStr?.let { Json.parseToJsonElement(it) as? JsonObject } ?: JsonObject(emptyMap()),
+                            createdAt = rs.getTimestamp("created_at").toInstant(),
+                            updatedAt = rs.getTimestamp("updated_at").toInstant(),
+                            distanceMeters = rs.getDouble("distance_meters")
+                        )
+                    )
+                }
+                out
+            } ?: emptyList()
         }
 
     override suspend fun save(restroom: RestroomResponseDto): RestroomResponseDto =
         newSuspendedTransaction {
             val entity = RestroomEntity.findById(restroom.id) ?: createNewEntity(restroom)
             entity.updateFromDto(restroom)
-            entity.toResponseDto()
+            entity.toRestroomResponseDto()
         }
 
     override suspend fun deleteById(id: UUID): Boolean =
@@ -134,42 +191,5 @@ class RestroomRepositoryImpl : RestroomRepository {
         dataSource = dto.dataSource
         status = dto.status
         amenities = dto.amenities
-    }
-
-    private fun RestroomEntity.toResponseDto() =
-        RestroomResponseDto(
-            id = id.value,
-            cityId = city?.id?.value,
-            name = name,
-            description = description,
-            address = address,
-            phones = phones,
-            workTime = workTime,
-            feeType = feeType,
-            accessibilityType = accessibilityType,
-            lat = coordinates.latitude,
-            lon = coordinates.longitude,
-            dataSource = dataSource,
-            status = status,
-            amenities = amenities,
-            createdAt = createdAt,
-            updatedAt = updatedAt
-        )
-
-    private fun calculateDistance(
-        lat1: Double,
-        lon1: Double,
-        lat2: Double,
-        lon2: Double
-    ): Double {
-        val earthRadius = 6_371_000.0 // Earth's radius in meters
-        val dLat = Math.toRadians(lat2 - lat1)
-        val dLon = Math.toRadians(lon2 - lon1)
-        val a =
-            kotlin.math.sin(dLat / 2) * kotlin.math.sin(dLat / 2) +
-                kotlin.math.cos(Math.toRadians(lat1)) * kotlin.math.cos(Math.toRadians(lat2)) *
-                kotlin.math.sin(dLon / 2) * kotlin.math.sin(dLon / 2)
-        val c = 2 * kotlin.math.atan2(kotlin.math.sqrt(a), kotlin.math.sqrt(1 - a))
-        return earthRadius * c
     }
 }

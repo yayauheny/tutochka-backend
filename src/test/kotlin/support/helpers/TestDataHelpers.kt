@@ -176,6 +176,62 @@ object TestDataHelpers {
             )
         }
 
+    fun createNearestRestroomResponseDto(
+        id: UUID = UUID.randomUUID(),
+        cityId: UUID = UUID.randomUUID(),
+        name: String = "Central Park Restroom",
+        description: String = "Public restroom in Central Park",
+        address: String = "123 Central Park, New York, NY",
+        phones: JsonObject? = createBasicPhones(),
+        workTime: JsonObject? = createBasicWorkTime(),
+        feeType: FeeType = FeeType.FREE,
+        accessibilityType: AccessibilityType = AccessibilityType.DISABLED,
+        lat: Double = 40.7829,
+        lon: Double = -73.9654,
+        dataSource: DataSourceType = DataSourceType.MANUAL,
+        status: RestroomStatus = RestroomStatus.ACTIVE,
+        amenities: JsonObject = createBasicAmenities(),
+        createdAt: Instant = Instant.now(),
+        updatedAt: Instant = Instant.now(),
+        distanceMeters: Double = 100.0
+    ) = yayauheny.by.model.NearestRestroomResponseDto(
+        id = id,
+        cityId = cityId,
+        name = name,
+        description = description,
+        address = address,
+        phones = phones,
+        workTime = workTime,
+        feeType = feeType,
+        accessibilityType = accessibilityType,
+        lat = lat,
+        lon = lon,
+        dataSource = dataSource,
+        status = status,
+        amenities = amenities,
+        createdAt = createdAt,
+        updatedAt = updatedAt,
+        distanceMeters = distanceMeters
+    )
+
+    fun createNearestRestroomList(
+        count: Int,
+        cityId: UUID = UUID.randomUUID(),
+        baseLat: Double = 40.7829,
+        baseLon: Double = -73.9654
+    ): List<yayauheny.by.model.NearestRestroomResponseDto> =
+        (1..count).map { i ->
+            createNearestRestroomResponseDto(
+                cityId = cityId,
+                name = "Restroom $i",
+                description = "Description for restroom $i",
+                address = "Address $i",
+                lat = baseLat + i * 0.01,
+                lon = baseLon - i * 0.01,
+                distanceMeters = i * 50.0 // Simulate increasing distance
+            )
+        }
+
     fun createBasicPhones(): JsonObject =
         buildJsonObject {
             put("primary", JsonPrimitive("+1-555-0123"))

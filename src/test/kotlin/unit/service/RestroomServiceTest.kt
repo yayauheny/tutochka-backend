@@ -21,6 +21,8 @@ import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.CsvSource
 import org.junit.jupiter.params.provider.EnumSource
 import org.junit.jupiter.params.provider.ValueSource
+import support.helpers.TestDataHelpers
+import yayauheny.by.model.NearestRestroomResponseDto
 import yayauheny.by.model.PageResponseDto
 import yayauheny.by.model.PaginationDto
 import yayauheny.by.model.RestroomCreateDto
@@ -30,7 +32,6 @@ import yayauheny.by.model.enums.DataSourceType
 import yayauheny.by.model.enums.FeeType
 import yayauheny.by.model.enums.RestroomStatus
 import yayauheny.by.repository.RestroomRepository
-import support.helpers.TestDataHelpers
 
 @DisplayName("RestroomService Tests")
 class RestroomServiceTest {
@@ -122,18 +123,24 @@ class RestroomServiceTest {
 
         @ParameterizedTest
         @ValueSource(ints = [1, 3, 5, 10, 20])
-        @DisplayName("GIVEN location and limit WHEN finding nearest restrooms THEN return limited results")
+        @DisplayName("GIVEN location and limit WHEN finding nearest restrooms THEN return limited results with distance")
         fun given_location_and_limit_when_finding_nearest_restrooms_then_return_limited_results(limit: Int) =
             runTest {
                 val latitude = 40.7829
                 val longitude = -73.9654
-                val expectedRestrooms = TestDataHelpers.createRestroomList(limit)
+                val expectedRestrooms: List<NearestRestroomResponseDto> =
+                    TestDataHelpers.createNearestRestroomList(
+                        limit
+                    )
                 coEvery { restroomRepository.findNearestByLocation(latitude, longitude, limit) } returns expectedRestrooms
 
                 val actualRestrooms = restroomService.findNearestRestrooms(latitude, longitude, limit)
 
                 assertEquals(expectedRestrooms, actualRestrooms)
                 assertEquals(limit, actualRestrooms.size)
+                actualRestrooms.forEach { restroom ->
+                    assertTrue(restroom.distanceMeters >= 0, "Distance should be non-negative")
+                }
                 coVerify(exactly = 1) { restroomRepository.findNearestByLocation(latitude, longitude, limit) }
             }
 
@@ -143,13 +150,16 @@ class RestroomServiceTest {
             runTest {
                 val latitude = 40.7829
                 val longitude = -73.9654
-                val expectedRestrooms = TestDataHelpers.createRestroomList(5)
+                val expectedRestrooms: List<NearestRestroomResponseDto> = TestDataHelpers.createNearestRestroomList(5)
                 coEvery { restroomRepository.findNearestByLocation(latitude, longitude, 5) } returns expectedRestrooms
 
                 val actualRestrooms = restroomService.findNearestRestrooms(latitude, longitude)
 
                 assertEquals(expectedRestrooms, actualRestrooms)
                 assertEquals(5, actualRestrooms.size)
+                actualRestrooms.forEach { restroom ->
+                    assertTrue(restroom.distanceMeters >= 0, "Distance should be non-negative")
+                }
                 coVerify(exactly = 1) { restroomRepository.findNearestByLocation(latitude, longitude, 5) }
             }
 
@@ -166,12 +176,18 @@ class RestroomServiceTest {
             lon: Double,
             expectedCount: Int
         ) = runTest {
-            val expectedRestrooms = TestDataHelpers.createRestroomList(expectedCount)
+            val expectedRestrooms: List<NearestRestroomResponseDto> =
+                TestDataHelpers.createNearestRestroomList(
+                    expectedCount
+                )
             coEvery { restroomRepository.findNearestByLocation(lat, lon, 5) } returns expectedRestrooms
 
             val actualRestrooms = restroomService.findNearestRestrooms(lat, lon)
 
             assertEquals(expectedRestrooms, actualRestrooms)
+            actualRestrooms.forEach { restroom ->
+                assertTrue(restroom.distanceMeters >= 0, "Distance should be non-negative")
+            }
             coVerify(exactly = 1) { restroomRepository.findNearestByLocation(lat, lon, 5) }
         }
     }

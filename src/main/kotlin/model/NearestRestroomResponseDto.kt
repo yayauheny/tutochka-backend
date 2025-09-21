@@ -12,8 +12,8 @@ import yayauheny.by.model.enums.FeeType
 import yayauheny.by.model.enums.RestroomStatus
 
 @Serializable
-@Schema(description = "Restroom response data")
-data class RestroomResponseDto(
+@Schema(description = "Restroom nearest search response data")
+data class NearestRestroomResponseDto(
     @Schema(description = "Unique identifier", example = "123e4567-e89b-12d3-a456-426614174000")
     @Contextual val id: UUID,
     @Schema(description = "City ID where the restroom is located", example = "123e4567-e89b-12d3-a456-426614174000")
@@ -24,15 +24,9 @@ data class RestroomResponseDto(
     val description: String?,
     @Schema(description = "Street address", example = "123 Main Street, Downtown")
     val address: String,
-    @Schema(
-        description = "Contact phone numbers in JSON format",
-        example = """{"main": "+1-234-567-8900", "emergency": "+1-234-567-8901"}"""
-    )
+    @Schema(description = "Contact phone numbers in JSON format")
     val phones: JsonObject?,
-    @Schema(
-        description = "Working hours in JSON format",
-        example = """{"monday": "08:00-22:00", "tuesday": "08:00-22:00", "weekend": "09:00-21:00"}"""
-    )
+    @Schema(description = "Working hours in JSON format")
     val workTime: JsonObject?,
     @Schema(description = "Fee type", example = "FREE")
     val feeType: FeeType,
@@ -46,12 +40,12 @@ data class RestroomResponseDto(
     val dataSource: DataSourceType,
     @Schema(description = "Current status of the restroom", example = "ACTIVE")
     val status: RestroomStatus,
-    @Schema(description = "Available amenities in JSON format", example = """{"wifi": true, "babyChanging": false, "wheelchair": true}""")
+    @Schema(description = "Available amenities in JSON format")
     val amenities: JsonObject,
     @Schema(description = "Creation timestamp", example = "2023-12-01T10:30:00Z")
     @Contextual val createdAt: Instant,
     @Schema(description = "Last update timestamp", example = "2023-12-01T15:45:00Z")
     @Contextual val updatedAt: Instant,
-    @Schema(description = "Distance from search point in meters (only present in nearest search results)", example = "150.5")
-    val distanceMeters: Double? = null
+    @Schema(description = "Distance from search point in meters", example = "150.5")
+    val distanceMeters: Double
 )

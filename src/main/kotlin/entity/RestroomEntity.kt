@@ -1,11 +1,12 @@
 package yayauheny.by.entity
 
+import java.util.UUID
 import org.jetbrains.exposed.dao.UUIDEntity
 import org.jetbrains.exposed.dao.UUIDEntityClass
 import org.jetbrains.exposed.dao.id.EntityID
+import yayauheny.by.model.NearestRestroomResponseDto
 import yayauheny.by.model.RestroomResponseDto
 import yayauheny.by.table.RestroomsTable
-import java.util.UUID
 
 class RestroomEntity(
     id: EntityID<UUID>
@@ -45,5 +46,26 @@ class RestroomEntity(
             amenities = amenities,
             createdAt = createdAt,
             updatedAt = updatedAt,
+        )
+
+    fun toNearestRestroomResponseDto(distanceMeters: Double): NearestRestroomResponseDto =
+        NearestRestroomResponseDto(
+            id = id.value,
+            cityId = city?.id?.value,
+            name = name,
+            description = description,
+            address = address,
+            phones = phones,
+            workTime = workTime,
+            feeType = feeType,
+            accessibilityType = accessibilityType,
+            lat = coordinates.latitude,
+            lon = coordinates.longitude,
+            dataSource = dataSource,
+            status = status,
+            amenities = amenities,
+            createdAt = createdAt,
+            updatedAt = updatedAt,
+            distanceMeters = distanceMeters
         )
 }

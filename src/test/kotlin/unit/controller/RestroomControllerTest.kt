@@ -223,6 +223,8 @@ class RestroomControllerTest : RoutingTestBase() {
         @DisplayName("GIVEN out of range coordinates WHEN GET nearest restrooms THEN return 400")
         fun get_nearest_restrooms_with_out_of_range_coordinates_returns_400() =
             runTest {
+                coEvery { restroomService.findNearestRestrooms(any(), any(), any()) } returns emptyList()
+
                 withRoutingApp { client ->
                     val response =
                         client.testGet(
