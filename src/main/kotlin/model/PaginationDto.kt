@@ -1,7 +1,9 @@
 package yayauheny.by.model
 
 import io.swagger.v3.oas.annotations.media.Schema
+import kotlinx.serialization.Serializable
 
+@Serializable
 @Schema(description = "Pagination parameters")
 data class PaginationDto(
     @Schema(description = "Page number (0-based)", example = "0")
@@ -13,15 +15,17 @@ data class PaginationDto(
     @Schema(description = "Sort direction", example = "ASC", allowableValues = ["ASC", "DESC"])
     val direction: SortDirection = SortDirection.ASC,
     @Schema(description = "Filter parameters as key-value pairs")
-    val filters: Map<String, Any> = emptyMap()
+    val filters: Map<String, String> = emptyMap()
 )
 
+@Serializable
 @Schema(description = "Sort direction")
 enum class SortDirection {
     ASC,
     DESC
 }
 
+@Serializable
 @Schema(description = "Paginated response")
 data class PageResponseDto<T>(
     @Schema(description = "Page content")

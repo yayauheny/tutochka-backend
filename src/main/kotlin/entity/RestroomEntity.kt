@@ -3,8 +3,8 @@ package yayauheny.by.entity
 import org.jetbrains.exposed.dao.UUIDEntity
 import org.jetbrains.exposed.dao.UUIDEntityClass
 import org.jetbrains.exposed.dao.id.EntityID
+import yayauheny.by.model.RestroomResponseDto
 import yayauheny.by.table.RestroomsTable
-import yayauheny.by.util.toJsonObject
 import java.util.UUID
 
 class RestroomEntity(
@@ -27,22 +27,23 @@ class RestroomEntity(
     var createdAt by RestroomsTable.createdAt
     var updatedAt by RestroomsTable.updatedAt
 
-    fun toRestroom(): RestroomEntity =
-        RestroomEntity(
+    fun toRestroomResponseDto(): RestroomResponseDto =
+        RestroomResponseDto(
             id = id.value,
             cityId = city?.id?.value,
             name = name,
             description = description,
             address = address,
-            phones = phones?.toJsonObject(),
-            workTime = workTime?.toJsonObject(),
+            phones = phones,
+            workTime = workTime,
             feeType = feeType,
             accessibilityType = accessibilityType,
-            coordinates = coordinates,
+            lat = coordinates.latitude,
+            lon = coordinates.longitude,
             dataSource = dataSource,
             status = status,
-            amenities = amenities.toJsonObject(),
+            amenities = amenities,
             createdAt = createdAt,
-            updatedAt = updatedAt
+            updatedAt = updatedAt,
         )
 }

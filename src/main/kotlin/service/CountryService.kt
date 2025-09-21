@@ -1,5 +1,6 @@
 package yayauheny.by.service
 
+import yayauheny.by.common.errors.ConflictException
 import yayauheny.by.model.CountryCreateDto
 import yayauheny.by.model.CountryResponseDto
 import yayauheny.by.model.PageResponseDto
@@ -18,7 +19,7 @@ class CountryService(
 
     suspend fun createCountry(createDto: CountryCreateDto): CountryResponseDto {
         if (countryRepository.existsByCode(createDto.code)) {
-            throw IllegalArgumentException("Country with code '${createDto.code}' already exists")
+            throw ConflictException("Country with code '${createDto.code}' already exists")
         }
 
         val countryDto = createDto.toResponseDto(UUID.randomUUID())
@@ -31,7 +32,7 @@ class CountryService(
     ): CountryResponseDto? =
         countryRepository.findById(id)?.let { existing ->
             if (updateDto.code != existing.code && countryRepository.existsByCode(updateDto.code)) {
-                throw IllegalArgumentException("Country with code '${updateDto.code}' already exists")
+                throw ConflictException("Country with code '${updateDto.code}' already exists")
             }
 
             val updatedDto = updateDto.toResponseDto(id = existing.id)

@@ -34,7 +34,7 @@ fun createPaginationFromParams(
     sort: String?
 ): PaginationDto =
     PaginationDto(
-        page = page ?: 0,
-        size = size ?: 20,
+        page = maxOf(page ?: 0, 0),
+        size = maxOf(size ?: 20, 1),
         sort = sort
     )

@@ -2,10 +2,14 @@ package yayauheny.by.model
 
 import io.swagger.v3.oas.annotations.media.Schema
 import java.util.UUID
+import kotlinx.serialization.Contextual
+import kotlinx.serialization.Serializable
 
+@Serializable
 @Schema(description = "Data for creating a new city")
 data class CityCreateDto(
     @Schema(description = "Country ID", example = "123e4567-e89b-12d3-a456-426614174000", required = true)
+    @Contextual
     val countryId: UUID,
     @Schema(description = "City name in Russian", example = "Москва", required = true)
     val nameRu: String,

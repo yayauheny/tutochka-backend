@@ -10,9 +10,12 @@ import io.ktor.server.routing.post
 import io.ktor.server.routing.route
 import yayauheny.by.model.CountryCreateDto
 import yayauheny.by.service.CountryService
+import yayauheny.by.service.validation.countryCreateValidator
+import service.validation.validateAndThen
 import yayauheny.by.util.createPaginationFromQuery
 import yayauheny.by.util.getStringFromPath
 import yayauheny.by.util.getUuidFromPath
+import yayauheny.by.common.errors.NotFoundException
 
 class CountryController(
     private val countryService: CountryService
@@ -27,23 +30,26 @@ class CountryController(
 
             get("/{id}") {
                 val id = call.getUuidFromPath("id")
-                val country = countryService.getCountryById(id)
-                country?.let {
-                    call.respond(HttpStatusCode.OK, it)
-                } ?: call.respond(HttpStatusCode.NotFound)
+                val country =
+                    countryService.getCountryById(id)
+                        ?: throw NotFoundException("Country with id $id not found")
+                call.respond(HttpStatusCode.OK, country)
             }
 
             get("/code/{code}") {
                 val code = call.getStringFromPath("code")
-                val country = countryService.getCountryByCode(code)
-                country?.let {
-                    call.respond(HttpStatusCode.OK, it)
-                } ?: call.respond(HttpStatusCode.NotFound)
+                val country =
+                    countryService.getCountryByCode(code)
+                        ?: throw NotFoundException("Country with code $code not found")
+                call.respond(HttpStatusCode.OK, country)
             }
 
             post {
                 val createDto = call.receive<CountryCreateDto>()
-                val country = countryService.createCountry(createDto)
+                val country =
+                    createDto.validateAndThen(countryCreateValidator) { valid ->
+                        countryService.createCountry(valid)
+                    }
                 call.respond(HttpStatusCode.Created, country)
             }
         }

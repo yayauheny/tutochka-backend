@@ -1,4 +1,4 @@
-package service
+package unit.service
 
 import io.mockk.coEvery
 import io.mockk.coVerify
@@ -13,13 +13,14 @@ import org.junit.jupiter.api.DisplayName
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertThrows
+import yayauheny.by.common.errors.ConflictException
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.ValueSource
 import yayauheny.by.model.CountryResponseDto
 import yayauheny.by.model.PaginationDto
 import yayauheny.by.repository.CountryRepository
 import yayauheny.by.service.CountryService
-import yayauheny.by.testdata.CountryTestData
+import support.helpers.TestDataHelpers
 
 @DisplayName("CountryService Tests")
 class CountryServiceTest {
@@ -36,7 +37,7 @@ class CountryServiceTest {
                 val pagination = PaginationDto(page = 0, size = 10)
                 val expectedPage =
                     yayauheny.by.model.PageResponseDto(
-                        content = CountryTestData.createCountryList(3),
+                        content = TestDataHelpers.createCountryList(3),
                         page = 0,
                         size = 10,
                         totalElements = 3L,
@@ -59,7 +60,7 @@ class CountryServiceTest {
                 val pagination = PaginationDto(page = 0, size = 3)
                 val expectedPage =
                     yayauheny.by.model.PageResponseDto(
-                        content = CountryTestData.createCountryList(3),
+                        content = TestDataHelpers.createCountryList(3),
                         page = 0,
                         size = 3,
                         totalElements = 5L,
@@ -102,7 +103,7 @@ class CountryServiceTest {
         @DisplayName("should_return_country_when_found_by_id")
         fun should_return_country_when_found_by_id() =
             runTest {
-                val country = CountryTestData.createCountryResponseDto()
+                val country = TestDataHelpers.createCountryResponseDto()
                 coEvery { countryRepository.findById(country.id) } returns country
 
                 val result = countryService.getCountryById(country.id)
@@ -128,7 +129,7 @@ class CountryServiceTest {
         @DisplayName("should_return_country_when_found_by_code")
         fun should_return_country_when_found_by_code() =
             runTest {
-                val country = CountryTestData.createCountryResponseDto()
+                val country = TestDataHelpers.createCountryResponseDto()
                 coEvery { countryRepository.findByCode(country.code) } returns country
 
                 val result = countryService.getCountryByCode(country.code)
@@ -184,8 +185,8 @@ class CountryServiceTest {
         @DisplayName("should_create_new_country_with_unique_code")
         fun should_create_new_country_with_unique_code() =
             runTest {
-                val createDto = CountryTestData.createCountryCreateDto()
-                val expectedResponse = CountryTestData.createCountryResponseDto()
+                val createDto = TestDataHelpers.createCountryCreateDto()
+                val expectedResponse = TestDataHelpers.createCountryResponseDto()
                 coEvery { countryRepository.existsByCode(createDto.code) } returns false
                 coEvery { countryRepository.save(any()) } returns expectedResponse
 
@@ -200,10 +201,10 @@ class CountryServiceTest {
         @DisplayName("should_throw_exception_when_creating_country_with_existing_code")
         fun should_throw_exception_when_creating_country_with_existing_code() =
             runTest {
-                val createDto = CountryTestData.createCountryCreateDto()
+                val createDto = TestDataHelpers.createCountryCreateDto()
                 coEvery { countryRepository.existsByCode(createDto.code) } returns true
 
-                assertThrows<IllegalArgumentException> {
+                assertThrows<ConflictException> {
                     countryService.createCountry(createDto)
                 }
 
@@ -216,8 +217,8 @@ class CountryServiceTest {
         @DisplayName("should_handle_different_country_codes")
         fun should_handle_different_country_codes(code: String) =
             runTest {
-                val createDto = CountryTestData.createCountryCreateDto(code = code)
-                val expectedResponse = CountryTestData.createCountryResponseDto(code = code)
+                val createDto = TestDataHelpers.createCountryCreateDto(code = code)
+                val expectedResponse = TestDataHelpers.createCountryResponseDto(code = code)
                 coEvery { countryRepository.existsByCode(code) } returns false
                 coEvery { countryRepository.save(any()) } returns expectedResponse
 
@@ -236,8 +237,8 @@ class CountryServiceTest {
         @DisplayName("should_update_existing_country_with_same_code")
         fun should_update_existing_country_with_same_code() =
             runTest {
-                val existingCountry = CountryTestData.createCountryResponseDto()
-                val updateDto = CountryTestData.createCountryCreateDto(code = existingCountry.code)
+                val existingCountry = TestDataHelpers.createCountryResponseDto()
+                val updateDto = TestDataHelpers.createCountryCreateDto(code = existingCountry.code)
                 val updatedCountry =
                     existingCountry.copy(
                         nameRu = updateDto.nameRu,
@@ -257,8 +258,8 @@ class CountryServiceTest {
         @DisplayName("should_update_existing_country_with_new_unique_code")
         fun should_update_existing_country_with_new_unique_code() =
             runTest {
-                val existingCountry = CountryTestData.createCountryResponseDto()
-                val updateDto = CountryTestData.createCountryCreateDto(code = "NEW")
+                val existingCountry = TestDataHelpers.createCountryResponseDto()
+                val updateDto = TestDataHelpers.createCountryCreateDto(code = "NEW")
                 val updatedCountry =
                     existingCountry.copy(
                         nameRu = updateDto.nameRu,
@@ -281,12 +282,12 @@ class CountryServiceTest {
         @DisplayName("should_throw_exception_when_updating_with_existing_code")
         fun should_throw_exception_when_updating_with_existing_code() =
             runTest {
-                val existingCountry = CountryTestData.createCountryResponseDto()
-                val updateDto = CountryTestData.createCountryCreateDto(code = "EXISTING")
+                val existingCountry = TestDataHelpers.createCountryResponseDto()
+                val updateDto = TestDataHelpers.createCountryCreateDto(code = "EXISTING")
                 coEvery { countryRepository.findById(existingCountry.id) } returns existingCountry
                 coEvery { countryRepository.existsByCode("EXISTING") } returns true
 
-                assertThrows<IllegalArgumentException> {
+                assertThrows<ConflictException> {
                     countryService.updateCountry(existingCountry.id, updateDto)
                 }
 
@@ -300,7 +301,7 @@ class CountryServiceTest {
         fun should_return_null_when_updating_non_existent_country() =
             runTest {
                 val id = UUID.randomUUID()
-                val updateDto = CountryTestData.createCountryCreateDto()
+                val updateDto = TestDataHelpers.createCountryCreateDto()
                 coEvery { countryRepository.findById(id) } returns null
 
                 val result = countryService.updateCountry(id, updateDto)

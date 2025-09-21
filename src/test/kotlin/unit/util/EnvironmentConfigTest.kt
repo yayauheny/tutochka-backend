@@ -1,12 +1,13 @@
-package yayauheny.by.util
+package unit.util
 
+import kotlin.test.assertEquals
+import kotlin.test.assertFalse
+import kotlin.test.assertTrue
 import org.junit.jupiter.api.DisplayName
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.ValueSource
-import kotlin.test.assertEquals
-import kotlin.test.assertFalse
-import kotlin.test.assertTrue
+import yayauheny.by.util.EnvironmentConfig
 
 @DisplayName("EnvironmentConfig Tests")
 class EnvironmentConfigTest {

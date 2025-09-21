@@ -1,14 +1,13 @@
 package yayauheny.by.repository
 
+import java.util.UUID
 import org.jetbrains.exposed.sql.transactions.experimental.newSuspendedTransaction
 import yayauheny.by.entity.RestroomEntity
+import yayauheny.by.model.GeoPoint
 import yayauheny.by.model.PageResponseDto
 import yayauheny.by.model.PaginationDto
 import yayauheny.by.model.RestroomResponseDto
 import yayauheny.by.table.RestroomsTable
-import yayauheny.by.util.toJsonObject
-import yayauheny.by.util.toMap
-import java.util.UUID
 
 interface RestroomRepository {
     suspend fun findAll(pagination: PaginationDto): PageResponseDto<RestroomResponseDto>
@@ -94,11 +93,16 @@ class RestroomRepositoryImpl : RestroomRepository {
         limit: Int
     ): List<RestroomResponseDto> =
         newSuspendedTransaction {
-            RestroomEntity
-                .all()
-                .map { it.toResponseDto() }
-                .sortedBy { calculateDistance(latitude, longitude, it.lat, it.lon) }
-                .take(limit)
+            // TODO: refactor
+            val allRestrooms =
+                RestroomEntity
+                    .all()
+                    .limit(limit)
+                    .map { it.toResponseDto() }
+                    .sortedBy { calculateDistance(latitude, longitude, it.lat, it.lon) }
+                    .take(limit)
+
+            allRestrooms
         }
 
     override suspend fun save(restroom: RestroomResponseDto): RestroomResponseDto =
@@ -122,13 +126,14 @@ class RestroomRepositoryImpl : RestroomRepository {
         name = dto.name
         description = dto.description
         address = dto.address
-        phones = dto.phones?.toMap()
-        workTime = dto.workTime?.toMap()
+        phones = dto.phones
+        workTime = dto.workTime
         feeType = dto.feeType
         accessibilityType = dto.accessibilityType
+        coordinates = GeoPoint(dto.lon, dto.lat)
         dataSource = dto.dataSource
         status = dto.status
-        amenities = dto.amenities.toMap()
+        amenities = dto.amenities
     }
 
     private fun RestroomEntity.toResponseDto() =
@@ -138,15 +143,15 @@ class RestroomRepositoryImpl : RestroomRepository {
             name = name,
             description = description,
             address = address,
-            phones = phones?.toJsonObject(),
-            workTime = workTime?.toJsonObject(),
+            phones = phones,
+            workTime = workTime,
             feeType = feeType,
             accessibilityType = accessibilityType,
             lat = coordinates.latitude,
             lon = coordinates.longitude,
             dataSource = dataSource,
             status = status,
-            amenities = amenities.toJsonObject(),
+            amenities = amenities,
             createdAt = createdAt,
             updatedAt = updatedAt
         )
