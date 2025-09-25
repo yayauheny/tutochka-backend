@@ -106,7 +106,7 @@ class CityServiceTest {
         @DisplayName("should_search_cities_by_name")
         fun should_search_cities_by_name() =
             runTest {
-                val searchName = "New York"
+                val searchName = "Minsk"
                 val pagination = yayauheny.by.model.PaginationDto(page = 0, size = 10)
                 val expectedPage =
                     yayauheny.by.model.PageResponseDto(

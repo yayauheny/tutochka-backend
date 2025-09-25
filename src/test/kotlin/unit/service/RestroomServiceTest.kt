@@ -244,6 +244,33 @@ class RestroomServiceTest {
                 coVerify(exactly = 1) { restroomRepository.save(any()) }
             }
 
+        @Test
+        @DisplayName("GIVEN restroom with parent place data WHEN creating restroom THEN save parent place fields correctly")
+        fun given_restroom_with_parent_place_data_when_creating_restroom_then_save_parent_place_fields_correctly() =
+            runTest {
+                val createDto =
+                    TestDataHelpers.createRestroomCreateDto(
+                        parentPlaceName = "Central Park Mall",
+                        parentPlaceType = "SHOPPING_MALL",
+                        inheritParentSchedule = true
+                    )
+                val expectedResponse =
+                    TestDataHelpers.createRestroomResponseDto(
+                        parentPlaceName = "Central Park Mall",
+                        parentPlaceType = "SHOPPING_MALL",
+                        inheritParentSchedule = true
+                    )
+                coEvery { restroomRepository.save(any()) } returns expectedResponse
+
+                val actualResponse = restroomService.createRestroom(createDto)
+
+                assertEquals(expectedResponse, actualResponse)
+                assertEquals("Central Park Mall", actualResponse.parentPlaceName)
+                assertEquals("SHOPPING_MALL", actualResponse.parentPlaceType)
+                assertTrue(actualResponse.inheritParentSchedule)
+                coVerify(exactly = 1) { restroomRepository.save(any()) }
+            }
+
         @ParameterizedTest
         @EnumSource(DataSourceType::class)
         @DisplayName("GIVEN different data sources WHEN creating restroom THEN handle all types correctly")
@@ -277,7 +304,10 @@ class RestroomServiceTest {
                         lat = 40.7829,
                         lon = -73.9654,
                         dataSource = DataSourceType.MANUAL,
-                        amenities = createBasicAmenities()
+                        amenities = createBasicAmenities(),
+                        parentPlaceName = null,
+                        parentPlaceType = null,
+                        inheritParentSchedule = false
                     )
                 val expectedResponse =
                     RestroomResponseDto(
@@ -295,6 +325,9 @@ class RestroomServiceTest {
                         dataSource = DataSourceType.MANUAL,
                         status = RestroomStatus.ACTIVE,
                         amenities = createBasicAmenities(),
+                        parentPlaceName = null,
+                        parentPlaceType = null,
+                        inheritParentSchedule = false,
                         createdAt = Instant.now(),
                         updatedAt = Instant.now()
                     )

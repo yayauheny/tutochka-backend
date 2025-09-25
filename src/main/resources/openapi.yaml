@@ -12,6 +12,25 @@ servers:
     description: Development server
 
 paths:
+  /health:
+    get:
+      summary: Health check
+      description: Check if the service is running
+      responses:
+        '200':
+          description: Service is healthy
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: healthy
+                  service:
+                    type: string
+                    example: TuTochka API
+
   /countries:
     get:
       summary: Get all countries
@@ -34,25 +53,25 @@ paths:
           description: Sort field
           schema:
             type: string
-        - name: direction
-          in: query
-          description: Sort direction
-          schema:
-            type: string
-            enum: [ASC, DESC]
-            default: ASC
-        - name: filters
-          in: query
-          description: Filter parameters as key-value pairs
-          schema:
-            type: object
       responses:
         '200':
           description: Successfully retrieved countries
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/PageResponse'
+                $ref: '#/components/schemas/PageResponseCountry'
+        '400':
+          description: Validation error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
     post:
       summary: Create new country
       description: Create a new country with the provided data
@@ -70,7 +89,17 @@ paths:
               schema:
                 $ref: '#/components/schemas/CountryResponseDto'
         '400':
-          description: Invalid input data
+          description: Validation error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
 
   /countries/{id}:
     get:
@@ -93,6 +122,16 @@ paths:
                 $ref: '#/components/schemas/CountryResponseDto'
         '404':
           description: Country not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
 
   /countries/code/{code}:
     get:
@@ -115,6 +154,16 @@ paths:
                 $ref: '#/components/schemas/CountryResponseDto'
         '404':
           description: Country not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
 
   /cities:
     get:
@@ -138,25 +187,25 @@ paths:
           description: Sort field
           schema:
             type: string
-        - name: direction
-          in: query
-          description: Sort direction
-          schema:
-            type: string
-            enum: [ASC, DESC]
-            default: ASC
-        - name: filters
-          in: query
-          description: Filter parameters as key-value pairs
-          schema:
-            type: object
       responses:
         '200':
           description: Successfully retrieved cities
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/PageResponse'
+                $ref: '#/components/schemas/PageResponseCity'
+        '400':
+          description: Validation error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
     post:
       summary: Create new city
       description: Create a new city with the provided data
@@ -174,7 +223,17 @@ paths:
               schema:
                 $ref: '#/components/schemas/CityResponseDto'
         '400':
-          description: Invalid input data
+          description: Validation error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
 
   /cities/{id}:
     get:
@@ -197,6 +256,16 @@ paths:
                 $ref: '#/components/schemas/CityResponseDto'
         '404':
           description: City not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
 
   /cities/country/{countryId}:
     get:
@@ -228,7 +297,25 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/PageResponse'
+                $ref: '#/components/schemas/PageResponseCity'
+        '400':
+          description: Validation error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: Country not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
 
   /cities/search:
     get:
@@ -260,7 +347,19 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/PageResponse'
+                $ref: '#/components/schemas/PageResponseCity'
+        '400':
+          description: Validation error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
 
   /restrooms:
     get:
@@ -284,25 +383,25 @@ paths:
           description: Sort field
           schema:
             type: string
-        - name: direction
-          in: query
-          description: Sort direction
-          schema:
-            type: string
-            enum: [ASC, DESC]
-            default: ASC
-        - name: filters
-          in: query
-          description: Filter parameters as key-value pairs
-          schema:
-            type: object
       responses:
         '200':
           description: Successfully retrieved restrooms
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/PageResponse'
+                $ref: '#/components/schemas/PageResponseRestroom'
+        '400':
+          description: Validation error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
     post:
       summary: Create new restroom
       description: Create a new restroom with the provided data
@@ -320,7 +419,17 @@ paths:
               schema:
                 $ref: '#/components/schemas/RestroomResponseDto'
         '400':
-          description: Invalid input data
+          description: Validation error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
 
   /restrooms/{id}:
     get:
@@ -343,6 +452,16 @@ paths:
                 $ref: '#/components/schemas/RestroomResponseDto'
         '404':
           description: Restroom not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
 
   /restrooms/city/{cityId}:
     get:
@@ -374,7 +493,25 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/PageResponse'
+                $ref: '#/components/schemas/PageResponseRestroom'
+        '400':
+          description: Validation error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: City not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
 
   /restrooms/nearest:
     get:
@@ -402,6 +539,8 @@ paths:
           description: Maximum number of restrooms to return
           schema:
             type: integer
+            minimum: 1
+            maximum: 50
             default: 5
       responses:
         '200':
@@ -411,9 +550,19 @@ paths:
               schema:
                 type: array
                 items:
-                  $ref: '#/components/schemas/RestroomResponseDto'
+                  $ref: '#/components/schemas/NearestRestroomResponseDto'
         '400':
           description: Missing or invalid coordinates
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
 
 components:
   schemas:
@@ -556,11 +705,11 @@ components:
           example: {"monday": "06:00-22:00", "tuesday": "06:00-22:00"}
         feeType:
           type: string
-          enum: [FREE, PAID, DONATION]
+          enum: [FREE, PAID]
           description: Fee type
         accessibilityType:
           type: string
-          enum: [NONE, DISABLED, WHEELCHAIR_ACCESSIBLE, UNISEX]
+          enum: [MEN, WOMEN, UNISEX, FAMILY, DISABLED]
           description: Accessibility type
         lat:
           type: number
@@ -574,12 +723,24 @@ components:
           example: -73.9654
         dataSource:
           type: string
-          enum: [MANUAL, API, IMPORT]
+          enum: [MANUAL, USER, API, IMPORT]
           description: Data source
         amenities:
           type: object
           description: Amenities as JSON object
           example: {"wifi": "true", "heating": "true"}
+        parentPlaceName:
+          type: string
+          description: Parent place name (e.g., shopping mall, restaurant)
+          example: Central Park Mall
+        parentPlaceType:
+          type: string
+          description: Parent place type
+          example: SHOPPING_MALL
+        inheritParentSchedule:
+          type: boolean
+          description: Whether to inherit parent place schedule
+          example: false
 
     RestroomResponseDto:
       type: object
@@ -609,11 +770,11 @@ components:
           description: Working hours as JSON object (optional)
         feeType:
           type: string
-          enum: [FREE, PAID, DONATION]
+          enum: [FREE, PAID]
           description: Fee type
         accessibilityType:
           type: string
-          enum: [NONE, DISABLED, WHEELCHAIR_ACCESSIBLE, UNISEX]
+          enum: [MEN, WOMEN, UNISEX, FAMILY, DISABLED]
           description: Accessibility type
         lat:
           type: number
@@ -625,7 +786,7 @@ components:
           description: Longitude
         dataSource:
           type: string
-          enum: [MANUAL, API, IMPORT]
+          enum: [MANUAL, USER, API, IMPORT]
           description: Data source
         status:
           type: string
@@ -634,6 +795,15 @@ components:
         amenities:
           type: object
           description: Amenities as JSON object
+        parentPlaceName:
+          type: string
+          description: Parent place name (e.g., shopping mall, restaurant)
+        parentPlaceType:
+          type: string
+          description: Parent place type
+        inheritParentSchedule:
+          type: boolean
+          description: Whether to inherit parent place schedule
         createdAt:
           type: string
           format: date-time
@@ -643,13 +813,88 @@ components:
           format: date-time
           description: Last update timestamp
 
-    PageResponse:
+    NearestRestroomResponseDto:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+          description: Unique identifier
+        cityId:
+          type: string
+          format: uuid
+          description: City ID (optional)
+        name:
+          type: string
+          description: Restroom name (optional)
+        description:
+          type: string
+          description: Restroom description (optional)
+        address:
+          type: string
+          description: Restroom address
+        phones:
+          type: object
+          description: Phone numbers as JSON object (optional)
+        workTime:
+          type: object
+          description: Working hours as JSON object (optional)
+        feeType:
+          type: string
+          enum: [FREE, PAID]
+          description: Fee type
+        accessibilityType:
+          type: string
+          enum: [MEN, WOMEN, UNISEX, FAMILY, DISABLED]
+          description: Accessibility type
+        lat:
+          type: number
+          format: double
+          description: Latitude
+        lon:
+          type: number
+          format: double
+          description: Longitude
+        dataSource:
+          type: string
+          enum: [MANUAL, USER, API, IMPORT]
+          description: Data source
+        status:
+          type: string
+          enum: [ACTIVE, INACTIVE, PENDING, TEMP_CLOSED]
+          description: Restroom status
+        amenities:
+          type: object
+          description: Amenities as JSON object
+        parentPlaceName:
+          type: string
+          description: Parent place name (e.g., shopping mall, restaurant)
+        parentPlaceType:
+          type: string
+          description: Parent place type
+        inheritParentSchedule:
+          type: boolean
+          description: Whether to inherit parent place schedule
+        createdAt:
+          type: string
+          format: date-time
+          description: Creation timestamp
+        updatedAt:
+          type: string
+          format: date-time
+          description: Last update timestamp
+        distanceMeters:
+          type: integer
+          format: int32
+          description: Distance from search point in meters
+
+    PageResponseCountry:
       type: object
       properties:
         content:
           type: array
           items:
-            type: object
+            $ref: '#/components/schemas/CountryResponseDto'
           description: Page content
         page:
           type: integer
@@ -670,3 +915,100 @@ components:
         last:
           type: boolean
           description: Is last page
+
+    PageResponseCity:
+      type: object
+      properties:
+        content:
+          type: array
+          items:
+            $ref: '#/components/schemas/CityResponseDto'
+          description: Page content
+        page:
+          type: integer
+          description: Current page number
+        size:
+          type: integer
+          description: Page size
+        totalElements:
+          type: integer
+          format: int64
+          description: Total number of elements
+        totalPages:
+          type: integer
+          description: Total number of pages
+        first:
+          type: boolean
+          description: Is first page
+        last:
+          type: boolean
+          description: Is last page
+
+    PageResponseRestroom:
+      type: object
+      properties:
+        content:
+          type: array
+          items:
+            $ref: '#/components/schemas/RestroomResponseDto'
+          description: Page content
+        page:
+          type: integer
+          description: Current page number
+        size:
+          type: integer
+          description: Page size
+        totalElements:
+          type: integer
+          format: int64
+          description: Total number of elements
+        totalPages:
+          type: integer
+          description: Total number of pages
+        first:
+          type: boolean
+          description: Is first page
+        last:
+          type: boolean
+          description: Is last page
+
+    ErrorResponse:
+      type: object
+      properties:
+        timestamp:
+          type: string
+          description: Timestamp when error occurred
+          example: "2023-12-01T10:30:00Z"
+        status:
+          type: integer
+          description: HTTP status code
+          example: 400
+        error:
+          type: string
+          description: Error type
+          example: "Bad Request"
+        message:
+          type: string
+          description: Detailed error message
+          example: "Invalid UUID format"
+        path:
+          type: string
+          description: Request path where error occurred
+          example: "/api/v1/countries/123"
+        errors:
+          type: array
+          items:
+            $ref: '#/components/schemas/FieldError'
+          description: Field validation errors (only present for validation errors)
+
+    FieldError:
+      type: object
+      properties:
+        field:
+          type: string
+          description: Field name
+          example: "nameRu"
+        message:
+          type: string
+          description: Error message
+          example: "nameRu must not be blank"

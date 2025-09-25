@@ -10,7 +10,7 @@ import yayauheny.by.util.envLong
 data class DatabaseConfig(
     val host: String = "DB_HOST".env("localhost"),
     val port: Int = "DB_PORT".envInt(5432),
-    val name: String = "DB_NAME".env("tutochka"),
+    val name: String = "DB_NAME".env("postgres"),
     val user: String = "DB_USER".env("postgres"),
     val password: String = "DB_PASSWORD".env("password"),
     val maxPoolSize: Int = "DB_MAX_POOL_SIZE".envInt(10),
@@ -21,7 +21,7 @@ data class DatabaseConfig(
 ) {
     fun createDatabase(): Database = Database.connect(createDataSource())
 
-    private fun createDataSource(): HikariDataSource =
+    fun createDataSource(): HikariDataSource =
         HikariDataSource(
             HikariConfig().apply {
                 jdbcUrl = "jdbc:postgresql://$host:$port/$name"

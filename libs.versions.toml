@@ -14,6 +14,8 @@ junitJupiter = "5.10.1"
 junitPlatform = "1.10.1"
 swagger = "2.2.15"
 ktlint = "12.1.1"
+tgbotapi = "29.0.0"
+konform = "0.11.0"
 
 [plugins]
 kotlinJvm = { id = "org.jetbrains.kotlin.jvm", version.ref = "kotlin" }
@@ -47,7 +49,8 @@ liquibaseCore = { module = "org.liquibase:liquibase-core", version = "4.24.0" }
 picocli = { module = "info.picocli:picocli", version = "4.6.3" }
 
 serializationJsonType = { module = "org.jetbrains.kotlinx:kotlinx-serialization-json", version = "1.9.0" }
-konform = { module = "io.konform:konform-jvm", version = "0.11.0" }
+konform = { module = "io.konform:konform-jvm", version.ref = "konform" }
+tgbotapi = { module = "dev.inmo:tgbotapi", version.ref = "tgbotapi" }
 
 # DI
 koinKtor = { module = "io.insert-koin:koin-ktor", version.ref = "koin" }
@@ -89,4 +92,7 @@ swaggerBundle = ["swaggerCore", "swaggerAnnotations", "swaggerModels", "swaggerJ
 testcontainersBundle = ["testcontainersPostgres", "testcontainersKotlin", "testcontainersJunit"]
 testingBundle = ["junitJupiter", "junitPlatformLauncher", "mockk", "kotlinxCoroutinesTest"]
 liquibaseBundle = ["liquibaseCore", "postgresql", "picocli"]
+validationBundle = ["konform", "serializationJsonType"]
+databaseBundle = ["postgis", "hikaricp"]
+botBundle = ["tgbotapi", "konform", "serializationJsonType"]
 

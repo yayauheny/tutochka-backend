@@ -48,10 +48,16 @@ data class RestroomResponseDto(
     val status: RestroomStatus,
     @Schema(description = "Available amenities in JSON format", example = """{"wifi": true, "babyChanging": false, "wheelchair": true}""")
     val amenities: JsonObject,
+    @Schema(description = "Parent place name (e.g., shopping mall, restaurant)", example = "Central Park Mall")
+    val parentPlaceName: String?,
+    @Schema(description = "Parent place type", example = "SHOPPING_MALL")
+    val parentPlaceType: String?,
+    @Schema(description = "Whether to inherit parent place schedule", example = "false")
+    val inheritParentSchedule: Boolean,
     @Schema(description = "Creation timestamp", example = "2023-12-01T10:30:00Z")
     @Contextual val createdAt: Instant,
     @Schema(description = "Last update timestamp", example = "2023-12-01T15:45:00Z")
     @Contextual val updatedAt: Instant,
-    @Schema(description = "Distance from search point in meters (only present in nearest search results)", example = "150.5")
-    val distanceMeters: Double? = null
+    @Schema(description = "Distance from search point in meters (only present in nearest search results)", example = "150")
+    val distanceMeters: Int? = null
 )

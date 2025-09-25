@@ -168,14 +168,14 @@ class CityControllerTest : RoutingTestBase() {
                 coEvery { cityService.searchCitiesByName(any(), any()) } returns PageResponseDto(emptyList(), 0, 20, 0, 0, true, true)
 
                 withRoutingApp { client ->
-                    val response = client.testGet("/api/v1/cities/search", mapOf("name" to "New York"))
+                    val response = client.testGet("/api/v1/cities/search", mapOf("name" to "Minsk"))
 
                     assertEquals(HttpStatusCode.OK, response.status)
                     response.assertJsonContentType()
                 }
 
                 coVerify(exactly = 1) {
-                    cityService.searchCitiesByName("New York", any())
+                    cityService.searchCitiesByName("Minsk", any())
                 }
             }
 
@@ -207,10 +207,10 @@ class CityControllerTest : RoutingTestBase() {
                     """
                     {
                         "countryId": "$countryId",
-                        "nameRu": "Нью-Йорк",
-                        "nameEn": "New York",
-                        "lat": 40.7128,
-                        "lon": -74.0060
+                        "nameRu": "Минск",
+                        "nameEn": "Minsk",
+                        "lat": 53.9006,
+                        "lon": 27.5590
                     }
                     """.trimIndent()
 

@@ -50,11 +50,11 @@ object TestDataHelpers {
 
     fun createCityCreateDto(
         countryId: UUID = UUID.randomUUID(),
-        nameRu: String = "Минск",
-        nameEn: String = "Minsk",
-        region: String? = "Минская область",
-        lat: Double = 53.9006,
-        lon: Double = 27.5590
+        nameRu: String = "Нью-Йорк",
+        nameEn: String = "New York",
+        region: String? = "NY",
+        lat: Double = 40.7128,
+        lon: Double = -74.0060
     ) = CityCreateDto(
         countryId = countryId,
         nameRu = nameRu,
@@ -67,11 +67,11 @@ object TestDataHelpers {
     fun createCityResponseDto(
         id: UUID = UUID.randomUUID(),
         countryId: UUID = UUID.randomUUID(),
-        nameRu: String = "Минск",
-        nameEn: String = "Minsk",
-        region: String? = "Минская область",
-        lat: Double = 53.9006,
-        lon: Double = 27.5590
+        nameRu: String = "Нью-Йорк",
+        nameEn: String = "New York",
+        region: String? = "NY",
+        lat: Double = 40.7128,
+        lon: Double = -74.0060
     ) = CityResponseDto(
         id = id,
         countryId = countryId,
@@ -99,9 +99,9 @@ object TestDataHelpers {
 
     fun createRestroomCreateDto(
         cityId: UUID = UUID.randomUUID(),
-        name: String = "Minsk Central Restroom",
-        description: String = "Public restroom in Minsk center",
-        address: String = "123 Independence Avenue, Minsk, Belarus",
+        name: String = "Central Park Restroom",
+        description: String = "Public restroom in Central Park",
+        address: String = "123 Central Park, New York, NY",
         phones: JsonObject? = createBasicPhones(),
         workTime: JsonObject? = createBasicWorkTime(),
         feeType: FeeType = FeeType.FREE,
@@ -134,9 +134,9 @@ object TestDataHelpers {
     fun createRestroomResponseDto(
         id: UUID = UUID.randomUUID(),
         cityId: UUID = UUID.randomUUID(),
-        name: String = "Minsk Central Restroom",
-        description: String = "Public restroom in Minsk center",
-        address: String = "123 Independence Avenue, Minsk, Belarus",
+        name: String = "Central Park Restroom",
+        description: String = "Public restroom in Central Park",
+        address: String = "123 Central Park, New York, NY",
         phones: JsonObject? = createBasicPhones(),
         workTime: JsonObject? = createBasicWorkTime(),
         feeType: FeeType = FeeType.FREE,
@@ -191,9 +191,9 @@ object TestDataHelpers {
     fun createNearestRestroomResponseDto(
         id: UUID = UUID.randomUUID(),
         cityId: UUID = UUID.randomUUID(),
-        name: String = "Minsk Central Restroom",
-        description: String = "Public restroom in Minsk center",
-        address: String = "123 Independence Avenue, Minsk, Belarus",
+        name: String = "Central Park Restroom",
+        description: String = "Public restroom in Central Park",
+        address: String = "123 Central Park, New York, NY",
         phones: JsonObject? = createBasicPhones(),
         workTime: JsonObject? = createBasicWorkTime(),
         feeType: FeeType = FeeType.FREE,

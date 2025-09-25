@@ -202,21 +202,6 @@ docker-compose up -d
 
 ---
 
-## 🤝 Contributing / Участие в разработке
-
-1. Fork the repository / Сделайте форк репозитория
-2. Create a feature branch / Создайте ветку для функции
-3. Make your changes / Внесите изменения
-4. Run tests and formatting / Запустите тесты и форматирование
-5. Submit a pull request / Отправьте pull request
-
----
-
-## 📄 License / Лицензия
-
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
-
----
 
 ## 📞 Support / Поддержка
 

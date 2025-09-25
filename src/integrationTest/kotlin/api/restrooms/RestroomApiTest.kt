@@ -311,12 +311,12 @@ class RestroomApiTest : BaseIntegrationTest() {
                     assertTrue(restroom.containsKey("lon"), "Each restroom should have lon field")
                     assertTrue(restroom.containsKey("name"), "Each restroom should have name field")
 
-                    val distance = restroom["distanceMeters"]?.toString()?.toDoubleOrNull()
+                    val distance = restroom["distanceMeters"]?.toString()?.toIntOrNull()
                     assertTrue(distance != null && distance >= 0, "Distance should be a valid non-negative number")
                 }
 
                 // Check that distances are sorted in ascending order (nearest first)
-                val distances = jsonArray.mapNotNull { it["distanceMeters"]?.toString()?.toDoubleOrNull() }
+                val distances = jsonArray.mapNotNull { it["distanceMeters"]?.toString()?.toIntOrNull() }
                 val sortedDistances = distances.sorted()
                 assertEquals(sortedDistances, distances, "Restrooms should be sorted by distance (nearest first)")
 
@@ -341,7 +341,7 @@ class RestroomApiTest : BaseIntegrationTest() {
                         it["name"]?.toString()?.removeSurrounding("\"") == "Close Restroom"
                     }
                 assertNotNull(closeRestroom, "Close Restroom should be found in results")
-                val closeDistance = closeRestroom!!["distanceMeters"]?.toString()?.toDoubleOrNull()
+                val closeDistance = closeRestroom!!["distanceMeters"]?.toString()?.toIntOrNull()
                 assertNotNull(closeDistance, "Close Restroom should have distanceMeters")
                 // Expected distance: ~11m (55.7559 - 55.7558 = 0.0001 degrees ≈ 11m)
                 assertTrue(closeDistance!! in 5.0..20.0, "Close Restroom distance should be approximately 11m (±15m tolerance)")
@@ -352,7 +352,7 @@ class RestroomApiTest : BaseIntegrationTest() {
                         it["name"]?.toString()?.removeSurrounding("\"") == "Medium Restroom"
                     }
                 assertNotNull(mediumRestroom, "Medium Restroom should be found in results")
-                val mediumDistance = mediumRestroom!!["distanceMeters"]?.toString()?.toDoubleOrNull()
+                val mediumDistance = mediumRestroom!!["distanceMeters"]?.toString()?.toIntOrNull()
                 assertNotNull(mediumDistance, "Medium Restroom should have distanceMeters")
                 // Expected distance: ~55m (55.7563 - 55.7558 = 0.0005 degrees ≈ 55m)
                 assertTrue(mediumDistance!! in 40.0..70.0, "Medium Restroom distance should be approximately 55m (±15m tolerance)")
@@ -363,7 +363,7 @@ class RestroomApiTest : BaseIntegrationTest() {
                         it["name"]?.toString()?.removeSurrounding("\"") == "Far Restroom"
                     }
                 assertNotNull(farRestroom, "Far Restroom should be found in results")
-                val farDistance = farRestroom!!["distanceMeters"]?.toString()?.toDoubleOrNull()
+                val farDistance = farRestroom!!["distanceMeters"]?.toString()?.toIntOrNull()
                 assertNotNull(farDistance, "Far Restroom should have distanceMeters")
                 // Expected distance: ~111m (55.7568 - 55.7558 = 0.001 degrees ≈ 111m)
                 assertTrue(farDistance!! in 95.0..125.0, "Far Restroom distance should be approximately 111m (±15m tolerance)")
@@ -418,12 +418,12 @@ class RestroomApiTest : BaseIntegrationTest() {
                     val status = restroom["status"]?.toString()?.removeSurrounding("\"")
                     assertEquals("ACTIVE", status, "All returned restrooms should have ACTIVE status")
 
-                    val distance = restroom["distanceMeters"]?.toString()?.toDoubleOrNull()
+                    val distance = restroom["distanceMeters"]?.toString()?.toIntOrNull()
                     assertTrue(distance != null && distance >= 0, "Distance should be a valid non-negative number")
                 }
 
                 // Verify distances are sorted (nearest first)
-                val distances = jsonArray.mapNotNull { it["distanceMeters"]?.toString()?.toDoubleOrNull() }
+                val distances = jsonArray.mapNotNull { it["distanceMeters"]?.toString()?.toIntOrNull() }
                 val sortedDistances = distances.sorted()
                 assertEquals(sortedDistances, distances, "Restrooms should be sorted by distance (nearest first)")
             }
@@ -485,7 +485,7 @@ class RestroomApiTest : BaseIntegrationTest() {
                 assertEquals("Active Restroom", name, "Should return the active restroom, not the inactive one")
 
                 // Verify distance is reasonable
-                val distance = returnedRestroom["distanceMeters"]?.toString()?.toDoubleOrNull()
+                val distance = returnedRestroom["distanceMeters"]?.toString()?.toIntOrNull()
                 assertNotNull(distance, "Active restroom should have distanceMeters")
                 assertTrue(distance!! >= 0, "Distance should be non-negative")
             }

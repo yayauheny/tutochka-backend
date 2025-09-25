@@ -266,7 +266,10 @@ class RestroomControllerTest : RoutingTestBase() {
                         "lat": 55.7558,
                         "lon": 37.6176,
                         "dataSource": "MANUAL",
-                        "amenities": {}
+                        "amenities": {},
+                        "parentPlaceName": "Test Mall",
+                        "parentPlaceType": "SHOPPING_MALL",
+                        "inheritParentSchedule": true
                     }
                     """.trimIndent()
 

@@ -25,6 +25,9 @@ class RestroomEntity(
     var dataSource by RestroomsTable.dataSource
     var status by RestroomsTable.status
     var amenities by RestroomsTable.amenities
+    var parentPlaceName by RestroomsTable.parentPlaceName
+    var parentPlaceType by RestroomsTable.parentPlaceType
+    var inheritParentSchedule by RestroomsTable.inheritParentSchedule
     var createdAt by RestroomsTable.createdAt
     var updatedAt by RestroomsTable.updatedAt
 
@@ -44,11 +47,14 @@ class RestroomEntity(
             dataSource = dataSource,
             status = status,
             amenities = amenities,
+            parentPlaceName = parentPlaceName,
+            parentPlaceType = parentPlaceType,
+            inheritParentSchedule = inheritParentSchedule,
             createdAt = createdAt,
             updatedAt = updatedAt,
         )
 
-    fun toNearestRestroomResponseDto(distanceMeters: Double): NearestRestroomResponseDto =
+    fun toNearestRestroomResponseDto(distanceMeters: Int): NearestRestroomResponseDto =
         NearestRestroomResponseDto(
             id = id.value,
             cityId = city?.id?.value,
@@ -64,6 +70,9 @@ class RestroomEntity(
             dataSource = dataSource,
             status = status,
             amenities = amenities,
+            parentPlaceName = parentPlaceName,
+            parentPlaceType = parentPlaceType,
+            inheritParentSchedule = inheritParentSchedule,
             createdAt = createdAt,
             updatedAt = updatedAt,
             distanceMeters = distanceMeters
