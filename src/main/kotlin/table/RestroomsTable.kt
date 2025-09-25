@@ -25,6 +25,9 @@ object RestroomsTable : UUIDTable("restrooms") {
     val dataSource = enumerationByName("data_source", 20, DataSourceType::class)
     val status = enumerationByName("status", 20, RestroomStatus::class)
     val amenities = jsonb<JsonObject>("amenities", Json).default(JsonObject(emptyMap()))
+    val parentPlaceName = varchar("parent_place_name", 255).nullable()
+    val parentPlaceType = varchar("parent_place_type", 50).nullable()
+    val inheritParentSchedule = bool("inherit_parent_schedule").default(false)
     val createdAt = timestamp("created_at").clientDefault { Instant.now() }
     val updatedAt = timestamp("updated_at").clientDefault { Instant.now() }
 }

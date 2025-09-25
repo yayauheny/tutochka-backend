@@ -37,21 +37,24 @@ CREATE TABLE cities
 -- changeset yayauheny:init-restrooms-table
 CREATE TABLE restrooms
 (
-    id                 UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    city_id            UUID                   REFERENCES cities (id) ON DELETE SET NULL,
-    name               VARCHAR(255),
-    description        VARCHAR(255),
-    address            VARCHAR(255)           NOT NULL,
-    phones             JSONB,
-    work_time          JSONB,
-    fee_type           VARCHAR(20)            NOT NULL,
-    accessibility_type VARCHAR(20)            NOT NULL,
-    coordinates        GEOGRAPHY(Point, 4326) NOT NULL,
-    data_source        VARCHAR(20)            NOT NULL,
-    status             VARCHAR(20)            NOT NULL,
-    amenities          JSONB            DEFAULT '{}'::jsonb,
-    created_at         TIMESTAMP              NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    updated_at         TIMESTAMP              NOT NULL DEFAULT CURRENT_TIMESTAMP
+    id                     UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    city_id                UUID                   REFERENCES cities (id) ON DELETE SET NULL,
+    name                   VARCHAR(255),
+    description            VARCHAR(255),
+    address                VARCHAR(255)           NOT NULL,
+    phones                 JSONB,
+    work_time              JSONB,
+    fee_type               VARCHAR(20)            NOT NULL,
+    accessibility_type     VARCHAR(20)            NOT NULL,
+    coordinates            GEOGRAPHY(Point, 4326) NOT NULL,
+    data_source            VARCHAR(20)            NOT NULL,
+    status                 VARCHAR(20)            NOT NULL,
+    amenities              JSONB            DEFAULT '{}'::jsonb,
+    parent_place_name      VARCHAR(255),
+    parent_place_type      VARCHAR(50),
+    inherit_parent_schedule BOOLEAN DEFAULT false,
+    created_at             TIMESTAMP              NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at             TIMESTAMP              NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
 -- rollback DROP TABLE restrooms;
 

@@ -109,8 +109,8 @@ class RestroomRepositoryImpl : RestroomRepository {
                 """
                 SELECT id, city_id, name, description, address, phones, work_time,
                        fee_type, accessibility_type, coordinates, data_source, status, amenities,
-                       created_at, updated_at,
-                       ST_Distance(coordinates, ST_SetSRID(ST_MakePoint(?, ?), 4326)::geography) AS distance_meters
+                       parent_place_name, parent_place_type, inherit_parent_schedule, created_at, updated_at,
+                       floor(ST_Distance(coordinates, ST_SetSRID(ST_MakePoint(?, ?), 4326)::geography))::integer AS distance_meters
                 FROM restrooms
                 WHERE status = ?
                 ORDER BY coordinates <-> ST_SetSRID(ST_MakePoint(?, ?), 4326)::geography
@@ -119,12 +119,12 @@ class RestroomRepositoryImpl : RestroomRepository {
 
             val args =
                 listOf(
-                    DoubleColumnType() to longitude, // 1
-                    DoubleColumnType() to latitude, // 2
-                    RestroomsTable.status.columnType to RestroomStatus.ACTIVE, // 3
-                    DoubleColumnType() to longitude, // 4
-                    DoubleColumnType() to latitude, // 5
-                    IntegerColumnType() to limit // 6
+                    DoubleColumnType() to longitude,
+                    DoubleColumnType() to latitude,
+                    RestroomsTable.status.columnType to RestroomStatus.ACTIVE,
+                    DoubleColumnType() to longitude,
+                    DoubleColumnType() to latitude,
+                    IntegerColumnType() to limit
                 )
 
             exec(sql, args) { rs ->
@@ -152,9 +152,12 @@ class RestroomRepositoryImpl : RestroomRepository {
                             dataSource = DataSourceType.valueOf(rs.getString("data_source")),
                             status = RestroomStatus.valueOf(rs.getString("status")),
                             amenities = amenitiesStr?.let { Json.parseToJsonElement(it) as? JsonObject } ?: JsonObject(emptyMap()),
+                            parentPlaceName = rs.getString("parent_place_name"),
+                            parentPlaceType = rs.getString("parent_place_type"),
+                            inheritParentSchedule = rs.getBoolean("inherit_parent_schedule"),
                             createdAt = rs.getTimestamp("created_at").toInstant(),
                             updatedAt = rs.getTimestamp("updated_at").toInstant(),
-                            distanceMeters = rs.getDouble("distance_meters")
+                            distanceMeters = rs.getInt("distance_meters")
                         )
                     )
                 }
@@ -191,5 +194,8 @@ class RestroomRepositoryImpl : RestroomRepository {
         dataSource = dto.dataSource
         status = dto.status
         amenities = dto.amenities
+        parentPlaceName = dto.parentPlaceName
+        parentPlaceType = dto.parentPlaceType
+        inheritParentSchedule = dto.inheritParentSchedule
     }
 }

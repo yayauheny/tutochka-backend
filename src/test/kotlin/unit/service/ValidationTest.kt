@@ -72,11 +72,11 @@ class ValidationTest {
             val validDto =
                 CityCreateDto(
                     countryId = UUID.randomUUID(),
-                    nameRu = "Москва",
-                    nameEn = "Moscow",
-                    region = "Московская область",
-                    lat = 55.7558,
-                    lon = 37.6176
+                    nameRu = "Минск",
+                    nameEn = "Minsk",
+                    region = "Минская область",
+                    lat = 53.9006,
+                    lon = 27.5590
                 )
 
             val result = validDto.validateWith(cityCreateValidator)
@@ -90,8 +90,8 @@ class ValidationTest {
             val validDto =
                 CityCreateDto(
                     countryId = UUID.randomUUID(),
-                    nameRu = "Москва",
-                    nameEn = "Moscow",
+                    nameRu = "Минск",
+                    nameEn = "Minsk",
                     region = null,
                     lat = 90.0, // Maximum valid latitude
                     lon = 180.0 // Maximum valid longitude
@@ -133,7 +133,10 @@ class ValidationTest {
                     lat = 55.7558,
                     lon = 37.6176,
                     dataSource = DataSourceType.MANUAL,
-                    amenities = buildJsonObject { put("wifi", true) }
+                    amenities = buildJsonObject { put("wifi", true) },
+                    parentPlaceName = null,
+                    parentPlaceType = null,
+                    inheritParentSchedule = false
                 )
 
             val result = validDto.validateWith(restroomCreateValidator)
@@ -245,7 +248,10 @@ class ValidationTest {
                     91.0, // Invalid lat
                     181.0, // Invalid lon
                     DataSourceType.MANUAL,
-                    buildJsonObject {}
+                    buildJsonObject {},
+                    null,
+                    null,
+                    false
                 ) // Multiple issues
 
             val result = invalidDto.validateWith(restroomCreateValidator)
@@ -275,12 +281,12 @@ class ValidationTest {
         @JvmStatic
         fun invalidCityData(): Stream<Arguments> =
             Stream.of(
-                Arguments.of(CityCreateDto(UUID.randomUUID(), "", "Moscow", null, 55.7558, 37.6176), 1), // Empty nameRu
-                Arguments.of(CityCreateDto(UUID.randomUUID(), "Москва", "", null, 55.7558, 37.6176), 1), // Empty nameEn
-                Arguments.of(CityCreateDto(UUID.randomUUID(), "Москва", "Moscow", null, 91.0, 37.6176), 1), // Invalid lat > 90
-                Arguments.of(CityCreateDto(UUID.randomUUID(), "Москва", "Moscow", null, -91.0, 37.6176), 1), // Invalid lat < -90
-                Arguments.of(CityCreateDto(UUID.randomUUID(), "Москва", "Moscow", null, 55.7558, 181.0), 1), // Invalid lon > 180
-                Arguments.of(CityCreateDto(UUID.randomUUID(), "Москва", "Moscow", null, 55.7558, -181.0), 1), // Invalid lon < -180
+                Arguments.of(CityCreateDto(UUID.randomUUID(), "", "Minsk", null, 53.9006, 27.5590), 1), // Empty nameRu
+                Arguments.of(CityCreateDto(UUID.randomUUID(), "Минск", "", null, 53.9006, 27.5590), 1), // Empty nameEn
+                Arguments.of(CityCreateDto(UUID.randomUUID(), "Минск", "Minsk", null, 91.0, 27.5590), 1), // Invalid lat > 90
+                Arguments.of(CityCreateDto(UUID.randomUUID(), "Минск", "Minsk", null, -91.0, 27.5590), 1), // Invalid lat < -90
+                Arguments.of(CityCreateDto(UUID.randomUUID(), "Минск", "Minsk", null, 53.9006, 181.0), 1), // Invalid lon > 180
+                Arguments.of(CityCreateDto(UUID.randomUUID(), "Минск", "Minsk", null, 53.9006, -181.0), 1), // Invalid lon < -180
                 Arguments.of(CityCreateDto(UUID.randomUUID(), "", "", null, 91.0, 181.0), 4), // Multiple issues
             )
 
@@ -300,7 +306,10 @@ class ValidationTest {
                         55.7558,
                         37.6176,
                         DataSourceType.MANUAL,
-                        buildJsonObject {}
+                        buildJsonObject {},
+                        null,
+                        null,
+                        false
                     ),
                     1
                 ),
@@ -317,7 +326,10 @@ class ValidationTest {
                         91.0,
                         37.6176,
                         DataSourceType.MANUAL,
-                        buildJsonObject {} // Invalid lat > 90
+                        buildJsonObject {}, // Invalid lat > 90
+                        null,
+                        null,
+                        false
                     ),
                     1
                 ),
@@ -334,7 +346,10 @@ class ValidationTest {
                         -91.0,
                         37.6176,
                         DataSourceType.MANUAL,
-                        buildJsonObject {} // Invalid lat < -90
+                        buildJsonObject {}, // Invalid lat < -90
+                        null,
+                        null,
+                        false
                     ),
                     1
                 ),
@@ -351,7 +366,10 @@ class ValidationTest {
                         55.7558,
                         181.0,
                         DataSourceType.MANUAL,
-                        buildJsonObject {} // Invalid lon > 180
+                        buildJsonObject {}, // Invalid lon > 180
+                        null,
+                        null,
+                        false
                     ),
                     1
                 ),
@@ -368,7 +386,10 @@ class ValidationTest {
                         55.7558,
                         -181.0,
                         DataSourceType.MANUAL,
-                        buildJsonObject {} // Invalid lon < -180
+                        buildJsonObject {}, // Invalid lon < -180
+                        null,
+                        null,
+                        false
                     ),
                     1
                 ),

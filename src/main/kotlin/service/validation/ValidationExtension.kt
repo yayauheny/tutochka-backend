@@ -19,16 +19,13 @@ sealed class Validated<T> {
 }
 
 fun ValidationError.pathAsString(): String {
-    // Попробуем использовать более стабильный подход
     return try {
-        // Проверяем, есть ли dataPath (более новая версия Konform)
         val dataPath = this::class.java.getDeclaredField("dataPath")
         dataPath.isAccessible = true
         val pathValue = dataPath.get(this) as? List<*>
         if (pathValue != null && pathValue.isNotEmpty()) {
             pathValue.joinToString(".") { it.toString() }
         } else {
-            // Fallback к старому методу, но с улучшенным парсингом
             val pathStr = this.path.toString()
             when {
                 pathStr.contains("PropRef(") -> {
@@ -39,7 +36,6 @@ fun ValidationError.pathAsString(): String {
             }
         }
     } catch (e: Exception) {
-        // Если dataPath недоступен, используем улучшенный fallback
         val pathStr = this.path.toString()
         when {
             pathStr.contains("PropRef(") -> {

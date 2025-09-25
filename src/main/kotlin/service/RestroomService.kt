@@ -55,7 +55,7 @@ private fun RestroomCreateDto.toResponseDto(
     id: UUID,
     createdAt: Instant,
     updatedAt: Instant,
-    distanceMeters: Double? = null
+    distanceMeters: Int? = null
 ) = RestroomResponseDto(
     id = id,
     cityId = cityId,
@@ -71,6 +71,9 @@ private fun RestroomCreateDto.toResponseDto(
     dataSource = dataSource,
     status = RestroomStatus.ACTIVE,
     amenities = amenities,
+    parentPlaceName = parentPlaceName,
+    parentPlaceType = parentPlaceType,
+    inheritParentSchedule = inheritParentSchedule,
     createdAt = createdAt,
     updatedAt = updatedAt,
     distanceMeters = distanceMeters
