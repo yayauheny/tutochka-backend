@@ -47,9 +47,9 @@ data class RestroomCreateDto(
     )
     val amenities: JsonObject,
     @Schema(description = "Parent place name (e.g., shopping mall, restaurant)", example = "Central Park Mall")
-    val parentPlaceName: String?,
+    val parentPlaceName: String? = null,
     @Schema(description = "Parent place type", example = "SHOPPING_MALL")
-    val parentPlaceType: String?,
+    val parentPlaceType: String? = null,
     @Schema(description = "Whether to inherit parent place schedule", example = "false")
     val inheritParentSchedule: Boolean = false
 )
