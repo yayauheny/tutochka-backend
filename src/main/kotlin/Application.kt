@@ -1,5 +1,6 @@
 package yayauheny.by
 
+import com.zaxxer.hikari.HikariDataSource
 import io.ktor.serialization.kotlinx.json.json
 import io.ktor.server.application.Application
 import io.ktor.server.application.install
@@ -10,7 +11,6 @@ import java.time.Instant
 import java.util.UUID
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.modules.SerializersModule
-import net.mamoe.yamlkt.Yaml.Default.serializersModule
 import org.koin.ktor.ext.inject
 import org.koin.ktor.plugin.Koin
 import org.koin.logger.slf4jLogger
@@ -22,7 +22,6 @@ import yayauheny.by.di.databaseConfigModule
 import yayauheny.by.di.serviceModule
 import yayauheny.by.util.InstantSerializer
 import yayauheny.by.util.UUIDSerializer
-import com.zaxxer.hikari.HikariDataSource
 
 fun main(args: Array<String>) =
     io.ktor.server.netty.EngineMain

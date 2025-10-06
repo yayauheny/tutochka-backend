@@ -9,12 +9,14 @@ import kotlin.test.assertTrue
 import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.DisplayName
 import org.junit.jupiter.api.Nested
+import org.junit.jupiter.api.Tag
 import org.junit.jupiter.api.Test
 import support.helpers.DatabaseTestHelper
 import support.helpers.assertJsonContentType
 import support.helpers.testGet
 import support.helpers.testPost
 
+@Tag("integration")
 class CityApiTest : BaseIntegrationTest() {
     @Nested
     @DisplayName("GET /api/v1/cities")

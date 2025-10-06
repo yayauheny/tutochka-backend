@@ -15,6 +15,7 @@ import kotlin.test.assertTrue
 import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.DisplayName
 import org.junit.jupiter.api.Nested
+import org.junit.jupiter.api.Tag
 import org.junit.jupiter.api.Test
 import support.helpers.DatabaseTestHelper
 import support.helpers.assertJsonContentType
@@ -24,6 +25,7 @@ import support.helpers.parseErrorResponse
 import support.helpers.assertHasFieldError
 import support.helpers.assertHasValidationErrors
 
+@Tag("integration")
 class RestroomApiTest : BaseIntegrationTest() {
     @Test
     @DisplayName("GIVEN multiple restrooms WHEN GET with pagination THEN return paginated results")
@@ -344,7 +346,7 @@ class RestroomApiTest : BaseIntegrationTest() {
                 val closeDistance = closeRestroom!!["distanceMeters"]?.toString()?.toIntOrNull()
                 assertNotNull(closeDistance, "Close Restroom should have distanceMeters")
                 // Expected distance: ~11m (55.7559 - 55.7558 = 0.0001 degrees ≈ 11m)
-                assertTrue(closeDistance!! in 5.0..20.0, "Close Restroom distance should be approximately 11m (±15m tolerance)")
+                assertTrue(closeDistance!! in 5..20, "Close Restroom distance should be approximately 11m (±15m tolerance)")
 
                 // Verify approximate distance calculation for Medium Restroom
                 val mediumRestroom =
@@ -355,7 +357,7 @@ class RestroomApiTest : BaseIntegrationTest() {
                 val mediumDistance = mediumRestroom!!["distanceMeters"]?.toString()?.toIntOrNull()
                 assertNotNull(mediumDistance, "Medium Restroom should have distanceMeters")
                 // Expected distance: ~55m (55.7563 - 55.7558 = 0.0005 degrees ≈ 55m)
-                assertTrue(mediumDistance!! in 40.0..70.0, "Medium Restroom distance should be approximately 55m (±15m tolerance)")
+                assertTrue(mediumDistance!! in 40..70, "Medium Restroom distance should be approximately 55m (±15m tolerance)")
 
                 // Verify approximate distance calculation for Far Restroom
                 val farRestroom =
@@ -366,7 +368,7 @@ class RestroomApiTest : BaseIntegrationTest() {
                 val farDistance = farRestroom!!["distanceMeters"]?.toString()?.toIntOrNull()
                 assertNotNull(farDistance, "Far Restroom should have distanceMeters")
                 // Expected distance: ~111m (55.7568 - 55.7558 = 0.001 degrees ≈ 111m)
-                assertTrue(farDistance!! in 95.0..125.0, "Far Restroom distance should be approximately 111m (±15m tolerance)")
+                assertTrue(farDistance!! in 95..125, "Far Restroom distance should be approximately 111m (±15m tolerance)")
 
                 // Verify distance ordering: Close < Medium < Far
                 assertTrue(closeDistance < mediumDistance, "Close Restroom should be closer than Medium Restroom")
