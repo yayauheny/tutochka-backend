@@ -1,0 +1,141 @@
+---
+description:
+globs:
+alwaysApply: true
+---
+## Core Principles
+- Follow SOLID, DRY, KISS, and YAGNI principles
+- Adhere to OWASP security best practices
+- Break tasks into smallest units and solve problems step-by-step
+
+## Technology Stack
+- Framework: Kotlin Ktor 3.x with Kotlin 2.1+
+- JDK: 21 (LTS)
+- Build: Gradle with Kotlin DSL
+- Dependencies: Ktor Server Core/Netty, kotlinx.serialization, Exposed, PostGIS, Liquibase, Testcontainers, Koin, Logback
+
+## Application Structure
+- Keep existing structure (entity, repository, service, routes)
+- Do not force feature-based folders if not explicitly requested
+- Structure should remain similar to Java projects for consistency
+
+src/main/kotlin/com/company/app/
+├── entity/           # Database entities (Exposed tables, DTOs)
+├── repository/       # Data access layer
+├── service/          # Business logic
+├── route/            # Ktor routes
+└── config/           # DI, configs, utils
+
+Tests mirror this structure under src/test/kotlin
+
+## Application Logic Design
+1. Routes: only handle request/response, delegate logic
+2. Services: contain business rules, call repositories
+3. Repositories: Exposed queries + DB transactions
+4. Entities: Data classes for models
+5. DTOs: Transfer data between layers
+
+## Entities & Data Classes
+- Use data class for DTOs
+- Use object Table : UUIDTable() for Exposed entities
+- Use UUID or auto-incremented integers for IDs
+- Prefer immutability (val over var)
+
+## Repository Pattern Example
+interface ToiletRepository {
+    suspend fun findNearest(lat: Double, lon: Double, radiusMeters: Double): List<ToiletDTO>
+}
+
+class ToiletRepositoryImpl : ToiletRepository {
+    override suspend fun findNearest(lat: Double, lon: Double, radiusMeters: Double): List<ToiletDTO> =
+        newSuspendedTransaction {
+            Toilets
+                .select {
+                    ST_DWithin(Toilets.location, ST_MakePoint(lat, lon), radiusMeters)
+                }
+                .map { it.toToiletDTO() }
+        }
+}
+
+## Service Layer
+- Services must not contain SQL, only business logic
+- Use dependency injection with Koin
+- Throw domain-specific exceptions, not generic ones
+
+## Error Handling
+- Use sealed classes or Result for domain errors
+- For REST errors, use Ktor StatusPages
+- Map exceptions to consistent JSON responses
+
+## Security
+- Use Ktor Authentication (JWT if needed)
+- Always set security headers (X-Frame-Options, CSP, HSTS, etc.)
+- Avoid exposing stack traces to clients
+
+## Configuration Management
+- Use type-safe configuration via HOCON/YAML
+- Expose configs via DI
+- Keep secrets in environment variables, not in code
+
+## Coroutines & Kotlin Best Practices
+- Use suspend functions for DB and service methods
+- Avoid runBlocking in production code
+- Prefer Flow for streams instead of custom callbacks
+- Use scope functions (let, run, apply, also) instead of boilerplate
+- Avoid lateinit unless really needed
+- Prefer top-level functions or extensions over static utils
+- Replace Java Optional with Kotlin nullable types (T?)
+- Do not reimplement equals/hashCode/toString, use data class
+- Use Kotlin collections (mutableListOf, mapOf) over Java ones
+- Prefer immutability and expression-style functions
+- Use inline reified functions for generic helpers
+- Prefer sealed classes for error handling
+
+## Exposed ORM Guidelines
+- Use Exposed DSL instead of raw SQL where possible
+- Always wrap DB calls in transaction {} or newSuspendedTransaction {} for coroutines
+- Use batchInsert and batchUpdate for bulk operations
+- Fetch only required columns (avoid SELECT *)
+- Map query results to DTOs; do not expose ResultRow
+- Keep transactions short and focused
+- Use aliases for subqueries
+- Use Liquibase for schema migrations, not Exposed DDL
+
+## Geospatial Data (PostGIS)
+- Use built-in PostGIS functions:
+  - ST_DWithin for radius queries
+  - ST_Intersects, ST_Contains for spatial relations
+  - ST_Distance for measuring distances
+- Always use GiST or SP-GiST indexes on geometry/geography
+- Prefer ST_DWithin with geography type for Earth distances
+- Use bounding boxes (ST_MakeEnvelope) for rough filters
+- Avoid fetching all geometries into memory; filter in SQL
+- Add partial indexes for common query conditions
+- Use EXPLAIN ANALYZE to optimize queries
+
+## Testing Guidelines
+- Unit Tests:
+  - Use JUnit 5 + MockK
+  - Use runTest {} for suspend functions
+  - Test both happy-path and error cases
+
+- Integration Tests:
+  - Use Testcontainers with PostgreSQL
+  - Run Liquibase migrations before tests
+  - Test repositories and services directly (no mocks)
+  - Reset DB state between tests
+
+- Separation:
+  - Keep unit tests in src/test/kotlin
+  - Keep integration tests in src/integrationTest/kotlin if possible
+  - Do not mix unit and integration tests in the same package
+
+- Route tests:
+  - Use ktor-server-test-host for endpoints
+  - Cover positive and negative test cases
+
+- General rules:
+  - Minimum 80% coverage overall, 90%+ for repositories and services
+  - Test edge cases: empty collections, null values, boundaries
+  - Test failure paths: exceptions, validation errors, timeouts
+  - All public APIs must have integration tests

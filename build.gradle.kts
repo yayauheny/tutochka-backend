@@ -1,3 +1,7 @@
+import org.jooq.impl.SQLDataType
+import org.jooq.meta.jaxb.CustomType
+import org.jooq.meta.jaxb.ForcedType
+import org.jooq.meta.jaxb.Logging
 import org.testcontainers.containers.PostgreSQLContainer
 import org.testcontainers.utility.DockerImageName
 
@@ -28,6 +32,14 @@ java {
     }
 }
 
+sourceSets {
+    main {
+        java {
+            srcDir("build/generated-src/jooq")
+        }
+    }
+}
+
 buildscript {
     repositories {
         mavenCentral()
@@ -40,16 +52,23 @@ buildscript {
 
 dependencies {
     jooqGenerator(libs.postgresql)
+    jooqGenerator(libs.postgis)
 
     implementation(libs.bundles.ktorServerBundle)
     implementation(libs.bundles.koinBundle)
     implementation(libs.bundles.exposedBundle)
     implementation(libs.bundles.swaggerBundle)
     implementation(libs.bundles.validationBundle)
-    implementation(libs.bundles.databaseBundle)
-    implementation(libs.jooq)
+    implementation(libs.bundles.jooqBundle)
+    implementation(libs.postgis)
+    implementation(libs.hikaricp)
     implementation(libs.liquibaseCore)
     implementation(libs.logbackClassic)
+    implementation(libs.jooqPostgisSpatial) {
+        exclude(group = "org.jooq")
+        exclude(group = "org.postgresql")
+        exclude(group = "net.postgis")
+    }
 
     runtimeOnly(libs.postgresql)
 
@@ -116,21 +135,39 @@ jooq {
         create("main") {
             generateSchemaSourceOnCompilation.set(false)
             jooqConfiguration.apply {
-                logging =
-                    org.jooq.meta.jaxb.Logging
-                        .valueOf(jooqLoggingLevel)
+                logging = Logging.valueOf(jooqLoggingLevel)
+
                 jdbc.apply {
                     driver = liquibaseDriver
                     url = containerInstance?.jdbcUrl
                     user = containerInstance?.username
                     password = containerInstance?.password
                 }
+
                 generator.apply {
                     name = "org.jooq.codegen.KotlinGenerator"
                     database.apply {
                         name = "org.jooq.meta.postgres.PostgresDatabase"
                         excludes = jooqDatabaseExcludes
                         inputSchema = jooqDatabaseSchema
+
+                        withCustomTypes(
+                            CustomType()
+                                .withName("Geometry")
+                                .withBinding("net.dmitry.jooq.postgis.spatial.binding.JTSGeometryBinding")
+                                .withType("org.locationtech.jts.geom.Geometry")
+                        )
+                        withForcedTypes(
+                            ForcedType()
+                                .withName(SQLDataType.JSONB.typeName)
+                                .withIncludeTypes("jsonb"),
+                            ForcedType()
+                                .withName(SQLDataType.INSTANT.typeName)
+                                .withIncludeTypes("(?i:TIMESTAMP\\s+(WITH|WITHOUT)\\s+TIME\\s+ZONE)"),
+                            ForcedType()
+                                .withName("Geometry")
+                                .withIncludeTypes("(geometry|GEOMETRY)")
+                        )
                     }
                     generate.apply {
                         isDeprecated = false
@@ -200,6 +237,20 @@ tasks.check {
 
 val ktlintVersion = providers.gradleProperty("ktlint.version").get()
 
+tasks.withType<org.jlleitschuh.gradle.ktlint.tasks.BaseKtLintCheckTask>().configureEach {
+    exclude { projectFileTree ->
+        projectFileTree.file.absolutePath.contains("/build/")
+    }
+}
+
+tasks.withType<org.jlleitschuh.gradle.ktlint.tasks.KtLintCheckTask>().configureEach {
+    exclude("**/build/**")
+}
+
+tasks.withType<org.jlleitschuh.gradle.ktlint.tasks.KtLintFormatTask>().configureEach {
+    exclude("**/build/**")
+}
+
 ktlint {
     version.set(ktlintVersion)
     debug.set(false)
@@ -210,15 +261,13 @@ ktlint {
     enableExperimentalRules.set(false)
 
     filter {
-        exclude(
-            "build/**",
-            "**/build/**",
-            "**/generated/**",
-            "**/build/generated-src/**",
-            "buildSrc/**",
-            "**/resources/**"
-        )
-        include("**/kotlin/**", "**/*.kt")
+        exclude { element ->
+            element.file.path.contains(File.separator + "build" + File.separator) ||
+                element.file.path.startsWith("build/") ||
+                element.file.path.contains("generated-src")
+        }
+
+        include("src/main/kotlin/**/*.kt", "src/test/kotlin/**/*.kt")
     }
 }
 
@@ -294,4 +343,7 @@ tasks.jacocoTestCoverageVerification {
             }
         }
     }
+}
+repositories {
+    mavenCentral()
 }
