@@ -17,6 +17,7 @@ ktlint = "12.1.1"
 konform = "0.11.0"
 jooqPlugin = "10.1.1"
 jooq = "3.20.8"
+jooqPostgisSpatial = "1.0"
 
 [plugins]
 kotlinJvm = { id = "org.jetbrains.kotlin.jvm", version.ref = "kotlin" }
@@ -48,7 +49,8 @@ exposedJdbc = { module = "org.jetbrains.exposed:exposed-jdbc", version.ref = "ex
 exposedJavaDateTime = { module = "org.jetbrains.exposed:exposed-java-time", version.ref = "exposed" }
 exposedJson = { module = "org.jetbrains.exposed:exposed-json", version.ref = "exposed" }
 postgresql = { module = "org.postgresql:postgresql", version.ref = "postgresql" }
-jooq = { module = "org.jooq:jooq", version.ref = "jooq" }
+jooqKotlin = { module = "org.jooq:jooq-kotlin", version.ref = "jooq" }
+jooqPostgisSpatial = { module = "io.github.oshai:jooq-postgis-spatial", version.ref = "jooqPostgisSpatial" }
 postgis = { module = "net.postgis:postgis-jdbc", version = "2025.1.1" }
 hikaricp = { module = "com.zaxxer:HikariCP", version.ref = "hikaricp" }
 liquibaseCore = { module = "org.liquibase:liquibase-core", version = "4.24.0" }
@@ -90,11 +92,12 @@ ktorServerBundle = [
     "ktorServerStatusPages",
     "ktorServerCallLogging"
 ]
-exposedBundle = ["exposedCore", "exposedDao", "exposedJdbc", "exposedJavaDateTime", "exposedJson"]
 koinBundle = ["koinKtor", "koinLogger"]
-swaggerBundle = ["swaggerCore", "swaggerAnnotations", "swaggerModels", "swaggerJaxrs2"]
-testingBundle = ["junitJupiter", "junitPlatformLauncher", "mockk", "kotlinxCoroutinesTest"]
+jooqBundle = ["jooqKotlin", "jooqPostgisSpatial"]
+exposedBundle = ["exposedCore", "exposedDao", "exposedJdbc", "exposedJavaDateTime", "exposedJson"]
 liquibaseBundle = ["liquibaseCore", "postgresql", "picocli"]
 validationBundle = ["konform"]
-databaseBundle = ["postgis", "hikaricp"]
+swaggerBundle = ["swaggerCore", "swaggerAnnotations", "swaggerModels", "swaggerJaxrs2"]
+
 testcontainersBundle = ["testcontainersPostgres", "testcontainersCore", "testcontainersJunit"]
+testingBundle = ["junitJupiter", "junitPlatformLauncher", "mockk", "kotlinxCoroutinesTest"]
