@@ -56,7 +56,6 @@ dependencies {
 
     implementation(libs.bundles.ktorServerBundle)
     implementation(libs.bundles.koinBundle)
-    implementation(libs.bundles.exposedBundle)
     implementation(libs.bundles.swaggerBundle)
     implementation(libs.bundles.validationBundle)
     implementation(libs.bundles.jooqBundle)
@@ -155,7 +154,7 @@ jooq {
                             CustomType()
                                 .withName("Geometry")
                                 .withBinding("net.dmitry.jooq.postgis.spatial.binding.JTSGeometryBinding")
-                                .withType("org.locationtech.jts.geom.Geometry")
+                                .withType("com.vividsolutions.jts.geom.Geometry")
                         )
                         withForcedTypes(
                             ForcedType()

@@ -14,19 +14,19 @@ import yayauheny.by.common.query.PageResponse
 import yayauheny.by.common.query.PaginationRequest
 import yayauheny.by.common.query.builder.QueryBuilder
 import yayauheny.by.common.query.builder.QueryExecutor
-import yayauheny.by.di.RestroomRepo
 import yayauheny.by.model.enums.RestroomStatus
 import yayauheny.by.model.restroom.NearestRestroomResponseDto
 import yayauheny.by.model.restroom.RestroomCreateDto
 import yayauheny.by.model.restroom.RestroomResponseDto
 import yayauheny.by.model.restroom.RestroomUpdateDto
+import yayauheny.by.repository.RestroomRepository
 import yayauheny.by.tables.references.RESTROOMS
 import yayauheny.by.util.stDWithin
 import yayauheny.by.util.stDistance
 
 class RestroomRepositoryImpl(
     private val ctx: DSLContext
-) : RestroomRepo {
+) : RestroomRepository {
     private val restroomFields =
         mapOf(
             "id" to
@@ -151,8 +151,7 @@ class RestroomRepositoryImpl(
                     RESTROOMS.ID
                         .eq(id)
                         .and(RESTROOMS.IS_DELETED.eq(false).or(RESTROOMS.IS_DELETED.isNull))
-                )
-                .fetchOne()
+                ).fetchOne()
                 ?.map { RestroomMapper.mapFromRecord(it) }
         }
 
@@ -196,11 +195,11 @@ class RestroomRepositoryImpl(
                 .execute() > 0
         }
 
-    suspend fun findNearestByLocation(
+    override suspend fun findNearestByLocation(
         latitude: Double,
         longitude: Double,
-        limit: Int = 5,
-        distanceMeters: Double = 1000.0
+        limit: Int? = 5,
+        distanceMeters: Int? = 1000
     ): List<NearestRestroomResponseDto> =
         withContext(Dispatchers.IO) {
             val distanceField = stDistance(RESTROOMS.COORDINATES, latitude, longitude)
@@ -212,8 +211,7 @@ class RestroomRepositoryImpl(
                     stDWithin(RESTROOMS.COORDINATES, latitude, longitude, distanceMeters)
                         .and(RESTROOMS.STATUS.eq(RestroomStatus.ACTIVE.name))
                         .and(RESTROOMS.IS_DELETED.eq(false).or(RESTROOMS.IS_DELETED.isNull))
-                )
-                .orderBy(distanceField.asc())
+                ).orderBy(distanceField.asc())
                 .limit(limit)
                 .fetch()
                 .map {
@@ -222,7 +220,7 @@ class RestroomRepositoryImpl(
                 }
         }
 
-    suspend fun findByCityId(
+    override suspend fun findByCityId(
         cityId: UUID,
         pagination: PaginationRequest
     ): PageResponse<RestroomResponseDto> =

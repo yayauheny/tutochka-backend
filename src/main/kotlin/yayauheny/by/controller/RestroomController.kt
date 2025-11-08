@@ -4,20 +4,24 @@ import io.ktor.http.HttpStatusCode
 import io.ktor.server.request.receive
 import io.ktor.server.response.respond
 import io.ktor.server.routing.Route
+import io.ktor.server.routing.delete
 import io.ktor.server.routing.get
 import io.ktor.server.routing.post
+import io.ktor.server.routing.put
 import io.ktor.server.routing.route
-import yayauheny.by.service.validation.validateAndThen
 import yayauheny.by.common.errors.NotFoundException
 import yayauheny.by.model.restroom.RestroomCreateDto
 import yayauheny.by.service.RestroomService
 import yayauheny.by.service.validation.NearestRestroomsParams
 import yayauheny.by.service.validation.nearestRestroomsParamsValidator
 import yayauheny.by.service.validation.restroomCreateValidator
+import yayauheny.by.service.validation.restroomUpdateValidator
+import yayauheny.by.service.validation.validateAndThen
 import yayauheny.by.util.createPaginationFromQuery
 import yayauheny.by.util.getDoubleFromQuery
 import yayauheny.by.util.getIntFromQuery
 import yayauheny.by.util.getUuidFromPath
+import yayauheny.by.util.toPaginationRequest
 
 class RestroomController(
     private val restroomService: RestroomService
@@ -25,7 +29,7 @@ class RestroomController(
     fun Route.restroomRoutes() {
         route("/restrooms") {
             get {
-                val pagination = call.createPaginationFromQuery()
+                val pagination = call.toPaginationRequest()
                 val pageResponse = restroomService.getAllRestrooms(pagination)
                 call.respond(HttpStatusCode.OK, pageResponse)
             }
@@ -65,6 +69,30 @@ class RestroomController(
                         restroomService.createRestroom(valid)
                     }
                 call.respond(HttpStatusCode.Created, restroom)
+            }
+
+            put("/{id}") {
+                val id = call.getUuidFromPath("id")
+                val updateDto = call.receive<yayauheny.by.model.restroom.RestroomUpdateDto>()
+                val restroom =
+                    updateDto.validateAndThen(restroomUpdateValidator) { valid ->
+                        restroomService.updateRestroom(id, valid)
+                    }
+                if (restroom != null) {
+                    call.respond(HttpStatusCode.OK, restroom)
+                } else {
+                    call.respond(HttpStatusCode.NotFound)
+                }
+            }
+
+            delete("/{id}") {
+                val id = call.getUuidFromPath("id")
+                val deleted = restroomService.deleteRestroom(id)
+                if (deleted) {
+                    call.respond(HttpStatusCode.OK, mapOf("deleted" to true))
+                } else {
+                    call.respond(HttpStatusCode.NotFound)
+                }
             }
         }
     }

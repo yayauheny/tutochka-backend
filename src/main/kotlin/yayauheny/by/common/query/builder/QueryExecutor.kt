@@ -24,9 +24,10 @@ class QueryExecutor<T>(
         additionalConditions: List<Condition> = emptyList(),
         fetchCount: Boolean = true
     ): PageResponse<T> {
-        val filtered = baseQuery
-            .applyFilters(builder, request.filters)
-            .applyAdditionalConditions(additionalConditions)
+        val filtered =
+            baseQuery
+                .applyFilters(builder, request.filters)
+                .applyAdditionalConditions(additionalConditions)
         return executePaginatedInternal(filtered, request, builder, fetchCount)
     }
 
@@ -37,9 +38,10 @@ class QueryExecutor<T>(
         additionalConditions: List<Condition> = emptyList(),
         fetchCount: Boolean = true
     ): PageResponse<T> {
-        val filtered = baseQuery
-            .applyFilters(builder, request.filters)
-            .applyAdditionalConditions(additionalConditions)
+        val filtered =
+            baseQuery
+                .applyFilters(builder, request.filters)
+                .applyAdditionalConditions(additionalConditions)
         return executePaginatedInternal(filtered, request, builder, fetchCount)
     }
 
@@ -51,9 +53,10 @@ class QueryExecutor<T>(
         builder: QueryBuilder,
         additionalConditions: List<Condition> = emptyList()
     ): T? {
-        val filtered = baseQuery
-            .applyFilters(builder, filters)
-            .applyAdditionalConditions(additionalConditions)
+        val filtered =
+            baseQuery
+                .applyFilters(builder, filters)
+                .applyAdditionalConditions(additionalConditions)
         val sorted = filtered.applySorting(builder, sort, direction)
         return sorted.limit(1).fetchOne()?.map(mapper)
     }
@@ -80,9 +83,10 @@ class QueryExecutor<T>(
         builder: QueryBuilder,
         additionalConditions: List<Condition> = emptyList()
     ): List<T> {
-        val filtered = baseQuery
-            .applyFilters(builder, filters)
-            .applyAdditionalConditions(additionalConditions)
+        val filtered =
+            baseQuery
+                .applyFilters(builder, filters)
+                .applyAdditionalConditions(additionalConditions)
         val sorted = filtered.applySorting(builder, sort, direction)
         return sorted.fetch().map(mapper)
     }
@@ -122,17 +126,13 @@ class QueryExecutor<T>(
     }
 }
 
-private fun <R : Record> SelectConditionStep<R>.applyAdditionalConditions(
-    extraConditions: List<Condition>
-): SelectConditionStep<R> {
+private fun <R : Record> SelectConditionStep<R>.applyAdditionalConditions(extraConditions: List<Condition>): SelectConditionStep<R> {
     var step = this
     extraConditions.forEach { step = step.and(it) }
     return step
 }
 
-private fun <R : Record> SelectWhereStep<R>.applyAdditionalConditions(
-    extraConditions: List<Condition>
-): SelectConditionStep<R> {
+private fun <R : Record> SelectWhereStep<R>.applyAdditionalConditions(extraConditions: List<Condition>): SelectConditionStep<R> {
     var step: SelectConditionStep<R> = this.where(DSL.trueCondition())
     extraConditions.forEach { step = step.and(it) }
     return step

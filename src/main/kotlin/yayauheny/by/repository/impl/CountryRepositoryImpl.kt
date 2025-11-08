@@ -1,29 +1,22 @@
 package yayauheny.by.repository.impl
 
-import java.util.UUID
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import org.jooq.DSLContext
-import yayauheny.by.common.mapper.CityMapper
 import yayauheny.by.common.mapper.CountryMapper
-import yayauheny.by.common.query.FieldMeta
-import yayauheny.by.common.query.FieldParsers
-import yayauheny.by.common.query.FilterCriteria
-import yayauheny.by.common.query.FilterOperator
-import yayauheny.by.common.query.PageResponse
-import yayauheny.by.common.query.PaginationRequest
+import yayauheny.by.common.query.*
 import yayauheny.by.common.query.builder.QueryBuilder
 import yayauheny.by.common.query.builder.QueryExecutor
-import yayauheny.by.di.CountryRepo
 import yayauheny.by.model.country.CountryCreateDto
 import yayauheny.by.model.country.CountryResponseDto
 import yayauheny.by.model.country.CountryUpdateDto
-import yayauheny.by.tables.references.CITIES
+import yayauheny.by.repository.CountryRepository
 import yayauheny.by.tables.references.COUNTRIES
+import java.util.*
 
 class CountryRepositoryImpl(
     private val ctx: DSLContext
-) : CountryRepo {
+) : CountryRepository {
     private val countryFields =
         mapOf(
             "id" to
@@ -123,8 +116,7 @@ class CountryRepositoryImpl(
                     COUNTRIES.ID
                         .eq(id)
                         .and(COUNTRIES.IS_DELETED.eq(false).or(COUNTRIES.IS_DELETED.isNull))
-                )
-                .fetchOne()
+                ).fetchOne()
                 ?.map { CountryMapper.mapFromRecord(it) }
         }
 

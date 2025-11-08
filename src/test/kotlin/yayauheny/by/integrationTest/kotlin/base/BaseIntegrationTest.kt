@@ -1,8 +1,5 @@
 package integration.base
 
-import java.io.OutputStream
-import java.sql.DriverManager
-import java.sql.SQLException
 import liquibase.Contexts
 import liquibase.LabelExpression
 import liquibase.Scope
@@ -17,8 +14,9 @@ import liquibase.database.DatabaseFactory
 import liquibase.database.jvm.JdbcConnection
 import liquibase.exception.CommandExecutionException
 import liquibase.resource.ClassLoaderResourceAccessor
-import org.jetbrains.exposed.sql.Database
-import org.jetbrains.exposed.sql.transactions.transaction
+import org.jooq.DSLContext
+import org.jooq.SQLDialect
+import org.jooq.impl.DSL
 import org.junit.jupiter.api.BeforeAll
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.TestInstance
@@ -26,6 +24,9 @@ import org.testcontainers.containers.PostgreSQLContainer
 import org.testcontainers.junit.jupiter.Container
 import org.testcontainers.junit.jupiter.Testcontainers
 import org.testcontainers.utility.DockerImageName
+import java.io.OutputStream
+import java.sql.DriverManager
+import java.sql.SQLException
 
 @Testcontainers
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
@@ -52,10 +53,7 @@ abstract class BaseIntegrationTest {
                 DriverManager
                     .getConnection(postgres.jdbcUrl, postgres.username, postgres.password)
                     .use { connection ->
-                        val database =
-                            DatabaseFactory
-                                .getInstance()
-                                .findCorrectDatabaseImplementation(JdbcConnection(connection))
+                        val database = DatabaseFactory.getInstance().findCorrectDatabaseImplementation(JdbcConnection(connection))
                         val changeLogFile = "db/changelog/db.changelog-master.yml"
                         val scopeObjects =
                             mapOf(
@@ -108,24 +106,27 @@ abstract class BaseIntegrationTest {
         }
     }
 
-    protected lateinit var testDatabase: Database
+    private lateinit var dslContext: DSLContext
 
     @BeforeEach
     fun setupDatabase() {
-        testDatabase =
-            Database.connect(
-                url = postgres.jdbcUrl,
-                driver = "org.postgresql.Driver",
-                user = postgres.username,
-                password = postgres.password
+        dslContext =
+            DSL.using(
+                DriverManager.getConnection(postgres.jdbcUrl, postgres.username, postgres.password),
+                SQLDialect.POSTGRES
             )
-        transaction(testDatabase) {
-            exec(
-                """
-                TRUNCATE TABLE restrooms, cities, countries
-                RESTART IDENTITY CASCADE
-                """.trimIndent()
-            )
+
+        dslContext.transaction { configuration ->
+            DSL
+                .using(configuration)
+                .execute(
+                    """
+                    TRUNCATE TABLE restrooms, cities, countries
+                    RESTART IDENTITY CASCADE
+                    """.trimIndent()
+                )
         }
     }
+
+    protected fun getDslContext(): DSLContext = dslContext
 }

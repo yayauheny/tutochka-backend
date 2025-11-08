@@ -8,7 +8,6 @@ import yayauheny.by.model.country.CountryCreateDto
 import yayauheny.by.model.country.CountryResponseDto
 import yayauheny.by.model.country.CountryUpdateDto
 import yayauheny.by.tables.records.CountriesRecord
-import yayauheny.by.tables.references.CITIES
 import yayauheny.by.tables.references.COUNTRIES
 
 object CountryMapper {
@@ -37,7 +36,7 @@ object CountryMapper {
         dto: CountryUpdateDto
     ): UpdateSetMoreStep<*> {
         return updateStep
-            .set(CITIES.NAME_RU, dto.nameRu)
-            .set(CITIES.NAME_EN, dto.nameEn)
+            .set(COUNTRIES.NAME_RU, dto.nameRu)
+            .set(COUNTRIES.NAME_EN, dto.nameEn)
     }
 }

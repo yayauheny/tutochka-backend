@@ -7,13 +7,16 @@ import io.ktor.server.routing.Route
 import io.ktor.server.routing.delete
 import io.ktor.server.routing.get
 import io.ktor.server.routing.post
+import io.ktor.server.routing.put
 import io.ktor.server.routing.route
 import io.ktor.server.util.getOrFail
-import yayauheny.by.service.validation.validateAndThen
+import yayauheny.by.common.errors.NotFoundException
 import yayauheny.by.model.city.CityCreateDto
+import yayauheny.by.model.city.CityUpdateDto
 import yayauheny.by.service.CityService
 import yayauheny.by.service.validation.cityCreateValidator
-import yayauheny.by.common.errors.NotFoundException
+import yayauheny.by.service.validation.cityUpdateValidator
+import yayauheny.by.service.validation.validateAndThen
 import yayauheny.by.util.getUuidFromPath
 import yayauheny.by.util.toPaginationRequest
 
@@ -23,11 +26,9 @@ class CityController(
     fun Route.cityRoutes() {
         route("/cities") {
             get {
-                get("/cities") {
-                    val pagination = call.toPaginationRequest()
-                    val pageResponse = cityService.getAllCities(pagination)
-                    call.respond(HttpStatusCode.OK, pageResponse)
-                }
+                val pagination = call.toPaginationRequest()
+                val pageResponse = cityService.getAllCities(pagination)
+                call.respond(HttpStatusCode.OK, pageResponse)
             }
 
             get("/{id}") {
@@ -61,11 +62,28 @@ class CityController(
                 call.respond(HttpStatusCode.Created, city)
             }
 
-            delete("/delete") {
-                val name: String = call.parameters.getOrFail("name")
-                val pagination = call.toPaginationRequest()
-                val pageResponse = cityService.searchCitiesByName(name, pagination)
-                call.respond(HttpStatusCode.OK, pageResponse)
+            put("/{id}") {
+                val id = call.getUuidFromPath("id")
+                val updateDto = call.receive<CityUpdateDto>()
+                val city =
+                    updateDto.validateAndThen(cityUpdateValidator) { valid ->
+                        cityService.updateCity(id, valid)
+                    }
+                if (city != null) {
+                    call.respond(HttpStatusCode.OK, city)
+                } else {
+                    call.respond(HttpStatusCode.NotFound)
+                }
+            }
+
+            delete("/{id}") {
+                val id = call.getUuidFromPath("id")
+                val deleted = cityService.deleteCity(id)
+                if (deleted) {
+                    call.respond(HttpStatusCode.OK, mapOf("deleted" to true))
+                } else {
+                    call.respond(HttpStatusCode.NotFound)
+                }
             }
         }
     }

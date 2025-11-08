@@ -27,5 +27,6 @@ data class CityCreateDto(
         example = """{"type":"Polygon","coordinates":[[[37.3,55.5],[37.9,55.5],[37.9,55.9],[37.3,55.9],[37.3,55.5]]]}""",
         nullable = true
     )
+    @Contextual
     val cityBounds: Polygon?
 )
