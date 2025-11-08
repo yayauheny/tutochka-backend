@@ -15,14 +15,16 @@ import yayauheny.by.util.toPoint
 
 object CityMapper {
     fun mapFromRecord(record: Record): CityResponseDto {
+        val coordinates = record[CITIES.COORDINATES] as Point?
         return CityResponseDto(
             id = record[CITIES.ID]!!,
+            cityBounds = record[CITIES.CITY_BOUNDS] as Polygon?,
             countryId = record[CITIES.COUNTRY_ID]!!,
             nameRu = record[CITIES.NAME_RU]!!,
             nameEn = record[CITIES.NAME_EN]!!,
             region = record[CITIES.REGION],
-            coordinates = record[CITIES.COORDINATES]!! as Point,
-            cityBounds = record[CITIES.CITY_BOUNDS]!! as Polygon
+            lat = coordinates?.y ?: 0.0,
+            lon = coordinates?.x ?: 0.0
         )
     }
 

@@ -42,20 +42,7 @@ class CountryService(
     suspend fun updateCountry(
         id: UUID,
         updateDto: CountryUpdateDto
-    ): CountryResponseDto? =
-        countryRepository.findById(id)?.let { existing ->
-            if (updateDto.code != null && updateDto.code != existing.code) {
-                val existingByCode =
-                    countryRepository.findSingle(
-                        listOf(FilterCriteria("code", FilterOperator.EQ, updateDto.code))
-                    )
-                if (existingByCode != null) {
-                    throw ConflictException("Страна с кодом '${updateDto.code}' уже существует")
-                }
-            }
-
-            countryRepository.update(id, updateDto)
-        }
+    ): CountryResponseDto = countryRepository.update(id, updateDto)
 
     suspend fun deleteCountry(id: UUID): Boolean = countryRepository.deleteById(id)
 

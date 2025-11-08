@@ -117,7 +117,8 @@ val restroomUpdateValidator =
 data class NearestRestroomsParams(
     val lat: Double,
     val lon: Double,
-    val limit: Int
+    val limit: Int,
+    val distanceMeters: Int
 )
 
 val nearestRestroomsParamsValidator =
@@ -133,5 +134,9 @@ val nearestRestroomsParamsValidator =
         NearestRestroomsParams::limit {
             minimum(1) hint "Лимит должен быть не менее 1"
             maximum(100) hint "Лимит должен быть не более 100"
+        }
+        NearestRestroomsParams::distanceMeters {
+            minimum(1) hint "Радиус поиска должен быть не менее 1 метра"
+            maximum(50000) hint "Радиус поиска должен быть не более 50000 метров (50 км)"
         }
     }
