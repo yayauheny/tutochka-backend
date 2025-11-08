@@ -44,7 +44,7 @@
 
 ### Database & ORM
 - **PostgreSQL** - Robust, open-source relational database
-- **Exposed 0.61.0** - Kotlin SQL framework
+- **jOOQ 3.20.8** - Kotlin SQL framework
 - **PostGIS** - Spatial database extension for location data
 - **HikariCP 5.1.0** - High-performance JDBC connection pool
 
@@ -194,10 +194,26 @@ docker-compose up -d
 
 ---
 
+## 🏗️ Architecture / Архитектура
+
+### Project Structure
+- **MVC Pattern:** Clean separation of concerns with controllers, services, and repositories
+- **Dependency Injection:** Koin for managing dependencies
+- **Database Access:** jOOQ for type-safe SQL queries with PostgreSQL and PostGIS
+- **API Layer:** Ktor for building REST APIs with OpenAPI/Swagger documentation
+- **Testing:** JUnit 5 + TestContainers for integration tests with PostgreSQL
+
+### Key Components
+- **Controllers:** Handle HTTP requests and responses
+- **Services:** Implement business logic and orchestrate operations
+- **Repositories:** Handle database operations using jOOQ
+- **Mappers:** Convert between database records and DTOs
+- **Configuration:** Dependency injection modules and database configuration
+
 ## 📖 Documentation / Документация
 
 - **API Documentation:** Available at `/swagger-ui.html` when running
-- **Database Schema:** See `DATABASE_SETUP.md` for detailed database setup
+- **Database Schema:** See `src/main/resources/db/changelog/` for migration files
 - **Code Style:** Follows ktlint standards with automatic formatting
 
 ---

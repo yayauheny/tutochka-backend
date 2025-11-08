@@ -9,7 +9,6 @@ import org.jooq.impl.DSL
 
 private val geoFactory by lazy { GeometryFactory() }
 
-/** Create a JTS Point (x=lon, y=lat) with basic range validation. */
 fun createPoint(
     latitude: Double,
     longitude: Double
@@ -19,16 +18,7 @@ fun createPoint(
     return geoFactory.createPoint(Coordinate(longitude, latitude))
 }
 
-fun Pair<Double, Double>.toPoint(): Point =
-    createPoint(latitude = first, longitude = second)
-
-// SQL / jOOQ helpers (PostGIS GEOMETRY, SRID 4326)
-// With your generator config, geometry columns map to
-// org.locationtech.jts.geom.Geometry via JTSGeometryBinding.
-// ==============================
-//
-// All returned distances are in METERS (ST_DistanceSphere).
-//
+fun Pair<Double, Double>.toPoint(): Point = createPoint(latitude = first, longitude = second)
 
 fun geometryPoint(
     lat: Double,
@@ -81,51 +71,43 @@ fun stDistanceSpheroid(
         toLatitude
     )
 
-/**
- * Efficient "within radius (meters)" for geometry(4326).
- *
- * 1) BBOX prefilter: {geom} && ST_Expand(targetPoint, deltaDeg)  -- index-friendly
- * 2) Exact check:    ST_DistanceSphere({geom}, targetPoint) <= radiusMeters
- *
- * meters->degrees: use a safe constant for city-scale radii.
- */
+
 fun stDWithin(
     geometryField: Field<*>,
     latitude: Double,
     longitude: Double,
     distanceMeters: Double
 ): org.jooq.Condition {
-    val metersPerDegree = 111_320.0 // conservative; good enough for bbox prefilter
+    val metersPerDegree = 111_320.0
     val deltaDeg = distanceMeters / metersPerDegree
 
-    val targetPoint: Field<Geometry> = DSL.field(
-        "ST_SetSRID(ST_MakePoint({0}, {1}), 4326)",
-        Geometry::class.java,
-        longitude,
-        latitude
-    )
+    val targetPoint: Field<Geometry> =
+        DSL.field(
+            "ST_SetSRID(ST_MakePoint({0}, {1}), 4326)",
+            Geometry::class.java,
+            longitude,
+            latitude
+        )
 
-    val bboxCondition = DSL.condition(
-        "{0} && ST_Expand({1}, {2})",
-        geometryField,
-        targetPoint,
-        deltaDeg
-    )
+    val bboxCondition =
+        DSL.condition(
+            "{0} && ST_Expand({1}, {2})",
+            geometryField,
+            targetPoint,
+            deltaDeg
+        )
 
-    val preciseCondition = DSL.condition(
-        "ST_DistanceSphere({0}, {1}) <= {2}",
-        geometryField,
-        targetPoint,
-        distanceMeters
-    )
+    val preciseCondition =
+        DSL.condition(
+            "ST_DistanceSphere({0}, {1}) <= {2}",
+            geometryField,
+            targetPoint,
+            distanceMeters
+        )
 
     return bboxCondition.and(preciseCondition)
 }
 
-/**
- * Ordering helper: meters distance (spherical) usable in ORDER BY.
- * Typically combine with a modest radius WHERE to reduce evals.
- */
 fun stDistanceOrder(
     geometryField: Field<*>,
     toLatitude: Double,

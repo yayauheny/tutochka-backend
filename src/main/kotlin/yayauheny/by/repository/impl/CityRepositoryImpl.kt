@@ -1,7 +1,7 @@
 package yayauheny.by.repository.impl
 
 import java.time.Instant
-import java.util.UUID
+import java.util.*
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import org.jooq.DSLContext
@@ -14,15 +14,15 @@ import yayauheny.by.common.query.PageResponse
 import yayauheny.by.common.query.PaginationRequest
 import yayauheny.by.common.query.builder.QueryBuilder
 import yayauheny.by.common.query.builder.QueryExecutor
-import yayauheny.by.di.CityRepo
 import yayauheny.by.model.city.CityCreateDto
 import yayauheny.by.model.city.CityResponseDto
 import yayauheny.by.model.city.CityUpdateDto
+import yayauheny.by.repository.CityRepository
 import yayauheny.by.tables.references.CITIES
 
 class CityRepositoryImpl(
     private val ctx: DSLContext
-) : CityRepo {
+) : CityRepository {
     private val cityFields =
         mapOf(
             "id" to
@@ -127,8 +127,7 @@ class CityRepositoryImpl(
                     CITIES.ID
                         .eq(id)
                         .and(CITIES.IS_DELETED.eq(false).or(CITIES.IS_DELETED.isNull))
-                )
-                .fetchOne()
+                ).fetchOne()
                 ?.map { CityMapper.mapFromRecord(it) }
         }
 
@@ -172,7 +171,6 @@ class CityRepositoryImpl(
                     .fetchOne()
                     ?: throw IllegalStateException("Failed to update city with id: $id")
 
-
             CityMapper.mapFromRecord(updated)
         }
 
@@ -188,7 +186,7 @@ class CityRepositoryImpl(
             updated > 0
         }
 
-    suspend fun findByCountryId(
+    override suspend fun findByCountryId(
         countryId: UUID,
         pagination: PaginationRequest
     ): PageResponse<CityResponseDto> =
@@ -207,7 +205,7 @@ class CityRepositoryImpl(
             )
         }
 
-    suspend fun findByName(
+    override suspend fun findByName(
         name: String,
         pagination: PaginationRequest
     ): PageResponse<CityResponseDto> =

@@ -4,14 +4,15 @@ import java.time.Instant
 import java.util.UUID
 import yayauheny.by.common.query.PageResponse
 import yayauheny.by.common.query.PaginationRequest
-import yayauheny.by.di.RestroomRepo
+import yayauheny.by.repository.RestroomRepository
 import yayauheny.by.model.restroom.NearestRestroomResponseDto
 import yayauheny.by.model.restroom.RestroomCreateDto
 import yayauheny.by.model.restroom.RestroomResponseDto
+import yayauheny.by.model.restroom.RestroomUpdateDto
 import yayauheny.by.model.enums.RestroomStatus
 
 class RestroomService(
-    private val restroomRepository: RestroomRepo
+    private val restroomRepository: RestroomRepository
 ) {
     suspend fun getAllRestrooms(pagination: PaginationRequest): PageResponse<RestroomResponseDto> = restroomRepository.findAll(pagination)
 
@@ -20,37 +21,22 @@ class RestroomService(
     suspend fun getRestroomsByCity(
         cityId: UUID,
         pagination: PaginationRequest
-    ): PageResponse<RestroomResponseDto> =
-        (restroomRepository as yayauheny.by.repository.impl.RestroomRepositoryImpl)
-            .findByCityId(cityId, pagination)
+    ): PageResponse<RestroomResponseDto> = restroomRepository.findByCityId(cityId, pagination)
 
     suspend fun findNearestRestrooms(
         latitude: Double,
         longitude: Double,
         limit: Int = 5
-    ): List<NearestRestroomResponseDto> =
-        (restroomRepository as yayauheny.by.repository.impl.RestroomRepositoryImpl)
-            .findNearestByLocation(latitude, longitude, limit)
+    ): List<NearestRestroomResponseDto> = restroomRepository.findNearestByLocation(latitude, longitude, limit)
 
     suspend fun createRestroom(createDto: RestroomCreateDto): RestroomResponseDto {
-        val now = Instant.now()
-        val restroomDto = createDto.toResponseDto(UUID.randomUUID(), now, now)
-        return restroomRepository.save(restroomDto)
+        return restroomRepository.save(createDto)
     }
 
     suspend fun updateRestroom(
         id: UUID,
-        updateDto: RestroomCreateDto
-    ): RestroomResponseDto? =
-        restroomRepository.findById(id)?.let { existing ->
-            val updatedDto =
-                updateDto.toResponseDto(
-                    id = existing.id,
-                    createdAt = existing.createdAt,
-                    updatedAt = Instant.now()
-                )
-            restroomRepository.save(updatedDto)
-        }
+        updateDto: RestroomUpdateDto
+    ): RestroomResponseDto? = restroomRepository.update(id, updateDto)
 
     suspend fun deleteRestroom(id: UUID): Boolean = restroomRepository.deleteById(id)
 }

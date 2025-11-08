@@ -6,6 +6,9 @@ import org.jooq.DSLContext
 import org.jooq.impl.DefaultDSLContext
 import org.koin.dsl.module
 import yayauheny.by.config.DatabaseConfig
+import yayauheny.by.repository.CityRepository
+import yayauheny.by.repository.CountryRepository
+import yayauheny.by.repository.RestroomRepository
 import yayauheny.by.repository.impl.CityRepositoryImpl
 import yayauheny.by.repository.impl.CountryRepositoryImpl
 import yayauheny.by.repository.impl.RestroomRepositoryImpl
@@ -17,7 +20,7 @@ val databaseConfigModule =
         single<Configuration> { get<DatabaseConfig>().createJooqConfiguration(get<HikariDataSource>()) }
         single<DSLContext> { DefaultDSLContext(get<Configuration>()) }
 
-        single<CityRepositoryImpl> { CityRepositoryImpl(get()) }
-        single<CountryRepositoryImpl> { CountryRepositoryImpl(get()) }
-        single<RestroomRepositoryImpl> { RestroomRepositoryImpl(get()) }
+        single<CityRepository> { CityRepositoryImpl(get()) }
+        single<CountryRepository> { CountryRepositoryImpl(get()) }
+        single<RestroomRepository> { RestroomRepositoryImpl(get()) }
     }

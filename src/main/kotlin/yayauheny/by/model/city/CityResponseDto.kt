@@ -21,12 +21,14 @@ data class CityResponseDto(
         example = """{"type":"Point","coordinates":[37.6176,55.7558]}""",
         type = "object"
     )
+    @Contextual
     val coordinates: Point,
     @field:Schema(
         description = "City boundary as Polygon",
         example = """{"type":"Polygon","coordinates":[[[37.3,55.5],[37.9,55.5],[37.9,55.9],[37.3,55.9],[37.3,55.5]]]}""",
         nullable = true
     )
+    @Contextual
     val cityBounds: Polygon?,
     @field:Schema(description = "Country ID", example = "123e4567-e89b-12d3-a456-426614174000")
     @Contextual

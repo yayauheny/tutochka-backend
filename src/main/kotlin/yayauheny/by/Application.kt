@@ -1,5 +1,7 @@
 package yayauheny.by
 
+import com.vividsolutions.jts.geom.Point
+import com.vividsolutions.jts.geom.Polygon
 import com.zaxxer.hikari.HikariDataSource
 import io.ktor.serialization.kotlinx.json.json
 import io.ktor.server.application.Application
@@ -21,6 +23,8 @@ import yayauheny.by.di.controllerModule
 import yayauheny.by.di.databaseConfigModule
 import yayauheny.by.di.serviceModule
 import yayauheny.by.util.InstantSerializer
+import yayauheny.by.util.PointSerializer
+import yayauheny.by.util.PolygonSerializer
 import yayauheny.by.util.UUIDSerializer
 
 fun main(args: Array<String>) =
@@ -53,6 +57,8 @@ fun Application.module() {
                     SerializersModule {
                         contextual(UUID::class, UUIDSerializer)
                         contextual(Instant::class, InstantSerializer)
+                        contextual(Point::class, PointSerializer)
+                        contextual(Polygon::class, PolygonSerializer)
                     }
             }
         )

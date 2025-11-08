@@ -92,14 +92,15 @@ object RestroomMapper {
         dto: RestroomUpdateDto
     ): UpdateSetMoreStep<*> {
         val coordinates = (dto.lat to dto.lon).toPoint()
-        var query: UpdateSetMoreStep<*> = updateStep
-            .set(RESTROOMS.ADDRESS, dto.address)
-            .set(RESTROOMS.INHERIT_PARENT_SCHEDULE, dto.inheritParentSchedule)
-            .set(RESTROOMS.FEE_TYPE, dto.feeType.name)
-            .set(RESTROOMS.ACCESSIBILITY_TYPE, dto.accessibilityType.name)
-            .set(RESTROOMS.STATUS, dto.status.name)
-            .set(RESTROOMS.COORDINATES, coordinates)
-            .set(RESTROOMS.UPDATED_AT, Instant.now())
+        var query: UpdateSetMoreStep<*> =
+            updateStep
+                .set(RESTROOMS.ADDRESS, dto.address)
+                .set(RESTROOMS.INHERIT_PARENT_SCHEDULE, dto.inheritParentSchedule)
+                .set(RESTROOMS.FEE_TYPE, dto.feeType.name)
+                .set(RESTROOMS.ACCESSIBILITY_TYPE, dto.accessibilityType.name)
+                .set(RESTROOMS.STATUS, dto.status.name)
+                .set(RESTROOMS.COORDINATES, coordinates)
+                .set(RESTROOMS.UPDATED_AT, Instant.now())
 
         dto.name?.let { query = query.set(RESTROOMS.NAME, it) }
         dto.description?.let { query = query.set(RESTROOMS.DESCRIPTION, it) }
@@ -138,7 +139,10 @@ object RestroomMapper {
         )
     }
 
-    fun mapToNearestRestroom(record: Record, distanceMeters: Double): yayauheny.by.model.restroom.NearestRestroomResponseDto {
+    fun mapToNearestRestroom(
+        record: Record,
+        distanceMeters: Double
+    ): yayauheny.by.model.restroom.NearestRestroomResponseDto {
         val coordinates = record[RESTROOMS.COORDINATES]!! as Point
         return yayauheny.by.model.restroom.NearestRestroomResponseDto(
             id = record[RESTROOMS.ID]!!,
