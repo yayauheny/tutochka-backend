@@ -1,6 +1,5 @@
 package yayauheny.by.model.city
 
-import com.vividsolutions.jts.geom.Point
 import com.vividsolutions.jts.geom.Polygon
 import io.swagger.v3.oas.annotations.media.Schema
 import java.util.UUID
@@ -17,15 +16,8 @@ data class CityResponseDto(
     @Contextual
     val id: UUID,
     @field:Schema(
-        description = "Geographic coordinates of the city as a Point",
-        example = """{"type":"Point","coordinates":[37.6176,55.7558]}""",
-        type = "object"
-    )
-    @Contextual
-    val coordinates: Point,
-    @field:Schema(
         description = "City boundary as Polygon",
-        example = """{"type":"Polygon","coordinates":[[[37.3,55.5],[37.9,55.5],[37.9,55.9],[37.3,55.9],[37.3,55.5]]]}""",
+        example = """{"type":"Polygon","coordinates":[[[37.3,5.5],[37.9,55.5],[37.9,55.9],[37.3,55.9],[37.3,55.5]]]}""",
         nullable = true
     )
     @Contextual
@@ -38,5 +30,9 @@ data class CityResponseDto(
     @field:Schema(description = "City name in English", example = "Moscow")
     val nameEn: String,
     @field:Schema(description = "Region/state", example = "Moscow Oblast")
-    val region: String? = null
+    val region: String? = null,
+    @field:Schema(description = "Latitude", example = "55.7558", required = true)
+    val lat: Double,
+    @field:Schema(description = "Longitude", example = "37.6176", required = true)
+    val lon: Double
 )

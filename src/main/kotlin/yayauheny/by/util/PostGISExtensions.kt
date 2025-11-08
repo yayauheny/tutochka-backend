@@ -71,7 +71,6 @@ fun stDistanceSpheroid(
         toLatitude
     )
 
-
 fun stDWithin(
     geometryField: Field<*>,
     latitude: Double,

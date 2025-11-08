@@ -53,11 +53,12 @@ class RestroomController(
                 val lat = call.getDoubleFromQuery("lat")
                 val lon = call.getDoubleFromQuery("lon")
                 val limit = call.getIntFromQuery("limit") ?: 5
+                val distanceMeters = call.getIntFromQuery("distanceMeters") ?: 1000
 
-                val params = NearestRestroomsParams(lat, lon, limit)
+                val params = NearestRestroomsParams(lat, lon, limit, distanceMeters)
                 val restrooms =
                     params.validateAndThen(nearestRestroomsParamsValidator) { valid ->
-                        restroomService.findNearestRestrooms(valid.lat, valid.lon, valid.limit)
+                        restroomService.findNearestRestrooms(valid.lat, valid.lon, valid.limit, valid.distanceMeters)
                     }
                 call.respond(HttpStatusCode.OK, restrooms)
             }
@@ -78,11 +79,7 @@ class RestroomController(
                     updateDto.validateAndThen(restroomUpdateValidator) { valid ->
                         restroomService.updateRestroom(id, valid)
                     }
-                if (restroom != null) {
-                    call.respond(HttpStatusCode.OK, restroom)
-                } else {
-                    call.respond(HttpStatusCode.NotFound)
-                }
+                call.respond(HttpStatusCode.OK, restroom)
             }
 
             delete("/{id}") {

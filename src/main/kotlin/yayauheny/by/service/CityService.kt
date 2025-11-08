@@ -65,41 +65,7 @@ class CityService(
     suspend fun updateCity(
         id: UUID,
         updateDto: CityUpdateDto
-    ): CityResponseDto? =
-        cityRepository.findById(id)?.let { existing ->
-            countryRepository.findById(updateDto.countryId)
-                ?: throw IllegalArgumentException("Страна с ID '${updateDto.countryId}' не найдена")
-
-            val countryIdToCheck = updateDto.countryId ?: existing.countryId
-
-            if (updateDto.nameRu != existing.nameRu) {
-                val existingByRu =
-                    cityRepository.findSingle(
-                        listOf(
-                            FilterCriteria("countryId", FilterOperator.EQ, countryIdToCheck.toString()),
-                            FilterCriteria("nameRu", FilterOperator.EQ, updateDto.nameRu)
-                        )
-                    )
-                if (existingByRu != null) {
-                    throw IllegalArgumentException("Город с русским названием '${updateDto.nameRu}' уже существует в этой стране")
-                }
-            }
-
-            if (updateDto.nameEn != existing.nameEn) {
-                val existingByEn =
-                    cityRepository.findSingle(
-                        listOf(
-                            FilterCriteria("countryId", FilterOperator.EQ, countryIdToCheck.toString()),
-                            FilterCriteria("nameEn", FilterOperator.EQ, updateDto.nameEn)
-                        )
-                    )
-                if (existingByEn != null) {
-                    throw IllegalArgumentException("Город с английским названием '${updateDto.nameEn}' уже существует в этой стране")
-                }
-            }
-
-            cityRepository.update(id, updateDto)
-        }
+    ): CityResponseDto = cityRepository.update(id, updateDto)
 
     suspend fun deleteCity(id: UUID): Boolean = cityRepository.deleteById(id)
 }
