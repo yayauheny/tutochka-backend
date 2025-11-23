@@ -346,3 +346,6 @@ gradle-app.setting
 *.hprof
 
 # End of https://www.toptal.com/developers/gitignore/api/kotlin,java,maven,gradle,intellij,git,groovy,intellij+all,intellij+iml
+
+# Ignore kilocode rules directory
+.kilocode/

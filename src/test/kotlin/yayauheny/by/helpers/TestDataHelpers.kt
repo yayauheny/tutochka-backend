@@ -61,8 +61,7 @@ object TestDataHelpers {
         nameRu = nameRu,
         nameEn = nameEn,
         region = region,
-        lat = lat,
-        lon = lon
+        coordinates = yayauheny.by.model.LatLon(lat = lat, lon = lon)
     )
 
     fun createCityResponseDto(
@@ -79,8 +78,7 @@ object TestDataHelpers {
         nameRu = nameRu,
         nameEn = nameEn,
         region = region,
-        lat = lat,
-        lon = lon
+        coordinates = yayauheny.by.model.LatLon(lat = lat, lon = lon)
     )
 
     fun createCityList(
@@ -123,8 +121,7 @@ object TestDataHelpers {
         workTime = workTime,
         feeType = feeType,
         accessibilityType = accessibilityType,
-        lat = lat,
-        lon = lon,
+        coordinates = yayauheny.by.model.LatLon(lat = lat, lon = lon),
         dataSource = dataSource,
         amenities = amenities,
         parentPlaceName = parentPlaceName,
@@ -162,8 +159,7 @@ object TestDataHelpers {
         workTime = workTime,
         feeType = feeType,
         accessibilityType = accessibilityType,
-        lat = lat,
-        lon = lon,
+        coordinates = yayauheny.by.model.LatLon(lat = lat, lon = lon),
         dataSource = dataSource,
         status = status,
         amenities = amenities,
@@ -220,8 +216,7 @@ object TestDataHelpers {
         workTime = workTime,
         feeType = feeType,
         accessibilityType = accessibilityType,
-        lat = lat,
-        lon = lon,
+        coordinates = yayauheny.by.model.LatLon(lat = lat, lon = lon),
         dataSource = dataSource,
         status = status,
         amenities = amenities,

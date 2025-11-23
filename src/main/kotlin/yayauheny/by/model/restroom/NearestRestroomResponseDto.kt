@@ -4,6 +4,7 @@ import io.swagger.v3.oas.annotations.media.Schema
 import java.util.UUID
 import kotlinx.serialization.Contextual
 import kotlinx.serialization.Serializable
+import yayauheny.by.model.LatLon
 import yayauheny.by.model.enums.FeeType
 
 @Serializable
@@ -19,10 +20,8 @@ data class NearestRestroomResponseDto(
     val name: String?,
     @field:Schema(description = "Street address", example = "123 Main Street, Downtown")
     val address: String,
-    @field:Schema(description = "Latitude", example = "55.7558", required = true)
-    val lat: Double,
-    @field:Schema(description = "Longitude", example = "37.6176", required = true)
-    val lon: Double,
+    @field:Schema(description = "Coordinates", example = "55.7558, 37.6176", required = true)
+    val coordinates: LatLon,
     @field:Schema(description = "Distance from search point in meters", example = "150")
     val distanceMeters: Double,
     @field:Schema(description = "Fee type", example = "FREE")

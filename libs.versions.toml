@@ -17,7 +17,7 @@ ktlint = "12.1.1"
 konform = "0.11.0"
 jooqPlugin = "10.1.1"
 jooq = "3.20.8"
-jooqPostgisSpatial = "1.0"
+jtsCore = "1.20.0"
 
 [plugins]
 kotlinJvm = { id = "org.jetbrains.kotlin.jvm", version.ref = "kotlin" }
@@ -50,11 +50,11 @@ exposedJavaDateTime = { module = "org.jetbrains.exposed:exposed-java-time", vers
 exposedJson = { module = "org.jetbrains.exposed:exposed-json", version.ref = "exposed" }
 postgresql = { module = "org.postgresql:postgresql", version.ref = "postgresql" }
 jooqKotlin = { module = "org.jooq:jooq-kotlin", version.ref = "jooq" }
-jooqPostgisSpatial = { module = "io.github.oshai:jooq-postgis-spatial", version.ref = "jooqPostgisSpatial" }
 postgis = { module = "net.postgis:postgis-jdbc", version = "2025.1.1" }
 hikaricp = { module = "com.zaxxer:HikariCP", version.ref = "hikaricp" }
 liquibaseCore = { module = "org.liquibase:liquibase-core", version = "4.24.0" }
 picocli = { module = "info.picocli:picocli", version = "4.6.3" }
+jtsCore = { module = "org.locationtech.jts:jts-core", version.ref = "jtsCore" }
 
 konform = { module = "io.konform:konform-jvm", version.ref = "konform" }
 
@@ -93,7 +93,7 @@ ktorServerBundle = [
     "ktorServerCallLogging"
 ]
 koinBundle = ["koinKtor", "koinLogger"]
-jooqBundle = ["jooqKotlin", "jooqPostgisSpatial"]
+jooqBundle = ["jooqKotlin"]
 exposedBundle = ["exposedCore", "exposedDao", "exposedJdbc", "exposedJavaDateTime", "exposedJson"]
 liquibaseBundle = ["liquibaseCore", "postgresql", "picocli"]
 validationBundle = ["konform"]

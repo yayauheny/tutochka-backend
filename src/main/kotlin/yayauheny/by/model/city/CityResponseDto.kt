@@ -1,10 +1,10 @@
 package yayauheny.by.model.city
 
-import com.vividsolutions.jts.geom.Polygon
 import io.swagger.v3.oas.annotations.media.Schema
 import java.util.UUID
 import kotlinx.serialization.Contextual
 import kotlinx.serialization.Serializable
+import yayauheny.by.model.LatLon
 
 @Serializable
 @Schema(description = "City response data")
@@ -20,9 +20,8 @@ data class CityResponseDto(
         example = """{"type":"Polygon","coordinates":[[[37.3,5.5],[37.9,55.5],[37.9,55.9],[37.3,55.9],[37.3,55.5]]]}""",
         nullable = true
     )
-    @Contextual
-    val cityBounds: Polygon?,
-    @field:Schema(description = "Country ID", example = "123e4567-e89b-12d3-a456-426614174000")
+    val cityBounds: String?,
+    @field:Schema(description = "Country ID", example = "123e4567-e89b-12d3-a456-42614174000")
     @Contextual
     val countryId: UUID,
     @field:Schema(description = "City name in Russian", example = "Москва")
@@ -31,8 +30,6 @@ data class CityResponseDto(
     val nameEn: String,
     @field:Schema(description = "Region/state", example = "Moscow Oblast")
     val region: String? = null,
-    @field:Schema(description = "Latitude", example = "55.7558", required = true)
-    val lat: Double,
-    @field:Schema(description = "Longitude", example = "37.6176", required = true)
-    val lon: Double
+    @field:Schema(description = "Coordinates", example = "55.7558, 37.6176", required = true)
+    val coordinates: LatLon
 )

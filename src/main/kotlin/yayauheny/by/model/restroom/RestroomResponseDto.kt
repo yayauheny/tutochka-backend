@@ -6,6 +6,7 @@ import java.util.UUID
 import kotlinx.serialization.Contextual
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.JsonObject
+import yayauheny.by.model.LatLon
 import yayauheny.by.model.enums.AccessibilityType
 import yayauheny.by.model.enums.DataSourceType
 import yayauheny.by.model.enums.FeeType
@@ -47,10 +48,8 @@ data class RestroomResponseDto(
     val feeType: FeeType,
     @field:Schema(description = "Accessibility type", example = "UNISEX")
     val accessibilityType: AccessibilityType,
-    @field:Schema(description = "Latitude", example = "55.7558", required = true)
-    val lat: Double,
-    @field:Schema(description = "Longitude", example = "37.6176", required = true)
-    val lon: Double,
+    @field:Schema(description = "Coordinates", example = "55.7558, 37.6176", required = true)
+    val coordinates: LatLon,
     @field:Schema(description = "Data source type", example = "MANUAL")
     val dataSource: DataSourceType,
     @field:Schema(description = "Current status of the restroom", example = "ACTIVE")

@@ -19,12 +19,14 @@ import yayauheny.by.service.validation.Validated
 import yayauheny.by.service.validation.validateOrThrow
 import yayauheny.by.service.validation.validateWith
 import yayauheny.by.common.errors.ValidationException
+import yayauheny.by.model.LatLon
 import yayauheny.by.model.city.CityCreateDto
 import yayauheny.by.model.country.CountryCreateDto
 import yayauheny.by.model.restroom.RestroomCreateDto
 import yayauheny.by.model.enums.AccessibilityType
 import yayauheny.by.model.enums.DataSourceType
 import yayauheny.by.model.enums.FeeType
+import yayauheny.by.model.enums.RestroomStatus
 import yayauheny.by.service.validation.NearestRestroomsParams
 import yayauheny.by.service.validation.cityCreateValidator
 import yayauheny.by.service.validation.countryCreateValidator
@@ -75,8 +77,7 @@ class ValidationTest {
                     nameRu = "Минск",
                     nameEn = "Minsk",
                     region = "Минская область",
-                    lat = 53.9006,
-                    lon = 27.5590
+                    coordinates = LatLon(lat = 53.9006, lon = 27.5590)
                 )
 
             val result = validDto.validateWith(cityCreateValidator)
@@ -93,8 +94,7 @@ class ValidationTest {
                     nameRu = "Минск",
                     nameEn = "Minsk",
                     region = null,
-                    lat = 90.0, // Maximum valid latitude
-                    lon = 180.0 // Maximum valid longitude
+                    coordinates = LatLon(lat = 90.0, lon = 180.0) // Maximum valid latitude/longitude
                 )
 
             val result = validDto.validateWith(cityCreateValidator)
@@ -130,8 +130,7 @@ class ValidationTest {
                     workTime = buildJsonObject { put("monday", "08:00-22:00") },
                     feeType = FeeType.FREE,
                     accessibilityType = AccessibilityType.UNISEX,
-                    lat = 55.7558,
-                    lon = 37.6176,
+                    coordinates = LatLon(lat = 55.7558, lon = 37.6176),
                     dataSource = DataSourceType.MANUAL,
                     amenities = buildJsonObject { put("wifi", true) },
                     parentPlaceName = null,
@@ -212,12 +211,11 @@ class ValidationTest {
         fun cityWithMultipleIssuesShouldReturnAllErrors() {
             val invalidDto =
                 CityCreateDto(
-                    UUID.randomUUID(),
-                    "",
-                    "",
-                    null,
-                    91.0,
-                    181.0
+                    countryId = UUID.randomUUID(),
+                    nameRu = "",
+                    nameEn = "",
+                    region = null,
+                    coordinates = LatLon(lat = 91.0, lon = 181.0)
                 ) // Multiple issues
 
             val result = invalidDto.validateWith(cityCreateValidator)
@@ -237,21 +235,21 @@ class ValidationTest {
         fun restroomWithMultipleIssuesShouldReturnAllErrors() {
             val invalidDto =
                 RestroomCreateDto(
-                    UUID.randomUUID(),
-                    "Test",
-                    "Test",
-                    "", // Empty address
-                    buildJsonObject {},
-                    buildJsonObject {},
-                    FeeType.FREE,
-                    AccessibilityType.UNISEX,
-                    91.0, // Invalid lat
-                    181.0, // Invalid lon
-                    DataSourceType.MANUAL,
-                    buildJsonObject {},
-                    null,
-                    null,
-                    false
+                    cityId = UUID.randomUUID(),
+                    status = RestroomStatus.ACTIVE,
+                    name = "Test",
+                    description = "Test",
+                    address = "", // Empty address
+                    phones = buildJsonObject {},
+                    workTime = buildJsonObject {},
+                    feeType = FeeType.FREE,
+                    accessibilityType = AccessibilityType.UNISEX,
+                    coordinates = LatLon(lat = 91.0, lon = 181.0), // Invalid lat/lon
+                    dataSource = DataSourceType.MANUAL,
+                    amenities = buildJsonObject {},
+                    parentPlaceName = null,
+                    parentPlaceType = null,
+                    inheritParentSchedule = false
                 ) // Multiple issues
 
             val result = invalidDto.validateWith(restroomCreateValidator)
@@ -281,13 +279,13 @@ class ValidationTest {
         @JvmStatic
         fun invalidCityData(): Stream<Arguments> =
             Stream.of(
-                Arguments.of(CityCreateDto(UUID.randomUUID(), "", "Minsk", null, 53.9006, 27.5590), 1), // Empty nameRu
-                Arguments.of(CityCreateDto(UUID.randomUUID(), "Минск", "", null, 53.9006, 27.5590), 1), // Empty nameEn
-                Arguments.of(CityCreateDto(UUID.randomUUID(), "Минск", "Minsk", null, 91.0, 27.5590), 1), // Invalid lat > 90
-                Arguments.of(CityCreateDto(UUID.randomUUID(), "Минск", "Minsk", null, -91.0, 27.5590), 1), // Invalid lat < -90
-                Arguments.of(CityCreateDto(UUID.randomUUID(), "Минск", "Minsk", null, 53.9006, 181.0), 1), // Invalid lon > 180
-                Arguments.of(CityCreateDto(UUID.randomUUID(), "Минск", "Minsk", null, 53.9006, -181.0), 1), // Invalid lon < -180
-                Arguments.of(CityCreateDto(UUID.randomUUID(), "", "", null, 91.0, 181.0), 4), // Multiple issues
+                Arguments.of(CityCreateDto(UUID.randomUUID(), "", "Minsk", null, LatLon(lat = 53.9006, lon = 27.5590)), 1), // Empty nameRu
+                Arguments.of(CityCreateDto(UUID.randomUUID(), "Минск", "", null, LatLon(lat = 53.9006, lon = 27.5590)), 1), // Empty nameEn
+                Arguments.of(CityCreateDto(UUID.randomUUID(), "Минск", "Minsk", null, LatLon(lat = 91.0, lon = 27.5590)), 1), // Invalid lat > 90
+                Arguments.of(CityCreateDto(UUID.randomUUID(), "Минск", "Minsk", null, LatLon(lat = -91.0, lon = 27.5590)), 1), // Invalid lat < -90
+                Arguments.of(CityCreateDto(UUID.randomUUID(), "Минск", "Minsk", null, LatLon(lat = 53.9006, lon = 181.0)), 1), // Invalid lon > 180
+                Arguments.of(CityCreateDto(UUID.randomUUID(), "Минск", "Minsk", null, LatLon(lat = 53.9006, lon = -181.0)), 1), // Invalid lon < -180
+                Arguments.of(CityCreateDto(UUID.randomUUID(), "", "", null, LatLon(lat = 91.0, lon = 181.0)), 4), // Multiple issues
             )
 
         @JvmStatic
@@ -295,101 +293,101 @@ class ValidationTest {
             Stream.of(
                 Arguments.of(
                     RestroomCreateDto(
-                        UUID.randomUUID(),
-                        "Test",
-                        "Test",
-                        "", // Empty address
-                        buildJsonObject {},
-                        buildJsonObject {},
-                        FeeType.FREE,
-                        AccessibilityType.UNISEX,
-                        55.7558,
-                        37.6176,
-                        DataSourceType.MANUAL,
-                        buildJsonObject {},
-                        null,
-                        null,
-                        false
+                        cityId = UUID.randomUUID(),
+                        status = RestroomStatus.ACTIVE,
+                        name = "Test",
+                        description = "Test",
+                        address = "", // Empty address
+                        phones = buildJsonObject {},
+                        workTime = buildJsonObject {},
+                        feeType = FeeType.FREE,
+                        accessibilityType = AccessibilityType.UNISEX,
+                        coordinates = LatLon(lat = 55.7558, lon = 37.6176),
+                        dataSource = DataSourceType.MANUAL,
+                        amenities = buildJsonObject {},
+                        parentPlaceName = null,
+                        parentPlaceType = null,
+                        inheritParentSchedule = false
                     ),
                     1
                 ),
                 Arguments.of(
                     RestroomCreateDto(
-                        UUID.randomUUID(),
-                        "Test",
-                        "Test",
-                        "123 Main St",
-                        buildJsonObject {},
-                        buildJsonObject {},
-                        FeeType.FREE,
-                        AccessibilityType.UNISEX,
-                        91.0,
-                        37.6176,
-                        DataSourceType.MANUAL,
-                        buildJsonObject {}, // Invalid lat > 90
-                        null,
-                        null,
-                        false
+                        cityId = UUID.randomUUID(),
+                        status = RestroomStatus.ACTIVE,
+                        name = "Test",
+                        description = "Test",
+                        address = "123 Main St",
+                        phones = buildJsonObject {},
+                        workTime = buildJsonObject {},
+                        feeType = FeeType.FREE,
+                        accessibilityType = AccessibilityType.UNISEX,
+                        coordinates = LatLon(lat = 91.0, lon = 37.6176), // Invalid lat > 90
+                        dataSource = DataSourceType.MANUAL,
+                        amenities = buildJsonObject {},
+                        parentPlaceName = null,
+                        parentPlaceType = null,
+                        inheritParentSchedule = false
                     ),
                     1
                 ),
                 Arguments.of(
                     RestroomCreateDto(
-                        UUID.randomUUID(),
-                        "Test",
-                        "Test",
-                        "123 Main St",
-                        buildJsonObject {},
-                        buildJsonObject {},
-                        FeeType.FREE,
-                        AccessibilityType.UNISEX,
-                        -91.0,
-                        37.6176,
-                        DataSourceType.MANUAL,
-                        buildJsonObject {}, // Invalid lat < -90
-                        null,
-                        null,
-                        false
+                        cityId = UUID.randomUUID(),
+                        status = RestroomStatus.ACTIVE,
+                        name = "Test",
+                        description = "Test",
+                        address = "123 Main St",
+                        phones = buildJsonObject {},
+                        workTime = buildJsonObject {},
+                        feeType = FeeType.FREE,
+                        accessibilityType = AccessibilityType.UNISEX,
+                        coordinates = LatLon(lat = -91.0, lon = 37.6176), // Invalid lat < -90
+                        dataSource = DataSourceType.MANUAL,
+                        amenities = buildJsonObject {},
+                        parentPlaceName = null,
+                        parentPlaceType = null,
+                        inheritParentSchedule = false
                     ),
                     1
                 ),
                 Arguments.of(
                     RestroomCreateDto(
-                        UUID.randomUUID(),
-                        "Test",
-                        "Test",
-                        "123 Main St",
-                        buildJsonObject {},
-                        buildJsonObject {},
-                        FeeType.FREE,
-                        AccessibilityType.UNISEX,
-                        55.7558,
-                        181.0,
-                        DataSourceType.MANUAL,
-                        buildJsonObject {}, // Invalid lon > 180
-                        null,
-                        null,
-                        false
+                        cityId = UUID.randomUUID(),
+                        status = RestroomStatus.ACTIVE,
+                        name = "Test",
+                        description = "Test",
+                        address = "123 Main St",
+                        phones = buildJsonObject {},
+                        workTime = buildJsonObject {},
+                        feeType = FeeType.FREE,
+                        accessibilityType = AccessibilityType.UNISEX,
+                        coordinates = LatLon(lat = 55.7558, lon = 181.0), // Invalid lon > 180
+                        dataSource = DataSourceType.MANUAL,
+                        amenities = buildJsonObject {},
+                        parentPlaceName = null,
+                        parentPlaceType = null,
+                        inheritParentSchedule = false
                     ),
                     1
                 ),
                 Arguments.of(
                     RestroomCreateDto(
-                        UUID.randomUUID(),
-                        "Test",
-                        "Test",
-                        "123 Main St",
-                        buildJsonObject {},
-                        buildJsonObject {},
-                        FeeType.FREE,
-                        AccessibilityType.UNISEX,
-                        55.7558,
-                        -181.0,
-                        DataSourceType.MANUAL,
-                        buildJsonObject {}, // Invalid lon < -180
-                        null,
-                        null,
-                        false
+                        cityId = UUID.randomUUID(),
+                        status = RestroomStatus.ACTIVE,
+                        name = "Test",
+                        description = "Test",
+                        address = "123 Main St",
+                        phones = buildJsonObject {},
+                        workTime = buildJsonObject {},
+                        feeType = FeeType.FREE,
+                        accessibilityType = AccessibilityType.UNISEX,
+                        coordinates = LatLon(lat = 55.7558, lon = -181.0), // Invalid lon < -180
+                        dataSource = DataSourceType.MANUAL,
+                        amenities = buildJsonObject {},
+                        parentPlaceName = null,
+                        parentPlaceType = null,
+                        inheritParentSchedule = false
                     ),
                     1
                 ),
@@ -415,7 +413,7 @@ class ValidationTest {
         @Test
         @DisplayName("Valid parameters should pass validation")
         fun valid_params_should_pass() {
-            val params = NearestRestroomsParams(55.7558, 37.6176, 10)
+            val params = NearestRestroomsParams(LatLon(lat = 55.7558, lon = 37.6176), 10, 1000)
             val result = params.validateWith(nearestRestroomsParamsValidator)
             assertTrue(result is Validated.Ok)
             assertEquals(params, result.value)
@@ -425,7 +423,7 @@ class ValidationTest {
         @DisplayName("Valid parameters should pass with validateOrThrow")
         fun valid_params_should_pass_with_validateOrThrow() =
             runTest {
-                val params = NearestRestroomsParams(55.7558, 37.6176, 10)
+                val params = NearestRestroomsParams(LatLon(lat = 55.7558, lon = 37.6176), 10, 1000)
                 val result = params.validateOrThrow(nearestRestroomsParamsValidator)
                 assertEquals(params, result)
             }

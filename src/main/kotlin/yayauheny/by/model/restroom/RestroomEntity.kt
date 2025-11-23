@@ -1,6 +1,5 @@
 package yayauheny.by.model.restroom
 
-import com.vividsolutions.jts.geom.Point
 import java.time.Instant
 import java.util.UUID
 import kotlinx.serialization.json.JsonObject
@@ -19,7 +18,6 @@ data class RestroomEntity(
     val workTime: JsonObject?,
     val feeType: FeeType,
     val accessibilityType: AccessibilityType,
-    val coordinates: Point,
     val dataSource: DataSourceType,
     val status: RestroomStatus,
     val amenities: JsonObject,
