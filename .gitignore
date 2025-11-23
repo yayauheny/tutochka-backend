@@ -349,3 +349,6 @@ gradle-app.setting
 
 # Ignore kilocode rules directory
 .kilocode/
+
+# Environment variables
+.env
