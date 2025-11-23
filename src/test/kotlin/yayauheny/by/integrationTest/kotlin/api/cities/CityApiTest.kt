@@ -11,8 +11,13 @@ import org.junit.jupiter.api.DisplayName
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Tag
 import org.junit.jupiter.api.Test
-import support.helpers.DatabaseTestHelper
+import java.util.UUID
+import yayauheny.by.helpers.DatabaseTestHelper
 import yayauheny.by.helpers.assertJsonContentType
+import yayauheny.by.helpers.assertStatusAndJsonContent
+import yayauheny.by.helpers.assertBodyContains
+import yayauheny.by.helpers.assertBodyContainsAll
+import yayauheny.by.helpers.createCityJson
 import yayauheny.by.helpers.testGet
 import yayauheny.by.helpers.testPost
 
@@ -25,7 +30,7 @@ class CityApiTest : BaseIntegrationTest() {
         @DisplayName("GIVEN cities endpoint WHEN GET /api/v1/cities THEN return paginated response")
         fun cities_endpoint_returns_paginated_response() =
             runTest {
-                KtorTestApplication.withApp(testDatabase) { client ->
+                KtorTestApplication.withApp(dslContext) { client ->
                     val response = client.testGet("/api/v1/cities")
 
                     assertEquals(HttpStatusCode.OK, response.status)
@@ -40,7 +45,7 @@ class CityApiTest : BaseIntegrationTest() {
         @DisplayName("GIVEN pagination parameters WHEN GET cities THEN return correct pagination")
         fun cities_with_pagination_parameters() =
             runTest {
-                KtorTestApplication.withApp(testDatabase) { client ->
+                KtorTestApplication.withApp(dslContext) { client ->
                     val response = client.testGet("/api/v1/cities", mapOf("page" to "0", "size" to "10"))
 
                     assertEquals(HttpStatusCode.OK, response.status)
@@ -55,7 +60,7 @@ class CityApiTest : BaseIntegrationTest() {
         @DisplayName("GIVEN cities exist WHEN GET cities THEN return cities data")
         fun given_cities_exist_when_get_cities_then_return_cities_data() =
             runTest {
-                KtorTestApplication.withApp(testDatabase) { client ->
+                KtorTestApplication.withApp(dslContext) { client ->
                     val response = client.testGet("/api/v1/cities")
 
                     assertEquals(HttpStatusCode.OK, response.status)
@@ -74,7 +79,7 @@ class CityApiTest : BaseIntegrationTest() {
         @DisplayName("GIVEN valid UUID WHEN GET city by ID THEN return valid response")
         fun get_city_by_valid_id() =
             runTest {
-                KtorTestApplication.withApp(testDatabase) { client ->
+                KtorTestApplication.withApp(dslContext) { client ->
                     val testUuid = "550e8400-e29b-41d4-a716-446655440000"
                     val response = client.testGet("/api/v1/cities/$testUuid")
                     assertTrue(response.status == HttpStatusCode.OK || response.status == HttpStatusCode.NotFound)
@@ -86,9 +91,9 @@ class CityApiTest : BaseIntegrationTest() {
         @DisplayName("GIVEN existing city WHEN GET city by ID THEN return city details")
         fun given_existing_city_when_get_city_by_id_then_return_city_details() =
             runTest {
-                val testEnv = DatabaseTestHelper.createTestEnvironment(testDatabase)
+                val testEnv = DatabaseTestHelper.createTestEnvironment(dslContext)
 
-                KtorTestApplication.withApp(testDatabase) { client ->
+                KtorTestApplication.withApp(dslContext) { client ->
                     val response = client.testGet("/api/v1/cities/${testEnv.cityId}")
 
                     assertEquals(HttpStatusCode.OK, response.status)
@@ -108,9 +113,9 @@ class CityApiTest : BaseIntegrationTest() {
         @DisplayName("GIVEN valid country ID WHEN GET cities by country THEN return cities")
         fun get_cities_by_valid_country_id() =
             runTest {
-                val testEnv = DatabaseTestHelper.createTestEnvironment(testDatabase)
+                val testEnv = DatabaseTestHelper.createTestEnvironment(dslContext)
 
-                KtorTestApplication.withApp(testDatabase) { client ->
+                KtorTestApplication.withApp(dslContext) { client ->
                     val response = client.testGet("/api/v1/cities/country/${testEnv.countryId}")
 
                     assertEquals(HttpStatusCode.OK, response.status)
@@ -125,7 +130,7 @@ class CityApiTest : BaseIntegrationTest() {
         @DisplayName("GIVEN invalid country ID WHEN GET cities by country THEN return 400")
         fun get_cities_by_invalid_country_id() =
             runTest {
-                KtorTestApplication.withApp(testDatabase) { client ->
+                KtorTestApplication.withApp(dslContext) { client ->
                     val response = client.testGet("/api/v1/cities/country/invalid-uuid")
 
                     assertEquals(HttpStatusCode.BadRequest, response.status)
@@ -141,7 +146,7 @@ class CityApiTest : BaseIntegrationTest() {
         @DisplayName("GIVEN valid name parameter WHEN search cities THEN return results")
         fun search_cities_with_valid_name() =
             runTest {
-                KtorTestApplication.withApp(testDatabase) { client ->
+                KtorTestApplication.withApp(dslContext) { client ->
                     val response = client.testGet("/api/v1/cities/search", mapOf("name" to "Test"))
 
                     assertEquals(HttpStatusCode.OK, response.status)
@@ -156,7 +161,7 @@ class CityApiTest : BaseIntegrationTest() {
         @DisplayName("GIVEN missing name parameter WHEN search cities THEN return 400")
         fun search_cities_without_name_parameter() =
             runTest {
-                KtorTestApplication.withApp(testDatabase) { client ->
+                KtorTestApplication.withApp(dslContext) { client ->
                     val response = client.testGet("/api/v1/cities/search")
 
                     assertEquals(HttpStatusCode.BadRequest, response.status)
@@ -174,28 +179,20 @@ class CityApiTest : BaseIntegrationTest() {
         @DisplayName("GIVEN valid city data WHEN POST city THEN return created city")
         fun create_city_with_valid_data() =
             runTest {
-                val testEnv = DatabaseTestHelper.createTestEnvironment(testDatabase)
+                val testEnv = DatabaseTestHelper.createTestEnvironment(dslContext)
                 val validJson =
-                    """
-                    {
-                        "countryId": "${testEnv.countryId}",
-                        "nameRu": "Тестовый город",
-                        "nameEn": "Test City",
-                        "region": "Test Region",
-                        "lat": 55.7558,
-                        "lon": 37.6176
-                    }
-                    """.trimIndent()
+                    createCityJson(
+                        countryId = testEnv.countryId,
+                        nameRu = "Тестовый город",
+                        nameEn = "Test City",
+                        region = "Test Region"
+                    )
 
-                KtorTestApplication.withApp(testDatabase) { client ->
+                KtorTestApplication.withApp(dslContext) { client ->
                     val response = client.testPost("/api/v1/cities", validJson)
 
-                    assertEquals(HttpStatusCode.Created, response.status)
-                    response.assertJsonContentType()
-                    val body = response.bodyAsText()
-                    assertTrue(body.contains("\"id\""))
-                    assertTrue(body.contains("Тестовый город"))
-                    assertTrue(body.contains("Test City"))
+                    response.assertStatusAndJsonContent(HttpStatusCode.Created)
+                    response.assertBodyContainsAll("\"id\"", "Тестовый город", "Test City")
                 }
             }
 
@@ -203,26 +200,19 @@ class CityApiTest : BaseIntegrationTest() {
         @DisplayName("GIVEN minimal city data WHEN POST city THEN create successfully")
         fun create_city_with_minimal_data() =
             runTest {
-                val testEnv = DatabaseTestHelper.createTestEnvironment(testDatabase)
+                val testEnv = DatabaseTestHelper.createTestEnvironment(dslContext)
                 val minimalJson =
-                    """
-                    {
-                        "countryId": "${testEnv.countryId}",
-                        "nameRu": "Минимальный город",
-                        "nameEn": "Minimal City",
-                        "lat": 55.7558,
-                        "lon": 37.6176
-                    }
-                    """.trimIndent()
+                    createCityJson(
+                        countryId = testEnv.countryId,
+                        nameRu = "Минимальный город",
+                        nameEn = "Minimal City"
+                    )
 
-                KtorTestApplication.withApp(testDatabase) { client ->
+                KtorTestApplication.withApp(dslContext) { client ->
                     val response = client.testPost("/api/v1/cities", minimalJson)
 
-                    assertEquals(HttpStatusCode.Created, response.status)
-                    response.assertJsonContentType()
-                    val body = response.bodyAsText()
-                    assertTrue(body.contains("\"id\""))
-                    assertTrue(body.contains("Минимальный город"))
+                    response.assertStatusAndJsonContent(HttpStatusCode.Created)
+                    response.assertBodyContainsAll("\"id\"", "Минимальный город")
                 }
             }
 
@@ -232,13 +222,11 @@ class CityApiTest : BaseIntegrationTest() {
             runTest {
                 val invalidJson = """{"invalid": "data"}"""
 
-                KtorTestApplication.withApp(testDatabase) { client ->
+                KtorTestApplication.withApp(dslContext) { client ->
                     val response = client.testPost("/api/v1/cities", invalidJson)
 
-                    assertEquals(HttpStatusCode.BadRequest, response.status)
-                    response.assertJsonContentType()
-                    val body = response.bodyAsText()
-                    assertTrue(body.contains("\"status\""))
+                    response.assertStatusAndJsonContent(HttpStatusCode.BadRequest)
+                    response.assertBodyContains("\"status\"")
                 }
             }
 
@@ -248,13 +236,11 @@ class CityApiTest : BaseIntegrationTest() {
             runTest {
                 val incompleteJson = """{"nameRu": "Неполный город"}"""
 
-                KtorTestApplication.withApp(testDatabase) { client ->
+                KtorTestApplication.withApp(dslContext) { client ->
                     val response = client.testPost("/api/v1/cities", incompleteJson)
 
-                    assertEquals(HttpStatusCode.BadRequest, response.status)
-                    response.assertJsonContentType()
-                    val body = response.bodyAsText()
-                    assertTrue(body.contains("\"status\""))
+                    response.assertStatusAndJsonContent(HttpStatusCode.BadRequest)
+                    response.assertBodyContains("\"status\"")
                 }
             }
     }
@@ -266,7 +252,7 @@ class CityApiTest : BaseIntegrationTest() {
         @DisplayName("GET /api/v1/cities/{id} with invalid UUID returns 400")
         fun get_city_invalid_uuid() =
             runTest {
-                KtorTestApplication.withApp(testDatabase) { client ->
+                KtorTestApplication.withApp(dslContext) { client ->
                     val response = client.testGet("/api/v1/cities/invalid-uuid")
                     assertEquals(HttpStatusCode.BadRequest, response.status)
                     response.assertJsonContentType()
@@ -277,7 +263,7 @@ class CityApiTest : BaseIntegrationTest() {
         @DisplayName("GET /api/v1/cities/{id} with non-existing UUID returns 404")
         fun get_city_non_existing_uuid() =
             runTest {
-                KtorTestApplication.withApp(testDatabase) { client ->
+                KtorTestApplication.withApp(dslContext) { client ->
                     val nonExistentId = "550e8400-e29b-41d4-a716-446655440000"
                     val response = client.testGet("/api/v1/cities/$nonExistentId")
                     assertEquals(HttpStatusCode.NotFound, response.status)
@@ -291,7 +277,7 @@ class CityApiTest : BaseIntegrationTest() {
         @DisplayName("GET /api/v1/cities/country/{countryId} with non-existing UUID returns empty results")
         fun get_cities_by_non_existing_country() =
             runTest {
-                KtorTestApplication.withApp(testDatabase) { client ->
+                KtorTestApplication.withApp(dslContext) { client ->
                     val nonExistentCountryId = "550e8400-e29b-41d4-a716-446655440000"
                     val response = client.testGet("/api/v1/cities/country/$nonExistentCountryId")
                     assertEquals(HttpStatusCode.OK, response.status)
@@ -305,20 +291,11 @@ class CityApiTest : BaseIntegrationTest() {
         @DisplayName("POST /api/v1/cities with invalid countryId UUID returns 400")
         fun create_city_invalid_country_id() =
             runTest {
-                KtorTestApplication.withApp(testDatabase) { client ->
+                KtorTestApplication.withApp(dslContext) { client ->
                     val invalidCountryIdJson =
-                        """
-                        {
-                            "countryId": "invalid-uuid",
-                            "nameRu": "Тестовый город",
-                            "nameEn": "Test City",
-                            "lat": 55.7558,
-                            "lon": 37.6176
-                        }
-                        """.trimIndent()
+                        """{"countryId": "invalid-uuid", "nameRu": "Тестовый город", "nameEn": "Test City", "coordinates": {"lat": 55.7558, "lon": 37.6176}}"""
                     val response = client.testPost("/api/v1/cities", invalidCountryIdJson)
-                    assertEquals(HttpStatusCode.BadRequest, response.status)
-                    response.assertJsonContentType()
+                    response.assertStatusAndJsonContent(HttpStatusCode.BadRequest)
                 }
             }
 
@@ -326,20 +303,15 @@ class CityApiTest : BaseIntegrationTest() {
         @DisplayName("POST /api/v1/cities with non-existing countryId returns 400")
         fun create_city_non_existing_country_id() =
             runTest {
-                KtorTestApplication.withApp(testDatabase) { client ->
+                KtorTestApplication.withApp(dslContext) { client ->
                     val nonExistentCountryIdJson =
-                        """
-                        {
-                            "countryId": "550e8400-e29b-41d4-a716-446655440000",
-                            "nameRu": "Тестовый город",
-                            "nameEn": "Test City",
-                            "lat": 55.7558,
-                            "lon": 37.6176
-                        }
-                        """.trimIndent()
+                        createCityJson(
+                            countryId = UUID.fromString("550e8400-e29b-41d4-a716-446655440000"),
+                            nameRu = "Тестовый город",
+                            nameEn = "Test City"
+                        )
                     val response = client.testPost("/api/v1/cities", nonExistentCountryIdJson)
-                    assertEquals(HttpStatusCode.BadRequest, response.status)
-                    response.assertJsonContentType()
+                    response.assertStatusAndJsonContent(HttpStatusCode.BadRequest)
                 }
             }
 
@@ -347,16 +319,18 @@ class CityApiTest : BaseIntegrationTest() {
         @DisplayName("POST /api/v1/cities with invalid lat type returns 400")
         fun create_city_invalid_lat_type() =
             runTest {
-                val testEnv = DatabaseTestHelper.createTestEnvironment(testDatabase)
-                KtorTestApplication.withApp(testDatabase) { client ->
+                val testEnv = DatabaseTestHelper.createTestEnvironment(dslContext)
+                KtorTestApplication.withApp(dslContext) { client ->
                     val invalidLatJson =
                         """
                         {
                             "countryId": "${testEnv.countryId}",
                             "nameRu": "Тестовый город",
                             "nameEn": "Test City",
-                            "lat": "north",
-                            "lon": 37.6176
+                            "coordinates": {
+                                "lat": "north",
+                                "lon": 37.6176
+                            }
                         }
                         """.trimIndent()
                     val response = client.testPost("/api/v1/cities", invalidLatJson)

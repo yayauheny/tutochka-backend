@@ -8,10 +8,13 @@ import kotlinx.serialization.json.buildJsonObject
 import yayauheny.by.model.restroom.NearestRestroomResponseDto
 import yayauheny.by.model.restroom.RestroomCreateDto
 import yayauheny.by.model.restroom.RestroomResponseDto
+import yayauheny.by.model.restroom.RestroomUpdateDto
 import yayauheny.by.model.city.CityCreateDto
 import yayauheny.by.model.city.CityResponseDto
+import yayauheny.by.model.city.CityUpdateDto
 import yayauheny.by.model.country.CountryCreateDto
 import yayauheny.by.model.country.CountryResponseDto
+import yayauheny.by.model.country.CountryUpdateDto
 import yayauheny.by.model.enums.AccessibilityType
 import yayauheny.by.model.enums.DataSourceType
 import yayauheny.by.model.enums.FeeType
@@ -49,6 +52,14 @@ object TestDataHelpers {
             )
         }
 
+    fun createCountryUpdateDto(
+        nameRu: String = "Соединенные Штаты",
+        nameEn: String = "United States"
+    ) = CountryUpdateDto(
+        nameRu = nameRu,
+        nameEn = nameEn
+    )
+
     fun createCityCreateDto(
         countryId: UUID = UUID.randomUUID(),
         nameRu: String = "Минск",
@@ -62,6 +73,22 @@ object TestDataHelpers {
         nameEn = nameEn,
         region = region,
         coordinates = yayauheny.by.model.LatLon(lat = lat, lon = lon)
+    )
+
+    fun createCityUpdateDto(
+        countryId: UUID = UUID.randomUUID(),
+        nameRu: String = "Минск",
+        nameEn: String = "Minsk",
+        region: String? = "Минская область",
+        coordinates: yayauheny.by.model.LatLon = yayauheny.by.model.LatLon(lat = 53.9006, lon = 27.5590),
+        cityBounds: String? = null
+    ) = CityUpdateDto(
+        countryId = countryId,
+        nameRu = nameRu,
+        nameEn = nameEn,
+        region = region,
+        coordinates = coordinates,
+        cityBounds = cityBounds
     )
 
     fun createCityResponseDto(
@@ -78,7 +105,8 @@ object TestDataHelpers {
         nameRu = nameRu,
         nameEn = nameEn,
         region = region,
-        coordinates = yayauheny.by.model.LatLon(lat = lat, lon = lon)
+        coordinates = yayauheny.by.model.LatLon(lat = lat, lon = lon),
+        cityBounds = null
     )
 
     fun createCityList(
@@ -108,12 +136,14 @@ object TestDataHelpers {
         lat: Double = 40.7829,
         lon: Double = -73.9654,
         dataSource: DataSourceType = DataSourceType.MANUAL,
+        status: RestroomStatus = RestroomStatus.ACTIVE,
         amenities: JsonObject = createBasicAmenities(),
         parentPlaceName: String? = null,
         parentPlaceType: String? = null,
         inheritParentSchedule: Boolean = false
     ) = RestroomCreateDto(
         cityId = cityId,
+        status = status,
         name = name,
         description = description,
         address = address,
@@ -123,6 +153,38 @@ object TestDataHelpers {
         accessibilityType = accessibilityType,
         coordinates = yayauheny.by.model.LatLon(lat = lat, lon = lon),
         dataSource = dataSource,
+        amenities = amenities,
+        parentPlaceName = parentPlaceName,
+        parentPlaceType = parentPlaceType,
+        inheritParentSchedule = inheritParentSchedule
+    )
+
+    fun createRestroomUpdateDto(
+        cityId: UUID? = UUID.randomUUID(),
+        name: String? = "Updated Restroom",
+        description: String? = "Updated description",
+        address: String = "Updated Address",
+        phones: JsonObject? = createBasicPhones(),
+        workTime: JsonObject? = createBasicWorkTime(),
+        feeType: FeeType = FeeType.FREE,
+        accessibilityType: AccessibilityType = AccessibilityType.DISABLED,
+        coordinates: yayauheny.by.model.LatLon = yayauheny.by.model.LatLon(lat = 40.7829, lon = -73.9654),
+        status: RestroomStatus = RestroomStatus.ACTIVE,
+        amenities: JsonObject? = createBasicAmenities(),
+        parentPlaceName: String? = null,
+        parentPlaceType: String? = null,
+        inheritParentSchedule: Boolean = false
+    ) = RestroomUpdateDto(
+        cityId = cityId,
+        name = name,
+        description = description,
+        address = address,
+        phones = phones,
+        workTime = workTime,
+        feeType = feeType,
+        accessibilityType = accessibilityType,
+        coordinates = coordinates,
+        status = status,
         amenities = amenities,
         parentPlaceName = parentPlaceName,
         parentPlaceType = parentPlaceType,
@@ -187,45 +249,21 @@ object TestDataHelpers {
 
     fun createNearestRestroomResponseDto(
         id: UUID = UUID.randomUUID(),
-        cityId: UUID = UUID.randomUUID(),
         name: String = "Minsk Central Restroom",
-        description: String = "Public restroom in Minsk center",
         address: String = "123 Independence Avenue, Minsk, Belarus",
-        phones: JsonObject? = createBasicPhones(),
-        workTime: JsonObject? = createBasicWorkTime(),
         feeType: FeeType = FeeType.FREE,
-        accessibilityType: AccessibilityType = AccessibilityType.DISABLED,
         lat: Double = 40.7829,
         lon: Double = -73.9654,
-        dataSource: DataSourceType = DataSourceType.MANUAL,
-        status: RestroomStatus = RestroomStatus.ACTIVE,
-        amenities: JsonObject = createBasicAmenities(),
-        parentPlaceName: String? = null,
-        parentPlaceType: String? = null,
-        inheritParentSchedule: Boolean = false,
-        createdAt: Instant = Instant.now(),
-        updatedAt: Instant = Instant.now(),
-        distanceMeters: Int = 100
+        distanceMeters: Double = 100.0,
+        isOpen: Boolean? = null
     ) = NearestRestroomResponseDto(
         id = id,
-        cityId = cityId,
         name = name,
-        description = description,
         address = address,
-        phones = phones,
-        workTime = workTime,
-        feeType = feeType,
-        accessibilityType = accessibilityType,
         coordinates = yayauheny.by.model.LatLon(lat = lat, lon = lon),
-        dataSource = dataSource,
-        status = status,
-        amenities = amenities,
-        parentPlaceName = parentPlaceName,
-        parentPlaceType = parentPlaceType,
-        inheritParentSchedule = inheritParentSchedule,
-        createdAt = createdAt,
-        updatedAt = updatedAt,
-        distanceMeters = distanceMeters
+        distanceMeters = distanceMeters,
+        feeType = feeType,
+        isOpen = isOpen
     )
 
     fun createNearestRestroomList(
@@ -236,13 +274,11 @@ object TestDataHelpers {
     ): List<NearestRestroomResponseDto> =
         (1..count).map { i ->
             createNearestRestroomResponseDto(
-                cityId = cityId,
                 name = "Restroom $i",
-                description = "Description for restroom $i",
                 address = "Address $i",
                 lat = baseLat + i * 0.01,
                 lon = baseLon - i * 0.01,
-                distanceMeters = i * 50 // Simulate increasing distance
+                distanceMeters = i * 50.0 // Simulate increasing distance
             )
         }
 

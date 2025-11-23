@@ -9,11 +9,12 @@ import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.DisplayName
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
-import support.helpers.TestDataHelpers
+import yayauheny.by.helpers.TestDataHelpers
 import yayauheny.by.helpers.assertJsonContentType
 import yayauheny.by.helpers.testGet
 import yayauheny.by.helpers.testPost
-import yayauheny.by.model.PageResponseDto
+import yayauheny.by.common.query.PageResponse
+import yayauheny.by.model.city.CityResponseDto
 
 class CityControllerTest : RoutingTestBase() {
     @Nested
@@ -23,7 +24,7 @@ class CityControllerTest : RoutingTestBase() {
         @DisplayName("GIVEN cities endpoint WHEN GET /api/v1/cities THEN return 200 and call service with default pagination")
         fun cities_endpoint_returns_200_and_calls_service_with_default_pagination() =
             runTest {
-                coEvery { cityService.getAllCities(any()) } returns PageResponseDto(emptyList(), 0, 20, 0, 0, true, true)
+                coEvery { cityService.getAllCities(any()) } returns PageResponse(emptyList<CityResponseDto>(), 0, 20, 0, 0, true, true)
 
                 withRoutingApp { client ->
                     val response = client.testGet("/api/v1/cities")
@@ -41,7 +42,7 @@ class CityControllerTest : RoutingTestBase() {
         @DisplayName("GIVEN pagination parameters WHEN GET cities THEN pass parameters to service")
         fun cities_with_pagination_parameters_passes_to_service() =
             runTest {
-                coEvery { cityService.getAllCities(any()) } returns PageResponseDto(emptyList(), 1, 10, 0, 0, false, true)
+                coEvery { cityService.getAllCities(any()) } returns PageResponse(emptyList<CityResponseDto>(), 1, 10, 0, 0, false, true)
 
                 withRoutingApp { client ->
                     val response = client.testGet("/api/v1/cities", mapOf("page" to "1", "size" to "10"))
@@ -58,7 +59,7 @@ class CityControllerTest : RoutingTestBase() {
         @DisplayName("GIVEN negative pagination parameters WHEN GET cities THEN clamp to valid values")
         fun cities_with_negative_pagination_clamps_values() =
             runTest {
-                coEvery { cityService.getAllCities(any()) } returns PageResponseDto(emptyList(), 0, 1, 0, 0, true, true)
+                coEvery { cityService.getAllCities(any()) } returns PageResponse(emptyList<CityResponseDto>(), 0, 1, 0, 0, true, true)
 
                 withRoutingApp { client ->
                     val response = client.testGet("/api/v1/cities", mapOf("page" to "-1", "size" to "-5"))
@@ -130,7 +131,8 @@ class CityControllerTest : RoutingTestBase() {
         fun get_cities_by_valid_country_id_returns_200_and_calls_service() =
             runTest {
                 val countryId = UUID.randomUUID()
-                coEvery { cityService.getCitiesByCountry(any(), any()) } returns PageResponseDto(emptyList(), 0, 20, 0, 0, true, true)
+                coEvery { cityService.getCitiesByCountry(any(), any()) } returns
+                    PageResponse(emptyList<CityResponseDto>(), 0, 20, 0, 0, true, true)
 
                 withRoutingApp { client ->
                     val response = client.testGet("/api/v1/cities/country/$countryId")
@@ -165,7 +167,8 @@ class CityControllerTest : RoutingTestBase() {
         @DisplayName("GIVEN name parameter WHEN GET cities search THEN return 200 and call service")
         fun search_cities_with_name_returns_200_and_calls_service() =
             runTest {
-                coEvery { cityService.searchCitiesByName(any(), any()) } returns PageResponseDto(emptyList(), 0, 20, 0, 0, true, true)
+                coEvery { cityService.searchCitiesByName(any(), any()) } returns
+                    PageResponse(emptyList<CityResponseDto>(), 0, 20, 0, 0, true, true)
 
                 withRoutingApp { client ->
                     val response = client.testGet("/api/v1/cities/search", mapOf("name" to "Minsk"))
@@ -209,8 +212,10 @@ class CityControllerTest : RoutingTestBase() {
                         "countryId": "$countryId",
                         "nameRu": "Минск",
                         "nameEn": "Minsk",
-                        "lat": 53.9006,
-                        "lon": 27.5590
+                        "coordinates": {
+                            "lat": 53.9006,
+                            "lon": 27.5590
+                        }
                     }
                     """.trimIndent()
 

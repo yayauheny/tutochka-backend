@@ -6,21 +6,21 @@ import io.ktor.server.application.install
 import io.ktor.server.plugins.contentnegotiation.ContentNegotiation
 import io.ktor.server.testing.ApplicationTestBuilder
 import io.ktor.server.testing.testApplication
-import org.jetbrains.exposed.sql.Database
+import org.jooq.DSLContext
 import org.koin.ktor.plugin.Koin
-import yayauheny.by.helpers.testJson
 import yayauheny.by.common.plugins.configureErrorHandling
 import yayauheny.by.config.configureRouting
+import yayauheny.by.helpers.testJson
 
 object KtorTestApplication {
     fun withApp(
-        testDatabase: Database,
+        testDslContext: DSLContext,
         block: suspend ApplicationTestBuilder.(client: HttpClient) -> Unit
     ) = testApplication {
         application {
-            install(Koin) { modules(buildTestModules(testDatabase)) }
+            install(Koin) { modules(buildTestModules(testDslContext)) }
             install(ContentNegotiation) {
-                json(yayauheny.by.helpers.testJson)
+                json(testJson)
             }
             configureErrorHandling()
             configureRouting()

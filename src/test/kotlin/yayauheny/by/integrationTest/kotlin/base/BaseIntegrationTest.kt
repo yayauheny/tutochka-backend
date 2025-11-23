@@ -106,7 +106,7 @@ abstract class BaseIntegrationTest {
         }
     }
 
-    private lateinit var dslContext: DSLContext
+    protected lateinit var dslContext: DSLContext
 
     @BeforeEach
     fun setupDatabase() {
@@ -128,5 +128,7 @@ abstract class BaseIntegrationTest {
         }
     }
 
-    protected fun getDslContext(): DSLContext = dslContext
+    @Deprecated("Use dslContext instead", ReplaceWith("dslContext"))
+    protected val testDatabase: DSLContext
+        get() = dslContext
 }

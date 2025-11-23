@@ -1,18 +1,21 @@
 package yayauheny.by.helpers
 
+import java.time.Instant
 import java.util.UUID
 import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.JsonPrimitive
 import kotlinx.serialization.json.buildJsonObject
-import org.jetbrains.exposed.sql.Database
-import org.jetbrains.exposed.sql.transactions.transaction
-import yayauheny.by.entity.CityEntity
-import yayauheny.by.entity.CountryEntity
-import yayauheny.by.entity.RestroomEntity
+import org.jooq.DSLContext
+import org.jooq.impl.DSL
 import yayauheny.by.model.enums.AccessibilityType
 import yayauheny.by.model.enums.DataSourceType
 import yayauheny.by.model.enums.FeeType
 import yayauheny.by.model.enums.RestroomStatus
+import yayauheny.by.tables.references.CITIES
+import yayauheny.by.tables.references.COUNTRIES
+import yayauheny.by.tables.references.RESTROOMS
+import yayauheny.by.util.pointExpr
+import yayauheny.by.util.toJSONBOrEmpty
 
 data class TestCountryData(
     val nameRu: String = "Test Country RU",
@@ -72,60 +75,93 @@ object DatabaseTestHelper {
     ) = TestRestroomData(name, description, address, phones, workTime, feeType, accessibilityType, lat, lon, dataSource, status, amenities)
 
     fun insertTestCountry(
-        database: Database,
+        dslContext: DSLContext,
         data: TestCountryData = createTestCountryData()
     ): UUID =
-        transaction(database) {
-            CountryEntity
-                .new {
-                    this.nameRu = data.nameRu
-                    this.nameEn = data.nameEn
-                    this.code = data.code
-                }.id.value
+        dslContext.transactionResult { configuration ->
+            val ctx = DSL.using(configuration)
+            val now = Instant.now()
+            val id = UUID.randomUUID()
+
+            ctx
+                .insertInto(COUNTRIES)
+                .set(COUNTRIES.ID, id)
+                .set(COUNTRIES.CODE, data.code)
+                .set(COUNTRIES.NAME_RU, data.nameRu)
+                .set(COUNTRIES.NAME_EN, data.nameEn)
+                .set(COUNTRIES.CREATED_AT, now)
+                .set(COUNTRIES.UPDATED_AT, now)
+                .returning(COUNTRIES.ID)
+                .fetchOne()
+                ?.getValue(COUNTRIES.ID)
+                ?: error("Failed to insert test country")
         }
 
     fun insertTestCity(
-        database: Database,
+        dslContext: DSLContext,
         countryId: UUID,
         data: TestCityData = createTestCityData()
     ): UUID =
-        transaction(database) {
-            CityEntity
-                .new {
-                    this.country = CountryEntity.findById(countryId)!!
-                    this.nameRu = data.nameRu
-                    this.nameEn = data.nameEn
-                    this.lat = data.lat
-                    this.lon = data.lon
-                }.id.value
+        dslContext.transactionResult { configuration ->
+            val ctx = DSL.using(configuration)
+            val now = Instant.now()
+            val id = UUID.randomUUID()
+
+            ctx
+                .insertInto(CITIES)
+                .set(CITIES.ID, id)
+                .set(CITIES.COUNTRY_ID, countryId)
+                .set(CITIES.NAME_RU, data.nameRu)
+                .set(CITIES.NAME_EN, data.nameEn)
+                .set(
+                    CITIES.COORDINATES,
+                    pointExpr(data.lon, data.lat, CITIES.COORDINATES)
+                ).set(CITIES.CREATED_AT, now)
+                .set(CITIES.UPDATED_AT, now)
+                .returning(CITIES.ID)
+                .fetchOne()
+                ?.getValue(CITIES.ID)
+                ?: error("Failed to insert test city")
         }
 
     fun insertTestRestroom(
-        database: Database,
+        dslContext: DSLContext,
         cityId: UUID? = null,
         data: TestRestroomData = createTestRestroomData()
     ): UUID =
-        transaction(database) {
-            RestroomEntity
-                .new {
-                    this.city = cityId?.let { CityEntity.findById(it) }
-                    this.name = data.name
-                    this.description = data.description
-                    this.address = data.address
-                    this.phones = data.phones
-                    this.workTime = data.workTime
-                    this.feeType = data.feeType
-                    this.accessibilityType = data.accessibilityType
-                    this.coordinates = GeoPoint(longitude = data.lon, latitude = data.lat)
-                    this.dataSource = data.dataSource
-                    this.status = data.status
-                    this.amenities = data.amenities
-                }.id.value
+        dslContext.transactionResult { configuration ->
+            val ctx = DSL.using(configuration)
+            val now = Instant.now()
+            val id = UUID.randomUUID()
+
+            ctx
+                .insertInto(RESTROOMS)
+                .set(RESTROOMS.ID, id)
+                .set(RESTROOMS.CITY_ID, cityId)
+                .set(RESTROOMS.NAME, data.name)
+                .set(RESTROOMS.DESCRIPTION, data.description)
+                .set(RESTROOMS.ADDRESS, data.address)
+                .set(RESTROOMS.PHONES, data.phones.toJSONBOrEmpty())
+                .set(RESTROOMS.WORK_TIME, data.workTime.toJSONBOrEmpty())
+                .set(RESTROOMS.FEE_TYPE, data.feeType.name)
+                .set(RESTROOMS.ACCESSIBILITY_TYPE, data.accessibilityType.name)
+                .set(
+                    RESTROOMS.COORDINATES,
+                    pointExpr(data.lon, data.lat, RESTROOMS.COORDINATES)
+                ).set(RESTROOMS.DATA_SOURCE, data.dataSource.name)
+                .set(RESTROOMS.STATUS, data.status.name)
+                .set(RESTROOMS.AMENITIES, data.amenities.toJSONBOrEmpty())
+                .set(RESTROOMS.CREATED_AT, now)
+                .set(RESTROOMS.UPDATED_AT, now)
+                .returning(RESTROOMS.ID)
+                .fetchOne()
+                ?.getValue(RESTROOMS.ID)
+                ?: error("Failed to insert test restroom")
         }
 
-    fun createTestEnvironment(database: Database): TestEnvironment {
-        val countryId = insertTestCountry(database)
-        val cityId = insertTestCity(database, countryId)
+    fun createTestEnvironment(dslContext: DSLContext): TestEnvironment {
+        val countryId = insertTestCountry(dslContext)
+        val cityId = insertTestCity(dslContext, countryId)
         return TestEnvironment(countryId, cityId)
     }
 

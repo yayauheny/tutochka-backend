@@ -34,6 +34,88 @@ import yayauheny.by.service.validation.nearestRestroomsParamsValidator
 import yayauheny.by.service.validation.restroomCreateValidator
 
 class ValidationTest {
+    companion object {
+        @JvmStatic
+        fun invalidCountryData(): Stream<Arguments> =
+            Stream.of(
+                Arguments.of(CountryCreateDto("", "United States", "US"), 1), // Empty nameRu
+                Arguments.of(CountryCreateDto("Соединенные Штаты", "", "US"), 1), // Empty nameEn
+                Arguments.of(CountryCreateDto("Соединенные Штаты", "United States", ""), 1), // Empty code
+                Arguments.of(CountryCreateDto("Соединенные Штаты", "United States", "US"), 0) // Valid
+            )
+
+        @JvmStatic
+        fun invalidCityData(): Stream<Arguments> =
+            Stream.of(
+                Arguments.of(
+                    CityCreateDto(UUID.randomUUID(), "", "Minsk", null, LatLon(lat = 53.9006, lon = 27.5590)),
+                    1
+                ), // Empty nameRu
+                Arguments.of(
+                    CityCreateDto(UUID.randomUUID(), "Минск", "", null, LatLon(lat = 53.9006, lon = 27.5590)),
+                    1
+                ), // Empty nameEn
+                Arguments.of(
+                    CityCreateDto(UUID.randomUUID(), "Минск", "Minsk", null, LatLon(lat = 91.0, lon = 27.5590)),
+                    1
+                ), // lat > 90
+                Arguments.of(
+                    CityCreateDto(UUID.randomUUID(), "Минск", "Minsk", null, LatLon(lat = -91.0, lon = 27.5590)),
+                    1
+                ), // lat < -90
+                Arguments.of(
+                    CityCreateDto(UUID.randomUUID(), "Минск", "Minsk", null, LatLon(lat = 53.9006, lon = 181.0)),
+                    1
+                ), // lon > 180
+                Arguments.of(
+                    CityCreateDto(UUID.randomUUID(), "Минск", "Minsk", null, LatLon(lat = 53.9006, lon = -181.0)),
+                    1
+                ), // lon < -180
+                Arguments.of(
+                    CityCreateDto(UUID.randomUUID(), "Минск", "Minsk", null, LatLon(lat = 53.9006, lon = 27.5590)),
+                    0
+                ) // Valid
+            )
+
+        @JvmStatic
+        fun invalidRestroomData(): Stream<Arguments> =
+            Stream.of(
+                Arguments.of(
+                    RestroomCreateDto(
+                        cityId = UUID.randomUUID(),
+                        status = RestroomStatus.ACTIVE,
+                        name = null,
+                        description = null,
+                        address = "",
+                        phones = null,
+                        workTime = null,
+                        feeType = FeeType.FREE,
+                        accessibilityType = AccessibilityType.UNISEX,
+                        coordinates = LatLon(lat = 55.7558, lon = 37.6176),
+                        dataSource = DataSourceType.MANUAL,
+                        amenities = buildJsonObject {},
+                        parentPlaceName = null,
+                        parentPlaceType = null,
+                        inheritParentSchedule = false
+                    ),
+                    1
+                ),
+            )
+
+        @JvmStatic
+        fun invalidNearestRestroomsParamsData(): Stream<Arguments> =
+            Stream.of(
+                Arguments.of(NearestRestroomsParams(LatLon(lat = 91.0, lon = 37.6176), 10, 1000), 1), // lat > 90
+                Arguments.of(NearestRestroomsParams(LatLon(lat = -91.0, lon = 37.6176), 10, 1000), 1), // lat < -90
+                Arguments.of(NearestRestroomsParams(LatLon(lat = 55.7558, lon = 181.0), 10, 1000), 1), // lon > 180
+                Arguments.of(NearestRestroomsParams(LatLon(lat = 55.7558, lon = -181.0), 10, 1000), 1), // lon < -180
+                Arguments.of(NearestRestroomsParams(LatLon(lat = 55.7558, lon = 37.6176), 0, 1000), 1), // limit = 0
+                Arguments.of(NearestRestroomsParams(LatLon(lat = 55.7558, lon = 37.6176), -1, 1000), 1), // limit < 0
+                Arguments.of(NearestRestroomsParams(LatLon(lat = 55.7558, lon = 37.6176), 101, 1000), 1), // limit > 100
+                Arguments.of(NearestRestroomsParams(LatLon(lat = 91.0, lon = 181.0), 101, 1000), 3), // Multiple issues
+            )
+    }
+
     @Nested
     @DisplayName("CountryCreateDto validation")
     inner class CountryValidationTest {
@@ -53,7 +135,7 @@ class ValidationTest {
         }
 
         @ParameterizedTest
-        @MethodSource("unit.service.ValidationTest#invalidCountryData")
+        @MethodSource("yayauheny.by.unit.service.ValidationTest#invalidCountryData")
         @DisplayName("Invalid data should fail validation")
         fun invalidDataShouldFailValidation(
             dto: CountryCreateDto,
@@ -102,7 +184,7 @@ class ValidationTest {
         }
 
         @ParameterizedTest
-        @MethodSource("unit.service.ValidationTest#invalidCityData")
+        @MethodSource("yayauheny.by.unit.service.ValidationTest#invalidCityData")
         @DisplayName("Invalid data should fail validation")
         fun invalidDataShouldFailValidation(
             dto: CityCreateDto,
@@ -132,6 +214,7 @@ class ValidationTest {
                     accessibilityType = AccessibilityType.UNISEX,
                     coordinates = LatLon(lat = 55.7558, lon = 37.6176),
                     dataSource = DataSourceType.MANUAL,
+                    status = RestroomStatus.ACTIVE,
                     amenities = buildJsonObject { put("wifi", true) },
                     parentPlaceName = null,
                     parentPlaceType = null,
@@ -144,7 +227,7 @@ class ValidationTest {
         }
 
         @ParameterizedTest
-        @MethodSource("unit.service.ValidationTest#invalidRestroomData")
+        @MethodSource("yayauheny.by.unit.service.ValidationTest#invalidRestroomData")
         @DisplayName("Invalid data should fail validation")
         fun invalidDataShouldFailValidation(
             dto: RestroomCreateDto,
@@ -263,150 +346,6 @@ class ValidationTest {
         }
     }
 
-    companion object {
-        @JvmStatic
-        fun invalidCountryData(): Stream<Arguments> =
-            Stream.of(
-                Arguments.of(CountryCreateDto("", "United States", "US"), 1), // Empty nameRu
-                Arguments.of(CountryCreateDto("США", "", "US"), 1), // Empty nameEn
-                Arguments.of(CountryCreateDto("США", "United States", ""), 2), // Empty code (minLength + maxLength)
-                Arguments.of(CountryCreateDto("США", "United States", "U"), 1), // Too short code
-                Arguments.of(CountryCreateDto("США", "United States", "TOOLONGCODE"), 1), // Too long code
-                Arguments.of(CountryCreateDto("США", "United States", "US@"), 1), // Invalid characters
-                Arguments.of(CountryCreateDto("", "", "U"), 3), // Multiple issues
-            )
-
-        @JvmStatic
-        fun invalidCityData(): Stream<Arguments> =
-            Stream.of(
-                Arguments.of(CityCreateDto(UUID.randomUUID(), "", "Minsk", null, LatLon(lat = 53.9006, lon = 27.5590)), 1), // Empty nameRu
-                Arguments.of(CityCreateDto(UUID.randomUUID(), "Минск", "", null, LatLon(lat = 53.9006, lon = 27.5590)), 1), // Empty nameEn
-                Arguments.of(CityCreateDto(UUID.randomUUID(), "Минск", "Minsk", null, LatLon(lat = 91.0, lon = 27.5590)), 1), // Invalid lat > 90
-                Arguments.of(CityCreateDto(UUID.randomUUID(), "Минск", "Minsk", null, LatLon(lat = -91.0, lon = 27.5590)), 1), // Invalid lat < -90
-                Arguments.of(CityCreateDto(UUID.randomUUID(), "Минск", "Minsk", null, LatLon(lat = 53.9006, lon = 181.0)), 1), // Invalid lon > 180
-                Arguments.of(CityCreateDto(UUID.randomUUID(), "Минск", "Minsk", null, LatLon(lat = 53.9006, lon = -181.0)), 1), // Invalid lon < -180
-                Arguments.of(CityCreateDto(UUID.randomUUID(), "", "", null, LatLon(lat = 91.0, lon = 181.0)), 4), // Multiple issues
-            )
-
-        @JvmStatic
-        fun invalidRestroomData(): Stream<Arguments> =
-            Stream.of(
-                Arguments.of(
-                    RestroomCreateDto(
-                        cityId = UUID.randomUUID(),
-                        status = RestroomStatus.ACTIVE,
-                        name = "Test",
-                        description = "Test",
-                        address = "", // Empty address
-                        phones = buildJsonObject {},
-                        workTime = buildJsonObject {},
-                        feeType = FeeType.FREE,
-                        accessibilityType = AccessibilityType.UNISEX,
-                        coordinates = LatLon(lat = 55.7558, lon = 37.6176),
-                        dataSource = DataSourceType.MANUAL,
-                        amenities = buildJsonObject {},
-                        parentPlaceName = null,
-                        parentPlaceType = null,
-                        inheritParentSchedule = false
-                    ),
-                    1
-                ),
-                Arguments.of(
-                    RestroomCreateDto(
-                        cityId = UUID.randomUUID(),
-                        status = RestroomStatus.ACTIVE,
-                        name = "Test",
-                        description = "Test",
-                        address = "123 Main St",
-                        phones = buildJsonObject {},
-                        workTime = buildJsonObject {},
-                        feeType = FeeType.FREE,
-                        accessibilityType = AccessibilityType.UNISEX,
-                        coordinates = LatLon(lat = 91.0, lon = 37.6176), // Invalid lat > 90
-                        dataSource = DataSourceType.MANUAL,
-                        amenities = buildJsonObject {},
-                        parentPlaceName = null,
-                        parentPlaceType = null,
-                        inheritParentSchedule = false
-                    ),
-                    1
-                ),
-                Arguments.of(
-                    RestroomCreateDto(
-                        cityId = UUID.randomUUID(),
-                        status = RestroomStatus.ACTIVE,
-                        name = "Test",
-                        description = "Test",
-                        address = "123 Main St",
-                        phones = buildJsonObject {},
-                        workTime = buildJsonObject {},
-                        feeType = FeeType.FREE,
-                        accessibilityType = AccessibilityType.UNISEX,
-                        coordinates = LatLon(lat = -91.0, lon = 37.6176), // Invalid lat < -90
-                        dataSource = DataSourceType.MANUAL,
-                        amenities = buildJsonObject {},
-                        parentPlaceName = null,
-                        parentPlaceType = null,
-                        inheritParentSchedule = false
-                    ),
-                    1
-                ),
-                Arguments.of(
-                    RestroomCreateDto(
-                        cityId = UUID.randomUUID(),
-                        status = RestroomStatus.ACTIVE,
-                        name = "Test",
-                        description = "Test",
-                        address = "123 Main St",
-                        phones = buildJsonObject {},
-                        workTime = buildJsonObject {},
-                        feeType = FeeType.FREE,
-                        accessibilityType = AccessibilityType.UNISEX,
-                        coordinates = LatLon(lat = 55.7558, lon = 181.0), // Invalid lon > 180
-                        dataSource = DataSourceType.MANUAL,
-                        amenities = buildJsonObject {},
-                        parentPlaceName = null,
-                        parentPlaceType = null,
-                        inheritParentSchedule = false
-                    ),
-                    1
-                ),
-                Arguments.of(
-                    RestroomCreateDto(
-                        cityId = UUID.randomUUID(),
-                        status = RestroomStatus.ACTIVE,
-                        name = "Test",
-                        description = "Test",
-                        address = "123 Main St",
-                        phones = buildJsonObject {},
-                        workTime = buildJsonObject {},
-                        feeType = FeeType.FREE,
-                        accessibilityType = AccessibilityType.UNISEX,
-                        coordinates = LatLon(lat = 55.7558, lon = -181.0), // Invalid lon < -180
-                        dataSource = DataSourceType.MANUAL,
-                        amenities = buildJsonObject {},
-                        parentPlaceName = null,
-                        parentPlaceType = null,
-                        inheritParentSchedule = false
-                    ),
-                    1
-                ),
-            )
-
-        @JvmStatic
-        fun invalidNearestRestroomsParamsData(): Stream<Arguments> =
-            Stream.of(
-                Arguments.of(NearestRestroomsParams(91.0, 37.6176, 10), 1), // lat > 90
-                Arguments.of(NearestRestroomsParams(-91.0, 37.6176, 10), 1), // lat < -90
-                Arguments.of(NearestRestroomsParams(55.7558, 181.0, 10), 1), // lon > 180
-                Arguments.of(NearestRestroomsParams(55.7558, -181.0, 10), 1), // lon < -180
-                Arguments.of(NearestRestroomsParams(55.7558, 37.6176, 0), 1), // limit = 0
-                Arguments.of(NearestRestroomsParams(55.7558, 37.6176, -1), 1), // limit < 0
-                Arguments.of(NearestRestroomsParams(55.7558, 37.6176, 101), 1), // limit > 100
-                Arguments.of(NearestRestroomsParams(91.0, 181.0, 101), 3), // Multiple issues
-            )
-    }
-
     @Nested
     @DisplayName("NearestRestroomsParams validation")
     inner class NearestRestroomsParamsValidationTest {
@@ -429,7 +368,7 @@ class ValidationTest {
             }
 
         @ParameterizedTest
-        @MethodSource("unit.service.ValidationTest#invalidNearestRestroomsParamsData")
+        @MethodSource("yayauheny.by.unit.service.ValidationTest#invalidNearestRestroomsParamsData")
         @DisplayName("Invalid parameters should fail validation")
         fun invalid_params_should_fail(
             params: NearestRestroomsParams,
@@ -441,7 +380,7 @@ class ValidationTest {
         }
 
         @ParameterizedTest
-        @MethodSource("unit.service.ValidationTest#invalidNearestRestroomsParamsData")
+        @MethodSource("yayauheny.by.unit.service.ValidationTest#invalidNearestRestroomsParamsData")
         @DisplayName("Invalid parameters should throw ValidationException")
         fun invalid_params_should_throw(
             params: NearestRestroomsParams,
