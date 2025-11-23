@@ -3,28 +3,53 @@ package yayauheny.by.common.mapper
 import org.jooq.Record
 import org.jooq.UpdateSetFirstStep
 import org.jooq.UpdateSetMoreStep
+import org.slf4j.LoggerFactory
 import yayauheny.by.model.LatLon
 import yayauheny.by.model.city.CityResponseDto
 import yayauheny.by.model.city.CityUpdateDto
 import yayauheny.by.tables.references.CITIES
-import yayauheny.by.util.geomFromGeoJson
-import yayauheny.by.util.reqDouble
 
 object CityMapper {
+    private val logger = LoggerFactory.getLogger(CityMapper::class.java)
+
     fun mapFromRecord(record: Record): CityResponseDto {
-        return CityResponseDto(
-            id = record[CITIES.ID]!!,
-            cityBounds = record.get("city_bounds_json") as? String,
-            countryId = record[CITIES.COUNTRY_ID]!!,
-            nameRu = record[CITIES.NAME_RU]!!,
-            nameEn = record[CITIES.NAME_EN]!!,
-            region = record[CITIES.REGION],
-            coordinates =
-                LatLon(
-                    lat = record.reqDouble("lat"),
-                    lon = record.reqDouble("lon")
+        logger.info("mapFromRecord() called")
+        try {
+            logger.info("Getting lat/lon from record")
+            val lat = record.get("lat", Double::class.javaObjectType)
+            val lon = record.get("lon", Double::class.javaObjectType)
+            logger.info("lat=$lat, lon=$lon")
+
+            // Если вдруг не пришли — шанс, что забыли подключить projection:
+            require(lat != null && lon != null) {
+                "Missing lat/lon in record. Make sure query/returning uses cityProjection() with CITIES.COORDINATES.lat()/lon()."
+            }
+            logger.info("lat/lon validation passed")
+
+            logger.info("Getting other fields from record")
+            val id = record[CITIES.ID]!!
+            val countryId = record[CITIES.COUNTRY_ID]!!
+            val nameRu = record[CITIES.NAME_RU]!!
+            val nameEn = record[CITIES.NAME_EN]!!
+            val region = record[CITIES.REGION]
+            logger.info("Fields extracted: id=$id, countryId=$countryId, nameRu=$nameRu, nameEn=$nameEn, region=$region")
+
+            logger.info("Creating CityResponseDto")
+            val result =
+                CityResponseDto(
+                    id = id,
+                    countryId = countryId,
+                    nameRu = nameRu,
+                    nameEn = nameEn,
+                    region = region,
+                    coordinates = LatLon(lat = lat!!, lon = lon!!)
                 )
-        )
+            logger.info("CityResponseDto created successfully: id=${result.id}")
+            return result
+        } catch (e: Exception) {
+            logger.error("Error in mapFromRecord()", e)
+            throw e
+        }
     }
 
     fun applyUpdateDto(
@@ -32,23 +57,10 @@ object CityMapper {
         dto: CityUpdateDto
     ): UpdateSetMoreStep<*> {
         val r = CITIES
-        var step =
-            update
-                .set(r.COUNTRY_ID, dto.countryId)
-                .set(r.NAME_RU, dto.nameRu)
-                .set(r.NAME_EN, dto.nameEn)
-                .set(r.REGION, dto.region)
-
-        step =
-            if (dto.cityBounds != null) {
-                step.set(
-                    r.CITY_BOUNDS,
-                    geomFromGeoJson(dto.cityBounds, r.CITY_BOUNDS)
-                )
-            } else {
-                step.set(r.CITY_BOUNDS, null as org.jooq.Geometry?)
-            }
-
-        return step
+        return update
+            .set(r.COUNTRY_ID, dto.countryId)
+            .set(r.NAME_RU, dto.nameRu)
+            .set(r.NAME_EN, dto.nameEn)
+            .set(r.REGION, dto.region)
     }
 }

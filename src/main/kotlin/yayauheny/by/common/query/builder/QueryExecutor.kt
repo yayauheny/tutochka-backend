@@ -99,7 +99,7 @@ class QueryExecutor<T>(
     ): PageResponse<T> {
         val totalElements = if (fetchCount) ctx.fetchCount(filtered) else 0
         val sorted = filtered.applySorting(builder, request.sort, request.direction)
-        val offset = ((request.page - 1).coerceAtLeast(0)) * request.size
+        val offset = request.page * request.size
         val content =
             sorted
                 .limit(request.size)
@@ -120,7 +120,7 @@ class QueryExecutor<T>(
             size = request.size,
             totalElements = totalElements,
             totalPages = totalPages,
-            first = request.page <= 1,
+            first = request.page <= 0,
             last = fetchCount && request.page >= totalPages
         )
     }

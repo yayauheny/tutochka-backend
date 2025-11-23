@@ -91,3 +91,29 @@ fun Field<*>.asGeoJson(): Field<String> = DSL.field("ST_AsGeoJSON({0})", SQLData
 
 /** Извлекает double из Record, выбрасывает ошибку если колонка отсутствует */
 fun Record.reqDouble(name: String): Double = get(name, Double::class.java) ?: error("Expected column '$name' in SELECT")
+
+/** Возвращает все поля таблицы RESTROOMS кроме coordinates (для SELECT запросов) */
+fun getAllRestroomsFieldsExceptCoordinates(): List<org.jooq.Field<*>> {
+    val r = yayauheny.by.tables.references.RESTROOMS
+    return listOf(
+        r.ID,
+        r.CITY_ID,
+        r.NAME,
+        r.DESCRIPTION,
+        r.ADDRESS,
+        r.PHONES,
+        r.WORK_TIME,
+        r.FEE_TYPE,
+        r.ACCESSIBILITY_TYPE,
+        r.DATA_SOURCE,
+        r.STATUS,
+        r.AMENITIES,
+        r.PARENT_PLACE_NAME,
+        r.PARENT_PLACE_TYPE,
+        r.INHERIT_PARENT_SCHEDULE,
+        r.IS_DELETED,
+        r.CREATED_AT,
+        r.UPDATED_AT,
+        r.DELETED_AT
+    )
+}

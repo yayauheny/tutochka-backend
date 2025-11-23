@@ -7,11 +7,17 @@ import io.ktor.http.HttpStatusCode
 import kotlin.test.assertEquals
 import kotlin.test.assertTrue
 import kotlinx.coroutines.test.runTest
+import kotlinx.serialization.json.Json
+import kotlinx.serialization.json.jsonObject
+import kotlinx.serialization.json.jsonPrimitive
+import kotlinx.serialization.json.intOrNull
 import org.junit.jupiter.api.DisplayName
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Tag
 import org.junit.jupiter.api.Test
 import yayauheny.by.helpers.assertJsonContentType
+import yayauheny.by.helpers.assertStatusAndJsonContent
+import yayauheny.by.helpers.assertBodyContainsAll
 import yayauheny.by.helpers.testGet
 import yayauheny.by.helpers.testPost
 
@@ -27,11 +33,8 @@ class CountryApiTest : BaseIntegrationTest() {
                 KtorTestApplication.withApp(dslContext) { client ->
                     val response = client.testGet("/api/v1/countries")
 
-                    assertEquals(HttpStatusCode.OK, response.status)
-                    response.assertJsonContentType()
-                    val body = response.bodyAsText()
-                    assertTrue(body.contains("\"content\""))
-                    assertTrue(body.contains("\"totalElements\""))
+                    response.assertStatusAndJsonContent(HttpStatusCode.OK)
+                    response.assertBodyContainsAll("\"content\"", "\"totalElements\"")
                 }
             }
 
@@ -42,11 +45,10 @@ class CountryApiTest : BaseIntegrationTest() {
                 KtorTestApplication.withApp(dslContext) { client ->
                     val response = client.testGet("/api/v1/countries", mapOf("page" to "0", "size" to "10"))
 
-                    assertEquals(HttpStatusCode.OK, response.status)
-                    response.assertJsonContentType()
-                    val body = response.bodyAsText()
-                    assertTrue(body.contains("\"page\":0"))
-                    assertTrue(body.contains("\"size\":10"))
+                    response.assertStatusAndJsonContent(HttpStatusCode.OK)
+                    val json = Json.parseToJsonElement(response.bodyAsText()).jsonObject
+                    assertEquals(0, json["page"]!!.jsonPrimitive.intOrNull)
+                    assertEquals(10, json["size"]!!.jsonPrimitive.intOrNull)
                 }
             }
     }
@@ -62,11 +64,10 @@ class CountryApiTest : BaseIntegrationTest() {
                     val validJson = """{"nameRu": "Тестовая страна", "nameEn": "Test Country", "code": "TC"}"""
                     val response = client.testPost("/api/v1/countries", validJson)
 
-                    assertEquals(HttpStatusCode.Created, response.status)
-                    response.assertJsonContentType()
-                    val body = response.bodyAsText()
-                    assertTrue(body.contains("\"id\""))
-                    assertTrue(body.contains("\"code\""))
+                    response.assertStatusAndJsonContent(HttpStatusCode.Created)
+                    val json = Json.parseToJsonElement(response.bodyAsText()).jsonObject
+                    assertTrue(json.containsKey("id"))
+                    assertTrue(json.containsKey("code"))
                 }
             }
     }
@@ -111,8 +112,7 @@ class CountryApiTest : BaseIntegrationTest() {
             runTest {
                 KtorTestApplication.withApp(dslContext) { client ->
                     val response = client.testGet("/api/v1/countries/invalid-uuid")
-                    assertEquals(HttpStatusCode.BadRequest, response.status)
-                    response.assertJsonContentType()
+                    response.assertStatusAndJsonContent(HttpStatusCode.BadRequest)
                 }
             }
 
@@ -123,10 +123,10 @@ class CountryApiTest : BaseIntegrationTest() {
                 KtorTestApplication.withApp(dslContext) { client ->
                     val nonExistentId = "550e8400-e29b-41d4-a716-446655440000"
                     val response = client.testGet("/api/v1/countries/$nonExistentId")
-                    assertEquals(HttpStatusCode.NotFound, response.status)
-                    response.assertJsonContentType()
-                    val body = response.bodyAsText()
-                    assertTrue(body.contains("not found"))
+                    response.assertStatusAndJsonContent(HttpStatusCode.NotFound)
+                    val json = Json.parseToJsonElement(response.bodyAsText()).jsonObject
+                    val message = json["message"]?.jsonPrimitive?.content
+                    assertTrue(message != null && message.lowercase().contains("not found"))
                 }
             }
 
@@ -136,10 +136,10 @@ class CountryApiTest : BaseIntegrationTest() {
             runTest {
                 KtorTestApplication.withApp(dslContext) { client ->
                     val response = client.testGet("/api/v1/countries/code/XX")
-                    assertEquals(HttpStatusCode.NotFound, response.status)
-                    response.assertJsonContentType()
-                    val body = response.bodyAsText()
-                    assertTrue(body.contains("not found"))
+                    response.assertStatusAndJsonContent(HttpStatusCode.NotFound)
+                    val json = Json.parseToJsonElement(response.bodyAsText()).jsonObject
+                    val message = json["message"]?.jsonPrimitive?.content
+                    assertTrue(message != null && message.lowercase().contains("not found"))
                 }
             }
 
@@ -149,8 +149,7 @@ class CountryApiTest : BaseIntegrationTest() {
             runTest {
                 KtorTestApplication.withApp(dslContext) { client ->
                     val response = client.testPost("/api/v1/countries", """{"invalid": "data"}""")
-                    assertEquals(HttpStatusCode.BadRequest, response.status)
-                    response.assertJsonContentType()
+                    response.assertStatusAndJsonContent(HttpStatusCode.BadRequest)
                 }
             }
 
@@ -161,8 +160,7 @@ class CountryApiTest : BaseIntegrationTest() {
                 KtorTestApplication.withApp(dslContext) { client ->
                     val incompleteJson = """{"nameRu": "Тестовая страна"}"""
                     val response = client.testPost("/api/v1/countries", incompleteJson)
-                    assertEquals(HttpStatusCode.BadRequest, response.status)
-                    response.assertJsonContentType()
+                    response.assertStatusAndJsonContent(HttpStatusCode.BadRequest)
                 }
             }
 
@@ -180,10 +178,9 @@ class CountryApiTest : BaseIntegrationTest() {
                         }
                         """.trimIndent()
                     val response = client.testPost("/api/v1/countries", tooLongCodeJson)
-                    assertEquals(HttpStatusCode.BadRequest, response.status)
-                    response.assertJsonContentType()
-                    val body = response.bodyAsText()
-                    assertTrue(body.contains("\"errors\""))
+                    response.assertStatusAndJsonContent(HttpStatusCode.BadRequest)
+                    val json = Json.parseToJsonElement(response.bodyAsText()).jsonObject
+                    assertTrue(json.containsKey("errors"))
                 }
             }
 
@@ -212,10 +209,11 @@ class CountryApiTest : BaseIntegrationTest() {
                         }
                         """.trimIndent()
                     val response = client.testPost("/api/v1/countries", duplicateCodeJson)
-                    assertEquals(HttpStatusCode.Conflict, response.status)
-                    response.assertJsonContentType()
-                    val body = response.bodyAsText()
-                    assertTrue(body.contains("already exists"))
+                    response.assertStatusAndJsonContent(HttpStatusCode.Conflict)
+                    val json = Json.parseToJsonElement(response.bodyAsText()).jsonObject
+                    assertEquals(409, json["status"]!!.jsonPrimitive.intOrNull)
+                    val message = json["message"]?.jsonPrimitive?.content
+                    assertTrue(message != null && message.lowercase().contains("exist"))
                 }
             }
     }

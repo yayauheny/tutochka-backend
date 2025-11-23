@@ -10,6 +10,8 @@ import io.ktor.server.response.respond
 import java.time.Instant
 import kotlinx.serialization.SerializationException
 import org.slf4j.LoggerFactory
+import org.postgresql.util.PSQLException
+import yayauheny.by.common.errors.ConflictException
 import yayauheny.by.common.errors.ErrorResponse
 import yayauheny.by.common.errors.RestException
 import yayauheny.by.common.errors.ValidationException
@@ -75,6 +77,50 @@ fun Application.configureErrorHandling() {
                 )
 
             call.respond(HttpStatusCode.BadRequest, errorResponse)
+        }
+
+        exception<ConflictException> { call, cause ->
+            logger.warn("Conflict exception occurred: ${cause.message}", cause)
+
+            val errorResponse =
+                ErrorResponse(
+                    timestamp = Instant.now().toString(),
+                    status = HttpStatusCode.Conflict.value,
+                    error = HttpStatusCode.Conflict.description,
+                    message = cause.message ?: "Конфликт ресурсов",
+                    path = call.request.path()
+                )
+
+            call.respond(HttpStatusCode.Conflict, errorResponse)
+        }
+
+        exception<PSQLException> { call, cause ->
+            logger.warn("PostgreSQL exception occurred: ${cause.message}", cause)
+
+            // Обработка ошибки уникальности (23505)
+            val errorResponse =
+                if (cause.sqlState == "23505") {
+                    ErrorResponse(
+                        timestamp = Instant.now().toString(),
+                        status = HttpStatusCode.Conflict.value,
+                        error = HttpStatusCode.Conflict.description,
+                        message = "Город с таким названием уже существует в этой стране",
+                        path = call.request.path()
+                    )
+                } else {
+                    ErrorResponse(
+                        timestamp = Instant.now().toString(),
+                        status = HttpStatusCode.InternalServerError.value,
+                        error = HttpStatusCode.InternalServerError.description,
+                        message = "Ошибка базы данных",
+                        path = call.request.path()
+                    )
+                }
+
+            call.respond(
+                if (cause.sqlState == "23505") HttpStatusCode.Conflict else HttpStatusCode.InternalServerError,
+                errorResponse
+            )
         }
 
         exception<IllegalArgumentException> { call, cause ->

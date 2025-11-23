@@ -368,18 +368,20 @@ class RestroomServiceTest {
             }
 
         @Test
-        @DisplayName("GIVEN non-existent restroom WHEN updating THEN return null")
-        fun given_non_existent_restroom_when_updating_then_return_null() =
+        @DisplayName("GIVEN non-existent restroom WHEN updating THEN throw error")
+        fun given_non_existent_restroom_when_updating_then_throw_error() =
             runTest {
                 val nonExistentId = UUID.randomUUID()
                 val updateDto = TestDataHelpers.createRestroomUpdateDto()
-                coEvery { restroomRepository.findById(nonExistentId) } returns null
+                coEvery { restroomRepository.update(nonExistentId, updateDto) } throws Exception("Failed to update restroom $nonExistentId")
 
-                val actualResult = restroomService.updateRestroom(nonExistentId, updateDto)
+                val exception =
+                    kotlin.test.assertFailsWith<Exception> {
+                        restroomService.updateRestroom(nonExistentId, updateDto)
+                    }
 
-                assertNull(actualResult)
-                coVerify(exactly = 1) { restroomRepository.findById(nonExistentId) }
-                coVerify(exactly = 0) { restroomRepository.save(any()) }
+                assertTrue(exception.message?.contains("Failed to update restroom") == true)
+                coVerify(exactly = 1) { restroomRepository.update(nonExistentId, updateDto) }
             }
 
         @Test
@@ -399,15 +401,16 @@ class RestroomServiceTest {
                         description = existingRestroom.description,
                         address = existingRestroom.address
                     )
-                coEvery { restroomRepository.update(any(), any()) } returns existingRestroom
+                // Repository update will set updatedAt to current time, but createdAt should be preserved
+                val updatedRestroom = existingRestroom.copy(updatedAt = Instant.now())
+                coEvery { restroomRepository.update(existingRestroom.id, updateDto) } returns updatedRestroom
 
                 val actualResult = restroomService.updateRestroom(existingRestroom.id, updateDto)
 
-                assertEquals(existingRestroom, actualResult)
+                assertEquals(updatedRestroom, actualResult)
                 assertNotNull(actualResult)
                 assertEquals(originalCreatedAt, actualResult!!.createdAt)
-                coVerify(exactly = 1) { restroomRepository.findById(existingRestroom.id) }
-                coVerify(exactly = 1) { restroomRepository.save(any()) }
+                coVerify(exactly = 1) { restroomRepository.update(existingRestroom.id, updateDto) }
             }
 
         @ParameterizedTest
@@ -417,16 +420,16 @@ class RestroomServiceTest {
             runTest {
                 val existingRestroom = TestDataHelpers.createRestroomResponseDto(status = status)
                 val updateDto = TestDataHelpers.createRestroomUpdateDto()
-                coEvery { restroomRepository.findById(existingRestroom.id) } returns existingRestroom
-                coEvery { restroomRepository.save(any()) } returns existingRestroom
+                // Repository update preserves status from existing restroom
+                val updatedRestroom = existingRestroom.copy(updatedAt = Instant.now())
+                coEvery { restroomRepository.update(existingRestroom.id, updateDto) } returns updatedRestroom
 
                 val actualResult = restroomService.updateRestroom(existingRestroom.id, updateDto)
 
-                assertEquals(existingRestroom, actualResult)
+                assertEquals(updatedRestroom, actualResult)
                 assertNotNull(actualResult)
                 assertEquals(status, actualResult!!.status)
-                coVerify(exactly = 1) { restroomRepository.findById(existingRestroom.id) }
-                coVerify(exactly = 1) { restroomRepository.save(any()) }
+                coVerify(exactly = 1) { restroomRepository.update(existingRestroom.id, updateDto) }
             }
     }
 

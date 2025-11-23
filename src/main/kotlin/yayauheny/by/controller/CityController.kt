@@ -9,14 +9,18 @@ import io.ktor.server.routing.get
 import io.ktor.server.routing.post
 import io.ktor.server.routing.put
 import io.ktor.server.routing.route
-import io.ktor.server.util.getOrFail
+import org.slf4j.LoggerFactory
+import yayauheny.by.common.errors.FieldError
 import yayauheny.by.common.errors.NotFoundException
+import yayauheny.by.common.errors.ValidationException
 import yayauheny.by.model.city.CityCreateDto
 import yayauheny.by.model.city.CityUpdateDto
 import yayauheny.by.service.CityService
+import yayauheny.by.service.validation.Validated
 import yayauheny.by.service.validation.cityCreateValidator
 import yayauheny.by.service.validation.cityUpdateValidator
 import yayauheny.by.service.validation.validateAndThen
+import yayauheny.by.service.validation.validateWith
 import yayauheny.by.util.getUuidFromPath
 import yayauheny.by.util.toPaginationRequest
 
@@ -47,19 +51,56 @@ class CityController(
             }
 
             get("/search") {
-                val name: String = call.parameters.getOrFail("name")
+                val name = call.request.queryParameters["name"]?.trim()
+                val errors = mutableListOf<FieldError>()
+                if (name.isNullOrBlank()) {
+                    errors += FieldError("name", "Параметр name обязателен")
+                } else if (name.length < 2) {
+                    errors += FieldError("name", "Минимальная длина параметра name — 2 символа")
+                }
+                if (errors.isNotEmpty()) {
+                    throw ValidationException(errors = errors)
+                }
+
                 val pagination = call.toPaginationRequest()
-                val pageResponse = cityService.searchCitiesByName(name, pagination)
+                val pageResponse = cityService.searchCitiesByName(name!!, pagination)
                 call.respond(HttpStatusCode.OK, pageResponse)
             }
 
             post {
-                val createDto = call.receive<CityCreateDto>()
-                val city =
-                    createDto.validateAndThen(cityCreateValidator) { valid ->
-                        cityService.createCity(valid)
+                val logger = LoggerFactory.getLogger("CityController")
+                try {
+                    val createDto = call.receive<CityCreateDto>()
+                    logger.debug(
+                        "POST /api/v1/cities - Received CityCreateDto: countryId=${createDto.countryId}, nameRu=${createDto.nameRu}, nameEn=${createDto.nameEn}, region=${createDto.region}, coordinates=(${createDto.coordinates.lat}, ${createDto.coordinates.lon})"
+                    )
+
+                    logger.debug("Validating CityCreateDto")
+                    val validationResult = createDto.validateWith(cityCreateValidator)
+
+                    when (validationResult) {
+                        is Validated.Ok<CityCreateDto> -> {
+                            logger.debug("Validation passed, calling cityService.createCity()")
+                            val city = cityService.createCity(validationResult.value)
+                            logger.info("City created successfully: id=${city.id}, nameRu=${city.nameRu}, nameEn=${city.nameEn}")
+                            call.respond(HttpStatusCode.Created, city)
+                        }
+                        is Validated.Fail<CityCreateDto> -> {
+                            logger.warn("Validation failed with ${validationResult.errors.size} error(s):")
+                            validationResult.errors.forEach { error ->
+                                logger.warn("  - Field '${error.field}': ${error.message}")
+                            }
+                            throw yayauheny.by.common.errors
+                                .ValidationException(errors = validationResult.errors)
+                        }
                     }
-                call.respond(HttpStatusCode.Created, city)
+                } catch (e: yayauheny.by.common.errors.ValidationException) {
+                    logger.debug("ValidationException caught, rethrowing: ${e.errors?.size} errors")
+                    throw e
+                } catch (e: Exception) {
+                    logger.error("Unexpected error in POST /api/v1/cities", e)
+                    throw e
+                }
             }
 
             put("/{id}") {
@@ -79,10 +120,9 @@ class CityController(
             delete("/{id}") {
                 val id = call.getUuidFromPath("id")
                 val deleted = cityService.deleteCity(id)
-                if (deleted) {
-                    call.respond(HttpStatusCode.OK, mapOf("deleted" to true))
-                } else {
-                    call.respond(HttpStatusCode.NotFound)
+                when {
+                    deleted -> call.respond(HttpStatusCode.OK, mapOf("deleted" to true))
+                    else -> call.respond(HttpStatusCode.NotFound)
                 }
             }
         }

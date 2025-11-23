@@ -34,7 +34,7 @@ CREATE TABLE cities
     name_ru     VARCHAR(255) NOT NULL,
     name_en     VARCHAR(255) NOT NULL,
     region      VARCHAR(255),
-    city_bounds GEOMETRY(Polygon, 4326),
+    city_bounds GEOMETRY(Polygon, 4326) DEFAULT NULL,
     coordinates GEOMETRY(POINT, 4326) NOT NULL UNIQUE,
     is_deleted  BOOLEAN               DEFAULT false,
     created_at  TIMESTAMP    NOT NULL DEFAULT CURRENT_TIMESTAMP,

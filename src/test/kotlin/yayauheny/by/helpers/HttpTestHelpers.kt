@@ -33,14 +33,6 @@ val testJson =
             }
     }
 
-fun HttpResponse.assertJsonContentType() {
-    val contentType = this.headers["Content-Type"]
-    assertTrue(
-        contentType?.contains("application/json") == true,
-        "Response should have JSON content type, got: $contentType"
-    )
-}
-
 suspend fun HttpClient.testGet(
     path: String,
     query: Map<String, String> = emptyMap()

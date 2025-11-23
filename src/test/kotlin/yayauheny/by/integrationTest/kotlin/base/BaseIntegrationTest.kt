@@ -1,22 +1,17 @@
 package integration.base
 
+import java.sql.Connection
+import java.sql.DriverManager
 import liquibase.Contexts
 import liquibase.LabelExpression
-import liquibase.Scope
-import liquibase.changelog.ChangeLogParameters
-import liquibase.changelog.visitor.ChangeExecListener
-import liquibase.command.CommandScope
-import liquibase.command.core.UpdateCommandStep
-import liquibase.command.core.helpers.ChangeExecListenerCommandStep
-import liquibase.command.core.helpers.DatabaseChangelogCommandStep
-import liquibase.command.core.helpers.DbUrlConnectionCommandStep
+import liquibase.Liquibase
 import liquibase.database.DatabaseFactory
 import liquibase.database.jvm.JdbcConnection
-import liquibase.exception.CommandExecutionException
 import liquibase.resource.ClassLoaderResourceAccessor
 import org.jooq.DSLContext
 import org.jooq.SQLDialect
 import org.jooq.impl.DSL
+import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.BeforeAll
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.TestInstance
@@ -24,9 +19,7 @@ import org.testcontainers.containers.PostgreSQLContainer
 import org.testcontainers.junit.jupiter.Container
 import org.testcontainers.junit.jupiter.Testcontainers
 import org.testcontainers.utility.DockerImageName
-import java.io.OutputStream
-import java.sql.DriverManager
-import java.sql.SQLException
+import yayauheny.by.helpers.DatabaseTestHelper
 
 @Testcontainers
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
@@ -45,90 +38,46 @@ abstract class BaseIntegrationTest {
                 .withUsername("postgres")
                 .withPassword("postgres")
                 .withReuse(true)
-
-        @JvmStatic
-        @BeforeAll
-        fun migrate() {
-            try {
-                DriverManager
-                    .getConnection(postgres.jdbcUrl, postgres.username, postgres.password)
-                    .use { connection ->
-                        val database = DatabaseFactory.getInstance().findCorrectDatabaseImplementation(JdbcConnection(connection))
-                        val changeLogFile = "db/changelog/db.changelog-master.yml"
-                        val scopeObjects =
-                            mapOf(
-                                Scope.Attr.database.name to database,
-                                Scope.Attr.resourceAccessor.name to ClassLoaderResourceAccessor()
-                            )
-
-                        Scope.child(scopeObjects) {
-                            val updateCommand =
-                                CommandScope(*UpdateCommandStep.COMMAND_NAME).apply {
-                                    addArgumentValue(
-                                        DbUrlConnectionCommandStep.DATABASE_ARG,
-                                        database
-                                    )
-                                    addArgumentValue(
-                                        UpdateCommandStep.CHANGELOG_FILE_ARG,
-                                        changeLogFile
-                                    )
-                                    addArgumentValue(
-                                        UpdateCommandStep.CONTEXTS_ARG,
-                                        Contexts().toString()
-                                    )
-                                    addArgumentValue(
-                                        UpdateCommandStep.LABEL_FILTER_ARG,
-                                        LabelExpression().originalString
-                                    )
-                                    addArgumentValue(
-                                        ChangeExecListenerCommandStep.CHANGE_EXEC_LISTENER_ARG,
-                                        null as ChangeExecListener?
-                                    )
-                                    addArgumentValue(
-                                        DatabaseChangelogCommandStep.CHANGELOG_PARAMETERS,
-                                        ChangeLogParameters(database)
-                                    )
-
-                                    setOutput(OutputStream.nullOutputStream())
-                                }
-                            updateCommand.execute()
-                        }
-                    }
-            } catch (e: CommandExecutionException) {
-                println("Liquibase migration failed: ${e.message}")
-                e.printStackTrace()
-                throw e
-            } catch (e: SQLException) {
-                println("Database connection failed: ${e.message}")
-                e.printStackTrace()
-                throw e
-            }
-        }
     }
 
     protected lateinit var dslContext: DSLContext
+    private var connection: Connection? = null
 
-    @BeforeEach
-    fun setupDatabase() {
-        dslContext =
-            DSL.using(
-                DriverManager.getConnection(postgres.jdbcUrl, postgres.username, postgres.password),
-                SQLDialect.POSTGRES
-            )
+    @BeforeAll
+    fun runMigrationsOnce() {
+        check(postgres.isRunning) { "PostgreSQL container is not running" }
 
-        dslContext.transaction { configuration ->
-            DSL
-                .using(configuration)
-                .execute(
-                    """
-                    TRUNCATE TABLE restrooms, cities, countries
-                    RESTART IDENTITY CASCADE
-                    """.trimIndent()
+        DriverManager.getConnection(postgres.jdbcUrl, postgres.username, postgres.password).use { conn ->
+            val database =
+                DatabaseFactory
+                    .getInstance()
+                    .findCorrectDatabaseImplementation(JdbcConnection(conn))
+            val liquibase =
+                Liquibase(
+                    "db/changelog/db.changelog-master.yml",
+                    ClassLoaderResourceAccessor(),
+                    database
                 )
+            liquibase.update(Contexts(), LabelExpression())
         }
     }
 
-    @Deprecated("Use dslContext instead", ReplaceWith("dslContext"))
-    protected val testDatabase: DSLContext
-        get() = dslContext
+    @BeforeEach
+    fun openConnectionAndResetData() {
+        connection = DriverManager.getConnection(postgres.jdbcUrl, postgres.username, postgres.password)
+        dslContext = DSL.using(connection, SQLDialect.POSTGRES)
+
+        DatabaseTestHelper.truncateAllTables(dslContext)
+    }
+
+    @AfterEach
+    fun closeConnection() {
+        runCatching {
+            connection?.apply {
+                autoCommit = true
+                close()
+            }
+        }
+        connection = null
+    }
 }

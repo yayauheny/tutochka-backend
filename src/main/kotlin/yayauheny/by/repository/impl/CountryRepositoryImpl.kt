@@ -152,11 +152,17 @@ class CountryRepositoryImpl(
         withContext(Dispatchers.IO) {
             val query = ctx.update(COUNTRIES)
             val updateStep = CountryMapper.applyUpdateDto(query, updateDto)
-            updateStep
-                .where(COUNTRIES.ID.eq(id))
-                .returning()
-                .fetchSingle()
-                .map { CountryMapper.mapFromRecord(it) }
+            val rec =
+                updateStep
+                    .where(COUNTRIES.ID.eq(id))
+                    .returning(
+                        COUNTRIES.ID,
+                        COUNTRIES.CODE,
+                        COUNTRIES.NAME_RU,
+                        COUNTRIES.NAME_EN
+                    ).fetchOne()
+                    ?: error("Failed to update country $id")
+            CountryMapper.mapFromRecord(rec)
         }
 
     override suspend fun deleteById(id: UUID): Boolean =
