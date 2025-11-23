@@ -24,7 +24,7 @@ class CountryApiTest : BaseIntegrationTest() {
         @DisplayName("GIVEN countries endpoint WHEN GET /api/v1/countries THEN return paginated response")
         fun countries_endpoint_returns_paginated_response() =
             runTest {
-                KtorTestApplication.withApp(testDatabase) { client ->
+                KtorTestApplication.withApp(dslContext) { client ->
                     val response = client.testGet("/api/v1/countries")
 
                     assertEquals(HttpStatusCode.OK, response.status)
@@ -39,7 +39,7 @@ class CountryApiTest : BaseIntegrationTest() {
         @DisplayName("GIVEN pagination parameters WHEN GET countries THEN return correct pagination")
         fun countries_with_pagination_parameters() =
             runTest {
-                KtorTestApplication.withApp(testDatabase) { client ->
+                KtorTestApplication.withApp(dslContext) { client ->
                     val response = client.testGet("/api/v1/countries", mapOf("page" to "0", "size" to "10"))
 
                     assertEquals(HttpStatusCode.OK, response.status)
@@ -58,7 +58,7 @@ class CountryApiTest : BaseIntegrationTest() {
         @DisplayName("GIVEN valid country data WHEN POST country THEN return created country")
         fun create_country_with_valid_data() =
             runTest {
-                KtorTestApplication.withApp(testDatabase) { client ->
+                KtorTestApplication.withApp(dslContext) { client ->
                     val validJson = """{"nameRu": "Тестовая страна", "nameEn": "Test Country", "code": "TC"}"""
                     val response = client.testPost("/api/v1/countries", validJson)
 
@@ -78,7 +78,7 @@ class CountryApiTest : BaseIntegrationTest() {
         @DisplayName("GIVEN valid UUID WHEN GET country by ID THEN return valid response")
         fun get_country_by_valid_id() =
             runTest {
-                KtorTestApplication.withApp(testDatabase) { client ->
+                KtorTestApplication.withApp(dslContext) { client ->
                     val testUuid = "550e8400-e29b-41d4-a716-446655440000"
                     val response = client.testGet("/api/v1/countries/$testUuid")
                     assertTrue(response.status == HttpStatusCode.OK || response.status == HttpStatusCode.NotFound)
@@ -94,7 +94,7 @@ class CountryApiTest : BaseIntegrationTest() {
         @DisplayName("GIVEN valid country code WHEN GET country by code THEN return valid response")
         fun get_country_by_valid_code() =
             runTest {
-                KtorTestApplication.withApp(testDatabase) { client ->
+                KtorTestApplication.withApp(dslContext) { client ->
                     val response = client.testGet("/api/v1/countries/code/US")
                     assertTrue(response.status == HttpStatusCode.OK || response.status == HttpStatusCode.NotFound)
                     response.assertJsonContentType()
@@ -109,7 +109,7 @@ class CountryApiTest : BaseIntegrationTest() {
         @DisplayName("GET /api/v1/countries/{id} with invalid UUID returns 400")
         fun get_country_invalid_uuid() =
             runTest {
-                KtorTestApplication.withApp(testDatabase) { client ->
+                KtorTestApplication.withApp(dslContext) { client ->
                     val response = client.testGet("/api/v1/countries/invalid-uuid")
                     assertEquals(HttpStatusCode.BadRequest, response.status)
                     response.assertJsonContentType()
@@ -120,7 +120,7 @@ class CountryApiTest : BaseIntegrationTest() {
         @DisplayName("GET /api/v1/countries/{id} with non-existing UUID returns 404")
         fun get_country_non_existing_uuid() =
             runTest {
-                KtorTestApplication.withApp(testDatabase) { client ->
+                KtorTestApplication.withApp(dslContext) { client ->
                     val nonExistentId = "550e8400-e29b-41d4-a716-446655440000"
                     val response = client.testGet("/api/v1/countries/$nonExistentId")
                     assertEquals(HttpStatusCode.NotFound, response.status)
@@ -134,7 +134,7 @@ class CountryApiTest : BaseIntegrationTest() {
         @DisplayName("GET /api/v1/countries/code/{code} with non-existing code returns 404")
         fun get_country_non_existing_code() =
             runTest {
-                KtorTestApplication.withApp(testDatabase) { client ->
+                KtorTestApplication.withApp(dslContext) { client ->
                     val response = client.testGet("/api/v1/countries/code/XX")
                     assertEquals(HttpStatusCode.NotFound, response.status)
                     response.assertJsonContentType()
@@ -147,7 +147,7 @@ class CountryApiTest : BaseIntegrationTest() {
         @DisplayName("POST /api/v1/countries with invalid JSON returns 400")
         fun create_country_invalid_json() =
             runTest {
-                KtorTestApplication.withApp(testDatabase) { client ->
+                KtorTestApplication.withApp(dslContext) { client ->
                     val response = client.testPost("/api/v1/countries", """{"invalid": "data"}""")
                     assertEquals(HttpStatusCode.BadRequest, response.status)
                     response.assertJsonContentType()
@@ -158,7 +158,7 @@ class CountryApiTest : BaseIntegrationTest() {
         @DisplayName("POST /api/v1/countries with missing required fields returns 400")
         fun create_country_missing_required_fields() =
             runTest {
-                KtorTestApplication.withApp(testDatabase) { client ->
+                KtorTestApplication.withApp(dslContext) { client ->
                     val incompleteJson = """{"nameRu": "Тестовая страна"}"""
                     val response = client.testPost("/api/v1/countries", incompleteJson)
                     assertEquals(HttpStatusCode.BadRequest, response.status)
@@ -170,7 +170,7 @@ class CountryApiTest : BaseIntegrationTest() {
         @DisplayName("POST /api/v1/countries with too long code returns 400")
         fun create_country_too_long_code() =
             runTest {
-                KtorTestApplication.withApp(testDatabase) { client ->
+                KtorTestApplication.withApp(dslContext) { client ->
                     val tooLongCodeJson =
                         """
                         {
@@ -191,7 +191,7 @@ class CountryApiTest : BaseIntegrationTest() {
         @DisplayName("POST /api/v1/countries with duplicate code returns 409")
         fun create_country_duplicate_code() =
             runTest {
-                KtorTestApplication.withApp(testDatabase) { client ->
+                KtorTestApplication.withApp(dslContext) { client ->
                     val firstCountryJson =
                         """
                         {

@@ -9,11 +9,12 @@ import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.DisplayName
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
-import support.helpers.TestDataHelpers
+import yayauheny.by.helpers.TestDataHelpers
 import yayauheny.by.helpers.assertJsonContentType
 import yayauheny.by.helpers.testGet
 import yayauheny.by.helpers.testPost
-import yayauheny.by.model.PageResponseDto
+import yayauheny.by.common.query.PageResponse
+import yayauheny.by.model.restroom.RestroomResponseDto
 
 class RestroomControllerTest : RoutingTestBase() {
     @Nested
@@ -23,7 +24,8 @@ class RestroomControllerTest : RoutingTestBase() {
         @DisplayName("GIVEN restrooms endpoint WHEN GET /api/v1/restrooms THEN return 200 and call service with default pagination")
         fun restrooms_endpoint_returns_200_and_calls_service_with_default_pagination() =
             runTest {
-                coEvery { restroomService.getAllRestrooms(any()) } returns PageResponseDto(emptyList(), 0, 20, 0, 0, true, true)
+                coEvery { restroomService.getAllRestrooms(any()) } returns
+                    PageResponse(emptyList<RestroomResponseDto>(), 0, 20, 0, 0, true, true)
 
                 withRoutingApp { client ->
                     val response = client.testGet("/api/v1/restrooms")
@@ -39,7 +41,8 @@ class RestroomControllerTest : RoutingTestBase() {
         @DisplayName("GIVEN pagination parameters WHEN GET restrooms THEN pass parameters to service")
         fun restrooms_with_pagination_parameters_passes_to_service() =
             runTest {
-                coEvery { restroomService.getAllRestrooms(any()) } returns PageResponseDto(emptyList(), 1, 10, 0, 0, false, true)
+                coEvery { restroomService.getAllRestrooms(any()) } returns
+                    PageResponse(emptyList<RestroomResponseDto>(), 1, 10, 0, 0, false, true)
 
                 withRoutingApp { client ->
                     val response = client.testGet("/api/v1/restrooms", mapOf("page" to "1", "size" to "10"))
@@ -111,7 +114,8 @@ class RestroomControllerTest : RoutingTestBase() {
         fun get_restrooms_by_valid_city_id_returns_200_and_calls_service() =
             runTest {
                 val cityId = UUID.randomUUID()
-                coEvery { restroomService.getRestroomsByCity(any(), any()) } returns PageResponseDto(emptyList(), 0, 20, 0, 0, true, true)
+                coEvery { restroomService.getRestroomsByCity(any(), any()) } returns
+                    PageResponse(emptyList<RestroomResponseDto>(), 0, 20, 0, 0, true, true)
 
                 withRoutingApp { client ->
                     val response = client.testGet("/api/v1/restrooms/city/$cityId")
@@ -256,6 +260,7 @@ class RestroomControllerTest : RoutingTestBase() {
                     """
                     {
                         "cityId": "$cityId",
+                        "status": "ACTIVE",
                         "name": "Test Restroom",
                         "description": "Test Description",
                         "address": "Test Address 123",
@@ -263,8 +268,10 @@ class RestroomControllerTest : RoutingTestBase() {
                         "workTime": {},
                         "feeType": "FREE",
                         "accessibilityType": "UNISEX",
-                        "lat": 55.7558,
-                        "lon": 37.6176,
+                        "coordinates": {
+                            "lat": 55.7558,
+                            "lon": 37.6176
+                        },
                         "dataSource": "MANUAL",
                         "amenities": {},
                         "parentPlaceName": "Test Mall",

@@ -21,17 +21,18 @@ import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.CsvSource
 import org.junit.jupiter.params.provider.EnumSource
 import org.junit.jupiter.params.provider.ValueSource
-import support.helpers.TestDataHelpers
+import yayauheny.by.helpers.TestDataHelpers
 import yayauheny.by.model.LatLon
 import yayauheny.by.model.restroom.NearestRestroomResponseDto
-import yayauheny.by.model.PageResponseDto
-import yayauheny.by.model.PaginationDto
+import yayauheny.by.common.query.PaginationRequest
+import yayauheny.by.common.query.PageResponse
 import yayauheny.by.model.restroom.RestroomCreateDto
 import yayauheny.by.model.restroom.RestroomResponseDto
 import yayauheny.by.model.enums.AccessibilityType
 import yayauheny.by.model.enums.DataSourceType
 import yayauheny.by.model.enums.FeeType
 import yayauheny.by.model.enums.RestroomStatus
+import yayauheny.by.repository.RestroomRepository
 import yayauheny.by.service.RestroomService
 
 @DisplayName("RestroomService Tests")
@@ -53,13 +54,13 @@ class RestroomServiceTest {
         @DisplayName("GIVEN existing restrooms WHEN retrieving all THEN return paginated restrooms")
         fun given_existing_restrooms_when_retrieving_all_then_return_paginated_restrooms() =
             runTest {
-                val pagination = PaginationDto(page = 0, size = 10)
+                val pagination = PaginationRequest(page = 0, size = 10)
                 val expectedPage =
-                    PageResponseDto(
+                    PageResponse(
                         content = TestDataHelpers.createRestroomList(3),
                         page = 0,
                         size = 10,
-                        totalElements = 3L,
+                        totalElements = 3,
                         totalPages = 1,
                         first = true,
                         last = true
@@ -103,13 +104,13 @@ class RestroomServiceTest {
         fun given_restrooms_in_city_when_finding_by_city_id_then_return_city_restrooms() =
             runTest {
                 val cityId = UUID.randomUUID()
-                val pagination = PaginationDto(page = 0, size = 10)
+                val pagination = PaginationRequest(page = 0, size = 10)
                 val expectedPage =
-                    PageResponseDto(
+                    PageResponse(
                         content = TestDataHelpers.createRestroomList(2),
                         page = 0,
                         size = 10,
-                        totalElements = 2L,
+                        totalElements = 2,
                         totalPages = 1,
                         first = true,
                         last = true
@@ -202,7 +203,7 @@ class RestroomServiceTest {
             runTest {
                 val createDto = TestDataHelpers.createRestroomCreateDto()
                 val expectedResponse = TestDataHelpers.createRestroomResponseDto(status = RestroomStatus.ACTIVE)
-                val savedRestroomSlot = slot<RestroomResponseDto>()
+                val savedRestroomSlot = slot<RestroomCreateDto>()
                 coEvery { restroomRepository.save(capture(savedRestroomSlot)) } returns expectedResponse
 
                 val actualResponse = restroomService.createRestroom(createDto)
@@ -349,22 +350,21 @@ class RestroomServiceTest {
         fun given_existing_restroom_when_updating_then_return_updated_restroom() =
             runTest {
                 val existingRestroom = TestDataHelpers.createRestroomResponseDto()
-                val updateDto = TestDataHelpers.createRestroomCreateDto()
+                val updateDto = TestDataHelpers.createRestroomUpdateDto()
                 val updatedRestroom =
                     existingRestroom.copy(
-                        name = updateDto.name,
-                        description = updateDto.description,
+                        name = updateDto.name ?: existingRestroom.name,
+                        description = updateDto.description ?: existingRestroom.description,
                         address = updateDto.address,
                         updatedAt = Instant.now()
                     )
                 coEvery { restroomRepository.findById(existingRestroom.id) } returns existingRestroom
-                coEvery { restroomRepository.save(any()) } returns updatedRestroom
+                coEvery { restroomRepository.update(any(), any()) } returns updatedRestroom
 
                 val actualResult = restroomService.updateRestroom(existingRestroom.id, updateDto)
 
                 assertEquals(updatedRestroom, actualResult)
-                coVerify(exactly = 1) { restroomRepository.findById(existingRestroom.id) }
-                coVerify(exactly = 1) { restroomRepository.save(any()) }
+                coVerify(exactly = 1) { restroomRepository.update(any(), any()) }
             }
 
         @Test
@@ -372,7 +372,7 @@ class RestroomServiceTest {
         fun given_non_existent_restroom_when_updating_then_return_null() =
             runTest {
                 val nonExistentId = UUID.randomUUID()
-                val updateDto = TestDataHelpers.createRestroomCreateDto()
+                val updateDto = TestDataHelpers.createRestroomUpdateDto()
                 coEvery { restroomRepository.findById(nonExistentId) } returns null
 
                 val actualResult = restroomService.updateRestroom(nonExistentId, updateDto)
@@ -394,13 +394,12 @@ class RestroomServiceTest {
                         updatedAt = originalUpdatedAt
                     )
                 val updateDto =
-                    TestDataHelpers.createRestroomCreateDto(
-                        name = existingRestroom.name ?: "Test Name",
-                        description = existingRestroom.description ?: "Test Description",
+                    TestDataHelpers.createRestroomUpdateDto(
+                        name = existingRestroom.name,
+                        description = existingRestroom.description,
                         address = existingRestroom.address
                     )
-                coEvery { restroomRepository.findById(existingRestroom.id) } returns existingRestroom
-                coEvery { restroomRepository.save(any()) } returns existingRestroom
+                coEvery { restroomRepository.update(any(), any()) } returns existingRestroom
 
                 val actualResult = restroomService.updateRestroom(existingRestroom.id, updateDto)
 
@@ -417,7 +416,7 @@ class RestroomServiceTest {
         fun given_existing_restroom_with_different_status_when_updating_then_preserve_status(status: RestroomStatus) =
             runTest {
                 val existingRestroom = TestDataHelpers.createRestroomResponseDto(status = status)
-                val updateDto = TestDataHelpers.createRestroomCreateDto()
+                val updateDto = TestDataHelpers.createRestroomUpdateDto()
                 coEvery { restroomRepository.findById(existingRestroom.id) } returns existingRestroom
                 coEvery { restroomRepository.save(any()) } returns existingRestroom
 
@@ -468,13 +467,13 @@ class RestroomServiceTest {
         @DisplayName("GIVEN restrooms and pagination WHEN getting all restrooms THEN return correct page")
         fun given_restrooms_and_pagination_when_getting_all_restrooms_then_return_correct_page() =
             runTest {
-                val pagination = PaginationDto(page = 1, size = 3)
+                val pagination = PaginationRequest(page = 1, size = 3)
                 val expectedPage =
-                    PageResponseDto(
+                    PageResponse(
                         content = TestDataHelpers.createRestroomList(3),
                         page = 1,
                         size = 3,
-                        totalElements = 10L,
+                        totalElements = 10,
                         totalPages = 4,
                         first = false,
                         last = false
@@ -491,13 +490,13 @@ class RestroomServiceTest {
         @DisplayName("GIVEN empty restrooms WHEN getting all restrooms THEN return empty page")
         fun given_empty_restrooms_when_getting_all_restrooms_then_return_empty_page() =
             runTest {
-                val pagination = PaginationDto(page = 0, size = 10)
+                val pagination = PaginationRequest(page = 0, size = 10)
                 val expectedPage =
-                    PageResponseDto(
+                    PageResponse(
                         content = emptyList<RestroomResponseDto>(),
                         page = 0,
                         size = 10,
-                        totalElements = 0L,
+                        totalElements = 0,
                         totalPages = 0,
                         first = true,
                         last = true
@@ -515,23 +514,25 @@ class RestroomServiceTest {
         fun given_restrooms_and_city_id_when_getting_city_restrooms_then_return_correct_page() =
             runTest {
                 val cityId = UUID.randomUUID()
-                val pagination = PaginationDto(page = 0, size = 5)
+                val paginationRequest = PaginationRequest(page = 0, size = 5)
                 val expectedPage =
-                    PageResponseDto(
+                    PageResponse(
                         content = TestDataHelpers.createRestroomList(5),
                         page = 0,
                         size = 5,
-                        totalElements = 7L,
+                        totalElements = 7,
                         totalPages = 2,
                         first = true,
                         last = false
                     )
-                coEvery { restroomRepository.findByCityId(cityId, pagination) } returns expectedPage
+                coEvery { restroomRepository.findByCityId(cityId, paginationRequest) } returns expectedPage
 
-                val actualPage = restroomService.getRestroomsByCity(cityId, pagination)
+                val actualPage = restroomService.getRestroomsByCity(cityId, paginationRequest)
 
-                assertEquals(expectedPage, actualPage)
-                coVerify(exactly = 1) { restroomRepository.findByCityId(cityId, pagination) }
+                assertEquals(expectedPage.content, actualPage.content)
+                assertEquals(expectedPage.page, actualPage.page)
+                assertEquals(expectedPage.size, actualPage.size)
+                coVerify(exactly = 1) { restroomRepository.findByCityId(cityId, paginationRequest) }
             }
     }
 }
