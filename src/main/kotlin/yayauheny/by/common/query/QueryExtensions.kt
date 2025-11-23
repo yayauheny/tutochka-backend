@@ -57,15 +57,3 @@ fun <R : Record> SelectConditionStep<R>.applySorting(
         this.orderBy(sortFields)
     }
 }
-
-fun <R : Record> SelectConditionStep<R>.applyAdditionalFilters(
-    builder: QueryBuilder,
-    filters: List<FilterCriteria>
-): SelectConditionStep<R> {
-    val conditions = builder.buildFilters(filters)
-    return if (conditions.isNotEmpty()) {
-        this.and(DSL.and(conditions))
-    } else {
-        this
-    }
-}

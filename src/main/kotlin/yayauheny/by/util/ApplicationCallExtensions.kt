@@ -67,27 +67,6 @@ fun ApplicationCall.getDoubleFromQuery(paramName: String): Double {
         ?: throw IllegalArgumentException("Неверный формат параметра $paramName: '$value' не является числом")
 }
 
-fun ApplicationCall.getPositiveIntFromQuery(
-    paramName: String,
-    default: Int = 5,
-    maxValue: Int = 100
-): Int {
-    val value = request.queryParameters[paramName]
-    val intValue =
-        if (value == null) {
-            default
-        } else {
-            value.toIntOrNull()
-                ?: throw IllegalArgumentException("Неверный формат параметра $paramName: '$value' не является целым числом")
-        }
-
-    if (intValue <= 0) {
-        throw IllegalArgumentException("Параметр $paramName должен быть положительным числом")
-    }
-
-    return intValue.coerceAtMost(maxValue)
-}
-
 fun ApplicationCall.getIntFromQuery(
     paramName: String,
     default: Int? = null

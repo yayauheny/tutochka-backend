@@ -8,7 +8,7 @@ import org.jooq.impl.SQLDataType
 
 private const val SRID = 4326
 
-/** POINT(lon, lat) c типом целевого поля */
+/** Создает POINT(lon, lat) с SRID 4326 */
 fun <T> pointExpr(
     lon: Double,
     lat: Double,
@@ -23,7 +23,7 @@ fun Field<*>.latAlias(): Field<Double> = this.lat().`as`("lat")
 
 fun Field<*>.lonAlias(): Field<Double> = this.lon().`as`("lon")
 
-/** Быстрое сферическое расстояние (метры) */
+/** Быстрое сферическое расстояние в метрах */
 fun Field<*>.distanceSphereTo(
     lat: Double,
     lon: Double
@@ -37,7 +37,7 @@ fun Field<*>.distanceSphereTo(
         SRID
     )
 
-/** Точное расстояние по эллипсоиду (через geography) */
+/** Точное расстояние по эллипсоиду в метрах (geography) */
 fun Field<*>.distanceGeographyTo(
     lat: Double,
     lon: Double
@@ -51,7 +51,7 @@ fun Field<*>.distanceGeographyTo(
         SRID
     )
 
-/** Индексное KNN-упорядочивание (GiST `<->`) */
+/** KNN-сортировка через GiST индекс (`<->`) */
 fun Field<*>.knnOrderTo(
     lat: Double,
     lon: Double
@@ -65,7 +65,7 @@ fun Field<*>.knnOrderTo(
         SRID
     )
 
-/** Индекс-дружественный фильтр по радиусу (geometry) */
+/** Фильтр по радиусу с использованием индекса */
 fun Field<*>.withinDistanceOf(
     lat: Double,
     lon: Double,
@@ -80,14 +80,14 @@ fun Field<*>.withinDistanceOf(
         meters
     )
 
-/** GeoJSON -> geometry, тип целевого поля берём из target */
+/** Преобразует GeoJSON строку в geometry с SRID 4326 */
 fun <T> geomFromGeoJson(
     geoJson: String,
     target: Field<T>
 ): Field<T> = DSL.field("ST_SetSRID(ST_GeomFromGeoJSON({0}), {1})", target.dataType, geoJson, SRID)
 
-/** geometry -> GeoJSON */
+/** Преобразует geometry в GeoJSON строку */
 fun Field<*>.asGeoJson(): Field<String> = DSL.field("ST_AsGeoJSON({0})", SQLDataType.VARCHAR, this)
 
-/** безопасно достаём double из Record — упадём с понятной ошибкой, если забыли включить колонку в SELECT */
+/** Извлекает double из Record, выбрасывает ошибку если колонка отсутствует */
 fun Record.reqDouble(name: String): Double = get(name, Double::class.java) ?: error("Expected column '$name' in SELECT")
