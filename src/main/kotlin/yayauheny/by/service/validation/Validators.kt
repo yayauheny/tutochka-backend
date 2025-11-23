@@ -63,13 +63,15 @@ val countryUpdateValidator =
 val cityCreateValidator =
     Validation<CityCreateDto> {
         CityCreateDto::nameRu {
-            minLength(1) hint "Название города на русском языке обязательно"
+            minLength(2) hint "Название города на русском языке должно содержать минимум 2 символа"
             maxLength(255) hint "Название города на русском языке слишком длинное (максимум 255 символов)"
         }
         CityCreateDto::nameEn {
-            minLength(1) hint "Название города на английском языке обязательно"
+            minLength(2) hint "Название города на английском языке должно содержать минимум 2 символа"
             maxLength(255) hint "Название города на английском языке слишком длинное (максимум 255 символов)"
         }
+        // region - nullable поле, валидация выполняется на уровне сервиса
+        // для region: если не null, то длина 2..255
         CityCreateDto::coordinates {
             run(latLonValidator)
         }

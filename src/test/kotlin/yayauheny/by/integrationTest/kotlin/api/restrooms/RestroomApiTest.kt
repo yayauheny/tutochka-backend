@@ -13,12 +13,19 @@ import kotlin.test.assertEquals
 import kotlin.test.assertNotNull
 import kotlin.test.assertTrue
 import kotlinx.coroutines.test.runTest
+import kotlinx.serialization.json.Json
+import kotlinx.serialization.json.jsonArray
+import kotlinx.serialization.json.jsonObject
+import kotlinx.serialization.json.jsonPrimitive
+import kotlinx.serialization.json.intOrNull
 import org.junit.jupiter.api.DisplayName
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Tag
 import org.junit.jupiter.api.Test
 import yayauheny.by.helpers.DatabaseTestHelper
 import yayauheny.by.helpers.assertJsonContentType
+import yayauheny.by.helpers.assertStatusAndJsonContent
+import yayauheny.by.helpers.assertBodyContainsAll
 import yayauheny.by.helpers.testGet
 import yayauheny.by.helpers.testPost
 import yayauheny.by.helpers.parseErrorResponse
@@ -49,11 +56,8 @@ class RestroomApiTest : BaseIntegrationTest() {
                         headers.append("Accept", ContentType.Application.Json.toString())
                     }
 
-                assertEquals(HttpStatusCode.OK, response.status)
-                response.assertJsonContentType()
-                val body = response.bodyAsText()
-                assertTrue(body.contains("\"content\""))
-                assertTrue(body.contains("\"totalElements\""))
+                response.assertStatusAndJsonContent(HttpStatusCode.OK)
+                response.assertBodyContainsAll("\"content\"", "\"totalElements\"")
             }
         }
 
@@ -71,10 +75,9 @@ class RestroomApiTest : BaseIntegrationTest() {
                         headers.append("Accept", ContentType.Application.Json.toString())
                     }
 
-                assertEquals(HttpStatusCode.OK, response.status)
-                response.assertJsonContentType()
-                val body = response.bodyAsText()
-                assertTrue(body.contains("\"totalElements\":0"))
+                response.assertStatusAndJsonContent(HttpStatusCode.OK)
+                val json = Json.parseToJsonElement(response.bodyAsText()).jsonObject
+                assertEquals(0, json["totalElements"]!!.jsonPrimitive.intOrNull)
             }
         }
 
@@ -92,11 +95,10 @@ class RestroomApiTest : BaseIntegrationTest() {
                         headers.append("Accept", ContentType.Application.Json.toString())
                     }
 
-                assertEquals(HttpStatusCode.OK, response.status)
-                response.assertJsonContentType()
-                val body = response.bodyAsText()
-                assertTrue(body.contains("\"id\""))
-                assertTrue(body.contains("Premium Restroom"))
+                response.assertStatusAndJsonContent(HttpStatusCode.OK)
+                val json = Json.parseToJsonElement(response.bodyAsText()).jsonObject
+                assertTrue(json.containsKey("id"))
+                assertEquals("Premium Restroom", json["name"]?.jsonPrimitive?.content)
             }
         }
 
@@ -133,11 +135,10 @@ class RestroomApiTest : BaseIntegrationTest() {
                         setBody(restroomData)
                     }
 
-                assertEquals(HttpStatusCode.Created, response.status)
-                response.assertJsonContentType()
-                val body = response.bodyAsText()
-                assertTrue(body.contains("\"id\""))
-                assertTrue(body.contains("New Restroom"))
+                response.assertStatusAndJsonContent(HttpStatusCode.Created)
+                val json = Json.parseToJsonElement(response.bodyAsText()).jsonObject
+                assertTrue(json.containsKey("id"))
+                assertEquals("New Restroom", json["name"]?.jsonPrimitive?.content)
             }
         }
 
@@ -173,10 +174,9 @@ class RestroomApiTest : BaseIntegrationTest() {
                         setBody(minimalData)
                     }
 
-                assertEquals(HttpStatusCode.Created, response.status)
-                response.assertJsonContentType()
-                val body = response.bodyAsText()
-                assertTrue(body.contains("Minimal Address"))
+                response.assertStatusAndJsonContent(HttpStatusCode.Created)
+                val json = Json.parseToJsonElement(response.bodyAsText()).jsonObject
+                assertEquals("Minimal Address", json["address"]?.jsonPrimitive?.content)
             }
         }
 
@@ -193,10 +193,9 @@ class RestroomApiTest : BaseIntegrationTest() {
                         setBody(invalidData)
                     }
 
-                assertEquals(HttpStatusCode.BadRequest, response.status)
-                response.assertJsonContentType()
-                val body = response.bodyAsText()
-                assertTrue(body.contains("\"status\""))
+                response.assertStatusAndJsonContent(HttpStatusCode.BadRequest)
+                val json = Json.parseToJsonElement(response.bodyAsText()).jsonObject
+                assertEquals(400, json["status"]!!.jsonPrimitive.intOrNull)
             }
         }
 
@@ -231,14 +230,15 @@ class RestroomApiTest : BaseIntegrationTest() {
                         mapOf("lat" to "55.7558", "lon" to "37.6176", "limit" to "5")
                     )
 
-                assertEquals(HttpStatusCode.OK, response.status)
-                response.assertJsonContentType()
-                val body = response.bodyAsText()
-                assertTrue(body.startsWith("[") && body.endsWith("]"), "Response should be a JSON array")
-                assertTrue(body.contains("Restroom 1") || body.contains("Restroom 2"), "Response should contain test restrooms")
-                assertTrue(body.contains("distanceMeters"), "Response should contain distanceMeters field")
-                assertTrue(body.contains("\"lat\""), "Response should contain lat field")
-                assertTrue(body.contains("\"lon\""), "Response should contain lon field")
+                response.assertStatusAndJsonContent(HttpStatusCode.OK)
+                val jsonArray = Json.parseToJsonElement(response.bodyAsText()).jsonArray
+                assertTrue(jsonArray.isNotEmpty(), "Response should contain at least one restroom")
+                val firstRestroom = jsonArray.first().jsonObject
+                assertTrue(firstRestroom.containsKey("distanceMeters"), "Response should contain distanceMeters field")
+                assertTrue(firstRestroom.containsKey("lat"), "Response should contain lat field")
+                assertTrue(firstRestroom.containsKey("lon"), "Response should contain lon field")
+                val names = jsonArray.mapNotNull { it.jsonObject["name"]?.jsonPrimitive?.content }
+                assertTrue(names.any { it.contains("Restroom 1") || it.contains("Restroom 2") }, "Response should contain test restrooms")
             }
         }
 
@@ -472,8 +472,7 @@ class RestroomApiTest : BaseIntegrationTest() {
             runTest {
                 KtorTestApplication.withApp(dslContext) { client ->
                     val response = client.testGet("/api/v1/restrooms/invalid-uuid")
-                    assertEquals(HttpStatusCode.BadRequest, response.status)
-                    response.assertJsonContentType()
+                    response.assertStatusAndJsonContent(HttpStatusCode.BadRequest)
                 }
             }
 
@@ -483,8 +482,7 @@ class RestroomApiTest : BaseIntegrationTest() {
             runTest {
                 KtorTestApplication.withApp(dslContext) { client ->
                     val response = client.testGet("/api/v1/restrooms/city/invalid-uuid")
-                    assertEquals(HttpStatusCode.BadRequest, response.status)
-                    response.assertJsonContentType()
+                    response.assertStatusAndJsonContent(HttpStatusCode.BadRequest)
                 }
             }
 
@@ -495,10 +493,10 @@ class RestroomApiTest : BaseIntegrationTest() {
                 KtorTestApplication.withApp(dslContext) { client ->
                     val nonExistentId = "550e8400-e29b-41d4-a716-446655440000"
                     val response = client.testGet("/api/v1/restrooms/$nonExistentId")
-                    assertEquals(HttpStatusCode.NotFound, response.status)
-                    response.assertJsonContentType()
-                    val body = response.bodyAsText()
-                    assertTrue(body.contains("not found"))
+                    response.assertStatusAndJsonContent(HttpStatusCode.NotFound)
+                    val json = Json.parseToJsonElement(response.bodyAsText()).jsonObject
+                    val message = json["message"]?.jsonPrimitive?.content
+                    assertTrue(message != null && message.lowercase().contains("not found"))
                 }
             }
 
@@ -508,8 +506,7 @@ class RestroomApiTest : BaseIntegrationTest() {
             runTest {
                 KtorTestApplication.withApp(dslContext) { client ->
                     val response = client.testGet("/api/v1/restrooms/nearest", mapOf("lat" to "abc", "lon" to "37.6"))
-                    assertEquals(HttpStatusCode.BadRequest, response.status)
-                    response.assertJsonContentType()
+                    response.assertStatusAndJsonContent(HttpStatusCode.BadRequest)
                 }
             }
 
@@ -519,8 +516,7 @@ class RestroomApiTest : BaseIntegrationTest() {
             runTest {
                 KtorTestApplication.withApp(dslContext) { client ->
                     val response = client.testGet("/api/v1/restrooms/nearest", mapOf("lat" to "91.0", "lon" to "37.6"))
-                    assertEquals(HttpStatusCode.BadRequest, response.status)
-                    response.assertJsonContentType()
+                    response.assertStatusAndJsonContent(HttpStatusCode.BadRequest)
 
                     val errorResponse = response.parseErrorResponse()
                     errorResponse.assertHasValidationErrors()
@@ -534,8 +530,7 @@ class RestroomApiTest : BaseIntegrationTest() {
             runTest {
                 KtorTestApplication.withApp(dslContext) { client ->
                     val response = client.testPost("/api/v1/restrooms", """{"invalid": "data"}""")
-                    assertEquals(HttpStatusCode.BadRequest, response.status)
-                    response.assertJsonContentType()
+                    response.assertStatusAndJsonContent(HttpStatusCode.BadRequest)
                 }
             }
 
@@ -561,8 +556,7 @@ class RestroomApiTest : BaseIntegrationTest() {
                         }
                         """.trimIndent()
                     val response = client.testPost("/api/v1/restrooms", invalidEnumJson)
-                    assertEquals(HttpStatusCode.BadRequest, response.status)
-                    response.assertJsonContentType()
+                    response.assertStatusAndJsonContent(HttpStatusCode.BadRequest)
                 }
             }
     }

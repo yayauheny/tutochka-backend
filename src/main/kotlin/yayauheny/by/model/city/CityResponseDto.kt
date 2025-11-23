@@ -15,12 +15,6 @@ data class CityResponseDto(
     )
     @Contextual
     val id: UUID,
-    @field:Schema(
-        description = "City boundary as Polygon",
-        example = """{"type":"Polygon","coordinates":[[[37.3,5.5],[37.9,55.5],[37.9,55.9],[37.3,55.9],[37.3,55.5]]]}""",
-        nullable = true
-    )
-    val cityBounds: String?,
     @field:Schema(description = "Country ID", example = "123e4567-e89b-12d3-a456-42614174000")
     @Contextual
     val countryId: UUID,

@@ -18,12 +18,6 @@ data class CityUpdateDto(
     val countryId: UUID,
     @field:Schema(description = "Coordinates", example = "55.7558, 37.6176", required = true)
     val coordinates: LatLon,
-    @field:Schema(
-        description = "City boundary as Polygon",
-        example = """{"type":"Polygon","coordinates":[[[37.3,55.5],[37.9,55.5],[37.9,55.9],[37.3,55.9],[37.3,55.5]]]}""",
-        nullable = true
-    )
-    val cityBounds: String?,
     @field:Schema(description = "City name in Russian", example = "Москва", required = true)
     val nameRu: String,
     @field:Schema(description = "City name in English", example = "Moscow", required = true)

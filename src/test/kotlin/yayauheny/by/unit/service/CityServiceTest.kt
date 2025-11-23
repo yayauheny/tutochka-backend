@@ -175,7 +175,7 @@ class CityServiceTest {
                 coEvery { countryRepository.findById(country.id) } returns country
                 coEvery { cityRepository.findSingle(any()) } returns TestDataHelpers.createCityResponseDto()
 
-                assertThrows<IllegalArgumentException> {
+                assertThrows<yayauheny.by.common.errors.ConflictException> {
                     cityService.createCity(createDto)
                 }
 

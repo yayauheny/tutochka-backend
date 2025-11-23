@@ -80,15 +80,13 @@ object TestDataHelpers {
         nameRu: String = "Минск",
         nameEn: String = "Minsk",
         region: String? = "Минская область",
-        coordinates: yayauheny.by.model.LatLon = yayauheny.by.model.LatLon(lat = 53.9006, lon = 27.5590),
-        cityBounds: String? = null
+        coordinates: yayauheny.by.model.LatLon = yayauheny.by.model.LatLon(lat = 53.9006, lon = 27.5590)
     ) = CityUpdateDto(
         countryId = countryId,
         nameRu = nameRu,
         nameEn = nameEn,
         region = region,
-        coordinates = coordinates,
-        cityBounds = cityBounds
+        coordinates = coordinates
     )
 
     fun createCityResponseDto(
@@ -105,8 +103,7 @@ object TestDataHelpers {
         nameRu = nameRu,
         nameEn = nameEn,
         region = region,
-        coordinates = yayauheny.by.model.LatLon(lat = lat, lon = lon),
-        cityBounds = null
+        coordinates = yayauheny.by.model.LatLon(lat = lat, lon = lon)
     )
 
     fun createCityList(

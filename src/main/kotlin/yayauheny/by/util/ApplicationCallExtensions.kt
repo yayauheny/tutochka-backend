@@ -13,7 +13,7 @@ fun ApplicationCall.toPaginationRequest(
 ): PaginationRequest {
     val params = request.queryParameters
 
-    val page = params["page"]?.toIntOrNull()?.coerceAtLeast(1) ?: 1
+    val page = params["page"]?.toIntOrNull()?.coerceAtLeast(0) ?: 0
     val size = params["size"]?.toIntOrNull()?.coerceIn(1, maxSize) ?: defaultSize
     val sort = params["sort"]
 

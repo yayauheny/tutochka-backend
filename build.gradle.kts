@@ -74,7 +74,6 @@ dependencies {
 
 val tcImage = providers.gradleProperty("testcontainers.postgis.image").get()
 val tcDbName = providers.gradleProperty("testcontainers.db.name").get()
-val tcRyukDisabled = providers.gradleProperty("testcontainers.ryuk.disabled").get()
 
 val containerInstance: PostgreSQLContainer<Nothing>? =
     if ("generateJooq" in project.gradle.startParameter.taskNames ||
@@ -87,7 +86,6 @@ val containerInstance: PostgreSQLContainer<Nothing>? =
                 .asCompatibleSubstituteFor("postgres")
         ).apply {
             withDatabaseName(tcDbName)
-            withEnv("TESTCONTAINERS_RYUK_DISABLE", tcRyukDisabled)
             start()
         }
     } else {
@@ -204,7 +202,8 @@ tasks.register<Test>("integrationTest") {
             .get()
             .output.classesDirs
     classpath = sourceSets.test.get().runtimeClasspath
-    systemProperty("junit.jupiter.execution.parallel.enabled", testsParallel)
+    // Отключаем параллельное выполнение для интеграционных тестов
+    systemProperty("junit.jupiter.execution.parallel.enabled", "false")
     shouldRunAfter("test")
     finalizedBy("jacocoTestReport")
 

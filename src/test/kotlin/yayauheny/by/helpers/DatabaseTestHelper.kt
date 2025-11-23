@@ -26,8 +26,8 @@ data class TestCountryData(
 data class TestCityData(
     val nameRu: String = "Test City RU ${UUID.randomUUID().toString().take(8)}",
     val nameEn: String = "Test City EN ${UUID.randomUUID().toString().take(8)}",
-    val lat: Double = 55.7558,
-    val lon: Double = 37.6176
+    val lat: Double = 55.7558 + (Math.random() * 0.1 - 0.05), // Случайное смещение для уникальности координат
+    val lon: Double = 37.6176 + (Math.random() * 0.1 - 0.05)
 )
 
 data class TestRestroomData(
@@ -38,8 +38,8 @@ data class TestRestroomData(
     val workTime: JsonObject? = buildJsonObject { put("monday", JsonPrimitive("09:00-18:00")) },
     val feeType: FeeType = FeeType.FREE,
     val accessibilityType: AccessibilityType = AccessibilityType.UNISEX,
-    val lat: Double = 55.7558,
-    val lon: Double = 37.6176,
+    val lat: Double = 55.7558 + (Math.random() * 0.1 - 0.05), // Случайное смещение для уникальности координат
+    val lon: Double = 37.6176 + (Math.random() * 0.1 - 0.05),
     val dataSource: DataSourceType = DataSourceType.MANUAL,
     val status: RestroomStatus = RestroomStatus.ACTIVE,
     val amenities: JsonObject = buildJsonObject { put("wifi", JsonPrimitive("true")) }
@@ -49,14 +49,14 @@ object DatabaseTestHelper {
     fun createTestCountryData(
         nameRu: String = "Test Country RU",
         nameEn: String = "Test Country EN",
-        code: String = "TC"
+        code: String = "TC${UUID.randomUUID().toString().take(8).uppercase()}"
     ) = TestCountryData(nameRu, nameEn, code)
 
     fun createTestCityData(
         nameRu: String = "Test City RU ${UUID.randomUUID().toString().take(8)}",
         nameEn: String = "Test City EN ${UUID.randomUUID().toString().take(8)}",
-        lat: Double = 55.7558,
-        lon: Double = 37.6176
+        lat: Double = 55.7558 + (Math.random() * 0.1 - 0.05), // Добавляем небольшое случайное смещение для уникальности координат
+        lon: Double = 37.6176 + (Math.random() * 0.1 - 0.05)
     ) = TestCityData(nameRu, nameEn, lat, lon)
 
     fun createTestRestroomData(
@@ -67,8 +67,8 @@ object DatabaseTestHelper {
         workTime: JsonObject? = buildJsonObject { put("monday", JsonPrimitive("09:00-18:00")) },
         feeType: FeeType = FeeType.FREE,
         accessibilityType: AccessibilityType = AccessibilityType.UNISEX,
-        lat: Double = 55.7558,
-        lon: Double = 37.6176,
+        lat: Double = 55.7558 + (Math.random() * 0.1 - 0.05), // Случайное смещение для уникальности координат
+        lon: Double = 37.6176 + (Math.random() * 0.1 - 0.05),
         dataSource: DataSourceType = DataSourceType.MANUAL,
         status: RestroomStatus = RestroomStatus.ACTIVE,
         amenities: JsonObject = buildJsonObject { put("wifi", JsonPrimitive("true")) }
@@ -163,6 +163,15 @@ object DatabaseTestHelper {
         val countryId = insertTestCountry(dslContext)
         val cityId = insertTestCity(dslContext, countryId)
         return TestEnvironment(countryId, cityId)
+    }
+
+    fun truncateAllTables(dslContext: DSLContext) {
+        dslContext.transaction { configuration ->
+            val ctx = DSL.using(configuration)
+            ctx.deleteFrom(RESTROOMS).execute()
+            ctx.deleteFrom(CITIES).execute()
+            ctx.deleteFrom(COUNTRIES).execute()
+        }
     }
 
     data class TestEnvironment(

@@ -21,6 +21,7 @@ import yayauheny.by.model.restroom.RestroomResponseDto
 import yayauheny.by.model.restroom.RestroomUpdateDto
 import yayauheny.by.repository.RestroomRepository
 import yayauheny.by.tables.references.RESTROOMS
+import yayauheny.by.util.getAllRestroomsFieldsExceptCoordinates
 import yayauheny.by.util.distanceGeographyTo
 import yayauheny.by.util.knnOrderTo
 import yayauheny.by.util.latAlias
@@ -130,7 +131,7 @@ class RestroomRepositoryImpl(
 
             val baseQuery =
                 ctx
-                    .select(RESTROOMS.asterisk(), latField, lonField)
+                    .select(*(getAllRestroomsFieldsExceptCoordinates() + latField + lonField).toTypedArray())
                     .from(RESTROOMS)
                     .where(RESTROOMS.IS_DELETED.eq(false).or(RESTROOMS.IS_DELETED.isNull))
             executor.executePaginated(
@@ -147,7 +148,7 @@ class RestroomRepositoryImpl(
 
             val baseQuery =
                 ctx
-                    .select(RESTROOMS.asterisk(), latField, lonField)
+                    .select(*(getAllRestroomsFieldsExceptCoordinates() + latField + lonField).toTypedArray())
                     .from(RESTROOMS)
                     .where(RESTROOMS.IS_DELETED.eq(false).or(RESTROOMS.IS_DELETED.isNull))
             executor.executeSingle(
@@ -163,7 +164,7 @@ class RestroomRepositoryImpl(
             val lonField = RESTROOMS.COORDINATES.lonAlias()
 
             ctx
-                .select(RESTROOMS.asterisk(), latField, lonField)
+                .select(*getAllRestroomsFieldsExceptCoordinates().toTypedArray(), latField, lonField)
                 .from(RESTROOMS)
                 .where(
                     RESTROOMS.ID
@@ -204,8 +205,27 @@ class RestroomRepositoryImpl(
                     .set(r.INHERIT_PARENT_SCHEDULE, createDto.inheritParentSchedule)
                     .set(r.CREATED_AT, now)
                     .set(r.UPDATED_AT, now)
-                    .returning(r.asterisk(), latF, lonF)
-                    .fetchOne()
+                    .returning(
+                        r.ID,
+                        r.CITY_ID,
+                        r.NAME,
+                        r.DESCRIPTION,
+                        r.ADDRESS,
+                        r.PHONES,
+                        r.WORK_TIME,
+                        r.FEE_TYPE,
+                        r.ACCESSIBILITY_TYPE,
+                        r.DATA_SOURCE,
+                        r.STATUS,
+                        r.AMENITIES,
+                        r.PARENT_PLACE_NAME,
+                        r.PARENT_PLACE_TYPE,
+                        r.INHERIT_PARENT_SCHEDULE,
+                        r.CREATED_AT,
+                        r.UPDATED_AT,
+                        latF,
+                        lonF
+                    ).fetchOne()
                     ?: error("Error during save restroom")
 
             RestroomMapper.mapFromRecord(rec)
@@ -229,8 +249,27 @@ class RestroomRepositoryImpl(
                         pointExpr(updateDto.coordinates.lon, updateDto.coordinates.lat, r.COORDINATES)
                     ).set(r.UPDATED_AT, Instant.now())
                     .where(r.ID.eq(id))
-                    .returning(r.asterisk(), latF, lonF)
-                    .fetchOne()
+                    .returning(
+                        r.ID,
+                        r.CITY_ID,
+                        r.NAME,
+                        r.DESCRIPTION,
+                        r.ADDRESS,
+                        r.PHONES,
+                        r.WORK_TIME,
+                        r.FEE_TYPE,
+                        r.ACCESSIBILITY_TYPE,
+                        r.DATA_SOURCE,
+                        r.STATUS,
+                        r.AMENITIES,
+                        r.PARENT_PLACE_NAME,
+                        r.PARENT_PLACE_TYPE,
+                        r.INHERIT_PARENT_SCHEDULE,
+                        r.CREATED_AT,
+                        r.UPDATED_AT,
+                        latF,
+                        lonF
+                    ).fetchOne()
                     ?: error("Failed to update restroom $id")
 
             RestroomMapper.mapFromRecord(rec)
@@ -260,7 +299,7 @@ class RestroomRepositoryImpl(
             val distanceField = RESTROOMS.COORDINATES.distanceGeographyTo(latitude, longitude)
 
             ctx
-                .select(RESTROOMS.asterisk(), latField, lonField, distanceField.`as`("distance"))
+                .select(*getAllRestroomsFieldsExceptCoordinates().toTypedArray(), latField, lonField, distanceField.`as`("distance"))
                 .from(RESTROOMS)
                 .where(
                     RESTROOMS.COORDINATES
@@ -288,7 +327,7 @@ class RestroomRepositoryImpl(
             val filters = pagination.filters + cityFilter
             val baseQuery =
                 ctx
-                    .select(RESTROOMS.asterisk(), latField, lonField)
+                    .select(*(getAllRestroomsFieldsExceptCoordinates() + latField + lonField).toTypedArray())
                     .from(RESTROOMS)
                     .where(RESTROOMS.IS_DELETED.eq(false).or(RESTROOMS.IS_DELETED.isNull))
             executor.executePaginated(
