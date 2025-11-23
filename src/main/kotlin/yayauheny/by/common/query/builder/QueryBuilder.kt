@@ -45,13 +45,11 @@ class QueryBuilder(
 
         if (op !in meta.allowedOps) return null
 
-        // parse once
         when (op) {
             FilterOperator.IN, FilterOperator.NOT_IN -> {
                 val values = raw.split(",").mapNotNull { parser(it.trim()) }
                 if (values.isEmpty()) return null
                 return if (op == FilterOperator.IN) {
-                    // field.`in` accepts Collection
                     (field as Field<Any?>).`in`(values)
                 } else {
                     (field as Field<Any?>).notIn(values)

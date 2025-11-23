@@ -39,5 +39,3 @@ class RestroomService(
 
     suspend fun deleteRestroom(id: UUID): Boolean = restroomRepository.deleteById(id)
 }
-
-// This extension function is unused and has been removed as it referenced deprecated lat/lon properties

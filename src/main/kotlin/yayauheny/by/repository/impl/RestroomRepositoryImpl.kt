@@ -256,9 +256,7 @@ class RestroomRepositoryImpl(
             val maxDistance = (distanceMeters ?: 1000).toDouble()
             val latField = RESTROOMS.COORDINATES.latAlias()
             val lonField = RESTROOMS.COORDINATES.lonAlias()
-            // KNN для ORDER BY (быстро через индекс)
             val knnField = RESTROOMS.COORDINATES.knnOrderTo(latitude, longitude)
-            // Точное расстояние через geography для отображения
             val distanceField = RESTROOMS.COORDINATES.distanceGeographyTo(latitude, longitude)
 
             ctx

@@ -14,8 +14,7 @@ object CityMapper {
     fun mapFromRecord(record: Record): CityResponseDto {
         return CityResponseDto(
             id = record[CITIES.ID]!!,
-            // если хотите GeoJSON вместо toString(), можно в select’е вернуть ST_AsGeoJSON(...)
-            cityBounds = record.get("city_bounds_json", String::class.java),
+            cityBounds = record.get("city_bounds_json") as? String,
             countryId = record[CITIES.COUNTRY_ID]!!,
             nameRu = record[CITIES.NAME_RU]!!,
             nameEn = record[CITIES.NAME_EN]!!,
@@ -40,7 +39,6 @@ object CityMapper {
                 .set(r.NAME_EN, dto.nameEn)
                 .set(r.REGION, dto.region)
 
-        // city_bounds как GeoJSON -> GEOMETRY
         step =
             if (dto.cityBounds != null) {
                 step.set(
@@ -48,7 +46,6 @@ object CityMapper {
                     geomFromGeoJson(dto.cityBounds, r.CITY_BOUNDS)
                 )
             } else {
-                // Снять полигон
                 step.set(r.CITY_BOUNDS, null as org.jooq.Geometry?)
             }
 

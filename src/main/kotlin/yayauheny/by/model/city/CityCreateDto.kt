@@ -21,8 +21,8 @@ data class CityCreateDto(
     @field:Schema(description = "Coordinates", example = "55.7558, 37.6176", required = true)
     val coordinates: LatLon,
     @field:Schema(
-        description = "City boundary as WKT string",
-        example = "POLYGON((37.3 5.5, 37.9 55.5, 37.9 55.9, 37.3 55.9, 37.3 5.5))",
+        description = "City boundary as GeoJSON Polygon string",
+        example = """{"type":"Polygon","coordinates":[[[37.3,55.5],[37.9,55.5],[37.9,55.9],[37.3,55.9],[37.3,55.5]]]}""",
         nullable = true
     )
     val cityBounds: String? = null

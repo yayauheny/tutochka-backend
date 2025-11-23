@@ -27,7 +27,3 @@ fun String.env(default: String = ""): String = System.getenv(this) ?: default
 fun String.envInt(default: Int = 0): Int = System.getenv(this)?.toIntOrNull() ?: default
 
 fun String.envLong(default: Long = 0L): Long = System.getenv(this)?.toLongOrNull() ?: default
-
-fun String.envBoolean(default: Boolean = false): Boolean = System.getenv(this)?.toBooleanStrictOrNull() ?: default
-
-fun String.envOrNull(): String? = System.getenv(this)

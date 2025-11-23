@@ -14,6 +14,23 @@ import yayauheny.by.model.country.CountryUpdateDto
 import yayauheny.by.model.restroom.RestroomCreateDto
 import yayauheny.by.model.restroom.RestroomUpdateDto
 
+/**
+ * Валидатор для координат LatLon
+ * Проверяет, что широта находится в диапазоне [-90, 90],
+ * а долгота в диапазоне [-180, 180]
+ */
+val latLonValidator =
+    Validation<LatLon> {
+        LatLon::lat {
+            minimum(-90.0) hint "Широта должна быть не менее -90 градусов"
+            maximum(90.0) hint "Широта должна быть не более 90 градусов"
+        }
+        LatLon::lon {
+            minimum(-180.0) hint "Долгота должна быть не менее -180 градусов"
+            maximum(180.0) hint "Долгота должна быть не более 180 градусов"
+        }
+    }
+
 val countryCreateValidator =
     Validation<CountryCreateDto> {
         CountryCreateDto::nameRu {
@@ -53,8 +70,9 @@ val cityCreateValidator =
             minLength(1) hint "Название города на английском языке обязательно"
             maxLength(255) hint "Название города на английском языке слишком длинное (максимум 255 символов)"
         }
-        // Coordinates validation temporarily disabled - needs proper Konform syntax for nested objects
-        // CityCreateDto::coordinates { ... }
+        CityCreateDto::coordinates {
+            run(latLonValidator)
+        }
     }
 
 val cityUpdateValidator =
@@ -67,8 +85,9 @@ val cityUpdateValidator =
             minLength(1) hint "Название города на английском языке обязательно"
             maxLength(255) hint "Название города на английском языке слишком длинное (максимум 255 символов)"
         }
-        // Coordinates validation temporarily disabled - needs proper Konform syntax for nested objects
-        // CityUpdateDto::coordinates { ... }
+        CityUpdateDto::coordinates {
+            run(latLonValidator)
+        }
     }
 
 val restroomCreateValidator =
@@ -77,8 +96,9 @@ val restroomCreateValidator =
             minLength(1) hint "Адрес обязателен"
             maxLength(255) hint "Адрес слишком длинный (максимум 255 символов)"
         }
-        // Coordinates validation temporarily disabled - needs proper Konform syntax for nested objects
-        // RestroomCreateDto::coordinates { ... }
+        RestroomCreateDto::coordinates {
+            run(latLonValidator)
+        }
     }
 
 val restroomUpdateValidator =
@@ -87,8 +107,9 @@ val restroomUpdateValidator =
             minLength(1) hint "Адрес обязателен"
             maxLength(255) hint "Адрес слишком длинный (максимум 255 символов)"
         }
-        // Coordinates validation temporarily disabled - needs proper Konform syntax for nested objects
-        // RestroomUpdateDto::coordinates { ... }
+        RestroomUpdateDto::coordinates {
+            run(latLonValidator)
+        }
     }
 
 data class NearestRestroomsParams(
@@ -99,8 +120,9 @@ data class NearestRestroomsParams(
 
 val nearestRestroomsParamsValidator =
     Validation<NearestRestroomsParams> {
-        // Coordinates validation temporarily disabled - needs proper Konform syntax for nested objects
-        // NearestRestroomsParams::coordinates { ... }
+        NearestRestroomsParams::coordinates {
+            run(latLonValidator)
+        }
         NearestRestroomsParams::limit {
             minimum(1) hint "Лимит должен быть не менее 1"
             maximum(10) hint "Лимит должен быть не более 100"
