@@ -22,6 +22,7 @@ import org.junit.jupiter.params.provider.CsvSource
 import org.junit.jupiter.params.provider.EnumSource
 import org.junit.jupiter.params.provider.ValueSource
 import support.helpers.TestDataHelpers
+import yayauheny.by.model.LatLon
 import yayauheny.by.model.restroom.NearestRestroomResponseDto
 import yayauheny.by.model.PageResponseDto
 import yayauheny.by.model.PaginationDto
@@ -294,6 +295,7 @@ class RestroomServiceTest {
                 val createDto =
                     RestroomCreateDto(
                         cityId = null,
+                        status = RestroomStatus.ACTIVE,
                         name = "Test Restroom",
                         description = "Test Description",
                         address = "Test Address",
@@ -301,8 +303,7 @@ class RestroomServiceTest {
                         workTime = null,
                         feeType = FeeType.FREE,
                         accessibilityType = AccessibilityType.UNISEX,
-                        lat = 40.7829,
-                        lon = -73.9654,
+                        coordinates = LatLon(lat = 40.7829, lon = -73.9654),
                         dataSource = DataSourceType.MANUAL,
                         amenities = createBasicAmenities(),
                         parentPlaceName = null,
@@ -320,8 +321,7 @@ class RestroomServiceTest {
                         workTime = null,
                         feeType = FeeType.FREE,
                         accessibilityType = AccessibilityType.UNISEX,
-                        lat = 40.7829,
-                        lon = -73.9654,
+                        coordinates = LatLon(lat = 40.7829, lon = -73.9654),
                         dataSource = DataSourceType.MANUAL,
                         status = RestroomStatus.ACTIVE,
                         amenities = createBasicAmenities(),

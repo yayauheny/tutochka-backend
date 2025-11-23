@@ -5,6 +5,7 @@ import java.util.UUID
 import kotlinx.serialization.Contextual
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.JsonObject
+import yayauheny.by.model.LatLon
 import yayauheny.by.model.enums.AccessibilityType
 import yayauheny.by.model.enums.DataSourceType
 import yayauheny.by.model.enums.FeeType
@@ -41,17 +42,15 @@ data class RestroomCreateDto(
     val phones: JsonObject?,
     @field:Schema(
         description = "Working hours in JSON format",
-        example = """{"monday": "08:00-22:00", "tuesday": "08:00-22:00", "weekend": "09:00-21:00"}"""
+        example = """{"monday": "08:0-22:00", "tuesday": "08:00-22:00", "weekend": "09:00-21:00"}"""
     )
     val workTime: JsonObject?,
     @field:Schema(description = "Fee type", example = "FREE", required = true)
     val feeType: FeeType,
     @field:Schema(description = "Accessibility type", example = "UNISEX", required = true)
     val accessibilityType: AccessibilityType,
-    @field:Schema(description = "Lattitude coordinate", example = "27.547632", required = true)
-    val lat: Double,
-    @field:Schema(description = "Longitude coordinate", example = "53.895494", required = true)
-    val lon: Double,
+    @field:Schema(description = "Coordinates", example = "55.7558, 37.6176", required = true)
+    val coordinates: LatLon,
     @field:Schema(description = "Data source type", example = "MANUAL", required = true)
     val dataSource: DataSourceType,
     @field:Schema(

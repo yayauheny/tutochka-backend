@@ -19,6 +19,11 @@ import yayauheny.by.model.city.CityResponseDto
 import yayauheny.by.model.city.CityUpdateDto
 import yayauheny.by.repository.CityRepository
 import yayauheny.by.tables.references.CITIES
+import yayauheny.by.util.asGeoJson
+import yayauheny.by.util.geomFromGeoJson
+import yayauheny.by.util.latAlias
+import yayauheny.by.util.lonAlias
+import yayauheny.by.util.pointExpr
 
 class CityRepositoryImpl(
     private val ctx: DSLContext
@@ -107,9 +112,14 @@ class CityRepositoryImpl(
 
     override suspend fun findAll(pagination: PaginationRequest): PageResponse<CityResponseDto> =
         withContext(Dispatchers.IO) {
+            val latField = CITIES.COORDINATES.latAlias()
+            val lonField = CITIES.COORDINATES.lonAlias()
+            val cityBoundsJson = CITIES.CITY_BOUNDS.asGeoJson().`as`("city_bounds_json")
+
             val baseQuery =
                 ctx
-                    .selectFrom(CITIES)
+                    .select(CITIES.asterisk(), latField, lonField, cityBoundsJson)
+                    .from(CITIES)
                     .where(CITIES.IS_DELETED.eq(false).or(CITIES.IS_DELETED.isNull))
             executor.executePaginated(
                 baseQuery = baseQuery,
@@ -121,8 +131,13 @@ class CityRepositoryImpl(
 
     override suspend fun findById(id: UUID): CityResponseDto? =
         withContext(Dispatchers.IO) {
+            val latField = CITIES.COORDINATES.latAlias()
+            val lonField = CITIES.COORDINATES.lonAlias()
+            val cityBoundsJson = CITIES.CITY_BOUNDS.asGeoJson().`as`("city_bounds_json")
+
             ctx
-                .selectFrom(CITIES)
+                .select(CITIES.asterisk(), latField, lonField, cityBoundsJson)
+                .from(CITIES)
                 .where(
                     CITIES.ID
                         .eq(id)
@@ -133,9 +148,14 @@ class CityRepositoryImpl(
 
     override suspend fun findSingle(filters: List<FilterCriteria>): CityResponseDto? =
         withContext(Dispatchers.IO) {
+            val latField = CITIES.COORDINATES.latAlias()
+            val lonField = CITIES.COORDINATES.lonAlias()
+            val cityBoundsJson = CITIES.CITY_BOUNDS.asGeoJson().`as`("city_bounds_json")
+
             val baseQuery =
                 ctx
-                    .selectFrom(CITIES)
+                    .select(CITIES.asterisk(), latField, lonField, cityBoundsJson)
+                    .from(CITIES)
                     .where(CITIES.IS_DELETED.eq(false).or(CITIES.IS_DELETED.isNull))
             executor.executeSingle(
                 baseQuery = baseQuery,
@@ -146,14 +166,39 @@ class CityRepositoryImpl(
 
     override suspend fun save(dto: CityCreateDto): CityResponseDto =
         withContext(Dispatchers.IO) {
-            val record = CityMapper.mapToSaveRecord(ctx, dto)
-            val inserted = record.insert()
+            val r = CITIES
+            val latF = r.COORDINATES.latAlias()
+            val lonF = r.COORDINATES.lonAlias()
+            val boundsJson = r.CITY_BOUNDS.asGeoJson().`as`("city_bounds_json")
+            val id = UUID.randomUUID()
+            val now = Instant.now()
 
-            if (inserted == 0) {
-                throw IllegalStateException("Error during save city with name: ${dto.nameEn}")
+            val coordinatesExpr = pointExpr(dto.coordinates.lon, dto.coordinates.lat, r.COORDINATES)
+            val cityBoundsExpr = dto.cityBounds?.let { geomFromGeoJson(it, r.CITY_BOUNDS) }
+
+            var insert =
+                ctx
+                    .insertInto(r)
+                    .set(r.ID, id)
+                    .set(r.COUNTRY_ID, dto.countryId)
+                    .set(r.NAME_RU, dto.nameRu)
+                    .set(r.NAME_EN, dto.nameEn)
+                    .set(r.REGION, dto.region)
+                    .set(r.COORDINATES, coordinatesExpr)
+                    .set(r.CREATED_AT, now)
+                    .set(r.UPDATED_AT, now)
+
+            if (cityBoundsExpr != null) {
+                insert = insert.set(r.CITY_BOUNDS, cityBoundsExpr)
             }
 
-            CityMapper.mapFromRecord(record)
+            val rec =
+                insert
+                    .returning(r.asterisk(), latF, lonF, boundsJson)
+                    .fetchOne()
+                    ?: error("Error during save city: ${dto.nameEn}")
+
+            CityMapper.mapFromRecord(rec)
         }
 
     override suspend fun update(
@@ -161,17 +206,25 @@ class CityRepositoryImpl(
         updateDto: CityUpdateDto
     ): CityResponseDto =
         withContext(Dispatchers.IO) {
-            val query = ctx.update(CITIES)
-            val updateStep = CityMapper.applyUpdateDto(query, updateDto)
-            val updated =
-                updateStep
-                    .set(CITIES.UPDATED_AT, Instant.now())
-                    .where(CITIES.ID.eq(id))
-                    .returning()
-                    .fetchOne()
-                    ?: throw IllegalStateException("Failed to update city with id: $id")
+            val r = CITIES
+            val latF = r.COORDINATES.latAlias()
+            val lonF = r.COORDINATES.lonAlias()
+            val boundsJson = r.CITY_BOUNDS.asGeoJson().`as`("city_bounds_json")
 
-            CityMapper.mapFromRecord(updated)
+            val query = ctx.update(r)
+            val updateStep = CityMapper.applyUpdateDto(query, updateDto)
+            val rec =
+                updateStep
+                    .set(
+                        r.COORDINATES,
+                        pointExpr(updateDto.coordinates.lon, updateDto.coordinates.lat, r.COORDINATES)
+                    ).set(r.UPDATED_AT, Instant.now())
+                    .where(r.ID.eq(id))
+                    .returning(r.asterisk(), latF, lonF, boundsJson)
+                    .fetchOne()
+                    ?: error("Failed to update city $id")
+
+            CityMapper.mapFromRecord(rec)
         }
 
     override suspend fun deleteById(id: UUID): Boolean =
@@ -191,11 +244,16 @@ class CityRepositoryImpl(
         pagination: PaginationRequest
     ): PageResponse<CityResponseDto> =
         withContext(Dispatchers.IO) {
+            val latField = CITIES.COORDINATES.latAlias()
+            val lonField = CITIES.COORDINATES.lonAlias()
+            val cityBoundsJson = CITIES.CITY_BOUNDS.asGeoJson().`as`("city_bounds_json")
+
             val countryFilter = FilterCriteria("countryId", FilterOperator.EQ, countryId.toString())
             val filters = pagination.filters + countryFilter
             val baseQuery =
                 ctx
-                    .selectFrom(CITIES)
+                    .select(CITIES.asterisk(), latField, lonField, cityBoundsJson)
+                    .from(CITIES)
                     .where(CITIES.IS_DELETED.eq(false).or(CITIES.IS_DELETED.isNull))
             executor.executePaginated(
                 baseQuery = baseQuery,
@@ -210,11 +268,16 @@ class CityRepositoryImpl(
         pagination: PaginationRequest
     ): PageResponse<CityResponseDto> =
         withContext(Dispatchers.IO) {
+            val latField = CITIES.COORDINATES.latAlias()
+            val lonField = CITIES.COORDINATES.lonAlias()
+            val cityBoundsJson = CITIES.CITY_BOUNDS.asGeoJson().`as`("city_bounds_json")
+
             val nameFilter = FilterCriteria("nameRu", FilterOperator.ILIKE, "%$name%")
             val filters = pagination.filters + nameFilter
             val baseQuery =
                 ctx
-                    .selectFrom(CITIES)
+                    .select(CITIES.asterisk(), latField, lonField, cityBoundsJson)
+                    .from(CITIES)
                     .where(CITIES.IS_DELETED.eq(false).or(CITIES.IS_DELETED.isNull))
             executor.executePaginated(
                 baseQuery = baseQuery,

@@ -1,6 +1,3 @@
-import org.jooq.impl.SQLDataType
-import org.jooq.meta.jaxb.CustomType
-import org.jooq.meta.jaxb.ForcedType
 import org.jooq.meta.jaxb.Logging
 import org.testcontainers.containers.PostgreSQLContainer
 import org.testcontainers.utility.DockerImageName
@@ -63,11 +60,6 @@ dependencies {
     implementation(libs.hikaricp)
     implementation(libs.liquibaseCore)
     implementation(libs.logbackClassic)
-    implementation(libs.jooqPostgisSpatial) {
-        exclude(group = "org.jooq")
-        exclude(group = "org.postgresql")
-        exclude(group = "net.postgis")
-    }
 
     runtimeOnly(libs.postgresql)
 
@@ -125,7 +117,10 @@ liquibase {
 
 val jooqLoggingLevel = providers.gradleProperty("jooq.logging.level").get()
 val jooqDatabaseSchema = providers.gradleProperty("jooq.database.schema").get()
-val jooqDatabaseExcludes = providers.gradleProperty("jooq.database.excludes").get()
+val jooqDatabaseExcludes: String? =
+    providers
+        .gradleProperty("jooq.database.excludes")
+        .orNull
 val jooqTargetPackage = providers.gradleProperty("jooq.target.package").get()
 val jooqTargetDirectory = providers.gradleProperty("jooq.target.directory").get()
 
@@ -135,14 +130,12 @@ jooq {
             generateSchemaSourceOnCompilation.set(false)
             jooqConfiguration.apply {
                 logging = Logging.valueOf(jooqLoggingLevel)
-
                 jdbc.apply {
                     driver = liquibaseDriver
                     url = containerInstance?.jdbcUrl
                     user = containerInstance?.username
                     password = containerInstance?.password
                 }
-
                 generator.apply {
                     name = "org.jooq.codegen.KotlinGenerator"
                     database.apply {
@@ -150,27 +143,18 @@ jooq {
                         excludes = jooqDatabaseExcludes
                         inputSchema = jooqDatabaseSchema
 
-                        withCustomTypes(
-                            CustomType()
-                                .withName("Geometry")
-                                .withBinding("net.dmitry.jooq.postgis.spatial.binding.JTSGeometryBinding")
-                                .withType("com.vividsolutions.jts.geom.Geometry")
-                        )
                         withForcedTypes(
-                            ForcedType()
-                                .withName(SQLDataType.JSONB.typeName)
+                            org.jooq.meta.jaxb
+                                .ForcedType()
+                                .withName(org.jooq.impl.SQLDataType.INSTANT.typeName)
+                                .withIncludeTypes("(?i:TIMESTAMP\\ (WITH|WITHOUT)\\ TIME\\ ZONE)"),
+                            org.jooq.meta.jaxb
+                                .ForcedType()
+                                .withName(org.jooq.impl.SQLDataType.JSONB.typeName)
                                 .withIncludeTypes("jsonb"),
-                            ForcedType()
-                                .withName(SQLDataType.INSTANT.typeName)
-                                .withIncludeTypes("(?i:TIMESTAMP\\s+(WITH|WITHOUT)\\s+TIME\\s+ZONE)"),
-                            ForcedType()
-                                .withName("Geometry")
-                                .withIncludeTypes("(geometry|GEOMETRY)")
                         )
                     }
                     generate.apply {
-                        isDeprecated = false
-                        isFluentSetters = true
                         withJavaTimeTypes(true)
                         withPojosAsKotlinDataClasses(true)
                         withKotlinSetterJvmNameAnnotationsOnIsPrefix(true)

@@ -1,10 +1,10 @@
 package yayauheny.by.model.city
 
-import com.vividsolutions.jts.geom.Polygon
 import io.swagger.v3.oas.annotations.media.Schema
 import java.util.UUID
 import kotlinx.serialization.Contextual
 import kotlinx.serialization.Serializable
+import yayauheny.by.model.LatLon
 
 @Serializable
 @Schema(description = "Data for creating a new city")
@@ -18,15 +18,12 @@ data class CityCreateDto(
     val nameEn: String,
     @field:Schema(description = "Region/state", example = "Moscow Oblast")
     val region: String? = null,
-    @field:Schema(description = "Latitude", example = "55.7558", required = true)
-    val lat: Double,
-    @field:Schema(description = "Longitude", example = "37.6176", required = true)
-    val lon: Double,
+    @field:Schema(description = "Coordinates", example = "55.7558, 37.6176", required = true)
+    val coordinates: LatLon,
     @field:Schema(
-        description = "City boundary as GeoJSON Polygon",
-        example = """{"type":"Polygon","coordinates":[[[37.3,55.5],[37.9,55.5],[37.9,55.9],[37.3,55.9],[37.3,55.5]]]}""",
+        description = "City boundary as WKT string",
+        example = "POLYGON((37.3 5.5, 37.9 55.5, 37.9 55.9, 37.3 55.9, 37.3 5.5))",
         nullable = true
     )
-    @Contextual
-    val cityBounds: Polygon?
+    val cityBounds: String? = null
 )

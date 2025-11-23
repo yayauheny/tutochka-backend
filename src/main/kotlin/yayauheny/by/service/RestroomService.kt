@@ -1,10 +1,8 @@
 package yayauheny.by.service
 
-import java.time.Instant
 import java.util.UUID
 import yayauheny.by.common.query.PageResponse
 import yayauheny.by.common.query.PaginationRequest
-import yayauheny.by.model.enums.RestroomStatus
 import yayauheny.by.model.restroom.NearestRestroomResponseDto
 import yayauheny.by.model.restroom.RestroomCreateDto
 import yayauheny.by.model.restroom.RestroomResponseDto
@@ -42,30 +40,4 @@ class RestroomService(
     suspend fun deleteRestroom(id: UUID): Boolean = restroomRepository.deleteById(id)
 }
 
-private fun RestroomCreateDto.toResponseDto(
-    id: UUID,
-    createdAt: Instant,
-    updatedAt: Instant,
-    distanceMeters: Int? = null
-) = RestroomResponseDto(
-    id = id,
-    cityId = cityId,
-    name = name,
-    description = description,
-    address = address,
-    phones = phones,
-    workTime = workTime,
-    feeType = feeType,
-    accessibilityType = accessibilityType,
-    lat = lat,
-    lon = lon,
-    dataSource = dataSource,
-    status = RestroomStatus.ACTIVE,
-    amenities = amenities,
-    parentPlaceName = parentPlaceName,
-    parentPlaceType = parentPlaceType,
-    inheritParentSchedule = inheritParentSchedule,
-    createdAt = createdAt,
-    updatedAt = updatedAt,
-    distanceMeters = distanceMeters
-)
+// This extension function is unused and has been removed as it referenced deprecated lat/lon properties

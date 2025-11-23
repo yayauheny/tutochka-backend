@@ -21,8 +21,14 @@ import yayauheny.by.model.restroom.RestroomResponseDto
 import yayauheny.by.model.restroom.RestroomUpdateDto
 import yayauheny.by.repository.RestroomRepository
 import yayauheny.by.tables.references.RESTROOMS
-import yayauheny.by.util.stDWithin
-import yayauheny.by.util.stDistance
+import yayauheny.by.util.distanceGeographyTo
+import yayauheny.by.util.knnOrderTo
+import yayauheny.by.util.latAlias
+import yayauheny.by.util.lonAlias
+import yayauheny.by.util.pointExpr
+import yayauheny.by.util.reqDouble
+import yayauheny.by.util.toJSONBOrEmpty
+import yayauheny.by.util.withinDistanceOf
 
 class RestroomRepositoryImpl(
     private val ctx: DSLContext
@@ -119,9 +125,13 @@ class RestroomRepositoryImpl(
 
     override suspend fun findAll(pagination: PaginationRequest): PageResponse<RestroomResponseDto> =
         withContext(Dispatchers.IO) {
+            val latField = RESTROOMS.COORDINATES.latAlias()
+            val lonField = RESTROOMS.COORDINATES.lonAlias()
+
             val baseQuery =
                 ctx
-                    .selectFrom(RESTROOMS)
+                    .select(RESTROOMS.asterisk(), latField, lonField)
+                    .from(RESTROOMS)
                     .where(RESTROOMS.IS_DELETED.eq(false).or(RESTROOMS.IS_DELETED.isNull))
             executor.executePaginated(
                 baseQuery = baseQuery,
@@ -132,9 +142,13 @@ class RestroomRepositoryImpl(
 
     override suspend fun findSingle(filters: List<FilterCriteria>): RestroomResponseDto? =
         withContext(Dispatchers.IO) {
+            val latField = RESTROOMS.COORDINATES.latAlias()
+            val lonField = RESTROOMS.COORDINATES.lonAlias()
+
             val baseQuery =
                 ctx
-                    .selectFrom(RESTROOMS)
+                    .select(RESTROOMS.asterisk(), latField, lonField)
+                    .from(RESTROOMS)
                     .where(RESTROOMS.IS_DELETED.eq(false).or(RESTROOMS.IS_DELETED.isNull))
             executor.executeSingle(
                 baseQuery = baseQuery,
@@ -145,8 +159,12 @@ class RestroomRepositoryImpl(
 
     override suspend fun findById(id: UUID): RestroomResponseDto? =
         withContext(Dispatchers.IO) {
+            val latField = RESTROOMS.COORDINATES.latAlias()
+            val lonField = RESTROOMS.COORDINATES.lonAlias()
+
             ctx
-                .selectFrom(RESTROOMS)
+                .select(RESTROOMS.asterisk(), latField, lonField)
+                .from(RESTROOMS)
                 .where(
                     RESTROOMS.ID
                         .eq(id)
@@ -157,14 +175,40 @@ class RestroomRepositoryImpl(
 
     override suspend fun save(createDto: RestroomCreateDto): RestroomResponseDto =
         withContext(Dispatchers.IO) {
-            val record = RestroomMapper.mapToSaveRecord(ctx, createDto)
-            val inserted = record.insert()
+            val r = RESTROOMS
+            val latF = r.COORDINATES.latAlias()
+            val lonF = r.COORDINATES.lonAlias()
+            val id = UUID.randomUUID()
+            val now = Instant.now()
 
-            if (inserted == 0) {
-                throw IllegalStateException("Error during save restroom")
-            }
+            val rec =
+                ctx
+                    .insertInto(r)
+                    .set(r.ID, id)
+                    .set(r.CITY_ID, createDto.cityId)
+                    .set(r.NAME, createDto.name)
+                    .set(r.DESCRIPTION, createDto.description)
+                    .set(r.ADDRESS, createDto.address)
+                    .set(r.PHONES, createDto.phones.toJSONBOrEmpty())
+                    .set(r.WORK_TIME, createDto.workTime.toJSONBOrEmpty())
+                    .set(r.FEE_TYPE, createDto.feeType.name)
+                    .set(r.ACCESSIBILITY_TYPE, createDto.accessibilityType.name)
+                    .set(
+                        r.COORDINATES,
+                        pointExpr(createDto.coordinates.lon, createDto.coordinates.lat, r.COORDINATES)
+                    ).set(r.DATA_SOURCE, createDto.dataSource.name)
+                    .set(r.STATUS, createDto.status.name)
+                    .set(r.AMENITIES, createDto.amenities.toJSONBOrEmpty())
+                    .set(r.PARENT_PLACE_NAME, createDto.parentPlaceName)
+                    .set(r.PARENT_PLACE_TYPE, createDto.parentPlaceType)
+                    .set(r.INHERIT_PARENT_SCHEDULE, createDto.inheritParentSchedule)
+                    .set(r.CREATED_AT, now)
+                    .set(r.UPDATED_AT, now)
+                    .returning(r.asterisk(), latF, lonF)
+                    .fetchOne()
+                    ?: error("Error during save restroom")
 
-            RestroomMapper.mapFromRecord(record)
+            RestroomMapper.mapFromRecord(rec)
         }
 
     override suspend fun update(
@@ -172,17 +216,24 @@ class RestroomRepositoryImpl(
         updateDto: RestroomUpdateDto
     ): RestroomResponseDto =
         withContext(Dispatchers.IO) {
-            val query = ctx.update(RESTROOMS)
-            val updateStep = RestroomMapper.applyUpdateDto(query, updateDto)
-            val updated =
-                updateStep
-                    .set(RESTROOMS.UPDATED_AT, Instant.now())
-                    .where(RESTROOMS.ID.eq(id))
-                    .returning()
-                    .fetchOne()
-                    ?: throw IllegalStateException("Failed to update restroom with id: $id")
+            val r = RESTROOMS
+            val latF = r.COORDINATES.latAlias()
+            val lonF = r.COORDINATES.lonAlias()
 
-            RestroomMapper.mapFromRecord(updated)
+            val query = ctx.update(r)
+            val updateStep = RestroomMapper.applyUpdateDto(query, updateDto)
+            val rec =
+                updateStep
+                    .set(
+                        r.COORDINATES,
+                        pointExpr(updateDto.coordinates.lon, updateDto.coordinates.lat, r.COORDINATES)
+                    ).set(r.UPDATED_AT, Instant.now())
+                    .where(r.ID.eq(id))
+                    .returning(r.asterisk(), latF, lonF)
+                    .fetchOne()
+                    ?: error("Failed to update restroom $id")
+
+            RestroomMapper.mapFromRecord(rec)
         }
 
     override suspend fun deleteById(id: UUID): Boolean =
@@ -198,24 +249,31 @@ class RestroomRepositoryImpl(
     override suspend fun findNearestByLocation(
         latitude: Double,
         longitude: Double,
-        limit: Int? = 5,
-        distanceMeters: Int? = 1000
+        limit: Int?,
+        distanceMeters: Int?
     ): List<NearestRestroomResponseDto> =
         withContext(Dispatchers.IO) {
-            val distanceField = stDistance(RESTROOMS.COORDINATES, latitude, longitude)
+            val maxDistance = (distanceMeters ?: 1000).toDouble()
+            val latField = RESTROOMS.COORDINATES.latAlias()
+            val lonField = RESTROOMS.COORDINATES.lonAlias()
+            // KNN для ORDER BY (быстро через индекс)
+            val knnField = RESTROOMS.COORDINATES.knnOrderTo(latitude, longitude)
+            // Точное расстояние через geography для отображения
+            val distanceField = RESTROOMS.COORDINATES.distanceGeographyTo(latitude, longitude)
 
             ctx
-                .select(RESTROOMS.asterisk(), distanceField.`as`("distance"))
+                .select(RESTROOMS.asterisk(), latField, lonField, distanceField.`as`("distance"))
                 .from(RESTROOMS)
                 .where(
-                    stDWithin(RESTROOMS.COORDINATES, latitude, longitude, distanceMeters)
+                    RESTROOMS.COORDINATES
+                        .withinDistanceOf(latitude, longitude, maxDistance)
                         .and(RESTROOMS.STATUS.eq(RestroomStatus.ACTIVE.name))
                         .and(RESTROOMS.IS_DELETED.eq(false).or(RESTROOMS.IS_DELETED.isNull))
-                ).orderBy(distanceField.asc())
-                .limit(limit)
+                ).orderBy(knnField.asc())
+                .limit(limit ?: 5)
                 .fetch()
                 .map {
-                    val distance = it.get("distance", Double::class.java)
+                    val distance = it.reqDouble("distance")
                     RestroomMapper.mapToNearestRestroom(it, distance)
                 }
         }
@@ -225,11 +283,15 @@ class RestroomRepositoryImpl(
         pagination: PaginationRequest
     ): PageResponse<RestroomResponseDto> =
         withContext(Dispatchers.IO) {
+            val latField = RESTROOMS.COORDINATES.latAlias()
+            val lonField = RESTROOMS.COORDINATES.lonAlias()
+
             val cityFilter = FilterCriteria("cityId", FilterOperator.EQ, cityId.toString())
             val filters = pagination.filters + cityFilter
             val baseQuery =
                 ctx
-                    .selectFrom(RESTROOMS)
+                    .select(RESTROOMS.asterisk(), latField, lonField)
+                    .from(RESTROOMS)
                     .where(RESTROOMS.IS_DELETED.eq(false).or(RESTROOMS.IS_DELETED.isNull))
             executor.executePaginated(
                 baseQuery = baseQuery,

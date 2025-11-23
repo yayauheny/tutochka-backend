@@ -55,10 +55,15 @@ class RestroomController(
                 val limit = call.getIntFromQuery("limit") ?: 5
                 val distanceMeters = call.getIntFromQuery("distanceMeters") ?: 1000
 
-                val params = NearestRestroomsParams(lat, lon, limit, distanceMeters)
+                val params = NearestRestroomsParams(yayauheny.by.model.LatLon(lat, lon), limit, distanceMeters)
                 val restrooms =
                     params.validateAndThen(nearestRestroomsParamsValidator) { valid ->
-                        restroomService.findNearestRestrooms(valid.lat, valid.lon, valid.limit, valid.distanceMeters)
+                        restroomService.findNearestRestrooms(
+                            valid.coordinates.lat,
+                            valid.coordinates.lon,
+                            valid.limit,
+                            valid.distanceMeters
+                        )
                     }
                 call.respond(HttpStatusCode.OK, restrooms)
             }
