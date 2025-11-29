@@ -1,7 +1,7 @@
 package yayauheny.by.repository.impl
 
 import java.time.Instant
-import java.util.*
+import java.util.UUID
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import org.jooq.DSLContext
@@ -22,8 +22,6 @@ import yayauheny.by.model.city.CityResponseDto
 import yayauheny.by.model.city.CityUpdateDto
 import yayauheny.by.repository.CityRepository
 import yayauheny.by.tables.references.CITIES
-import yayauheny.by.util.latAlias
-import yayauheny.by.util.lonAlias
 import yayauheny.by.util.pointExpr
 
 class CityRepositoryImpl(
@@ -114,27 +112,20 @@ class CityRepositoryImpl(
 
     /**
      * Единый набор полей для SELECT/RETURNING запросов городов.
-     * Включает все поля таблицы + lat/lon координаты.
+     * Включает все поля таблицы + lat/lon координаты (реальные колонки).
      */
     private fun cityProjection(): Array<SelectFieldOrAsterisk> {
-        val latF = CITIES.COORDINATES.latAlias()
-        val lonF = CITIES.COORDINATES.lonAlias()
-
-        // Не используем CITIES.asterisk(), потому что оно включает coordinates (Geometry),
-        // который jOOQ не может правильно прочитать без специальной обработки.
-        // Используем только вычисляемые поля lat/lon через ST_X/ST_Y
         return arrayOf(
             CITIES.ID,
             CITIES.COUNTRY_ID,
             CITIES.NAME_RU,
             CITIES.NAME_EN,
             CITIES.REGION,
-            // CITIES.COORDINATES - не включаем, используем только lat/lon через ST_X/ST_Y
             CITIES.CREATED_AT,
             CITIES.UPDATED_AT,
             CITIES.IS_DELETED,
-            latF,
-            lonF
+            CITIES.LAT,
+            CITIES.LON
         )
     }
 
@@ -192,10 +183,8 @@ class CityRepositoryImpl(
                 val r = CITIES
                 val id = UUID.randomUUID()
                 val now = Instant.now()
-                logger.info("Generated ID: $id, timestamp: $now")
 
-                logger.info("Building INSERT statement")
-                val insert =
+                val rec =
                     ctx
                         .insertInto(r)
                         .set(r.ID, id)
@@ -208,27 +197,9 @@ class CityRepositoryImpl(
                             pointExpr(dto.coordinates.lon, dto.coordinates.lat, r.COORDINATES)
                         ).set(r.CREATED_AT, now)
                         .set(r.UPDATED_AT, now)
-
-                // План Б: сначала возвращаем только ID, затем делаем отдельный SELECT
-                // Это необходимо, потому что jOOQ не может вернуть вычисляемые поля (lat/lon через ST_X/ST_Y) в RETURNING
-                logger.info("Executing INSERT ... RETURNING ID")
-                val idRec =
-                    insert
-                        .returning(r.ID)
+                        .returning(*cityProjection())
                         .fetchOne() ?: error("Error during save city: ${dto.nameEn}")
-                val insertedId = idRec[r.ID]!!
-                logger.info("INSERT successful, inserted ID: $insertedId")
 
-                logger.info("Executing SELECT with cityProjection()")
-                val rec =
-                    ctx
-                        .select(*cityProjection())
-                        .from(r)
-                        .where(r.ID.eq(insertedId))
-                        .fetchOne() ?: error("City not found after insert: ${dto.nameEn}")
-                logger.info("SELECT successful, record found")
-
-                logger.info("Calling CityMapper.mapFromRecord()")
                 val result = CityMapper.mapFromRecord(rec)
                 logger.info("Mapping successful: id=${result.id}, nameRu=${result.nameRu}, nameEn=${result.nameEn}")
                 return@withContext result

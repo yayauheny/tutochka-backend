@@ -16,13 +16,12 @@ object CityMapper {
         logger.info("mapFromRecord() called")
         try {
             logger.info("Getting lat/lon from record")
-            val lat = record.get("lat", Double::class.javaObjectType)
-            val lon = record.get("lon", Double::class.javaObjectType)
+            val lat = record[CITIES.LAT]
+            val lon = record[CITIES.LON]
             logger.info("lat=$lat, lon=$lon")
 
-            // Если вдруг не пришли — шанс, что забыли подключить projection:
             require(lat != null && lon != null) {
-                "Missing lat/lon in record. Make sure query/returning uses cityProjection() with CITIES.COORDINATES.lat()/lon()."
+                "Missing lat/lon in record. Make sure query/returning uses cityProjection() with CITIES.LAT/LON."
             }
             logger.info("lat/lon validation passed")
 
@@ -42,7 +41,7 @@ object CityMapper {
                     nameRu = nameRu,
                     nameEn = nameEn,
                     region = region,
-                    coordinates = LatLon(lat = lat!!, lon = lon!!)
+                    coordinates = LatLon(lat = lat, lon = lon)
                 )
             logger.info("CityResponseDto created successfully: id=${result.id}")
             return result
