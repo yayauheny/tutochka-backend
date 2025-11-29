@@ -13,14 +13,16 @@ import yayauheny.by.model.restroom.NearestRestroomResponseDto
 import yayauheny.by.model.restroom.RestroomResponseDto
 import yayauheny.by.model.restroom.RestroomUpdateDto
 import yayauheny.by.tables.references.RESTROOMS
-import yayauheny.by.util.reqDouble
 import yayauheny.by.util.toJSONBOrEmpty
 import yayauheny.by.util.toJsonObjectOrEmpty
 
 object RestroomMapper {
     fun mapFromRecord(record: Record): RestroomResponseDto {
-        val lat = record.reqDouble("lat")
-        val lon = record.reqDouble("lon")
+        val lat = record[RESTROOMS.LAT]
+        val lon = record[RESTROOMS.LON]
+        require(lat != null && lon != null) {
+            "Missing lat/lon in record. Make sure query/returning uses restroomProjection() with RESTROOMS.LAT/LON."
+        }
         return RestroomResponseDto(
             id = record[RESTROOMS.ID]!!,
             cityId = record[RESTROOMS.CITY_ID],
@@ -31,7 +33,7 @@ object RestroomMapper {
             workTime = record[RESTROOMS.WORK_TIME].toJsonObjectOrEmpty(),
             feeType = FeeType.valueOf(record[RESTROOMS.FEE_TYPE]!!),
             accessibilityType = AccessibilityType.valueOf(record[RESTROOMS.ACCESSIBILITY_TYPE]!!),
-            coordinates = LatLon(lat = lat, lon = lon),
+            coordinates = LatLon(lat = lat!!, lon = lon!!),
             dataSource = DataSourceType.valueOf(record[RESTROOMS.DATA_SOURCE]!!),
             status = RestroomStatus.valueOf(record[RESTROOMS.STATUS]!!),
             amenities = record[RESTROOMS.AMENITIES].toJsonObjectOrEmpty(),
@@ -71,13 +73,16 @@ object RestroomMapper {
         record: Record,
         distanceMeters: Double
     ): NearestRestroomResponseDto {
-        val lat = record.reqDouble("lat")
-        val lon = record.reqDouble("lon")
+        val lat = record[RESTROOMS.LAT]
+        val lon = record[RESTROOMS.LON]
+        require(lat != null && lon != null) {
+            "Missing lat/lon in record. Make sure query uses restroomProjection() with RESTROOMS.LAT/LON."
+        }
         return NearestRestroomResponseDto(
             id = record[RESTROOMS.ID]!!,
             name = record[RESTROOMS.NAME],
             address = record[RESTROOMS.ADDRESS]!!,
-            coordinates = LatLon(lat = lat, lon = lon),
+            coordinates = LatLon(lat = lat!!, lon = lon!!),
             distanceMeters = distanceMeters,
             feeType = FeeType.valueOf(record[RESTROOMS.FEE_TYPE]!!),
             isOpen = null

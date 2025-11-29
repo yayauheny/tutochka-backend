@@ -33,6 +33,26 @@ val testJson =
             }
     }
 
+fun HttpResponse.assertJsonContentType() {
+    val ct = this.contentType()
+    assertTrue(
+        ct?.match(ContentType.Application.Json) == true,
+        "Expected Content-Type application/json but was $ct"
+    )
+}
+
+fun HttpResponse.assertStatusAndJsonContent(
+    expectedStatus: HttpStatusCode,
+    message: String? = null
+) {
+    assertEquals(
+        expectedStatus,
+        this.status,
+        message ?: "Expected status $expectedStatus but got ${this.status}"
+    )
+    this.assertJsonContentType()
+}
+
 suspend fun HttpClient.testGet(
     path: String,
     query: Map<String, String> = emptyMap()
@@ -82,52 +102,15 @@ fun ErrorResponse.assertHasValidationErrors() {
     )
 }
 
-/**
- * Asserts that the HTTP response has the expected status code and JSON content type.
- * Provides clear error messages if assertions fail.
- */
-fun HttpResponse.assertStatusAndJsonContent(
-    expectedStatus: HttpStatusCode,
-    message: String? = null
-) {
-    assertEquals(
-        expectedStatus,
-        this.status,
-        message ?: "Expected status $expectedStatus but got ${this.status}"
-    )
-    this.assertJsonContentType()
-}
-
-/**
- * Asserts that the response body contains the specified text.
- * Provides clear error message with actual body content.
- */
-suspend fun HttpResponse.assertBodyContains(
-    expectedText: String,
-    message: String? = null
-) {
-    val body = this.bodyAsText()
-    assertTrue(
-        body.contains(expectedText),
-        message ?: "Response body should contain '$expectedText', but got: ${body.take(200)}"
-    )
-}
-
-/**
- * Asserts that the response body contains all specified texts.
- */
-suspend fun HttpResponse.assertBodyContainsAll(
-    vararg expectedTexts: String,
-    message: String? = null
-) {
-    val body = this.bodyAsText()
-    expectedTexts.forEach { expectedText ->
-        assertTrue(
-            body.contains(expectedText),
-            message ?: "Response body should contain '$expectedText', but got: ${body.take(200)}"
-        )
+// (Временно) старые contains-ассёрты для совместимости
+suspend fun HttpResponse.assertBodyContains(vararg expected: String) {
+    val body = bodyAsText()
+    expected.forEach {
+        assertTrue(body.contains(it), "Response body should contain '$it', got: ${body.take(200)}")
     }
 }
+
+suspend fun HttpResponse.assertBodyContainsAll(vararg expectedTexts: String) = assertBodyContains(*expectedTexts)
 
 /**
  * Creates a JSON string for city creation request.
