@@ -13,10 +13,10 @@ import yayauheny.by.common.errors.NotFoundException
 import yayauheny.by.model.restroom.RestroomCreateDto
 import yayauheny.by.service.RestroomService
 import yayauheny.by.service.validation.NearestRestroomsParams
-import yayauheny.by.service.validation.nearestRestroomsParamsValidator
-import yayauheny.by.service.validation.restroomCreateValidator
-import yayauheny.by.service.validation.restroomUpdateValidator
 import yayauheny.by.service.validation.validateAndThen
+import yayauheny.by.service.validation.validateNearestRestroomsParams
+import yayauheny.by.service.validation.validateRestroomOnCreate
+import yayauheny.by.service.validation.validateRestroomOnUpdate
 import yayauheny.by.util.createPaginationFromQuery
 import yayauheny.by.util.getDoubleFromQuery
 import yayauheny.by.util.getIntFromQuery
@@ -38,7 +38,7 @@ class RestroomController(
                 val id = call.getUuidFromPath("id")
                 val restroom =
                     restroomService.getRestroomById(id)
-                        ?: throw NotFoundException("Restroom with id $id not found")
+                        ?: throw NotFoundException("Туалет с ID '$id' не найден")
                 call.respond(HttpStatusCode.OK, restroom)
             }
 
@@ -57,23 +57,25 @@ class RestroomController(
 
                 val params = NearestRestroomsParams(yayauheny.by.model.LatLon(lat, lon), limit, distanceMeters)
                 val restrooms =
-                    params.validateAndThen(nearestRestroomsParamsValidator) { valid ->
-                        restroomService.findNearestRestrooms(
-                            valid.coordinates.lat,
-                            valid.coordinates.lon,
-                            valid.limit,
-                            valid.distanceMeters
-                        )
-                    }
+                    params
+                        .validateAndThen(validateNearestRestroomsParams) { valid ->
+                            restroomService.findNearestRestrooms(
+                                valid.coordinates.lat,
+                                valid.coordinates.lon,
+                                valid.limit,
+                                valid.distanceMeters
+                            )
+                        }.getOrThrow()
                 call.respond(HttpStatusCode.OK, restrooms)
             }
 
             post {
                 val createDto = call.receive<RestroomCreateDto>()
                 val restroom =
-                    createDto.validateAndThen(restroomCreateValidator) { valid ->
-                        restroomService.createRestroom(valid)
-                    }
+                    createDto
+                        .validateAndThen(validateRestroomOnCreate) { valid ->
+                            restroomService.createRestroom(valid)
+                        }.getOrThrow()
                 call.respond(HttpStatusCode.Created, restroom)
             }
 
@@ -81,9 +83,10 @@ class RestroomController(
                 val id = call.getUuidFromPath("id")
                 val updateDto = call.receive<yayauheny.by.model.restroom.RestroomUpdateDto>()
                 val restroom =
-                    updateDto.validateAndThen(restroomUpdateValidator) { valid ->
-                        restroomService.updateRestroom(id, valid)
-                    }
+                    updateDto
+                        .validateAndThen(validateRestroomOnUpdate) { valid ->
+                            restroomService.updateRestroom(id, valid)
+                        }.getOrThrow()
                 call.respond(HttpStatusCode.OK, restroom)
             }
 

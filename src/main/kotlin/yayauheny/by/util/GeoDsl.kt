@@ -90,7 +90,7 @@ fun <T> geomFromGeoJson(
 fun Field<*>.asGeoJson(): Field<String> = DSL.field("ST_AsGeoJSON({0})", SQLDataType.VARCHAR, this)
 
 /** Извлекает double из Record, выбрасывает ошибку если колонка отсутствует */
-fun Record.reqDouble(name: String): Double = get(name, Double::class.java) ?: error("Expected column '$name' in SELECT")
+fun Record.reqDouble(name: String): Double = get(name, Double::class.java) ?: error("Ожидалась колонка '$name' в SELECT")
 
 /** Возвращает все поля таблицы RESTROOMS кроме coordinates (для SELECT запросов) */
 fun getAllRestroomsFieldsExceptCoordinates(): List<org.jooq.Field<*>> {
