@@ -30,7 +30,7 @@ fun runLiquibaseMigrations(dataSource: HikariDataSource) {
             logger.info("Liquibase migrations completed successfully")
         }
     } catch (e: Exception) {
-        logger.error("Failed to run Liquibase migrations", e)
+        logger.error("Не удалось выполнить миграции Liquibase", e)
         throw e
     }
 }

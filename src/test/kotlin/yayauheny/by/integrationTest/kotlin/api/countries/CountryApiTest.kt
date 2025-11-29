@@ -126,7 +126,11 @@ class CountryApiTest : BaseIntegrationTest() {
                     response.assertStatusAndJsonContent(HttpStatusCode.NotFound)
                     val json = Json.parseToJsonElement(response.bodyAsText()).jsonObject
                     val message = json["message"]?.jsonPrimitive?.content
-                    assertTrue(message != null && message.lowercase().contains("not found"))
+                    // Проверяем, что сообщение об ошибке присутствует (может быть на русском или английском)
+                    assertTrue(
+                        message != null &&
+                            (message.lowercase().contains("not found") || message.contains("не найдена") || message.contains("не найден"))
+                    )
                 }
             }
 
@@ -139,7 +143,11 @@ class CountryApiTest : BaseIntegrationTest() {
                     response.assertStatusAndJsonContent(HttpStatusCode.NotFound)
                     val json = Json.parseToJsonElement(response.bodyAsText()).jsonObject
                     val message = json["message"]?.jsonPrimitive?.content
-                    assertTrue(message != null && message.lowercase().contains("not found"))
+                    // Проверяем, что сообщение об ошибке присутствует (может быть на русском или английском)
+                    assertTrue(
+                        message != null &&
+                            (message.lowercase().contains("not found") || message.contains("не найдена") || message.contains("не найден"))
+                    )
                 }
             }
 
@@ -213,7 +221,11 @@ class CountryApiTest : BaseIntegrationTest() {
                     val json = Json.parseToJsonElement(response.bodyAsText()).jsonObject
                     assertEquals(409, json["status"]!!.jsonPrimitive.intOrNull)
                     val message = json["message"]?.jsonPrimitive?.content
-                    assertTrue(message != null && message.lowercase().contains("exist"))
+                    // Проверяем, что сообщение об ошибке присутствует (может быть на русском или английском)
+                    assertTrue(
+                        message != null &&
+                            (message.lowercase().contains("exist") || message.contains("существует") || message.contains("уже"))
+                    )
                 }
             }
     }

@@ -12,7 +12,7 @@ class ValidationException : RestException {
     val errors: List<FieldError>?
 
     constructor(
-        message: String? = "Validation failed",
+        message: String? = "Ошибка валидации",
         cause: Throwable? = null
     ) : super(HttpStatusCode.BadRequest, message, cause) {
         this.errors = null
@@ -27,11 +27,22 @@ class ValidationException : RestException {
 }
 
 class NotFoundException(
-    message: String? = "Resource not found",
+    message: String? = "Ресурс не найден",
     cause: Throwable? = null
 ) : RestException(HttpStatusCode.NotFound, message, cause)
 
 class ConflictException(
-    message: String? = "Resource conflict",
+    message: String? = "Конфликт ресурсов",
     cause: Throwable? = null
 ) : RestException(HttpStatusCode.Conflict, message, cause)
+
+class BadRequestException(
+    message: String? = "Неверный запрос",
+    cause: Throwable? = null
+) : RestException(HttpStatusCode.BadRequest, message, cause)
+
+class ServiceUnavailableException(
+    message: String? = "Сервис временно недоступен",
+    cause: Throwable? = null,
+    val retryAfter: Int? = null
+) : RestException(HttpStatusCode.ServiceUnavailable, message, cause)

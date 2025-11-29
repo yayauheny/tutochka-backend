@@ -15,12 +15,8 @@ data class FieldError(
 @Serializable
 @Schema(description = "Error response structure")
 data class ErrorResponse(
-    @Schema(description = "Timestamp when error occurred", example = "2023-12-01T10:30:00Z")
-    val timestamp: String,
     @Schema(description = "HTTP status code", example = "400")
     val status: Int,
-    @Schema(description = "Error type", example = "Bad Request")
-    val error: String,
     @Schema(description = "Detailed error message", example = "Invalid UUID format")
     val message: String?,
     @Schema(description = "Request path where error occurred", example = "/api/v1/countries/123")

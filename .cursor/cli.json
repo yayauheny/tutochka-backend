@@ -1,0 +1,48 @@
+{
+  "permissions": {
+    "allow": [
+      "Shell(git)",
+      "Shell(./gradlew)",
+      "Shell(gradle)",
+      "Shell(grep)",
+      "Shell(find)",
+      "Shell(cat)",
+      "Shell(head)",
+      "Shell(tail)",
+      "Shell(wc)",
+      "Shell(mkdir)",
+      "Shell(ls)",
+      "Shell(pwd)",
+      "Shell(which)",
+      "Shell(echo)",
+      "Shell(sed)",
+      "Shell(awk)",
+      "Read(*)",
+      "Write(*.kt)",
+      "Write(*.kts)",
+      "Write(build.gradle*)",
+      "Write(settings.gradle*)"
+    ],
+    "deny": [
+      "Shell(rm)",
+      "Shell(rmdir)",
+      "Shell(git push)",
+      "Shell(git push --force)",
+      "Shell(git push -f)",
+      "Shell(git reset --hard)",
+      "Shell(git clean -fd)",
+      "Shell(git clean -fdx)",
+      "Shell(drop)",
+      "Shell(truncate)",
+      "Shell(dd)",
+      "Shell(shred)",
+      "Read(.env)",
+      "Read(.env.*)",
+      "Write(.env)",
+      "Write(.env.*)",
+      "Read(.ssh/*)",
+      "Read(*id_rsa*)",
+      "Read(*id_ed25519*)"
+    ]
+  }
+}

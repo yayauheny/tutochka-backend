@@ -975,18 +975,10 @@ components:
     ErrorResponse:
       type: object
       properties:
-        timestamp:
-          type: string
-          description: Timestamp when error occurred
-          example: "2023-12-01T10:30:00Z"
         status:
           type: integer
           description: HTTP status code
           example: 400
-        error:
-          type: string
-          description: Error type
-          example: "Bad Request"
         message:
           type: string
           description: Detailed error message

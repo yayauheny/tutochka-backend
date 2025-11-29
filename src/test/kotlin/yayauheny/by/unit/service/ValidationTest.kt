@@ -15,7 +15,6 @@ import org.junit.jupiter.api.Test
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.Arguments
 import org.junit.jupiter.params.provider.MethodSource
-import yayauheny.by.service.validation.Validated
 import yayauheny.by.service.validation.validateOrThrow
 import yayauheny.by.service.validation.validateWith
 import yayauheny.by.common.errors.ValidationException
@@ -28,10 +27,10 @@ import yayauheny.by.model.enums.DataSourceType
 import yayauheny.by.model.enums.FeeType
 import yayauheny.by.model.enums.RestroomStatus
 import yayauheny.by.service.validation.NearestRestroomsParams
-import yayauheny.by.service.validation.cityCreateValidator
-import yayauheny.by.service.validation.countryCreateValidator
-import yayauheny.by.service.validation.nearestRestroomsParamsValidator
-import yayauheny.by.service.validation.restroomCreateValidator
+import yayauheny.by.service.validation.validateCityOnCreate
+import yayauheny.by.service.validation.validateCountryOnCreate
+import yayauheny.by.service.validation.validateNearestRestroomsParams
+import yayauheny.by.service.validation.validateRestroomOnCreate
 
 class ValidationTest {
     companion object {
@@ -129,10 +128,10 @@ class ValidationTest {
                     code = "US"
                 )
 
-            val result = validDto.validateWith(countryCreateValidator)
+            val result = validDto.validateWith(validateCountryOnCreate)
 
-            assertTrue(result is Validated.Ok)
-            assertEquals(validDto, result.value)
+            assertTrue(result.isSuccess)
+            assertEquals(validDto, result.getOrNull())
         }
 
         @ParameterizedTest
@@ -142,13 +141,15 @@ class ValidationTest {
             dto: CountryCreateDto,
             expectedErrorCount: Int
         ) {
-            val result = dto.validateWith(countryCreateValidator)
+            val result = dto.validateWith(validateCountryOnCreate)
 
             if (expectedErrorCount == 0) {
-                assertTrue(result is Validated.Ok)
+                assertTrue(result.isSuccess)
             } else {
-                assertTrue(result is Validated.Fail)
-                assertEquals(expectedErrorCount, result.errors.size)
+                assertTrue(result.isFailure)
+                val exception = result.exceptionOrNull() as? ValidationException
+                assertNotNull(exception)
+                assertEquals(expectedErrorCount, exception.errors?.size)
             }
         }
     }
@@ -168,10 +169,10 @@ class ValidationTest {
                     coordinates = LatLon(lat = 53.9006, lon = 27.5590)
                 )
 
-            val result = validDto.validateWith(cityCreateValidator)
+            val result = validDto.validateWith(validateCityOnCreate)
 
-            assertTrue(result is Validated.Ok)
-            assertEquals(validDto, result.value)
+            assertTrue(result.isSuccess)
+            assertEquals(validDto, result.getOrNull())
         }
 
         @Test
@@ -186,9 +187,9 @@ class ValidationTest {
                     coordinates = LatLon(lat = 90.0, lon = 180.0)
                 )
 
-            val result = validDto.validateWith(cityCreateValidator)
+            val result = validDto.validateWith(validateCityOnCreate)
 
-            assertTrue(result is Validated.Ok)
+            assertTrue(result.isSuccess)
         }
 
         @ParameterizedTest
@@ -198,13 +199,15 @@ class ValidationTest {
             dto: CityCreateDto,
             expectedErrorCount: Int
         ) {
-            val result = dto.validateWith(cityCreateValidator)
+            val result = dto.validateWith(validateCityOnCreate)
 
             if (expectedErrorCount == 0) {
-                assertTrue(result is Validated.Ok)
+                assertTrue(result.isSuccess)
             } else {
-                assertTrue(result is Validated.Fail)
-                assertEquals(expectedErrorCount, result.errors.size)
+                assertTrue(result.isFailure)
+                val exception = result.exceptionOrNull() as? ValidationException
+                assertNotNull(exception)
+                assertEquals(expectedErrorCount, exception.errors?.size)
             }
         }
     }
@@ -234,9 +237,9 @@ class ValidationTest {
                     inheritParentSchedule = false
                 )
 
-            val result = validDto.validateWith(restroomCreateValidator)
-            assertTrue(result is Validated.Ok)
-            assertEquals(validDto, result.value)
+            val result = validDto.validateWith(validateRestroomOnCreate)
+            assertTrue(result.isSuccess)
+            assertEquals(validDto, result.getOrNull())
         }
 
         @ParameterizedTest
@@ -246,9 +249,11 @@ class ValidationTest {
             dto: RestroomCreateDto,
             expectedErrorCount: Int
         ) {
-            val result = dto.validateWith(restroomCreateValidator)
-            assertTrue(result is Validated.Fail)
-            assertEquals(expectedErrorCount, result.errors.size)
+            val result = dto.validateWith(validateRestroomOnCreate)
+            assertTrue(result.isFailure)
+            val exception = result.exceptionOrNull() as? ValidationException
+            assertNotNull(exception)
+            assertEquals(expectedErrorCount, exception.errors?.size)
         }
     }
 
@@ -263,7 +268,7 @@ class ValidationTest {
 
                 val exception =
                     assertFailsWith<ValidationException> {
-                        invalidDto.validateOrThrow(countryCreateValidator)
+                        invalidDto.validateOrThrow(validateCountryOnCreate)
                     }
 
                 assertNotNull(exception.errors)
@@ -278,7 +283,7 @@ class ValidationTest {
             runTest {
                 val validDto = CountryCreateDto("США", "United States", "US")
 
-                val result = validDto.validateOrThrow(countryCreateValidator)
+                val result = validDto.validateOrThrow(validateCountryOnCreate)
                 assertEquals(validDto, result)
             }
     }
@@ -291,11 +296,13 @@ class ValidationTest {
         fun countryWithMultipleIssuesShouldReturnAllErrors() {
             val invalidDto = CountryCreateDto("", "", "U") // Multiple issues
 
-            val result = invalidDto.validateWith(countryCreateValidator)
-            assertTrue(result is Validated.Fail)
-            assertEquals(3, result.errors.size) // nameRu, nameEn, code
+            val result = invalidDto.validateWith(validateCountryOnCreate)
+            assertTrue(result.isFailure)
+            val exception = result.exceptionOrNull() as? ValidationException
+            assertNotNull(exception)
+            assertEquals(3, exception.errors?.size) // nameRu, nameEn, code
 
-            val fields = result.errors.map { it.field }
+            val fields = exception.errors!!.map { it.field }
             // Check that we have errors for the expected fields (field names might be different)
             assertTrue(fields.any { it.contains("nameRu") || it.contains("name_ru") })
             assertTrue(fields.any { it.contains("nameEn") || it.contains("name_en") })
@@ -314,12 +321,17 @@ class ValidationTest {
                     coordinates = LatLon(lat = 91.0, lon = 181.0)
                 ) // Multiple issues
 
-            val result = invalidDto.validateWith(cityCreateValidator)
-            assertTrue(result is Validated.Fail)
+            val result = invalidDto.validateWith(validateCityOnCreate)
+            assertTrue(result.isFailure)
+            val exception = result.exceptionOrNull() as? ValidationException
+            assertNotNull(exception)
             // nameRu (1) + nameEn (1) + coordinates (2 for lat and lon) = 4 errors
-            assertTrue(result.errors.size >= 3, "Should have at least 3 errors (nameRu, nameEn, coordinates), got: ${result.errors.size}")
+            assertTrue(
+                exception.errors?.size ?: 0 >= 3,
+                "Should have at least 3 errors (nameRu, nameEn, coordinates), got: ${exception.errors?.size}"
+            )
 
-            val fields = result.errors.map { it.field.lowercase() }
+            val fields = exception.errors!!.map { it.field.lowercase() }
             // Check that we have errors for the expected fields (field names might be different)
             assertTrue(fields.any { it.contains("nameru") || it.contains("name_ru") }, "Should have nameRu error, got: $fields")
             assertTrue(fields.any { it.contains("nameen") || it.contains("name_en") }, "Should have nameEn error, got: $fields")
@@ -349,12 +361,17 @@ class ValidationTest {
                     inheritParentSchedule = false
                 ) // Multiple issues
 
-            val result = invalidDto.validateWith(restroomCreateValidator)
-            assertTrue(result is Validated.Fail)
+            val result = invalidDto.validateWith(validateRestroomOnCreate)
+            assertTrue(result.isFailure)
+            val exception = result.exceptionOrNull() as? ValidationException
+            assertNotNull(exception)
             // address (1) + coordinates (2 for lat and lon) = 3 errors
-            assertTrue(result.errors.size >= 2, "Should have at least 2 errors (address, coordinates), got: ${result.errors.size}")
+            assertTrue(
+                exception.errors?.size ?: 0 >= 2,
+                "Should have at least 2 errors (address, coordinates), got: ${exception.errors?.size}"
+            )
 
-            val fields = result.errors.map { it.field.lowercase() }
+            val fields = exception.errors!!.map { it.field.lowercase() }
             assertTrue(fields.any { it.contains("address") }, "Should have address error, got: $fields")
             // For nested coordinates, errors are reported on "coordinates" field
             assertTrue(fields.any { it.contains("coordinates") }, "Should have coordinates error, got: $fields")
@@ -368,9 +385,9 @@ class ValidationTest {
         @DisplayName("Valid parameters should pass validation")
         fun valid_params_should_pass() {
             val params = NearestRestroomsParams(LatLon(lat = 55.7558, lon = 37.6176), 10, 1000)
-            val result = params.validateWith(nearestRestroomsParamsValidator)
-            assertTrue(result is Validated.Ok)
-            assertEquals(params, result.value)
+            val result = params.validateWith(validateNearestRestroomsParams)
+            assertTrue(result.isSuccess)
+            assertEquals(params, result.getOrNull())
         }
 
         @Test
@@ -378,7 +395,7 @@ class ValidationTest {
         fun valid_params_should_pass_with_validateOrThrow() =
             runTest {
                 val params = NearestRestroomsParams(LatLon(lat = 55.7558, lon = 37.6176), 10, 1000)
-                val result = params.validateOrThrow(nearestRestroomsParamsValidator)
+                val result = params.validateOrThrow(validateNearestRestroomsParams)
                 assertEquals(params, result)
             }
 
@@ -389,9 +406,11 @@ class ValidationTest {
             params: NearestRestroomsParams,
             expectedErrorCount: Int
         ) {
-            val result = params.validateWith(nearestRestroomsParamsValidator)
-            assertTrue(result is Validated.Fail)
-            assertEquals(expectedErrorCount, result.errors.size)
+            val result = params.validateWith(validateNearestRestroomsParams)
+            assertTrue(result.isFailure)
+            val exception = result.exceptionOrNull() as? ValidationException
+            assertNotNull(exception)
+            assertEquals(expectedErrorCount, exception.errors?.size)
         }
 
         @ParameterizedTest
@@ -402,7 +421,7 @@ class ValidationTest {
             expectedErrorCount: Int
         ) = runTest {
             assertFailsWith<ValidationException> {
-                params.validateOrThrow(nearestRestroomsParamsValidator)
+                params.validateOrThrow(validateNearestRestroomsParams)
             }
         }
     }

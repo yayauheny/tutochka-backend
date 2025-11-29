@@ -1,8 +1,10 @@
 package yayauheny.by.helpers
 
 import io.ktor.client.HttpClient
+import io.ktor.client.request.delete
 import io.ktor.client.request.get
 import io.ktor.client.request.post
+import io.ktor.client.request.put
 import io.ktor.client.request.setBody
 import io.ktor.client.statement.HttpResponse
 import io.ktor.client.statement.bodyAsText
@@ -51,6 +53,20 @@ suspend fun HttpClient.testPost(
         setBody(jsonBody)
     }
 
+suspend fun HttpClient.testPut(
+    path: String,
+    jsonBody: String
+): HttpResponse =
+    put(path) {
+        contentType(ContentType.Application.Json)
+        setBody(jsonBody)
+    }
+
+suspend fun HttpClient.testDelete(path: String): HttpResponse =
+    delete(path) {
+        headers.append("Accept", ContentType.Application.Json.toString())
+    }
+
 suspend fun HttpResponse.parseErrorResponse(): ErrorResponse {
     val body = this.bodyAsText()
     return yayauheny.by.helpers.testJson
@@ -79,6 +95,17 @@ fun ErrorResponse.assertHasValidationErrors() {
     assertTrue(
         this.errors != null && this.errors.isNotEmpty(),
         "Error response should contain validation errors, but got: ${this.errors}"
+    )
+}
+
+/**
+ * Asserts that the response has JSON content type.
+ */
+fun HttpResponse.assertJsonContentType() {
+    val contentType = this.headers["Content-Type"]
+    assertTrue(
+        contentType?.contains("application/json") == true,
+        "Expected Content-Type to contain 'application/json', but got: $contentType"
     )
 }
 
@@ -172,6 +199,52 @@ fun createCountryJson(
             put("nameRu", nameRu)
             put("nameEn", nameEn)
             put("code", code)
+        }
+    return json.toString()
+}
+
+/**
+ * Creates a JSON string for city update request.
+ */
+fun createCityUpdateJson(dto: yayauheny.by.model.city.CityUpdateDto): String {
+    val json =
+        buildJsonObject {
+            put("countryId", dto.countryId.toString())
+            put("nameRu", dto.nameRu)
+            put("nameEn", dto.nameEn)
+            if (dto.region != null) {
+                put("region", dto.region)
+            }
+            put(
+                "coordinates",
+                buildJsonObject {
+                    put("lat", dto.coordinates.lat)
+                    put("lon", dto.coordinates.lon)
+                }
+            )
+        }
+    return json.toString()
+}
+
+/**
+ * Creates a JSON string for city creation request from DTO.
+ */
+fun createCityJson(dto: yayauheny.by.model.city.CityCreateDto): String {
+    val json =
+        buildJsonObject {
+            put("countryId", dto.countryId.toString())
+            put("nameRu", dto.nameRu)
+            put("nameEn", dto.nameEn)
+            if (dto.region != null) {
+                put("region", dto.region)
+            }
+            put(
+                "coordinates",
+                buildJsonObject {
+                    put("lat", dto.coordinates.lat)
+                    put("lon", dto.coordinates.lon)
+                }
+            )
         }
     return json.toString()
 }
