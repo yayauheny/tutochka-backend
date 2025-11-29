@@ -2,7 +2,6 @@ package yayauheny.by.helpers
 
 import java.time.Instant
 import java.util.UUID
-import kotlin.math.absoluteValue
 import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.JsonPrimitive
 import kotlinx.serialization.json.buildJsonObject
@@ -18,7 +17,6 @@ import yayauheny.by.tables.references.RESTROOMS
 import yayauheny.by.util.pointExpr
 import yayauheny.by.util.toJSONBOrEmpty
 
-// БАЗОВЫЕ ДЕФОЛТЫ — ДЕТЕРМИНИРОВАННЫЕ
 data class TestCountryData(
     val nameRu: String = "Test Country RU",
     val nameEn: String = "Test Country EN",
@@ -28,17 +26,9 @@ data class TestCountryData(
 data class TestCityData(
     val nameRu: String = "Test City RU ${UUID.randomUUID().toString().take(8)}",
     val nameEn: String = "Test City EN ${UUID.randomUUID().toString().take(8)}",
-    val lat: Double = 55.7558, // Базовые координаты
-    val lon: Double = 37.6176
-) {
-    // Генерируем уникальные координаты на основе UUID из имени
-    fun uniqueCoordinates(): Pair<Double, Double> {
-        val uuidHash = nameRu.hashCode().toLong().absoluteValue
-        val latOffset = (uuidHash % 1000) / 100000.0 // смещение до 0.01 градуса
-        val lonOffset = ((uuidHash / 1000) % 1000) / 100000.0
-        return Pair(lat + latOffset, lon + lonOffset)
-    }
-}
+    val lat: Double = 55.7558 + (Math.random() * 0.1 - 0.05), // Случайное смещение для уникальности координат
+    val lon: Double = 37.6176 + (Math.random() * 0.1 - 0.05)
+)
 
 data class TestRestroomData(
     val name: String? = "Test Restroom",
@@ -48,20 +38,12 @@ data class TestRestroomData(
     val workTime: JsonObject? = buildJsonObject { put("monday", JsonPrimitive("09:00-18:00")) },
     val feeType: FeeType = FeeType.FREE,
     val accessibilityType: AccessibilityType = AccessibilityType.UNISEX,
-    val lat: Double = 55.7558,
-    val lon: Double = 37.6176,
+    val lat: Double = 55.7558 + (Math.random() * 0.1 - 0.05), // Случайное смещение для уникальности координат
+    val lon: Double = 37.6176 + (Math.random() * 0.1 - 0.05),
     val dataSource: DataSourceType = DataSourceType.MANUAL,
     val status: RestroomStatus = RestroomStatus.ACTIVE,
     val amenities: JsonObject = buildJsonObject { put("wifi", JsonPrimitive("true")) }
-) {
-    // Генерируем уникальные координаты на основе имени или адреса
-    fun uniqueCoordinates(): Pair<Double, Double> {
-        val hash = (name ?: address).hashCode().toLong().absoluteValue
-        val latOffset = (hash % 1000) / 100000.0 // смещение до 0.01 градуса
-        val lonOffset = ((hash / 1000) % 1000) / 100000.0
-        return Pair(lat + latOffset, lon + lonOffset)
-    }
-}
+)
 
 object DatabaseTestHelper {
     fun createTestCountryData(
@@ -73,8 +55,8 @@ object DatabaseTestHelper {
     fun createTestCityData(
         nameRu: String = "Test City RU ${UUID.randomUUID().toString().take(8)}",
         nameEn: String = "Test City EN ${UUID.randomUUID().toString().take(8)}",
-        lat: Double = 55.7558,
-        lon: Double = 37.6176
+        lat: Double = 55.7558 + (Math.random() * 0.1 - 0.05), // Добавляем небольшое случайное смещение для уникальности координат
+        lon: Double = 37.6176 + (Math.random() * 0.1 - 0.05)
     ) = TestCityData(nameRu, nameEn, lat, lon)
 
     fun createTestRestroomData(
@@ -85,8 +67,8 @@ object DatabaseTestHelper {
         workTime: JsonObject? = buildJsonObject { put("monday", JsonPrimitive("09:00-18:00")) },
         feeType: FeeType = FeeType.FREE,
         accessibilityType: AccessibilityType = AccessibilityType.UNISEX,
-        lat: Double = 55.7558,
-        lon: Double = 37.6176,
+        lat: Double = 55.7558 + (Math.random() * 0.1 - 0.05), // Случайное смещение для уникальности координат
+        lon: Double = 37.6176 + (Math.random() * 0.1 - 0.05),
         dataSource: DataSourceType = DataSourceType.MANUAL,
         status: RestroomStatus = RestroomStatus.ACTIVE,
         amenities: JsonObject = buildJsonObject { put("wifi", JsonPrimitive("true")) }
@@ -124,7 +106,6 @@ object DatabaseTestHelper {
             val ctx = DSL.using(configuration)
             val now = Instant.now()
             val id = UUID.randomUUID()
-            val (lat, lon) = data.uniqueCoordinates()
 
             ctx
                 .insertInto(CITIES)
@@ -132,8 +113,10 @@ object DatabaseTestHelper {
                 .set(CITIES.COUNTRY_ID, countryId)
                 .set(CITIES.NAME_RU, data.nameRu)
                 .set(CITIES.NAME_EN, data.nameEn)
-                .set(CITIES.COORDINATES, pointExpr(lon, lat, CITIES.COORDINATES))
-                .set(CITIES.CREATED_AT, now)
+                .set(
+                    CITIES.COORDINATES,
+                    pointExpr(data.lon, data.lat, CITIES.COORDINATES)
+                ).set(CITIES.CREATED_AT, now)
                 .set(CITIES.UPDATED_AT, now)
                 .returning(CITIES.ID)
                 .fetchOne()
@@ -150,7 +133,6 @@ object DatabaseTestHelper {
             val ctx = DSL.using(configuration)
             val now = Instant.now()
             val id = UUID.randomUUID()
-            val (lat, lon) = data.uniqueCoordinates()
 
             ctx
                 .insertInto(RESTROOMS)
@@ -163,8 +145,10 @@ object DatabaseTestHelper {
                 .set(RESTROOMS.WORK_TIME, data.workTime.toJSONBOrEmpty())
                 .set(RESTROOMS.FEE_TYPE, data.feeType.name)
                 .set(RESTROOMS.ACCESSIBILITY_TYPE, data.accessibilityType.name)
-                .set(RESTROOMS.COORDINATES, pointExpr(lon, lat, RESTROOMS.COORDINATES))
-                .set(RESTROOMS.DATA_SOURCE, data.dataSource.name)
+                .set(
+                    RESTROOMS.COORDINATES,
+                    pointExpr(data.lon, data.lat, RESTROOMS.COORDINATES)
+                ).set(RESTROOMS.DATA_SOURCE, data.dataSource.name)
                 .set(RESTROOMS.STATUS, data.status.name)
                 .set(RESTROOMS.AMENITIES, data.amenities.toJSONBOrEmpty())
                 .set(RESTROOMS.CREATED_AT, now)
@@ -181,70 +165,14 @@ object DatabaseTestHelper {
         return TestEnvironment(countryId, cityId)
     }
 
-    /** Быстрое очищение БД между тестами */
     fun truncateAllTables(dslContext: DSLContext) {
-        dslContext.execute(
-            """
-            TRUNCATE TABLE 
-              restrooms, 
-              cities, 
-              countries
-            RESTART IDENTITY CASCADE
-            """.trimIndent()
-        )
+        dslContext.transaction { configuration ->
+            val ctx = DSL.using(configuration)
+            ctx.deleteFrom(RESTROOMS).execute()
+            ctx.deleteFrom(CITIES).execute()
+            ctx.deleteFrom(COUNTRIES).execute()
+        }
     }
-
-    // Простые сидеры
-    fun seedCountries(
-        dsl: DSLContext,
-        n: Int
-    ): List<UUID> =
-        (1..n).map { i ->
-            insertTestCountry(
-                dsl,
-                createTestCountryData(
-                    nameRu = "Страна $i",
-                    nameEn = "Country $i",
-                    code = "C$i"
-                )
-            )
-        }
-
-    fun seedCities(
-        dsl: DSLContext,
-        countryId: UUID,
-        n: Int
-    ): List<UUID> =
-        (1..n).map { i ->
-            insertTestCity(
-                dsl,
-                countryId,
-                createTestCityData(
-                    nameRu = "Город $i",
-                    nameEn = "City $i",
-                    lat = 50.0 + i * 0.01,
-                    lon = 30.0 + i * 0.01
-                )
-            )
-        }
-
-    fun seedRestrooms(
-        dsl: DSLContext,
-        cityId: UUID?,
-        n: Int
-    ): List<UUID> =
-        (1..n).map { i ->
-            insertTestRestroom(
-                dsl,
-                cityId,
-                createTestRestroomData(
-                    name = "Restroom $i",
-                    address = "Address $i",
-                    lat = 40.0 + i * 0.01,
-                    lon = -74.0 - i * 0.01
-                )
-            )
-        }
 
     data class TestEnvironment(
         val countryId: UUID,

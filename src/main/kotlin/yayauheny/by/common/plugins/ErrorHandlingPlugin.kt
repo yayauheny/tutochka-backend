@@ -4,7 +4,6 @@ import io.ktor.http.HttpStatusCode
 import io.ktor.server.application.Application
 import io.ktor.server.application.install
 import io.ktor.server.plugins.BadRequestException
-import io.ktor.server.plugins.NotFoundException
 import io.ktor.server.plugins.statuspages.StatusPages
 import io.ktor.server.request.path
 import io.ktor.server.response.respond
@@ -122,21 +121,6 @@ fun Application.configureErrorHandling() {
                 if (cause.sqlState == "23505") HttpStatusCode.Conflict else HttpStatusCode.InternalServerError,
                 errorResponse
             )
-        }
-
-        exception<NotFoundException> { call, cause ->
-            logger.warn("Not found exception occurred: ${cause.message}", cause)
-
-            val errorResponse =
-                ErrorResponse(
-                    timestamp = Instant.now().toString(),
-                    status = HttpStatusCode.NotFound.value,
-                    error = HttpStatusCode.NotFound.description,
-                    message = cause.message ?: "Ресурс не найден",
-                    path = call.request.path()
-                )
-
-            call.respond(HttpStatusCode.NotFound, errorResponse)
         }
 
         exception<IllegalArgumentException> { call, cause ->
