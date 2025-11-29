@@ -12,6 +12,7 @@ import yayauheny.by.model.country.CountryResponseDto
 import yayauheny.by.model.country.CountryUpdateDto
 import yayauheny.by.repository.CountryRepository
 import yayauheny.by.tables.references.COUNTRIES
+import yayauheny.by.util.transactionSuspend
 import java.util.*
 
 class CountryRepositoryImpl(
@@ -134,12 +135,12 @@ class CountryRepositoryImpl(
         }
 
     override suspend fun save(createDto: CountryCreateDto): CountryResponseDto =
-        withContext(Dispatchers.IO) {
-            val record = CountryMapper.mapToSaveRecord(ctx, createDto)
+        ctx.transactionSuspend { txCtx ->
+            val record = CountryMapper.mapToSaveRecord(txCtx, createDto)
             val inserted = record.insert()
 
             if (inserted == 0) {
-                throw IllegalStateException("Error during save country with code: ${createDto.code}")
+                throw IllegalStateException("Ошибка при сохранении страны с кодом: ${createDto.code}")
             }
 
             CountryMapper.mapFromRecord(record)
@@ -149,8 +150,8 @@ class CountryRepositoryImpl(
         id: UUID,
         updateDto: CountryUpdateDto
     ): CountryResponseDto =
-        withContext(Dispatchers.IO) {
-            val query = ctx.update(COUNTRIES)
+        ctx.transactionSuspend { txCtx ->
+            val query = txCtx.update(COUNTRIES)
             val updateStep = CountryMapper.applyUpdateDto(query, updateDto)
             val rec =
                 updateStep
@@ -161,14 +162,14 @@ class CountryRepositoryImpl(
                         COUNTRIES.NAME_RU,
                         COUNTRIES.NAME_EN
                     ).fetchOne()
-                    ?: error("Failed to update country $id")
+                    ?: error("Не удалось обновить страну $id")
             CountryMapper.mapFromRecord(rec)
         }
 
     override suspend fun deleteById(id: UUID): Boolean =
-        withContext(Dispatchers.IO) {
+        ctx.transactionSuspend { txCtx ->
             val deleted =
-                ctx
+                txCtx
                     .update(COUNTRIES)
                     .set(COUNTRIES.IS_DELETED, true)
                     .set(COUNTRIES.DELETED_AT, java.time.Instant.now())
