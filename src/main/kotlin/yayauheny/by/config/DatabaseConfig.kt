@@ -39,7 +39,7 @@ data class DatabaseConfig(
                 connectionTestQuery = "SELECT 1"
                 validationTimeout = 5000L
                 leakDetectionThreshold = 60000L
-                isAutoCommit = true
+                isAutoCommit = false // Отключено для явного управления транзакциями
                 poolName = "TutochkaPool"
             }
         )

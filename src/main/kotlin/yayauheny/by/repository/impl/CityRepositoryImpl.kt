@@ -7,7 +7,6 @@ import kotlinx.coroutines.withContext
 import org.jooq.DSLContext
 import org.jooq.SelectFieldOrAsterisk
 import org.jooq.impl.DSL
-import org.slf4j.LoggerFactory
 import yayauheny.by.common.mapper.CityMapper
 import yayauheny.by.common.query.FieldMeta
 import yayauheny.by.common.query.FieldParsers
@@ -25,11 +24,11 @@ import yayauheny.by.tables.references.CITIES
 import yayauheny.by.util.latAlias
 import yayauheny.by.util.lonAlias
 import yayauheny.by.util.pointExpr
+import yayauheny.by.util.transactionSuspend
 
 class CityRepositoryImpl(
     private val ctx: DSLContext
 ) : CityRepository {
-    private val logger = LoggerFactory.getLogger(CityRepositoryImpl::class.java)
     private val cityFields =
         mapOf(
             "id" to
@@ -186,65 +185,50 @@ class CityRepositoryImpl(
         }
 
     override suspend fun save(dto: CityCreateDto): CityResponseDto =
-        withContext(Dispatchers.IO) {
-            logger.info("save() called: nameEn=${dto.nameEn}, countryId=${dto.countryId}")
-            try {
-                val r = CITIES
-                val id = UUID.randomUUID()
-                val now = Instant.now()
-                logger.info("Generated ID: $id, timestamp: $now")
+        ctx.transactionSuspend { txCtx ->
+            val r = CITIES
+            val id = UUID.randomUUID()
+            val now = Instant.now()
 
-                logger.info("Building INSERT statement")
-                val insert =
-                    ctx
-                        .insertInto(r)
-                        .set(r.ID, id)
-                        .set(r.COUNTRY_ID, dto.countryId)
-                        .set(r.NAME_RU, dto.nameRu)
-                        .set(r.NAME_EN, dto.nameEn)
-                        .set(r.REGION, dto.region)
-                        .set(
-                            r.COORDINATES,
-                            pointExpr(dto.coordinates.lon, dto.coordinates.lat, r.COORDINATES)
-                        ).set(r.CREATED_AT, now)
-                        .set(r.UPDATED_AT, now)
+            val insert =
+                txCtx
+                    .insertInto(r)
+                    .set(r.ID, id)
+                    .set(r.COUNTRY_ID, dto.countryId)
+                    .set(r.NAME_RU, dto.nameRu)
+                    .set(r.NAME_EN, dto.nameEn)
+                    .set(r.REGION, dto.region)
+                    .set(
+                        r.COORDINATES,
+                        pointExpr(dto.coordinates.lon, dto.coordinates.lat, r.COORDINATES)
+                    ).set(r.CREATED_AT, now)
+                    .set(r.UPDATED_AT, now)
 
-                // План Б: сначала возвращаем только ID, затем делаем отдельный SELECT
-                // Это необходимо, потому что jOOQ не может вернуть вычисляемые поля (lat/lon через ST_X/ST_Y) в RETURNING
-                logger.info("Executing INSERT ... RETURNING ID")
-                val idRec =
-                    insert
-                        .returning(r.ID)
-                        .fetchOne() ?: error("Error during save city: ${dto.nameEn}")
-                val insertedId = idRec[r.ID]!!
-                logger.info("INSERT successful, inserted ID: $insertedId")
+            // План Б: сначала возвращаем только ID, затем делаем отдельный SELECT
+            // Это необходимо, потому что jOOQ не может вернуть вычисляемые поля (lat/lon через ST_X/ST_Y) в RETURNING
+            val idRec =
+                insert
+                    .returning(r.ID)
+                    .fetchOne() ?: error("Ошибка при сохранении города: ${dto.nameEn}")
+            val insertedId = idRec[r.ID]!!
 
-                logger.info("Executing SELECT with cityProjection()")
-                val rec =
-                    ctx
-                        .select(*cityProjection())
-                        .from(r)
-                        .where(r.ID.eq(insertedId))
-                        .fetchOne() ?: error("City not found after insert: ${dto.nameEn}")
-                logger.info("SELECT successful, record found")
+            val rec =
+                txCtx
+                    .select(*cityProjection())
+                    .from(r)
+                    .where(r.ID.eq(insertedId))
+                    .fetchOne() ?: error("Город не найден после вставки: ${dto.nameEn}")
 
-                logger.info("Calling CityMapper.mapFromRecord()")
-                val result = CityMapper.mapFromRecord(rec)
-                logger.info("Mapping successful: id=${result.id}, nameRu=${result.nameRu}, nameEn=${result.nameEn}")
-                return@withContext result
-            } catch (e: Exception) {
-                logger.error("Error in save()", e)
-                throw e
-            }
+            CityMapper.mapFromRecord(rec)
         }
 
     override suspend fun update(
         id: UUID,
         updateDto: CityUpdateDto
     ): CityResponseDto =
-        withContext(Dispatchers.IO) {
+        ctx.transactionSuspend { txCtx ->
             val r = CITIES
-            val query = ctx.update(r)
+            val query = txCtx.update(r)
             val updateStep = CityMapper.applyUpdateDto(query, updateDto)
             val rec =
                 updateStep
@@ -255,15 +239,15 @@ class CityRepositoryImpl(
                     .where(r.ID.eq(id))
                     .returning(*cityProjection())
                     .fetchOne()
-                    ?: error("Failed to update city $id")
+                    ?: error("Не удалось обновить город $id")
 
             CityMapper.mapFromRecord(rec)
         }
 
     override suspend fun deleteById(id: UUID): Boolean =
-        withContext(Dispatchers.IO) {
+        ctx.transactionSuspend { txCtx ->
             val updated =
-                ctx
+                txCtx
                     .update(CITIES)
                     .set(CITIES.IS_DELETED, true)
                     .set(CITIES.DELETED_AT, Instant.now())

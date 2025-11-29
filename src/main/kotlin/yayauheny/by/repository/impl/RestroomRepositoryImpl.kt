@@ -29,6 +29,7 @@ import yayauheny.by.util.lonAlias
 import yayauheny.by.util.pointExpr
 import yayauheny.by.util.reqDouble
 import yayauheny.by.util.toJSONBOrEmpty
+import yayauheny.by.util.transactionSuspend
 import yayauheny.by.util.withinDistanceOf
 
 class RestroomRepositoryImpl(
@@ -175,7 +176,7 @@ class RestroomRepositoryImpl(
         }
 
     override suspend fun save(createDto: RestroomCreateDto): RestroomResponseDto =
-        withContext(Dispatchers.IO) {
+        ctx.transactionSuspend { txCtx ->
             val r = RESTROOMS
             val latF = r.COORDINATES.latAlias()
             val lonF = r.COORDINATES.lonAlias()
@@ -183,7 +184,7 @@ class RestroomRepositoryImpl(
             val now = Instant.now()
 
             val rec =
-                ctx
+                txCtx
                     .insertInto(r)
                     .set(r.ID, id)
                     .set(r.CITY_ID, createDto.cityId)
@@ -226,7 +227,7 @@ class RestroomRepositoryImpl(
                         latF,
                         lonF
                     ).fetchOne()
-                    ?: error("Error during save restroom")
+                    ?: error("Ошибка при сохранении туалета")
 
             RestroomMapper.mapFromRecord(rec)
         }
@@ -235,12 +236,12 @@ class RestroomRepositoryImpl(
         id: UUID,
         updateDto: RestroomUpdateDto
     ): RestroomResponseDto =
-        withContext(Dispatchers.IO) {
+        ctx.transactionSuspend { txCtx ->
             val r = RESTROOMS
             val latF = r.COORDINATES.latAlias()
             val lonF = r.COORDINATES.lonAlias()
 
-            val query = ctx.update(r)
+            val query = txCtx.update(r)
             val updateStep = RestroomMapper.applyUpdateDto(query, updateDto)
             val rec =
                 updateStep
@@ -270,14 +271,14 @@ class RestroomRepositoryImpl(
                         latF,
                         lonF
                     ).fetchOne()
-                    ?: error("Failed to update restroom $id")
+                    ?: error("Не удалось обновить туалет $id")
 
             RestroomMapper.mapFromRecord(rec)
         }
 
     override suspend fun deleteById(id: UUID): Boolean =
-        withContext(Dispatchers.IO) {
-            ctx
+        ctx.transactionSuspend { txCtx ->
+            txCtx
                 .update(RESTROOMS)
                 .set(RESTROOMS.IS_DELETED, true)
                 .set(RESTROOMS.DELETED_AT, Instant.now())
