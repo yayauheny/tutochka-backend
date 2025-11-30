@@ -15,15 +15,8 @@ dependencies {
     implementation(project(":backend"))
     implementation(project(":shared"))
     
-    // Note: Backend module provides services that bot can call directly
-    // No REST client needed - direct service calls
-    
-    // Kotlin coroutines for calling suspend functions from Java
-    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.7.3")
-    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-jdk8:1.7.3")
-    
-    // Koin for DI integration with backend services
-    implementation("io.insert-koin:koin-core:3.5.6")
+    // Note: Bot calls backend via REST API (WebBackendClient)
+    // Backend and bot run as separate services/processes
     
     // Spring Boot dependencies
     implementation("org.springframework.boot:spring-boot-starter-validation")
