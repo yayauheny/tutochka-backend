@@ -2,7 +2,7 @@
   "master": {
     "tasks": [
       {
-        "id": 1,
+        "id": "1",
         "title": "Disable auto-commit and implement explicit transactions in DatabaseConfig",
         "description": "Modify database configuration to disable auto-commit and enable explicit transaction management for atomic operations.",
         "details": "Update DatabaseConfig.kt to set isAutoCommit = false in HikariConfig. Use Kotlin coroutines withContext(Dispatchers.IO) for database operations. Implement a suspend extension function transactionSuspend on DSLContext that wraps operations in a transaction block using jOOQ's transaction method.",
@@ -14,7 +14,7 @@
         "updatedAt": "2025-11-30T10:22:15.607Z"
       },
       {
-        "id": 2,
+        "id": "2",
         "title": "Refactor repository methods to use transactionSuspend for atomic operations",
         "description": "Update repository methods save(), update(), and deleteById() to wrap all database calls within transactionSuspend to ensure atomicity.",
         "details": "In repository implementations like CityRepositoryImpl and RestroomRepositoryImpl, wrap all related DB calls (e.g., insert and select) inside ctx.transactionSuspend { txCtx -> ... } to ensure they execute in one transaction. Remove any auto-commit reliance.",
@@ -28,7 +28,7 @@
         "updatedAt": "2025-11-30T10:22:15.611Z"
       },
       {
-        "id": 3,
+        "id": "3",
         "title": "Create extension helper for coordinate field projections to eliminate duplication",
         "description": "Implement an extension function or property to provide coordinate fields projection to avoid repeated code in repositories.",
         "details": "Create an extension function like selectWithCoordinates() on relevant table references (e.g., RESTROOMS) returning a list of fields including latAlias() and lonAlias(). Replace duplicated coordinate field declarations in repository methods with this helper.",
@@ -40,7 +40,7 @@
         "updatedAt": "2025-11-30T10:22:15.613Z"
       },
       {
-        "id": 4,
+        "id": "4",
         "title": "Add fetchCount parameter to executePaginated and optimize count queries",
         "description": "Modify executePaginated to accept a fetchCount boolean parameter to optionally skip COUNT queries for performance optimization.",
         "details": "Update QueryExecutor.kt to propagate fetchCount parameter. For endpoints like /nearest, call executePaginated with fetchCount=false to avoid expensive COUNT(*) queries. Consider approximate counts or caching for large tables in future iterations.",
@@ -52,7 +52,7 @@
         "updatedAt": "2025-11-30T10:25:21.893Z"
       },
       {
-        "id": 5,
+        "id": "5",
         "title": "Implement in-memory caching for countries and cities using Caffeine",
         "description": "Add caching layer for frequently requested read-only data like countries and cities to reduce database load.",
         "details": "Add Caffeine dependency version 3.1.8. Create CacheConfig.kt to configure caches with maximumSize and expireAfterWrite TTL. Inject caches into CountryService and CityService. Use cache.get(key) with loader lambda for reads. Invalidate cache on writes.",
@@ -63,7 +63,7 @@
         "subtasks": []
       },
       {
-        "id": 6,
+        "id": "6",
         "title": "Refactor long repository methods by extracting query building logic",
         "description": "Improve code readability by extracting complex query construction into smaller private methods in repositories.",
         "details": "In RestroomRepositoryImpl and CityRepositoryImpl, create private methods like buildInsertQuery() and buildReturningFields() that return InsertSetStep and list of fields respectively. Use these methods in save() and update() to reduce method length and duplication.",
@@ -75,7 +75,7 @@
         "updatedAt": "2025-11-30T10:27:00.713Z"
       },
       {
-        "id": 7,
+        "id": "7",
         "title": "Extract magic numbers and strings into centralized constants object",
         "description": "Centralize all magic numbers and strings used in validation, pagination, and defaults into a Constants.kt object for maintainability.",
         "details": "Create ApiConstants object in config package with constants like DEFAULT_PAGE_SIZE=10, MAX_PAGE_SIZE=100, MAX_NAME_LENGTH=255, etc. Replace all hardcoded literals in codebase with references to these constants.",
@@ -87,7 +87,7 @@
         "updatedAt": "2025-11-30T12:00:08.224Z"
       },
       {
-        "id": 8,
+        "id": "8",
         "title": "Standardize error messages and implement i18n-ready error constants",
         "description": "Centralize all error messages in a resource file or constants object and standardize language to English for API consistency and future i18n support.",
         "status": "pending",
@@ -98,7 +98,7 @@
         "subtasks": []
       },
       {
-        "id": 9,
+        "id": "9",
         "title": "Expand DTO validation to cover all fields with length and structure checks",
         "description": "Enhance validation logic for DTOs to include all relevant fields with proper length limits and JSON structure validation.",
         "details": "In RestroomValidators.kt, add validation rules for name, description, phones, workTime, and amenities fields. Use maxLength constraints from ApiConstants. Implement validateJsonObject for JSON structure validation of phones and workTime fields.",
@@ -112,7 +112,7 @@
         "updatedAt": "2025-11-30T12:27:37.250Z"
       },
       {
-        "id": 10,
+        "id": "10",
         "title": "Standardize validation to occur only in controllers, remove service-level validation",
         "description": "Refactor validation logic to be performed exclusively in controllers, ensuring services receive already validated data.",
         "details": "Remove validateOrThrow calls from service methods like CityService.createCity(). Keep validateAndThen in controllers. Services should only perform business logic validation and throw domain exceptions if needed.",
@@ -126,7 +126,7 @@
         "updatedAt": "2025-11-30T12:27:37.251Z"
       },
       {
-        "id": 11,
+        "id": "11",
         "title": "Replace reflection-based validation error path extraction with official konform API",
         "description": "Improve reliability and performance of validation error path extraction by using konform's official API instead of reflection and string parsing.",
         "details": "Update ValidationExtension.kt to use konform's API for error path retrieval. Implement caching if necessary to optimize repeated calls. Remove fragile string parsing logic.",
@@ -140,7 +140,7 @@
         "updatedAt": "2025-11-30T12:27:37.253Z"
       },
       {
-        "id": 12,
+        "id": "12",
         "title": "Enhance PSQLException handling to cover multiple SQL error states",
         "description": "Expand database error handling to differentiate unique violations, foreign key violations, check constraints, not-null violations, and others with specific HTTP responses.",
         "details": "In ErrorHandlingPlugin.kt, extend exception handler for PSQLException to switch on sqlState codes like 23505, 23503, 23514, 23502, 42P01. Map each to appropriate HTTP status and error message. Log errors with context.\n<info added on 2025-11-30T10:22:21.251Z>\nPSQLException handling for error codes 23505, 23503, 23502, 23514, and 42P01 has already been implemented with appropriate HTTP status mappings. The remaining work focuses on two areas: (1) structured logging with context information (request path, HTTP method, status code, query parameters) which is being handled as a separate task 14, and (2) updating integration tests to verify correct HTTP responses and error messages for various database error scenarios including unique constraint violations, foreign key violations, not-null violations, check constraint violations, and table not found errors.\n</info added on 2025-11-30T10:22:21.251Z>",
@@ -164,7 +164,7 @@
         "updatedAt": "2025-11-30T10:32:08.337Z"
       },
       {
-        "id": 13,
+        "id": "13",
         "title": "Replace error() calls with specific repository exceptions",
         "description": "Create custom exception classes for repository errors and replace generic error() calls with throwing these exceptions for better error classification.",
         "details": "Define RepositoryException and EntityNotFoundException classes. Replace error() calls in repositories with throw RepositoryException or EntityNotFoundException with descriptive messages. Update error handling to recognize these exceptions.",
@@ -189,7 +189,7 @@
         "updatedAt": "2025-11-30T10:22:15.615Z"
       },
       {
-        "id": 14,
+        "id": "14",
         "title": "Add structured logging with context for error handling",
         "description": "Improve error logs by including structured context such as request path, method, status, and query parameters for better diagnostics.",
         "details": "Enhance ErrorHandlingPlugin.kt to log exceptions with structured data maps including path, HTTP method, status code, and query parameters. Use logger.warn or logger.error accordingly.",
@@ -202,7 +202,7 @@
         "subtasks": []
       },
       {
-        "id": 15,
+        "id": "15",
         "title": "Reorganize model package to separate DTOs and entities",
         "description": "Refactor project package structure to clearly separate DTOs and entity classes for better maintainability and clarity.",
         "details": "Create model/dto and model/entity subpackages. Move CityCreateDto, CityResponseDto, etc. to dto/, and CountryEntity, CityEntity to entity/. Update imports and references accordingly.",
@@ -213,7 +213,7 @@
         "subtasks": []
       },
       {
-        "id": 16,
+        "id": "16",
         "title": "Split common package into api, mapper, and query subpackages",
         "description": "Refactor common package to reduce overload by dividing into more focused packages like api.errors, mapper, and query.builder.",
         "details": "Create new packages api.errors, mapper, query.builder. Move relevant classes and files accordingly. Update project references and imports.",
@@ -226,7 +226,7 @@
         "subtasks": []
       },
       {
-        "id": 17,
+        "id": "17",
         "title": "Group utility functions in util package by domain",
         "description": "Organize utility classes into domain-specific subpackages within util for better modularity and discoverability.",
         "details": "Create util/http, util/geo, util/db, util/serialization, util/config subpackages. Move ApplicationCallExtensions.kt to http/, GeoDsl.kt to geo/, RepositoryExtensions.kt to db/, Serializers.kt to serialization/, EnvironmentExtensions.kt to config/.",
@@ -239,7 +239,7 @@
         "subtasks": []
       },
       {
-        "id": 18,
+        "id": "18",
         "title": "Add comprehensive unit tests for QueryBuilder and QueryExecutor",
         "description": "The task to add unit tests for QueryExecutor has been skipped per user request. Existing tests on services and controllers already cover QueryExecutor functionality. The task is marked as completed.",
         "status": "done",
@@ -301,7 +301,7 @@
         "updatedAt": "2025-11-30T11:53:56.310Z"
       },
       {
-        "id": 19,
+        "id": "19",
         "title": "Add unit tests for mappers with mocked jOOQ Records",
         "description": "Create unit tests for RestroomMapper, CityMapper, and CountryMapper to verify correct mapping from jOOQ Records to DTOs.",
         "details": "Use mocking frameworks like MockK to mock Record objects with expected field values. Test mapFromRecord methods to ensure all fields are correctly mapped.",
@@ -313,7 +313,7 @@
         "updatedAt": "2025-11-30T11:53:09.521Z"
       },
       {
-        "id": 20,
+        "id": "20",
         "title": "Add unit tests for utility functions and edge cases",
         "description": "Implement unit tests for utility classes like GeoDsl, ApplicationCallExtensions, and RepositoryExtensions including edge cases and boundary conditions.",
         "details": "Write tests for GeoDsl functions like pointExpr and distanceGeographyTo. Mock ApplicationCall to test toPaginationRequest parsing. Add parameterized tests for edge cases such as empty lists, nulls, and invalid values.",
@@ -326,7 +326,7 @@
         "subtasks": []
       },
       {
-        "id": 21,
+        "id": "21",
         "title": "Implement health check endpoints with database connectivity verification",
         "description": "Create health check endpoints (/health, /health/ready, /health/live) that include database connectivity status, implemented in HealthController.kt with routing configured in RoutingConfig.kt, and provide comprehensive unit tests.",
         "details": "1. Create HealthController.kt to define three endpoints: /health, /health/ready, and /health/live. Each endpoint should return appropriate HTTP status and JSON indicating service health.\n\n2. Implement a database connectivity check within the health endpoints by executing a lightweight query or ping against the database using the existing database configuration (ensuring it uses explicit transactions as per Task 1).\n\n3. Integrate these endpoints into the application's routing by adding routes in RoutingConfig.kt, ensuring they are accessible and follow REST conventions.\n\n4. Structure the health responses to comply with common microservice health check standards, distinguishing readiness and liveness checks (e.g., readiness includes database connectivity, liveness confirms service is running).\n\n5. Write unit tests for HealthController to verify each endpoint returns correct status codes and payloads under normal and simulated failure conditions (e.g., database down).\n\n6. Follow Kotlin coroutine best practices for asynchronous database calls and HTTP handling.\n\n7. Ensure logging and error handling are consistent with existing project standards.",
@@ -340,7 +340,7 @@
         "updatedAt": "2025-11-30T11:56:32.005Z"
       },
       {
-        "id": 22,
+        "id": "22",
         "title": "Implement Local-First Task Management for Cursor Agent",
         "description": "Enable Cursor Agent to perform all read operations directly from the local tasks.json file and cache task context in memory during the session, minimizing API calls to Task Master.",
         "status": "pending",
@@ -351,7 +351,7 @@
         "subtasks": []
       },
       {
-        "id": 23,
+        "id": "23",
         "title": "Develop Automated Workflow Integration from User Task to Subtasks",
         "description": "Automate the entire workflow from receiving a new user task through generating and working on subtasks without explicit user mention of Task Master.",
         "details": "Implement a pipeline that upon receiving a new user task: 1) creates a structured task description, 2) formats it into a PRD, 3) calls `parse_prd` API to generate subtasks, 4) retrieves generated subtasks, and 5) proceeds to work strictly on these subtasks. Ensure this workflow triggers automatically and integrates seamlessly with Cursor Agent and Task Master.",
@@ -364,7 +364,7 @@
         "subtasks": []
       },
       {
-        "id": 24,
+        "id": "24",
         "title": "Implement Context Preservation and Structured Logging",
         "description": "Ensure all implementation details and progress are logged in the `details` field using a structured format to enable full context preservation and recovery.",
         "details": "Use the `update_subtask` API to log progress and implementation details in a structured format including Plan, Files, Changes, Issues, Progress, and Next steps. Implement saving of research outputs via `research --save-file`. Enforce a maximum length of 50,000 characters for the `details` field. Structure logs to facilitate easy parsing and recovery.",
@@ -378,7 +378,7 @@
         "subtasks": []
       },
       {
-        "id": 25,
+        "id": "25",
         "title": "Create Reusable Configuration Templates for Task Master and Cursor Agent",
         "description": "Develop configuration templates for Task Master and Cursor Agent to enable easy reuse and automatic application for new projects.",
         "status": "done",
@@ -392,7 +392,7 @@
         "updatedAt": "2025-11-30T10:55:51.768Z"
       },
       {
-        "id": 26,
+        "id": "26",
         "title": "Implement Fallback Recovery Mechanism Using Local Files",
         "description": "Ensure full recovery of task context and state from local files without any API calls in case of failures or restarts.",
         "details": "Develop recovery logic that reads `.taskmaster/tasks/tasks.json` and other local files to reconstruct the entire task and subtask state, including statuses, priorities, dependencies, and detailed logs. Confirm that this recovery works independently of any API calls, providing a complete picture of the current state for Cursor Agent and Task Master.",
@@ -406,7 +406,7 @@
         "subtasks": []
       },
       {
-        "id": 27,
+        "id": "27",
         "title": "Optimize API Usage with Batched Write Operations",
         "description": "Reduce the number of API calls by batching updates and write operations to Task Master AI.",
         "details": "Implement batching logic for write operations such as `update_subtask`, `add_task`, and `expand_task`. Accumulate multiple updates in memory and send them in a single API call to minimize overhead and resource consumption. Ensure batching respects session context and does not delay critical updates excessively.",
@@ -419,7 +419,7 @@
         "subtasks": []
       },
       {
-        "id": 28,
+        "id": "28",
         "title": "Integrate Economical AI Models for Main and Fallback Operations",
         "description": "Configure and integrate cost-effective AI models (sonar for main/research, gemini-2.0-flash for fallback) to optimize resource usage.",
         "details": "Set up model selection logic to use the sonar model for main and research tasks and gemini-2.0-flash as a fallback model. Ensure seamless switching between models based on availability and task type. Update configuration templates to reflect these model preferences.",
@@ -432,7 +432,7 @@
         "subtasks": []
       },
       {
-        "id": 29,
+        "id": "29",
         "title": "Implement Filtering and Status Checking for Local Task Operations",
         "description": "Enable efficient local filtering of tasks by status, priority, and dependencies, and implement subtask status checks without API calls.",
         "details": "Develop functions to filter tasks read from `tasks.json` based on status, priority, and dependencies. Implement logic to check and update subtask statuses locally by parsing the `details` field. Ensure these operations are performant and accurate to support local-first management and recovery.",
@@ -445,7 +445,7 @@
         "subtasks": []
       },
       {
-        "id": 30,
+        "id": "30",
         "title": "Проверка структуры файлов и директорий",
         "description": "Проверить корректность структуры файлов в .cursor/rules/ и .taskmaster/",
         "details": "Обойти все директории и убедиться, что все требуемые файлы присутствуют и имеют правильную структуру. Проверить наличие TASKMASTER_AUTO_WORKFLOW.mdc, taskmaster_integration.mdc, tutochka.mdc, dev_workflow.mdc, README.md и шаблонов в templates/. Убедиться, что нет лишних или устаревших файлов.",
@@ -457,7 +457,7 @@
         "updatedAt": "2025-11-30T11:09:15.684Z"
       },
       {
-        "id": 31,
+        "id": "31",
         "title": "Валидация ссылок между файлами правил",
         "description": "Проверить, что все ссылки в правилах указывают на существующие файлы",
         "status": "done",
@@ -471,7 +471,7 @@
         "updatedAt": "2025-11-30T11:09:34.748Z"
       },
       {
-        "id": 32,
+        "id": "32",
         "title": "Проверка отсутствия дублирующихся правил",
         "description": "Убедиться, что нет дублирующихся правил в файлах",
         "status": "done",
@@ -485,7 +485,7 @@
         "updatedAt": "2025-11-30T11:09:56.204Z"
       },
       {
-        "id": 33,
+        "id": "33",
         "title": "Оптимизация и упрощение файлов",
         "description": "Удалить избыточные комментарии, упростить сложные примеры кода, убедиться в единообразии форматирования",
         "status": "done",
@@ -531,7 +531,7 @@
         "updatedAt": "2025-11-30T11:10:16.515Z"
       },
       {
-        "id": 34,
+        "id": "34",
         "title": "Валидация автоматического workflow",
         "description": "Проверить, что автоматический workflow описан корректно и работает для всех типов запросов",
         "status": "done",
@@ -576,7 +576,7 @@
         "updatedAt": "2025-11-30T11:10:33.177Z"
       },
       {
-        "id": 35,
+        "id": "35",
         "title": "Проверка сохранения и восстановления контекста",
         "description": "Убедиться, что контекст сохраняется в поле details задач и восстанавливается из локальных файлов",
         "status": "done",
@@ -590,7 +590,7 @@
         "updatedAt": "2025-11-30T11:10:39.949Z"
       },
       {
-        "id": 36,
+        "id": "36",
         "title": "Add Git Commit Rule After Task Completion",
         "description": "Implement a workflow rule that triggers after a task status is set to 'done' to initiate a git commit.",
         "status": "done",
@@ -683,7 +683,7 @@
         "updatedAt": "2025-11-30T11:25:58.889Z"
       },
       {
-        "id": 37,
+        "id": "37",
         "title": "Collect Changed Files and Task Data",
         "description": "Gather detailed information about changed files and task details for generating the commit message, using a structured and documented approach.",
         "status": "in-progress",
@@ -694,7 +694,7 @@
         "subtasks": []
       },
       {
-        "id": 38,
+        "id": "38",
         "title": "Generate Structured Commit Message",
         "description": "Format a commit message using the collected task data and changed files.",
         "details": "Implement a template-based message generator that follows the specified format:\n```\nfeat(task-{id}): {task_title}\n\n{task_description}\n\nChanges:\n- {list of changed files or summary}\n\nTask: {id} - {title}\nStatus: done\n```\nEnsure the message is properly escaped and formatted.",
@@ -707,7 +707,7 @@
         "subtasks": []
       },
       {
-        "id": 39,
+        "id": "39",
         "title": "Execute Git Add and Commit",
         "description": "Perform the actual git operations to stage changes and create a commit.",
         "details": "Write a script that:\n- Runs `git add .` to stage all changes\n- Checks if there are staged changes\n- Executes `git commit` with the generated message\n- Uses `--no-verify` to avoid hooks blocking automation\n- Handles git errors gracefully (no repo, no changes, etc.)",
@@ -720,7 +720,7 @@
         "subtasks": []
       },
       {
-        "id": 40,
+        "id": "40",
         "title": "Document Git Commit Workflow",
         "description": "Update documentation to describe the new automatic commit workflow.",
         "details": "Add/update `.cursor/rules/taskmaster_integration.mdc` to document:\n- When and how commits are triggered\n- Commit message format\n- Error handling behavior\n- Any configuration options\nInclude examples of expected commit messages.",
@@ -733,7 +733,7 @@
         "subtasks": []
       },
       {
-        "id": 41,
+        "id": "41",
         "title": "Fix Compilation Errors in Tests",
         "description": "Resolve all compilation errors in test files, especially in RoutingConfig and ValidationTest, to allow tests to run after validation refactoring.",
         "details": "Identify and fix all compilation errors introduced by the validation refactoring. Pay special attention to RoutingConfig initialization and any usage of old string field paths that now need to use ValidationPath objects. Update imports and object instantiations as needed.",
@@ -745,7 +745,7 @@
         "updatedAt": "2025-11-30T12:44:31.650Z"
       },
       {
-        "id": 42,
+        "id": "42",
         "title": "Update Test Assertions for ValidationPath",
         "description": "Modify test assertions to correctly handle ValidationPath objects instead of string field paths.",
         "details": "Locate all test assertions that expect string field paths and update them to work with ValidationPath objects. Update HttpTestHelpers to support field error assertions with ValidationPath. Ensure all assertions are checking the correct properties of ValidationPath.",
@@ -759,7 +759,7 @@
         "updatedAt": "2025-11-30T12:44:32.204Z"
       },
       {
-        "id": 43,
+        "id": "43",
         "title": "Fix QueryBuilder Tests for NOT_IN and NE Operators",
         "description": "Update QueryBuilder tests to correctly test NOT_IN and NE operators after validation refactoring.",
         "details": "Review QueryBuilder tests and update any assertions or test data that rely on old validation logic. Ensure that tests for NOT_IN and NE operators are using the new validation API and correctly assert expected outcomes.",
@@ -773,7 +773,7 @@
         "updatedAt": "2025-11-30T12:44:32.819Z"
       },
       {
-        "id": 44,
+        "id": "44",
         "title": "Ensure ValidationTest.kt Works with New Validation API",
         "description": "Update ValidationTest.kt to use the new validation API and ensure all tests pass.",
         "details": "Review ValidationTest.kt and update any test cases that are not compatible with the new validation API. Ensure all test cases are using the correct validation methods and assertions.",
@@ -788,7 +788,7 @@
         "updatedAt": "2025-11-30T12:44:33.202Z"
       },
       {
-        "id": 45,
+        "id": "45",
         "title": "Run and Verify All Tests",
         "description": "Execute all unit and integration tests to ensure they pass after all fixes.",
         "details": "Run the full test suite, including all 209+ unit tests and 53+ integration tests. Address any remaining failures or issues. Ensure no compilation errors and all assertions are correct.",
@@ -805,7 +805,7 @@
         "updatedAt": "2025-11-30T12:44:33.549Z"
       },
       {
-        "id": 46,
+        "id": "46",
         "title": "Configure jOOQ Code Generation Dependency for Kotlin Compilation and Validate Imports/Output Location",
         "description": "Ensure jOOQ classes are generated before Kotlin compilation and verify all jOOQ imports and output locations are correct.",
         "status": "done",
@@ -823,7 +823,7 @@
         "updatedAt": "2025-11-30T12:48:35.470Z"
       },
       {
-        "id": 47,
+        "id": "47",
         "title": "Add Edge Case Tests for Validation, Pagination, and Coordinates",
         "description": "Implement comprehensive unit tests targeting boundary conditions for validation logic, pagination parameters, and coordinate inputs to ensure robust handling of edge cases.",
         "details": "Create two new Kotlin test classes: EdgeCaseValidationTest.kt and PaginationEdgeCaseTest.kt. In EdgeCaseValidationTest.kt, develop tests covering boundary values for coordinate inputs, including NaN, Infinity, and out-of-range values, as well as string inputs with maximum length, minimum length, empty strings, and strings containing only whitespace. In PaginationEdgeCaseTest.kt, implement tests for pagination parameters with edge cases such as negative numbers, extremely large values, and invalid string inputs. Use parameterized tests where appropriate to efficiently cover multiple edge scenarios. Ensure tests use the updated validation API and follow existing project conventions for assertions and test structure. Maintain test isolation and clarity with descriptive test names. Integrate these tests into the existing test suite to run automatically during CI builds.",
@@ -836,7 +836,7 @@
         "subtasks": []
       },
       {
-        "id": 48,
+        "id": "48",
         "title": "Analyze and Identify Duplicate and Redundant Tests",
         "description": "Perform a comprehensive analysis of all existing unit and integration test files to identify duplicate tests and redundant integration tests that replicate unit test logic.",
         "details": "Scan test directories `src/test/kotlin/yayauheny/by/unit/` and `src/test/kotlin/yayauheny/by/integrationTest/` to catalog tests. Use static analysis tools or scripts to detect duplicate test scenarios and overlapping assertions. Mark integration tests that duplicate unit test coverage for removal, retaining only those covering end-to-end or cross-layer scenarios.\n<info added on 2025-11-30T18:10:50.225Z>\nAnalysis phase completed: all 23 test files (17 unit, 6 integration) have been reviewed. Identified duplicates include RestroomApiTest duplicating RestroomControllerTest for GET /restrooms with pagination, GET /restrooms/{id}, and POST /restrooms (valid/invalid data), as well as CityApiTest and CountryApiTest duplicating corresponding unit tests for basic CRUD operations. The decision is to remove integration tests that duplicate controller/service logic and retain only integration tests covering end-to-end scenarios (e.g., GET /restrooms/nearest with real geo-queries), database-specific features (PostGIS, transactions), and cross-layer integration. A detailed report has been created at `.taskmaster/docs/test-analysis-report.md`. Next steps include starting the removal of duplicate tests and standardizing the test structure.\n</info added on 2025-11-30T18:10:50.225Z>",
@@ -848,21 +848,21 @@
         "updatedAt": "2025-11-30T18:12:01.976Z"
       },
       {
-        "id": 49,
+        "id": "49",
         "title": "Standardize Test Structure Using Given/When/Then Pattern",
         "description": "Refactor all tests to follow the Given/When/Then pattern with clear section comments to improve readability and maintainability.",
-        "details": "Update test methods to include explicit `// Given`, `// When`, and `// Then` comments. Ensure each test clearly separates setup, action, and assertion phases. Enforce this pattern in both unit and integration tests. Provide examples and guidelines for developers to follow.\n<info added on 2025-11-30T18:12:42.896Z>\nProgress update for task details:\n\nCompleted refactoring RestroomApiTest to fully adopt the Given/When/Then pattern with explicit `// Given`, `// When`, and `// Then` comments in all tests. Removed redundant CRUD tests covered by unit tests, retaining only end-to-end tests for the /nearest endpoint that involve real database queries. All tests now clearly separate setup, action, and assertion phases according to the pattern.\n\nNext steps include continuing the standardization of integration test files such as CityApiTest and CountryApiTest, followed by applying the same Given/When/Then structure to unit test files. This phased approach ensures consistent test readability and maintainability across the codebase.\n</info added on 2025-11-30T18:12:42.896Z>\n<info added on 2025-11-30T18:14:40.370Z>\n## Progress Update - Integration Tests Standardized\n\n**Completed:**\n- RestroomApiTest: All tests now have Given/When/Then structure\n- CityApiTest: All tests now have Given/When/Then structure  \n- CountryApiTest: All tests now have Given/When/Then structure\n- Removed duplicate CRUD tests from all integration test files\n- Kept only E2E tests (geospatial queries, database constraints, foreign key relationships)\n\n**Remaining:**\n- Standardize unit test files (RestroomControllerTest, CityControllerTest, etc.)\n- This is a large task - will continue step by step\n</info added on 2025-11-30T18:14:40.370Z>\n<info added on 2025-11-30T18:17:46.716Z>\n## Progress Update - Unit Tests Standardization Started\n\n**Completed:**\n- RestroomControllerTest: All 12 tests now have Given/When/Then structure\n- All tests compile and pass successfully\n\n**Remaining Unit Tests to Standardize:**\n- CityControllerTest\n- Other controller tests\n- Service tests\n- Mapper tests\n- Utility tests\n\n**Next Steps:**\n- Continue standardizing remaining unit test files\n- Then move to Task 50 (test data builders)\n</info added on 2025-11-30T18:17:46.716Z>\n<info added on 2025-11-30T18:19:37.689Z>\n## Progress Update - Unit Tests Standardization Continued\n\n**Completed:**\n- RestroomControllerTest: All 12 tests now have Given/When/Then structure ✅\n- CityControllerTest: All 10 tests now have Given/When/Then structure ✅\n- All tests compile and pass successfully ✅\n\n**Remaining Unit Tests to Standardize:**\n- Other controller tests (HealthControllerTest, etc.)\n- Service tests (RestroomServiceTest, CityServiceTest, etc.)\n- Mapper tests\n- Utility tests\n\n**Progress:** Approximately 22 unit tests standardized, with over 180 remaining\n\n**Next Steps:**\n- Continue standardizing remaining unit test files systematically\n- Upon completion, proceed to Task 50 (test data builders)\n</info added on 2025-11-30T18:19:37.689Z>\n<info added on 2025-11-30T18:22:32.793Z>\n## Progress Update - Unit Tests Standardization Continued\n\n**Completed:**\n- RestroomControllerTest: All 12 tests standardized ✅\n- CityControllerTest: All 10 tests standardized ✅\n- RestroomServiceTest: All 22 tests standardized ✅\n- All tests compile and pass successfully ✅\n\n**Progress:** Approximately 44 unit tests standardized (integration tests: 12, unit tests: 44)\n\n**Remaining Unit Tests to Standardize:**\n- CityServiceTest\n- CountryServiceTest\n- Other service tests\n- Mapper tests\n- Utility tests\n- Edge case tests (EdgeCaseValidationTest, PaginationEdgeCaseTest)\n\n**Next Steps:**\n- Continue standardizing remaining unit test files systematically\n- Upon completion, proceed to Task 50 (test data builders)\n</info added on 2025-11-30T18:22:32.793Z>\n<info added on 2025-11-30T18:28:06.755Z>\n## Progress Update - Major Milestone Reached\n\n**Completed Standardization:**\n- ✅ All integration tests (12 tests): RestroomApiTest, CityApiTest, CountryApiTest\n- ✅ All controller unit tests (22 tests): RestroomControllerTest, CityControllerTest, HealthControllerTest\n- ✅ All service unit tests (56 tests): RestroomServiceTest, CityServiceTest, CountryServiceTest\n- ✅ Validation tests (18 tests): ValidationTest\n\n**Total Standardized:** ~108 tests (12 integration + 96 unit)\n\n**All tests compile and pass successfully** ✅\n\n**Remaining:**\n- Edge case tests (EdgeCaseValidationTest, PaginationEdgeCaseTest)\n- Other utility/routing tests if any\n\n**Next Steps:**\n- Complete remaining edge case tests\n- Move to Task 50 (test data builders)\n</info added on 2025-11-30T18:28:06.755Z>",
+        "details": "Update test methods to include explicit `// Given`, `// When`, and `// Then` comments. Ensure each test clearly separates setup, action, and assertion phases. Enforce this pattern in both unit and integration tests. Provide examples and guidelines for developers to follow.\n<info added on 2025-11-30T18:12:42.896Z>\nProgress update for task details:\n\nCompleted refactoring RestroomApiTest to fully adopt the Given/When/Then pattern with explicit `// Given`, `// When`, and `// Then` comments in all tests. Removed redundant CRUD tests covered by unit tests, retaining only end-to-end tests for the /nearest endpoint that involve real database queries. All tests now clearly separate setup, action, and assertion phases according to the pattern.\n\nNext steps include continuing the standardization of integration test files such as CityApiTest and CountryApiTest, followed by applying the same Given/When/Then structure to unit test files. This phased approach ensures consistent test readability and maintainability across the codebase.\n</info added on 2025-11-30T18:12:42.896Z>\n<info added on 2025-11-30T18:14:40.370Z>\n## Progress Update - Integration Tests Standardized\n\n**Completed:**\n- RestroomApiTest: All tests now have Given/When/Then structure\n- CityApiTest: All tests now have Given/When/Then structure  \n- CountryApiTest: All tests now have Given/When/Then structure\n- Removed duplicate CRUD tests from all integration test files\n- Kept only E2E tests (geospatial queries, database constraints, foreign key relationships)\n\n**Remaining:**\n- Standardize unit test files (RestroomControllerTest, CityControllerTest, etc.)\n- This is a large task - will continue step by step\n</info added on 2025-11-30T18:14:40.370Z>\n<info added on 2025-11-30T18:17:46.716Z>\n## Progress Update - Unit Tests Standardization Started\n\n**Completed:**\n- RestroomControllerTest: All 12 tests now have Given/When/Then structure\n- All tests compile and pass successfully\n\n**Remaining Unit Tests to Standardize:**\n- CityControllerTest\n- Other controller tests\n- Service tests\n- Mapper tests\n- Utility tests\n\n**Next Steps:**\n- Continue standardizing remaining unit test files\n- Then move to Task 50 (test data builders)\n</info added on 2025-11-30T18:17:46.716Z>\n<info added on 2025-11-30T18:19:37.689Z>\n## Progress Update - Unit Tests Standardization Continued\n\n**Completed:**\n- RestroomControllerTest: All 12 tests now have Given/When/Then structure ✅\n- CityControllerTest: All 10 tests now have Given/When/Then structure ✅\n- All tests compile and pass successfully ✅\n\n**Remaining Unit Tests to Standardize:**\n- Other controller tests (HealthControllerTest, etc.)\n- Service tests (RestroomServiceTest, CityServiceTest, etc.)\n- Mapper tests\n- Utility tests\n\n**Progress:** Approximately 22 unit tests standardized, with over 180 remaining\n\n**Next Steps:**\n- Continue standardizing remaining unit test files systematically\n- Upon completion, proceed to Task 50 (test data builders)\n</info added on 2025-11-30T18:19:37.689Z>\n<info added on 2025-11-30T18:22:32.793Z>\n## Progress Update - Unit Tests Standardization Continued\n\n**Completed:**\n- RestroomControllerTest: All 12 tests standardized ✅\n- CityControllerTest: All 10 tests standardized ✅\n- RestroomServiceTest: All 22 tests standardized ✅\n- All tests compile and pass successfully ✅\n\n**Progress:** Approximately 44 unit tests standardized (integration tests: 12, unit tests: 44)\n\n**Remaining Unit Tests to Standardize:**\n- CityServiceTest\n- CountryServiceTest\n- Other service tests\n- Mapper tests\n- Utility tests\n- Edge case tests (EdgeCaseValidationTest, PaginationEdgeCaseTest)\n\n**Next Steps:**\n- Continue standardizing remaining unit test files systematically\n- Upon completion, proceed to Task 50 (test data builders)\n</info added on 2025-11-30T18:22:32.793Z>\n<info added on 2025-11-30T18:28:06.755Z>\n## Progress Update - Major Milestone Reached\n\n**Completed Standardization:**\n- ✅ All integration tests (12 tests): RestroomApiTest, CityApiTest, CountryApiTest\n- ✅ All controller unit tests (22 tests): RestroomControllerTest, CityControllerTest, HealthControllerTest\n- ✅ All service unit tests (56 tests): RestroomServiceTest, CityServiceTest, CountryServiceTest\n- ✅ Validation tests (18 tests): ValidationTest\n\n**Total Standardized:** ~108 tests (12 integration + 96 unit)\n\n**All tests compile and pass successfully** ✅\n\n**Remaining:**\n- Edge case tests (EdgeCaseValidationTest, PaginationEdgeCaseTest)\n- Other utility/routing tests if any\n\n**Next Steps:**\n- Complete remaining edge case tests\n- Move to Task 50 (test data builders)\n</info added on 2025-11-30T18:28:06.755Z>\n<info added on 2025-11-30T18:33:35.218Z>\n## Final Progress Update - Task 49 Complete\n\n**All Tests Standardized:**\n- ✅ Integration tests: RestroomApiTest, CityApiTest, CountryApiTest (12 tests)\n- ✅ Controller unit tests: RestroomControllerTest, CityControllerTest, HealthControllerTest, HttpStatusCodesTest, HealthRoutingTest (40 tests)\n- ✅ Service unit tests: RestroomServiceTest, CityServiceTest, CountryServiceTest (56 tests)\n- ✅ Validation tests: ValidationTest, EdgeCaseValidationTest (31 tests)\n- ✅ Mapper tests: RestroomMapperTest, CityMapperTest, CountryMapperTest (9 tests)\n- ✅ Utility tests: PaginationEdgeCaseTest (20 tests)\n- ✅ Config tests: DatabaseConfigTest, EnvironmentConfigTest (19 tests)\n\n**Total Standardized:** ~187 tests across all test files\n\n**All tests compile and pass successfully** ✅\n\n**Task 49 is now complete** - all tests follow the Given/When/Then pattern consistently.\n</info added on 2025-11-30T18:33:35.218Z>",
         "testStrategy": "Review a sample of refactored tests to confirm pattern adherence. Use code linters or custom scripts to detect missing section comments. Run tests to ensure no behavioral changes.",
         "priority": "high",
         "dependencies": [
           "48"
         ],
-        "status": "in-progress",
+        "status": "done",
         "subtasks": [],
-        "updatedAt": "2025-11-30T18:12:01.989Z"
+        "updatedAt": "2025-11-30T18:34:29.646Z"
       },
       {
-        "id": 50,
+        "id": "50",
         "title": "Create Dedicated Test Data Builder Classes",
         "description": "Develop reusable test data builder classes or factories to centralize and standardize test data creation, removing inline data from test methods.",
         "details": "Implement builder pattern classes in `src/test/kotlin/yayauheny/by/testdata/` to generate valid, invalid, and edge case data scenarios. Refactor tests to use these builders instead of inline data. Ensure builders support common scenarios and are easy to extend and maintain.",
@@ -875,7 +875,7 @@
         "subtasks": []
       },
       {
-        "id": 51,
+        "id": "51",
         "title": "Standardize JSON Assertions Using Utility Classes",
         "description": "Replace all custom JSON comparison logic in tests with standardized JSON assertion utilities, leveraging existing `HttpTestHelpers` or creating new utilities as needed.",
         "details": "Audit tests for JSON assertions and remove bespoke comparison code. Use or extend `HttpTestHelpers` to provide consistent, nested JSON comparison with clear error messages. Refactor tests to call these utilities for all JSON validations.",
@@ -889,7 +889,7 @@
         "subtasks": []
       },
       {
-        "id": 52,
+        "id": "52",
         "title": "Enforce Consistent Naming Conventions for Tests",
         "description": "Rename test classes and methods to follow the prescribed naming conventions for clarity and uniformity across the codebase.",
         "details": "Rename test classes to `{ClassUnderTest}Test` format. Rename test methods to `{scenario}_should_{expected_behavior}` pattern with descriptive names. Apply changes to both unit and integration tests. Update references if needed.",
@@ -902,7 +902,7 @@
         "subtasks": []
       },
       {
-        "id": 53,
+        "id": "53",
         "title": "Clean Up Unused and Duplicate Test Utilities",
         "description": "Identify and remove unused or duplicate test utility methods, marking those needed for future use with appropriate comments.",
         "details": "Analyze utility classes and methods for usage across tests. Remove utilities not actively used. For utilities potentially needed later, add `// TODO: Keep for future use` comments. Consolidate duplicate utility functions into single implementations.",
@@ -915,7 +915,7 @@
         "subtasks": []
       },
       {
-        "id": 54,
+        "id": "54",
         "title": "Organize Tests According to Technical Requirements",
         "description": "Ensure proper placement of unit and integration tests in their respective directories and maintain clear separation of concerns.",
         "details": "Verify all unit tests reside in `src/test/kotlin/yayauheny/by/unit/` and integration tests in `src/test/kotlin/yayauheny/by/integrationTest/`. Refactor misplaced tests accordingly. Confirm unit tests focus on isolated components and integration tests on cross-layer interactions.",
@@ -928,7 +928,7 @@
         "subtasks": []
       },
       {
-        "id": 55,
+        "id": "55",
         "title": "Centralize Mock Setup Using MockK in Test Fixtures",
         "description": "Standardize mock management by centralizing mock setup using MockK in base classes or test fixtures to avoid duplication and improve maintainability.",
         "details": "Create base test classes or fixtures that configure common mocks using MockK. Refactor tests to inherit from these fixtures instead of duplicating mock setup. Ensure consistent mock behavior and reduce boilerplate across tests.",
@@ -943,14 +943,12 @@
     ],
     "metadata": {
       "version": "1.0.0",
-      "lastModified": "2025-11-30T18:12:01.990Z",
+      "lastModified": "2025-11-30T18:34:29.647Z",
       "taskCount": 55,
-      "completedCount": 29,
+      "completedCount": 30,
       "tags": [
         "master"
-      ],
-      "created": "2025-11-30T18:12:38.911Z",
-      "description": "Tasks for master context"
+      ]
     }
   }
 }

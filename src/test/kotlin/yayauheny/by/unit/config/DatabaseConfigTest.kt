@@ -170,6 +170,7 @@ class DatabaseConfigTest {
     @Test
     @DisplayName("Zero or negative maxLifetime should throw IllegalArgumentException")
     fun invalid_max_lifetime_should_throw_exception() {
+        // When & Then
         assertThrows<IllegalArgumentException> {
             DatabaseConfig(maxLifetime = 0)
         }
@@ -181,6 +182,7 @@ class DatabaseConfigTest {
     @Test
     @DisplayName("idleTimeout greater than maxLifetime should throw IllegalArgumentException")
     fun idle_timeout_greater_than_max_lifetime_should_throw_exception() {
+        // When & Then
         assertThrows<IllegalArgumentException> {
             DatabaseConfig(idleTimeout = 2000000L, maxLifetime = 1000000L)
         }
@@ -189,7 +191,10 @@ class DatabaseConfigTest {
     @Test
     @DisplayName("idleTimeout equal to maxLifetime should pass")
     fun idle_timeout_equal_to_max_lifetime_should_pass() {
+        // Given & When
         val config = DatabaseConfig(idleTimeout = 1800000L, maxLifetime = 1800000L)
+
+        // Then
         assertEquals(1800000L, config.idleTimeout)
         assertEquals(1800000L, config.maxLifetime)
     }
@@ -197,6 +202,7 @@ class DatabaseConfigTest {
     @Test
     @DisplayName("Very large valid values should pass")
     fun very_large_valid_values_should_pass() {
+        // Given & When
         val config =
             DatabaseConfig(
                 maxPoolSize = Int.MAX_VALUE,
@@ -205,6 +211,8 @@ class DatabaseConfigTest {
                 idleTimeout = Long.MAX_VALUE,
                 maxLifetime = Long.MAX_VALUE
             )
+
+        // Then
         assertEquals(Int.MAX_VALUE, config.maxPoolSize)
         assertEquals(Long.MAX_VALUE, config.connectionTimeout)
     }
