@@ -54,6 +54,7 @@ class RestroomServiceTest {
         @DisplayName("GIVEN existing restrooms WHEN retrieving all THEN return paginated restrooms")
         fun given_existing_restrooms_when_retrieving_all_then_return_paginated_restrooms() =
             runTest {
+                // Given
                 val pagination = PaginationRequest(page = 0, size = 10)
                 val expectedPage =
                     PageResponse(
@@ -67,8 +68,10 @@ class RestroomServiceTest {
                     )
                 coEvery { restroomRepository.findAll(pagination) } returns expectedPage
 
+                // When
                 val actualPage = restroomService.getAllRestrooms(pagination)
 
+                // Then
                 assertEquals(expectedPage, actualPage)
                 coVerify(exactly = 1) { restroomRepository.findAll(pagination) }
             }
@@ -77,11 +80,14 @@ class RestroomServiceTest {
         @DisplayName("GIVEN existing restroom WHEN finding by ID THEN return restroom")
         fun given_existing_restroom_when_finding_by_id_then_return_restroom() =
             runTest {
+                // Given
                 val expectedRestroom = TestDataHelpers.createRestroomResponseDto()
                 coEvery { restroomRepository.findById(expectedRestroom.id) } returns expectedRestroom
 
+                // When
                 val actualRestroom = restroomService.getRestroomById(expectedRestroom.id)
 
+                // Then
                 assertEquals(expectedRestroom, actualRestroom)
                 coVerify(exactly = 1) { restroomRepository.findById(expectedRestroom.id) }
             }
@@ -90,11 +96,14 @@ class RestroomServiceTest {
         @DisplayName("GIVEN non-existent restroom WHEN finding by ID THEN return null")
         fun given_non_existent_restroom_when_finding_by_id_then_return_null() =
             runTest {
+                // Given
                 val nonExistentId = UUID.randomUUID()
                 coEvery { restroomRepository.findById(nonExistentId) } returns null
 
+                // When
                 val actualRestroom = restroomService.getRestroomById(nonExistentId)
 
+                // Then
                 assertNull(actualRestroom)
                 coVerify(exactly = 1) { restroomRepository.findById(nonExistentId) }
             }
@@ -103,6 +112,7 @@ class RestroomServiceTest {
         @DisplayName("GIVEN restrooms in city WHEN finding by city ID THEN return city restrooms")
         fun given_restrooms_in_city_when_finding_by_city_id_then_return_city_restrooms() =
             runTest {
+                // Given
                 val cityId = UUID.randomUUID()
                 val pagination = PaginationRequest(page = 0, size = 10)
                 val expectedPage =
@@ -117,8 +127,10 @@ class RestroomServiceTest {
                     )
                 coEvery { restroomRepository.findByCityId(cityId, pagination) } returns expectedPage
 
+                // When
                 val actualPage = restroomService.getRestroomsByCity(cityId, pagination)
 
+                // Then
                 assertEquals(expectedPage, actualPage)
                 coVerify(exactly = 1) { restroomRepository.findByCityId(cityId, pagination) }
             }
@@ -128,6 +140,7 @@ class RestroomServiceTest {
         @DisplayName("GIVEN location and limit WHEN finding nearest restrooms THEN return limited results with distance")
         fun given_location_and_limit_when_finding_nearest_restrooms_then_return_limited_results(limit: Int) =
             runTest {
+                // Given
                 val latitude = 40.7829
                 val longitude = -73.9654
                 val expectedRestrooms: List<NearestRestroomResponseDto> =
@@ -136,8 +149,10 @@ class RestroomServiceTest {
                     )
                 coEvery { restroomRepository.findNearestByLocation(latitude, longitude, limit) } returns expectedRestrooms
 
+                // When
                 val actualRestrooms = restroomService.findNearestRestrooms(latitude, longitude, limit)
 
+                // Then
                 assertEquals(expectedRestrooms, actualRestrooms)
                 assertEquals(limit, actualRestrooms.size)
                 actualRestrooms.forEach { restroom ->
@@ -150,13 +165,16 @@ class RestroomServiceTest {
         @DisplayName("GIVEN location without limit WHEN finding nearest restrooms THEN use default limit of 5")
         fun given_location_without_limit_when_finding_nearest_restrooms_then_use_default_limit_of_5() =
             runTest {
+                // Given
                 val latitude = 40.7829
                 val longitude = -73.9654
                 val expectedRestrooms: List<NearestRestroomResponseDto> = TestDataHelpers.createNearestRestroomList(5)
                 coEvery { restroomRepository.findNearestByLocation(latitude, longitude, 5) } returns expectedRestrooms
 
+                // When
                 val actualRestrooms = restroomService.findNearestRestrooms(latitude, longitude)
 
+                // Then
                 assertEquals(expectedRestrooms, actualRestrooms)
                 assertEquals(5, actualRestrooms.size)
                 actualRestrooms.forEach { restroom ->
@@ -178,14 +196,17 @@ class RestroomServiceTest {
             lon: Double,
             expectedCount: Int
         ) = runTest {
+            // Given
             val expectedRestrooms: List<NearestRestroomResponseDto> =
                 TestDataHelpers.createNearestRestroomList(
                     expectedCount
                 )
             coEvery { restroomRepository.findNearestByLocation(lat, lon, 5) } returns expectedRestrooms
 
+            // When
             val actualRestrooms = restroomService.findNearestRestrooms(lat, lon)
 
+            // Then
             assertEquals(expectedRestrooms, actualRestrooms)
             actualRestrooms.forEach { restroom ->
                 assertTrue(restroom.distanceMeters >= 0, "Distance should be non-negative")
@@ -201,13 +222,16 @@ class RestroomServiceTest {
         @DisplayName("GIVEN valid restroom data WHEN creating restroom THEN return created restroom with ACTIVE status")
         fun given_valid_restroom_data_when_creating_restroom_then_return_created_restroom_with_active_status() =
             runTest {
+                // Given
                 val createDto = TestDataHelpers.createRestroomCreateDto()
                 val expectedResponse = TestDataHelpers.createRestroomResponseDto(status = RestroomStatus.ACTIVE)
                 val savedRestroomSlot = slot<RestroomCreateDto>()
                 coEvery { restroomRepository.save(capture(savedRestroomSlot)) } returns expectedResponse
 
+                // When
                 val actualResponse = restroomService.createRestroom(createDto)
 
+                // Then
                 assertEquals(expectedResponse, actualResponse)
                 assertEquals(RestroomStatus.ACTIVE, savedRestroomSlot.captured.status)
                 coVerify(exactly = 1) { restroomRepository.save(any()) }
@@ -219,12 +243,15 @@ class RestroomServiceTest {
         fun given_different_accessibility_types_when_creating_restroom_then_handle_all_types_correctly(
             accessibilityType: AccessibilityType
         ) = runTest {
+            // Given
             val createDto = TestDataHelpers.createRestroomCreateDto(accessibilityType = accessibilityType)
             val expectedResponse = TestDataHelpers.createRestroomResponseDto(accessibilityType = accessibilityType)
             coEvery { restroomRepository.save(any()) } returns expectedResponse
 
+            // When
             val actualResponse = restroomService.createRestroom(createDto)
 
+            // Then
             assertEquals(expectedResponse, actualResponse)
             assertEquals(accessibilityType, actualResponse.accessibilityType)
             coVerify(exactly = 1) { restroomRepository.save(any()) }
@@ -235,12 +262,15 @@ class RestroomServiceTest {
         @DisplayName("GIVEN different fee types WHEN creating restroom THEN handle all types correctly")
         fun given_different_fee_types_when_creating_restroom_then_handle_all_types_correctly(feeType: FeeType) =
             runTest {
+                // Given
                 val createDto = TestDataHelpers.createRestroomCreateDto(feeType = feeType)
                 val expectedResponse = TestDataHelpers.createRestroomResponseDto(feeType = feeType)
                 coEvery { restroomRepository.save(any()) } returns expectedResponse
 
+                // When
                 val actualResponse = restroomService.createRestroom(createDto)
 
+                // Then
                 assertEquals(expectedResponse, actualResponse)
                 assertEquals(feeType, actualResponse.feeType)
                 coVerify(exactly = 1) { restroomRepository.save(any()) }
@@ -250,6 +280,7 @@ class RestroomServiceTest {
         @DisplayName("GIVEN restroom with parent place data WHEN creating restroom THEN save parent place fields correctly")
         fun given_restroom_with_parent_place_data_when_creating_restroom_then_save_parent_place_fields_correctly() =
             runTest {
+                // Given
                 val createDto =
                     TestDataHelpers.createRestroomCreateDto(
                         parentPlaceName = "Central Park Mall",
@@ -264,8 +295,10 @@ class RestroomServiceTest {
                     )
                 coEvery { restroomRepository.save(any()) } returns expectedResponse
 
+                // When
                 val actualResponse = restroomService.createRestroom(createDto)
 
+                // Then
                 assertEquals(expectedResponse, actualResponse)
                 assertEquals("Central Park Mall", actualResponse.parentPlaceName)
                 assertEquals("SHOPPING_MALL", actualResponse.parentPlaceType)
@@ -278,12 +311,15 @@ class RestroomServiceTest {
         @DisplayName("GIVEN different data sources WHEN creating restroom THEN handle all types correctly")
         fun given_different_data_sources_when_creating_restroom_then_handle_all_types_correctly(dataSource: DataSourceType) =
             runTest {
+                // Given
                 val createDto = TestDataHelpers.createRestroomCreateDto(dataSource = dataSource)
                 val expectedResponse = TestDataHelpers.createRestroomResponseDto(dataSource = dataSource)
                 coEvery { restroomRepository.save(any()) } returns expectedResponse
 
+                // When
                 val actualResponse = restroomService.createRestroom(createDto)
 
+                // Then
                 assertEquals(expectedResponse, actualResponse)
                 assertEquals(dataSource, actualResponse.dataSource)
                 coVerify(exactly = 1) { restroomRepository.save(any()) }
@@ -293,6 +329,7 @@ class RestroomServiceTest {
         @DisplayName("GIVEN restroom with null city ID WHEN creating restroom THEN handle correctly")
         fun given_restroom_with_null_city_id_when_creating_restroom_then_handle_correctly() =
             runTest {
+                // Given
                 val createDto =
                     RestroomCreateDto(
                         cityId = null,
@@ -334,8 +371,10 @@ class RestroomServiceTest {
                     )
                 coEvery { restroomRepository.save(any()) } returns expectedResponse
 
+                // When
                 val actualResponse = restroomService.createRestroom(createDto)
 
+                // Then
                 assertEquals(expectedResponse, actualResponse)
                 assertNull(actualResponse.cityId)
                 coVerify(exactly = 1) { restroomRepository.save(any()) }
@@ -349,6 +388,7 @@ class RestroomServiceTest {
         @DisplayName("GIVEN existing restroom WHEN updating THEN return updated restroom")
         fun given_existing_restroom_when_updating_then_return_updated_restroom() =
             runTest {
+                // Given
                 val existingRestroom = TestDataHelpers.createRestroomResponseDto()
                 val updateDto = TestDataHelpers.createRestroomUpdateDto()
                 val updatedRestroom =
@@ -361,8 +401,10 @@ class RestroomServiceTest {
                 coEvery { restroomRepository.findById(existingRestroom.id) } returns existingRestroom
                 coEvery { restroomRepository.update(any(), any()) } returns updatedRestroom
 
+                // When
                 val actualResult = restroomService.updateRestroom(existingRestroom.id, updateDto)
 
+                // Then
                 assertEquals(updatedRestroom, actualResult)
                 coVerify(exactly = 1) { restroomRepository.update(any(), any()) }
             }
@@ -371,15 +413,18 @@ class RestroomServiceTest {
         @DisplayName("GIVEN non-existent restroom WHEN updating THEN throw error")
         fun given_non_existent_restroom_when_updating_then_throw_error() =
             runTest {
+                // Given
                 val nonExistentId = UUID.randomUUID()
                 val updateDto = TestDataHelpers.createRestroomUpdateDto()
                 coEvery { restroomRepository.update(nonExistentId, updateDto) } throws Exception("Failed to update restroom $nonExistentId")
 
+                // When
                 val exception =
                     kotlin.test.assertFailsWith<Exception> {
                         restroomService.updateRestroom(nonExistentId, updateDto)
                     }
 
+                // Then
                 assertTrue(exception.message?.contains("Failed to update restroom") == true)
                 coVerify(exactly = 1) { restroomRepository.update(nonExistentId, updateDto) }
             }
@@ -388,6 +433,7 @@ class RestroomServiceTest {
         @DisplayName("GIVEN existing restroom WHEN updating with same data THEN preserve original timestamps")
         fun given_existing_restroom_when_updating_with_same_data_then_preserve_original_timestamps() =
             runTest {
+                // Given
                 val originalCreatedAt = Instant.parse("2023-01-01T00:00:00Z")
                 val originalUpdatedAt = Instant.parse("2023-01-02T00:00:00Z")
                 val existingRestroom =
@@ -405,8 +451,10 @@ class RestroomServiceTest {
                 val updatedRestroom = existingRestroom.copy(updatedAt = Instant.now())
                 coEvery { restroomRepository.update(existingRestroom.id, updateDto) } returns updatedRestroom
 
+                // When
                 val actualResult = restroomService.updateRestroom(existingRestroom.id, updateDto)
 
+                // Then
                 assertEquals(updatedRestroom, actualResult)
                 assertNotNull(actualResult)
                 assertEquals(originalCreatedAt, actualResult!!.createdAt)
@@ -418,14 +466,17 @@ class RestroomServiceTest {
         @DisplayName("GIVEN existing restroom with different status WHEN updating THEN preserve status")
         fun given_existing_restroom_with_different_status_when_updating_then_preserve_status(status: RestroomStatus) =
             runTest {
+                // Given
                 val existingRestroom = TestDataHelpers.createRestroomResponseDto(status = status)
                 val updateDto = TestDataHelpers.createRestroomUpdateDto()
                 // Repository update preserves status from existing restroom
                 val updatedRestroom = existingRestroom.copy(updatedAt = Instant.now())
                 coEvery { restroomRepository.update(existingRestroom.id, updateDto) } returns updatedRestroom
 
+                // When
                 val actualResult = restroomService.updateRestroom(existingRestroom.id, updateDto)
 
+                // Then
                 assertEquals(updatedRestroom, actualResult)
                 assertNotNull(actualResult)
                 assertEquals(status, actualResult!!.status)
@@ -440,11 +491,14 @@ class RestroomServiceTest {
         @DisplayName("GIVEN existing restroom WHEN deleting THEN return true")
         fun given_existing_restroom_when_deleting_then_return_true() =
             runTest {
+                // Given
                 val restroomId = UUID.randomUUID()
                 coEvery { restroomRepository.deleteById(restroomId) } returns true
 
+                // When
                 val actualResult = restroomService.deleteRestroom(restroomId)
 
+                // Then
                 assertTrue(actualResult)
                 coVerify(exactly = 1) { restroomRepository.deleteById(restroomId) }
             }
@@ -453,11 +507,14 @@ class RestroomServiceTest {
         @DisplayName("GIVEN non-existent restroom WHEN deleting THEN return false")
         fun given_non_existent_restroom_when_deleting_then_return_false() =
             runTest {
+                // Given
                 val nonExistentId = UUID.randomUUID()
                 coEvery { restroomRepository.deleteById(nonExistentId) } returns false
 
+                // When
                 val actualResult = restroomService.deleteRestroom(nonExistentId)
 
+                // Then
                 assertFalse(actualResult)
                 coVerify(exactly = 1) { restroomRepository.deleteById(nonExistentId) }
             }
@@ -470,6 +527,7 @@ class RestroomServiceTest {
         @DisplayName("GIVEN restrooms and pagination WHEN getting all restrooms THEN return correct page")
         fun given_restrooms_and_pagination_when_getting_all_restrooms_then_return_correct_page() =
             runTest {
+                // Given
                 val pagination = PaginationRequest(page = 1, size = 3)
                 val expectedPage =
                     PageResponse(
@@ -483,8 +541,10 @@ class RestroomServiceTest {
                     )
                 coEvery { restroomRepository.findAll(pagination) } returns expectedPage
 
+                // When
                 val actualPage = restroomService.getAllRestrooms(pagination)
 
+                // Then
                 assertEquals(expectedPage, actualPage)
                 coVerify(exactly = 1) { restroomRepository.findAll(pagination) }
             }
@@ -493,6 +553,7 @@ class RestroomServiceTest {
         @DisplayName("GIVEN empty restrooms WHEN getting all restrooms THEN return empty page")
         fun given_empty_restrooms_when_getting_all_restrooms_then_return_empty_page() =
             runTest {
+                // Given
                 val pagination = PaginationRequest(page = 0, size = 10)
                 val expectedPage =
                     PageResponse(
@@ -506,8 +567,10 @@ class RestroomServiceTest {
                     )
                 coEvery { restroomRepository.findAll(pagination) } returns expectedPage
 
+                // When
                 val actualPage = restroomService.getAllRestrooms(pagination)
 
+                // Then
                 assertEquals(expectedPage, actualPage)
                 coVerify(exactly = 1) { restroomRepository.findAll(pagination) }
             }
@@ -516,6 +579,7 @@ class RestroomServiceTest {
         @DisplayName("GIVEN restrooms and city ID WHEN getting city restrooms THEN return correct page")
         fun given_restrooms_and_city_id_when_getting_city_restrooms_then_return_correct_page() =
             runTest {
+                // Given
                 val cityId = UUID.randomUUID()
                 val paginationRequest = PaginationRequest(page = 0, size = 5)
                 val expectedPage =
@@ -530,8 +594,10 @@ class RestroomServiceTest {
                     )
                 coEvery { restroomRepository.findByCityId(cityId, paginationRequest) } returns expectedPage
 
+                // When
                 val actualPage = restroomService.getRestroomsByCity(cityId, paginationRequest)
 
+                // Then
                 assertEquals(expectedPage.content, actualPage.content)
                 assertEquals(expectedPage.page, actualPage.page)
                 assertEquals(expectedPage.size, actualPage.size)

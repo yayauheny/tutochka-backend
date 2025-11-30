@@ -830,23 +830,127 @@
         "testStrategy": "Verify that all new tests in EdgeCaseValidationTest.kt and PaginationEdgeCaseTest.kt execute successfully without failures. Confirm that tests correctly detect invalid inputs by asserting expected validation errors or exceptions. Run the full test suite to ensure no regressions occur. Use parameterized test reports to confirm coverage of all specified edge cases. Review test logs to ensure descriptive output for each edge case scenario. Additionally, perform code review to ensure tests adhere to project standards and effectively cover boundary conditions as specified.",
         "status": "pending",
         "dependencies": [
-          44
+          "44"
         ],
         "priority": "low",
+        "subtasks": []
+      },
+      {
+        "id": 48,
+        "title": "Analyze and Identify Duplicate and Redundant Tests",
+        "description": "Perform a comprehensive analysis of all existing unit and integration test files to identify duplicate tests and redundant integration tests that replicate unit test logic.",
+        "details": "Scan test directories `src/test/kotlin/yayauheny/by/unit/` and `src/test/kotlin/yayauheny/by/integrationTest/` to catalog tests. Use static analysis tools or scripts to detect duplicate test scenarios and overlapping assertions. Mark integration tests that duplicate unit test coverage for removal, retaining only those covering end-to-end or cross-layer scenarios.\n<info added on 2025-11-30T18:10:50.225Z>\nAnalysis phase completed: all 23 test files (17 unit, 6 integration) have been reviewed. Identified duplicates include RestroomApiTest duplicating RestroomControllerTest for GET /restrooms with pagination, GET /restrooms/{id}, and POST /restrooms (valid/invalid data), as well as CityApiTest and CountryApiTest duplicating corresponding unit tests for basic CRUD operations. The decision is to remove integration tests that duplicate controller/service logic and retain only integration tests covering end-to-end scenarios (e.g., GET /restrooms/nearest with real geo-queries), database-specific features (PostGIS, transactions), and cross-layer integration. A detailed report has been created at `.taskmaster/docs/test-analysis-report.md`. Next steps include starting the removal of duplicate tests and standardizing the test structure.\n</info added on 2025-11-30T18:10:50.225Z>",
+        "testStrategy": "Verify completeness by cross-referencing test coverage reports before and after deduplication. Ensure no critical business logic coverage is lost by running full test suite and comparing results.",
+        "priority": "high",
+        "dependencies": [],
+        "status": "done",
+        "subtasks": [],
+        "updatedAt": "2025-11-30T18:12:01.976Z"
+      },
+      {
+        "id": 49,
+        "title": "Standardize Test Structure Using Given/When/Then Pattern",
+        "description": "Refactor all tests to follow the Given/When/Then pattern with clear section comments to improve readability and maintainability.",
+        "details": "Update test methods to include explicit `// Given`, `// When`, and `// Then` comments. Ensure each test clearly separates setup, action, and assertion phases. Enforce this pattern in both unit and integration tests. Provide examples and guidelines for developers to follow.\n<info added on 2025-11-30T18:12:42.896Z>\nProgress update for task details:\n\nCompleted refactoring RestroomApiTest to fully adopt the Given/When/Then pattern with explicit `// Given`, `// When`, and `// Then` comments in all tests. Removed redundant CRUD tests covered by unit tests, retaining only end-to-end tests for the /nearest endpoint that involve real database queries. All tests now clearly separate setup, action, and assertion phases according to the pattern.\n\nNext steps include continuing the standardization of integration test files such as CityApiTest and CountryApiTest, followed by applying the same Given/When/Then structure to unit test files. This phased approach ensures consistent test readability and maintainability across the codebase.\n</info added on 2025-11-30T18:12:42.896Z>\n<info added on 2025-11-30T18:14:40.370Z>\n## Progress Update - Integration Tests Standardized\n\n**Completed:**\n- RestroomApiTest: All tests now have Given/When/Then structure\n- CityApiTest: All tests now have Given/When/Then structure  \n- CountryApiTest: All tests now have Given/When/Then structure\n- Removed duplicate CRUD tests from all integration test files\n- Kept only E2E tests (geospatial queries, database constraints, foreign key relationships)\n\n**Remaining:**\n- Standardize unit test files (RestroomControllerTest, CityControllerTest, etc.)\n- This is a large task - will continue step by step\n</info added on 2025-11-30T18:14:40.370Z>\n<info added on 2025-11-30T18:17:46.716Z>\n## Progress Update - Unit Tests Standardization Started\n\n**Completed:**\n- RestroomControllerTest: All 12 tests now have Given/When/Then structure\n- All tests compile and pass successfully\n\n**Remaining Unit Tests to Standardize:**\n- CityControllerTest\n- Other controller tests\n- Service tests\n- Mapper tests\n- Utility tests\n\n**Next Steps:**\n- Continue standardizing remaining unit test files\n- Then move to Task 50 (test data builders)\n</info added on 2025-11-30T18:17:46.716Z>\n<info added on 2025-11-30T18:19:37.689Z>\n## Progress Update - Unit Tests Standardization Continued\n\n**Completed:**\n- RestroomControllerTest: All 12 tests now have Given/When/Then structure ✅\n- CityControllerTest: All 10 tests now have Given/When/Then structure ✅\n- All tests compile and pass successfully ✅\n\n**Remaining Unit Tests to Standardize:**\n- Other controller tests (HealthControllerTest, etc.)\n- Service tests (RestroomServiceTest, CityServiceTest, etc.)\n- Mapper tests\n- Utility tests\n\n**Progress:** Approximately 22 unit tests standardized, with over 180 remaining\n\n**Next Steps:**\n- Continue standardizing remaining unit test files systematically\n- Upon completion, proceed to Task 50 (test data builders)\n</info added on 2025-11-30T18:19:37.689Z>\n<info added on 2025-11-30T18:22:32.793Z>\n## Progress Update - Unit Tests Standardization Continued\n\n**Completed:**\n- RestroomControllerTest: All 12 tests standardized ✅\n- CityControllerTest: All 10 tests standardized ✅\n- RestroomServiceTest: All 22 tests standardized ✅\n- All tests compile and pass successfully ✅\n\n**Progress:** Approximately 44 unit tests standardized (integration tests: 12, unit tests: 44)\n\n**Remaining Unit Tests to Standardize:**\n- CityServiceTest\n- CountryServiceTest\n- Other service tests\n- Mapper tests\n- Utility tests\n- Edge case tests (EdgeCaseValidationTest, PaginationEdgeCaseTest)\n\n**Next Steps:**\n- Continue standardizing remaining unit test files systematically\n- Upon completion, proceed to Task 50 (test data builders)\n</info added on 2025-11-30T18:22:32.793Z>",
+        "testStrategy": "Review a sample of refactored tests to confirm pattern adherence. Use code linters or custom scripts to detect missing section comments. Run tests to ensure no behavioral changes.",
+        "priority": "high",
+        "dependencies": [
+          "48"
+        ],
+        "status": "in-progress",
+        "subtasks": [],
+        "updatedAt": "2025-11-30T18:12:01.989Z"
+      },
+      {
+        "id": 50,
+        "title": "Create Dedicated Test Data Builder Classes",
+        "description": "Develop reusable test data builder classes or factories to centralize and standardize test data creation, removing inline data from test methods.",
+        "details": "Implement builder pattern classes in `src/test/kotlin/yayauheny/by/testdata/` to generate valid, invalid, and edge case data scenarios. Refactor tests to use these builders instead of inline data. Ensure builders support common scenarios and are easy to extend and maintain.",
+        "testStrategy": "Validate that all test data is generated via builders by code inspection. Run tests to confirm no failures due to data changes. Add unit tests for builder classes to verify correct data generation.",
+        "priority": "high",
+        "dependencies": [
+          "48"
+        ],
+        "status": "pending",
+        "subtasks": []
+      },
+      {
+        "id": 51,
+        "title": "Standardize JSON Assertions Using Utility Classes",
+        "description": "Replace all custom JSON comparison logic in tests with standardized JSON assertion utilities, leveraging existing `HttpTestHelpers` or creating new utilities as needed.",
+        "details": "Audit tests for JSON assertions and remove bespoke comparison code. Use or extend `HttpTestHelpers` to provide consistent, nested JSON comparison with clear error messages. Refactor tests to call these utilities for all JSON validations.",
+        "testStrategy": "Run all tests to ensure JSON assertions behave identically post-refactor. Add tests for JSON utility methods covering nested structures and error reporting.",
+        "priority": "medium",
+        "dependencies": [
+          "48",
+          "50"
+        ],
+        "status": "pending",
+        "subtasks": []
+      },
+      {
+        "id": 52,
+        "title": "Enforce Consistent Naming Conventions for Tests",
+        "description": "Rename test classes and methods to follow the prescribed naming conventions for clarity and uniformity across the codebase.",
+        "details": "Rename test classes to `{ClassUnderTest}Test` format. Rename test methods to `{scenario}_should_{expected_behavior}` pattern with descriptive names. Apply changes to both unit and integration tests. Update references if needed.",
+        "testStrategy": "Use automated scripts to detect naming convention violations before and after renaming. Conduct code reviews to ensure naming clarity. Run tests to confirm no breakage due to renaming.",
+        "priority": "medium",
+        "dependencies": [
+          "48"
+        ],
+        "status": "pending",
+        "subtasks": []
+      },
+      {
+        "id": 53,
+        "title": "Clean Up Unused and Duplicate Test Utilities",
+        "description": "Identify and remove unused or duplicate test utility methods, marking those needed for future use with appropriate comments.",
+        "details": "Analyze utility classes and methods for usage across tests. Remove utilities not actively used. For utilities potentially needed later, add `// TODO: Keep for future use` comments. Consolidate duplicate utility functions into single implementations.",
+        "testStrategy": "Verify utility usage with static analysis tools. Confirm no test failures after cleanup. Review comments to ensure future-use utilities are clearly marked.",
+        "priority": "medium",
+        "dependencies": [
+          "48"
+        ],
+        "status": "pending",
+        "subtasks": []
+      },
+      {
+        "id": 54,
+        "title": "Organize Tests According to Technical Requirements",
+        "description": "Ensure proper placement of unit and integration tests in their respective directories and maintain clear separation of concerns.",
+        "details": "Verify all unit tests reside in `src/test/kotlin/yayauheny/by/unit/` and integration tests in `src/test/kotlin/yayauheny/by/integrationTest/`. Refactor misplaced tests accordingly. Confirm unit tests focus on isolated components and integration tests on cross-layer interactions.",
+        "testStrategy": "Run tests after relocation to confirm no path or dependency issues. Use code reviews to validate test scope and placement.",
+        "priority": "medium",
+        "dependencies": [
+          "48"
+        ],
+        "status": "pending",
+        "subtasks": []
+      },
+      {
+        "id": 55,
+        "title": "Centralize Mock Setup Using MockK in Test Fixtures",
+        "description": "Standardize mock management by centralizing mock setup using MockK in base classes or test fixtures to avoid duplication and improve maintainability.",
+        "details": "Create base test classes or fixtures that configure common mocks using MockK. Refactor tests to inherit from these fixtures instead of duplicating mock setup. Ensure consistent mock behavior and reduce boilerplate across tests.",
+        "testStrategy": "Run all tests to verify mocks behave as expected post-refactor. Review mock configurations for duplication removal. Add tests for fixture classes if applicable.",
+        "priority": "medium",
+        "dependencies": [
+          "48"
+        ],
+        "status": "pending",
         "subtasks": []
       }
     ],
     "metadata": {
       "version": "1.0.0",
-      "lastModified": "2025-11-30T12:48:35.470Z",
-      "taskCount": 46,
-      "completedCount": 28,
+      "lastModified": "2025-11-30T18:12:01.990Z",
+      "taskCount": 55,
+      "completedCount": 29,
       "tags": [
         "master"
       ],
-      "created": "2025-11-30T17:18:30.988Z",
-      "description": "Tasks for master context",
-      "updated": "2025-11-30T17:56:08.078Z"
+      "created": "2025-11-30T18:12:38.911Z",
+      "description": "Tasks for master context"
     }
   }
 }
