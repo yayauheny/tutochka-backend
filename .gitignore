@@ -371,6 +371,10 @@ node_modules/
 # OS specific
 .DS_Store
 
-# Task files
-# tasks.json
-# tasks/ 
+# Task Master files
+# tasks.json - keep for context, but PRD files should not be committed
+.taskmaster/docs/*.txt
+.taskmaster/docs/*.md
+# Keep only README.md and templates
+!.taskmaster/README.md
+!.taskmaster/templates/ 
