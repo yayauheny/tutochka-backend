@@ -28,4 +28,7 @@ object ApiConstants {
     const val FILTER_PARTS_COUNT = 3
     const val FILTER_DELIMITER = ","
     const val FILTER_VALUE_DELIMITER = ":"
+
+    // JSON field constraints
+    const val MAX_JSON_STRING_LENGTH = 10000 // Maximum length for JSON string representation
 }

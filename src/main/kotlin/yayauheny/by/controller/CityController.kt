@@ -10,6 +10,7 @@ import io.ktor.server.routing.post
 import io.ktor.server.routing.put
 import io.ktor.server.routing.route
 import yayauheny.by.common.errors.NotFoundException
+import yayauheny.by.common.errors.ValidationException
 import yayauheny.by.model.city.CityCreateDto
 import yayauheny.by.model.city.CityUpdateDto
 import yayauheny.by.service.CityService
@@ -18,6 +19,8 @@ import yayauheny.by.service.validation.validateAndThen
 import yayauheny.by.service.validation.validateCityOnCreate
 import yayauheny.by.service.validation.validateCityOnUpdate
 import yayauheny.by.service.validation.validateCitySearchParams
+import yayauheny.by.service.validation.validateOrThrow
+import yayauheny.by.service.validation.validateRegion
 import yayauheny.by.util.getUuidFromPath
 import yayauheny.by.util.toPaginationRequest
 
@@ -59,22 +62,28 @@ class CityController(
 
             post {
                 val createDto = call.receive<CityCreateDto>()
-                val city =
-                    createDto
-                        .validateAndThen(validateCityOnCreate) { valid ->
-                            cityService.createCity(valid)
-                        }.getOrThrow()
+                // Валидация через konform
+                createDto.validateOrThrow(validateCityOnCreate)
+                // Дополнительная валидация nullable полей
+                val additionalErrors = validateRegion(createDto.region)
+                if (additionalErrors.isNotEmpty()) {
+                    throw ValidationException(additionalErrors)
+                }
+                val city = cityService.createCity(createDto)
                 call.respond(HttpStatusCode.Created, city)
             }
 
             put("/{id}") {
                 val id = call.getUuidFromPath("id")
                 val updateDto = call.receive<CityUpdateDto>()
-                val city =
-                    updateDto
-                        .validateAndThen(validateCityOnUpdate) { valid ->
-                            cityService.updateCity(id, valid)
-                        }.getOrThrow()
+                // Валидация через konform
+                updateDto.validateOrThrow(validateCityOnUpdate)
+                // Дополнительная валидация nullable полей
+                val additionalErrors = validateRegion(updateDto.region)
+                if (additionalErrors.isNotEmpty()) {
+                    throw ValidationException(additionalErrors)
+                }
+                val city = cityService.updateCity(id, updateDto)
                 call.respond(HttpStatusCode.OK, city)
             }
 

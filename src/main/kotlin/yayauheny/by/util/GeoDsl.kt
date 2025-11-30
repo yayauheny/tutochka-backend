@@ -126,3 +126,21 @@ fun getAllRestroomsFieldsWithCoordinates(): List<org.jooq.Field<*>> {
     val r = yayauheny.by.tables.references.RESTROOMS
     return getAllRestroomsFieldsExceptCoordinates() + r.COORDINATES.latAlias() + r.COORDINATES.lonAlias()
 }
+
+/**
+ * Возвращает координатные поля (lat/lon) для таблицы RESTROOMS.
+ * Используется в запросах, где нужны только координаты без других полей.
+ */
+fun getRestroomsCoordinateFields(): List<org.jooq.Field<*>> {
+    val r = yayauheny.by.tables.references.RESTROOMS
+    return listOf(r.COORDINATES.latAlias(), r.COORDINATES.lonAlias())
+}
+
+/**
+ * Возвращает координатные поля (lat/lon) для таблицы CITIES.
+ * Используется в запросах, где нужны только координаты без других полей.
+ */
+fun getCitiesCoordinateFields(): List<org.jooq.Field<*>> {
+    val c = yayauheny.by.tables.references.CITIES
+    return listOf(c.COORDINATES.latAlias(), c.COORDINATES.lonAlias())
+}

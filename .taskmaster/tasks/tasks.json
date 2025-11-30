@@ -2,7 +2,7 @@
   "master": {
     "tasks": [
       {
-        "id": "1",
+        "id": 1,
         "title": "Disable auto-commit and implement explicit transactions in DatabaseConfig",
         "description": "Modify database configuration to disable auto-commit and enable explicit transaction management for atomic operations.",
         "details": "Update DatabaseConfig.kt to set isAutoCommit = false in HikariConfig. Use Kotlin coroutines withContext(Dispatchers.IO) for database operations. Implement a suspend extension function transactionSuspend on DSLContext that wraps operations in a transaction block using jOOQ's transaction method.",
@@ -14,7 +14,7 @@
         "updatedAt": "2025-11-30T10:22:15.607Z"
       },
       {
-        "id": "2",
+        "id": 2,
         "title": "Refactor repository methods to use transactionSuspend for atomic operations",
         "description": "Update repository methods save(), update(), and deleteById() to wrap all database calls within transactionSuspend to ensure atomicity.",
         "details": "In repository implementations like CityRepositoryImpl and RestroomRepositoryImpl, wrap all related DB calls (e.g., insert and select) inside ctx.transactionSuspend { txCtx -> ... } to ensure they execute in one transaction. Remove any auto-commit reliance.",
@@ -28,7 +28,7 @@
         "updatedAt": "2025-11-30T10:22:15.611Z"
       },
       {
-        "id": "3",
+        "id": 3,
         "title": "Create extension helper for coordinate field projections to eliminate duplication",
         "description": "Implement an extension function or property to provide coordinate fields projection to avoid repeated code in repositories.",
         "details": "Create an extension function like selectWithCoordinates() on relevant table references (e.g., RESTROOMS) returning a list of fields including latAlias() and lonAlias(). Replace duplicated coordinate field declarations in repository methods with this helper.",
@@ -40,7 +40,7 @@
         "updatedAt": "2025-11-30T10:22:15.613Z"
       },
       {
-        "id": "4",
+        "id": 4,
         "title": "Add fetchCount parameter to executePaginated and optimize count queries",
         "description": "Modify executePaginated to accept a fetchCount boolean parameter to optionally skip COUNT queries for performance optimization.",
         "details": "Update QueryExecutor.kt to propagate fetchCount parameter. For endpoints like /nearest, call executePaginated with fetchCount=false to avoid expensive COUNT(*) queries. Consider approximate counts or caching for large tables in future iterations.",
@@ -52,7 +52,7 @@
         "updatedAt": "2025-11-30T10:25:21.893Z"
       },
       {
-        "id": "5",
+        "id": 5,
         "title": "Implement in-memory caching for countries and cities using Caffeine",
         "description": "Add caching layer for frequently requested read-only data like countries and cities to reduce database load.",
         "details": "Add Caffeine dependency version 3.1.8. Create CacheConfig.kt to configure caches with maximumSize and expireAfterWrite TTL. Inject caches into CountryService and CityService. Use cache.get(key) with loader lambda for reads. Invalidate cache on writes.",
@@ -63,7 +63,7 @@
         "subtasks": []
       },
       {
-        "id": "6",
+        "id": 6,
         "title": "Refactor long repository methods by extracting query building logic",
         "description": "Improve code readability by extracting complex query construction into smaller private methods in repositories.",
         "details": "In RestroomRepositoryImpl and CityRepositoryImpl, create private methods like buildInsertQuery() and buildReturningFields() that return InsertSetStep and list of fields respectively. Use these methods in save() and update() to reduce method length and duplication.",
@@ -75,7 +75,7 @@
         "updatedAt": "2025-11-30T10:27:00.713Z"
       },
       {
-        "id": "7",
+        "id": 7,
         "title": "Extract magic numbers and strings into centralized constants object",
         "description": "Centralize all magic numbers and strings used in validation, pagination, and defaults into a Constants.kt object for maintainability.",
         "details": "Create ApiConstants object in config package with constants like DEFAULT_PAGE_SIZE=10, MAX_PAGE_SIZE=100, MAX_NAME_LENGTH=255, etc. Replace all hardcoded literals in codebase with references to these constants.",
@@ -87,19 +87,18 @@
         "updatedAt": "2025-11-30T12:00:08.224Z"
       },
       {
-        "id": "8",
+        "id": 8,
         "title": "Standardize error messages and implement i18n-ready error constants",
         "description": "Centralize all error messages in a resource file or constants object and standardize language to English for API consistency and future i18n support.",
-        "details": "Create ErrorMessages object with formatted string constants for common errors. Replace inline error strings in exceptions and logs with references to ErrorMessages. Consider integration with i18n libraries for future multi-language support.\n<info added on 2025-11-30T10:29:34.826Z>\nTask deferred for later implementation. Per PROGRESS_TRACKING.md, error messages will remain in Russian. This task has low priority and will be completed in a future sprint.\n</info added on 2025-11-30T10:29:34.826Z>",
-        "testStrategy": "Verify all error messages are replaced. Test error responses for correct message formatting.",
-        "priority": "medium",
-        "dependencies": [],
         "status": "pending",
-        "subtasks": [],
-        "updatedAt": "2025-11-30T10:29:29.703Z"
+        "dependencies": [],
+        "priority": "medium",
+        "details": "Create ErrorMessages object with formatted string constants for common errors. Replace inline error strings in exceptions and logs with references to ErrorMessages. Consider integration with i18n libraries for future multi-language support.\n<info added on 2025-11-30T10:29:34.826Z>\nTask deferred for later implementation. Per PROGRESS_TRACKING.md, error messages will remain in Russian. This task has low priority and will be completed in a future sprint.\n</info added on 2025-11-30T10:29:34.826Z>\n\nRecent validation logic has been added to DatabaseConfig.kt in the init block, covering required fields (host, name, user, password), port range (1-65535), positive values for maxPoolSize, connectionTimeout, idleTimeout, maxLifetime, and minIdle constraints (>=0 and <= maxPoolSize, idleTimeout <= maxLifetime). DatabaseConfigTest.kt includes tests for all boundary cases. Error messages from this validation should also be centralized and standardized as part of this task, ensuring consistency with future API error handling standards (e.g., RFC 7807 or RFC 9457 for structured error responses).",
+        "testStrategy": "Verify all error messages are replaced. Test error responses for correct message formatting. Ensure validation error messages from DatabaseConfig.kt are included and follow the standardized format.",
+        "subtasks": []
       },
       {
-        "id": "9",
+        "id": 9,
         "title": "Expand DTO validation to cover all fields with length and structure checks",
         "description": "Enhance validation logic for DTOs to include all relevant fields with proper length limits and JSON structure validation.",
         "details": "In RestroomValidators.kt, add validation rules for name, description, phones, workTime, and amenities fields. Use maxLength constraints from ApiConstants. Implement validateJsonObject for JSON structure validation of phones and workTime fields.",
@@ -108,11 +107,12 @@
         "dependencies": [
           "7"
         ],
-        "status": "pending",
-        "subtasks": []
+        "status": "done",
+        "subtasks": [],
+        "updatedAt": "2025-11-30T12:27:37.250Z"
       },
       {
-        "id": "10",
+        "id": 10,
         "title": "Standardize validation to occur only in controllers, remove service-level validation",
         "description": "Refactor validation logic to be performed exclusively in controllers, ensuring services receive already validated data.",
         "details": "Remove validateOrThrow calls from service methods like CityService.createCity(). Keep validateAndThen in controllers. Services should only perform business logic validation and throw domain exceptions if needed.",
@@ -121,11 +121,12 @@
         "dependencies": [
           "9"
         ],
-        "status": "pending",
-        "subtasks": []
+        "status": "done",
+        "subtasks": [],
+        "updatedAt": "2025-11-30T12:27:37.251Z"
       },
       {
-        "id": "11",
+        "id": 11,
         "title": "Replace reflection-based validation error path extraction with official konform API",
         "description": "Improve reliability and performance of validation error path extraction by using konform's official API instead of reflection and string parsing.",
         "details": "Update ValidationExtension.kt to use konform's API for error path retrieval. Implement caching if necessary to optimize repeated calls. Remove fragile string parsing logic.",
@@ -134,11 +135,12 @@
         "dependencies": [
           "9"
         ],
-        "status": "pending",
-        "subtasks": []
+        "status": "done",
+        "subtasks": [],
+        "updatedAt": "2025-11-30T12:27:37.253Z"
       },
       {
-        "id": "12",
+        "id": 12,
         "title": "Enhance PSQLException handling to cover multiple SQL error states",
         "description": "Expand database error handling to differentiate unique violations, foreign key violations, check constraints, not-null violations, and others with specific HTTP responses.",
         "details": "In ErrorHandlingPlugin.kt, extend exception handler for PSQLException to switch on sqlState codes like 23505, 23503, 23514, 23502, 42P01. Map each to appropriate HTTP status and error message. Log errors with context.\n<info added on 2025-11-30T10:22:21.251Z>\nPSQLException handling for error codes 23505, 23503, 23502, 23514, and 42P01 has already been implemented with appropriate HTTP status mappings. The remaining work focuses on two areas: (1) structured logging with context information (request path, HTTP method, status code, query parameters) which is being handled as a separate task 14, and (2) updating integration tests to verify correct HTTP responses and error messages for various database error scenarios including unique constraint violations, foreign key violations, not-null violations, check constraint violations, and table not found errors.\n</info added on 2025-11-30T10:22:21.251Z>",
@@ -162,7 +164,7 @@
         "updatedAt": "2025-11-30T10:32:08.337Z"
       },
       {
-        "id": "13",
+        "id": 13,
         "title": "Replace error() calls with specific repository exceptions",
         "description": "Create custom exception classes for repository errors and replace generic error() calls with throwing these exceptions for better error classification.",
         "details": "Define RepositoryException and EntityNotFoundException classes. Replace error() calls in repositories with throw RepositoryException or EntityNotFoundException with descriptive messages. Update error handling to recognize these exceptions.",
@@ -187,7 +189,7 @@
         "updatedAt": "2025-11-30T10:22:15.615Z"
       },
       {
-        "id": "14",
+        "id": 14,
         "title": "Add structured logging with context for error handling",
         "description": "Improve error logs by including structured context such as request path, method, status, and query parameters for better diagnostics.",
         "details": "Enhance ErrorHandlingPlugin.kt to log exceptions with structured data maps including path, HTTP method, status code, and query parameters. Use logger.warn or logger.error accordingly.",
@@ -200,7 +202,7 @@
         "subtasks": []
       },
       {
-        "id": "15",
+        "id": 15,
         "title": "Reorganize model package to separate DTOs and entities",
         "description": "Refactor project package structure to clearly separate DTOs and entity classes for better maintainability and clarity.",
         "details": "Create model/dto and model/entity subpackages. Move CityCreateDto, CityResponseDto, etc. to dto/, and CountryEntity, CityEntity to entity/. Update imports and references accordingly.",
@@ -211,7 +213,7 @@
         "subtasks": []
       },
       {
-        "id": "16",
+        "id": 16,
         "title": "Split common package into api, mapper, and query subpackages",
         "description": "Refactor common package to reduce overload by dividing into more focused packages like api.errors, mapper, and query.builder.",
         "details": "Create new packages api.errors, mapper, query.builder. Move relevant classes and files accordingly. Update project references and imports.",
@@ -224,7 +226,7 @@
         "subtasks": []
       },
       {
-        "id": "17",
+        "id": 17,
         "title": "Group utility functions in util package by domain",
         "description": "Organize utility classes into domain-specific subpackages within util for better modularity and discoverability.",
         "details": "Create util/http, util/geo, util/db, util/serialization, util/config subpackages. Move ApplicationCallExtensions.kt to http/, GeoDsl.kt to geo/, RepositoryExtensions.kt to db/, Serializers.kt to serialization/, EnvironmentExtensions.kt to config/.",
@@ -237,7 +239,7 @@
         "subtasks": []
       },
       {
-        "id": "18",
+        "id": 18,
         "title": "Add comprehensive unit tests for QueryBuilder and QueryExecutor",
         "description": "The task to add unit tests for QueryExecutor has been skipped per user request. Existing tests on services and controllers already cover QueryExecutor functionality. The task is marked as completed.",
         "status": "done",
@@ -299,7 +301,7 @@
         "updatedAt": "2025-11-30T11:53:56.310Z"
       },
       {
-        "id": "19",
+        "id": 19,
         "title": "Add unit tests for mappers with mocked jOOQ Records",
         "description": "Create unit tests for RestroomMapper, CityMapper, and CountryMapper to verify correct mapping from jOOQ Records to DTOs.",
         "details": "Use mocking frameworks like MockK to mock Record objects with expected field values. Test mapFromRecord methods to ensure all fields are correctly mapped.",
@@ -311,7 +313,7 @@
         "updatedAt": "2025-11-30T11:53:09.521Z"
       },
       {
-        "id": "20",
+        "id": 20,
         "title": "Add unit tests for utility functions and edge cases",
         "description": "Implement unit tests for utility classes like GeoDsl, ApplicationCallExtensions, and RepositoryExtensions including edge cases and boundary conditions.",
         "details": "Write tests for GeoDsl functions like pointExpr and distanceGeographyTo. Mock ApplicationCall to test toPaginationRequest parsing. Add parameterized tests for edge cases such as empty lists, nulls, and invalid values.",
@@ -324,7 +326,7 @@
         "subtasks": []
       },
       {
-        "id": "21",
+        "id": 21,
         "title": "Implement health check endpoints with database connectivity verification",
         "description": "Create health check endpoints (/health, /health/ready, /health/live) that include database connectivity status, implemented in HealthController.kt with routing configured in RoutingConfig.kt, and provide comprehensive unit tests.",
         "details": "1. Create HealthController.kt to define three endpoints: /health, /health/ready, and /health/live. Each endpoint should return appropriate HTTP status and JSON indicating service health.\n\n2. Implement a database connectivity check within the health endpoints by executing a lightweight query or ping against the database using the existing database configuration (ensuring it uses explicit transactions as per Task 1).\n\n3. Integrate these endpoints into the application's routing by adding routes in RoutingConfig.kt, ensuring they are accessible and follow REST conventions.\n\n4. Structure the health responses to comply with common microservice health check standards, distinguishing readiness and liveness checks (e.g., readiness includes database connectivity, liveness confirms service is running).\n\n5. Write unit tests for HealthController to verify each endpoint returns correct status codes and payloads under normal and simulated failure conditions (e.g., database down).\n\n6. Follow Kotlin coroutine best practices for asynchronous database calls and HTTP handling.\n\n7. Ensure logging and error handling are consistent with existing project standards.",
@@ -338,7 +340,7 @@
         "updatedAt": "2025-11-30T11:56:32.005Z"
       },
       {
-        "id": "22",
+        "id": 22,
         "title": "Implement Local-First Task Management for Cursor Agent",
         "description": "Enable Cursor Agent to perform all read operations directly from the local tasks.json file and cache task context in memory during the session, minimizing API calls to Task Master.",
         "status": "pending",
@@ -349,7 +351,7 @@
         "subtasks": []
       },
       {
-        "id": "23",
+        "id": 23,
         "title": "Develop Automated Workflow Integration from User Task to Subtasks",
         "description": "Automate the entire workflow from receiving a new user task through generating and working on subtasks without explicit user mention of Task Master.",
         "details": "Implement a pipeline that upon receiving a new user task: 1) creates a structured task description, 2) formats it into a PRD, 3) calls `parse_prd` API to generate subtasks, 4) retrieves generated subtasks, and 5) proceeds to work strictly on these subtasks. Ensure this workflow triggers automatically and integrates seamlessly with Cursor Agent and Task Master.",
@@ -362,7 +364,7 @@
         "subtasks": []
       },
       {
-        "id": "24",
+        "id": 24,
         "title": "Implement Context Preservation and Structured Logging",
         "description": "Ensure all implementation details and progress are logged in the `details` field using a structured format to enable full context preservation and recovery.",
         "details": "Use the `update_subtask` API to log progress and implementation details in a structured format including Plan, Files, Changes, Issues, Progress, and Next steps. Implement saving of research outputs via `research --save-file`. Enforce a maximum length of 50,000 characters for the `details` field. Structure logs to facilitate easy parsing and recovery.",
@@ -376,7 +378,7 @@
         "subtasks": []
       },
       {
-        "id": "25",
+        "id": 25,
         "title": "Create Reusable Configuration Templates for Task Master and Cursor Agent",
         "description": "Develop configuration templates for Task Master and Cursor Agent to enable easy reuse and automatic application for new projects.",
         "status": "done",
@@ -390,7 +392,7 @@
         "updatedAt": "2025-11-30T10:55:51.768Z"
       },
       {
-        "id": "26",
+        "id": 26,
         "title": "Implement Fallback Recovery Mechanism Using Local Files",
         "description": "Ensure full recovery of task context and state from local files without any API calls in case of failures or restarts.",
         "details": "Develop recovery logic that reads `.taskmaster/tasks/tasks.json` and other local files to reconstruct the entire task and subtask state, including statuses, priorities, dependencies, and detailed logs. Confirm that this recovery works independently of any API calls, providing a complete picture of the current state for Cursor Agent and Task Master.",
@@ -404,7 +406,7 @@
         "subtasks": []
       },
       {
-        "id": "27",
+        "id": 27,
         "title": "Optimize API Usage with Batched Write Operations",
         "description": "Reduce the number of API calls by batching updates and write operations to Task Master AI.",
         "details": "Implement batching logic for write operations such as `update_subtask`, `add_task`, and `expand_task`. Accumulate multiple updates in memory and send them in a single API call to minimize overhead and resource consumption. Ensure batching respects session context and does not delay critical updates excessively.",
@@ -417,7 +419,7 @@
         "subtasks": []
       },
       {
-        "id": "28",
+        "id": 28,
         "title": "Integrate Economical AI Models for Main and Fallback Operations",
         "description": "Configure and integrate cost-effective AI models (sonar for main/research, gemini-2.0-flash for fallback) to optimize resource usage.",
         "details": "Set up model selection logic to use the sonar model for main and research tasks and gemini-2.0-flash as a fallback model. Ensure seamless switching between models based on availability and task type. Update configuration templates to reflect these model preferences.",
@@ -430,7 +432,7 @@
         "subtasks": []
       },
       {
-        "id": "29",
+        "id": 29,
         "title": "Implement Filtering and Status Checking for Local Task Operations",
         "description": "Enable efficient local filtering of tasks by status, priority, and dependencies, and implement subtask status checks without API calls.",
         "details": "Develop functions to filter tasks read from `tasks.json` based on status, priority, and dependencies. Implement logic to check and update subtask statuses locally by parsing the `details` field. Ensure these operations are performant and accurate to support local-first management and recovery.",
@@ -443,7 +445,7 @@
         "subtasks": []
       },
       {
-        "id": "30",
+        "id": 30,
         "title": "Проверка структуры файлов и директорий",
         "description": "Проверить корректность структуры файлов в .cursor/rules/ и .taskmaster/",
         "details": "Обойти все директории и убедиться, что все требуемые файлы присутствуют и имеют правильную структуру. Проверить наличие TASKMASTER_AUTO_WORKFLOW.mdc, taskmaster_integration.mdc, tutochka.mdc, dev_workflow.mdc, README.md и шаблонов в templates/. Убедиться, что нет лишних или устаревших файлов.",
@@ -455,7 +457,7 @@
         "updatedAt": "2025-11-30T11:09:15.684Z"
       },
       {
-        "id": "31",
+        "id": 31,
         "title": "Валидация ссылок между файлами правил",
         "description": "Проверить, что все ссылки в правилах указывают на существующие файлы",
         "status": "done",
@@ -469,7 +471,7 @@
         "updatedAt": "2025-11-30T11:09:34.748Z"
       },
       {
-        "id": "32",
+        "id": 32,
         "title": "Проверка отсутствия дублирующихся правил",
         "description": "Убедиться, что нет дублирующихся правил в файлах",
         "status": "done",
@@ -483,7 +485,7 @@
         "updatedAt": "2025-11-30T11:09:56.204Z"
       },
       {
-        "id": "33",
+        "id": 33,
         "title": "Оптимизация и упрощение файлов",
         "description": "Удалить избыточные комментарии, упростить сложные примеры кода, убедиться в единообразии форматирования",
         "status": "done",
@@ -529,7 +531,7 @@
         "updatedAt": "2025-11-30T11:10:16.515Z"
       },
       {
-        "id": "34",
+        "id": 34,
         "title": "Валидация автоматического workflow",
         "description": "Проверить, что автоматический workflow описан корректно и работает для всех типов запросов",
         "status": "done",
@@ -574,7 +576,7 @@
         "updatedAt": "2025-11-30T11:10:33.177Z"
       },
       {
-        "id": "35",
+        "id": 35,
         "title": "Проверка сохранения и восстановления контекста",
         "description": "Убедиться, что контекст сохраняется в поле details задач и восстанавливается из локальных файлов",
         "status": "done",
@@ -588,7 +590,7 @@
         "updatedAt": "2025-11-30T11:10:39.949Z"
       },
       {
-        "id": "36",
+        "id": 36,
         "title": "Add Git Commit Rule After Task Completion",
         "description": "Implement a workflow rule that triggers after a task status is set to 'done' to initiate a git commit.",
         "status": "done",
@@ -681,18 +683,18 @@
         "updatedAt": "2025-11-30T11:25:58.889Z"
       },
       {
-        "id": "37",
+        "id": 37,
         "title": "Collect Changed Files and Task Data",
         "description": "Gather detailed information about changed files and task details for generating the commit message, using a structured and documented approach.",
         "status": "in-progress",
         "dependencies": [],
         "priority": "medium",
-        "details": "Implement a function or script that performs the following five-step process:\n1. Verify if the current directory is a git repository using appropriate git commands.\n2. Collect the list of changed files using `git status --porcelain` with detailed parsing to identify file states.\n3. Retrieve task data (ID, title, description) locally from `tasks.json` without relying on external APIs.\n4. Implement a function `generateCommitMessage` that accepts parameters for changed files and task data to produce a structured commit message.\n5. Document all steps, commands, and function usage comprehensively in `git_commit.mdc` for maintainability and clarity.\n\nInclude example git commands for repository verification and file collection as part of the implementation documentation.",
+        "details": "Implement a function or script that performs the following five-step process:\n1. Verify if the current directory is a git repository using appropriate git commands.\n2. Collect the list of changed files using `git status --porcelain` with detailed parsing to identify file states.\n3. Retrieve task data (ID, title, description) locally from `tasks.json` without relying on external APIs.\n4. Implement a function `generateCommitMessage` that accepts parameters for changed files and task data to produce a structured commit message.\n5. Document all steps, commands, and function usage comprehensively in `git_commit.mdc` for maintainability and clarity.\n\nInclude example git commands for repository verification and file collection as part of the implementation documentation.\n<info added on 2025-11-30T17:18:42.913Z>\nРабота над задачей 37 завершена. В документацию `git_commit.mdc` добавлена детальная информация по всем пяти шагам процесса генерации commit message:\n\n1. **Проверка Git репозитория**:  \n   - Примеры команд для проверки наличия git репозитория:  \n     - `git rev-parse --is-inside-work-tree`  \n     - `git status`  \n   - Альтернативные методы проверки:  \n     - Проверка наличия директории `.git`  \n     - Использование `git rev-parse --git-dir`  \n   - Пример реализации на Kotlin с обработкой ошибок:  \n     ```kotlin\n     fun isGitRepository(): Boolean {\n         return try {\n             val process = Runtime.getRuntime().exec(\"git rev-parse --is-inside-work-tree\")\n             process.waitFor() == 0\n         } catch (e: Exception) {\n             false\n         }\n     }\n     ```\n\n2. **Парсинг git status --porcelain**:  \n   - Описание формата вывода команды `git status --porcelain`  \n   - Статусные коды:  \n     - `M` — модифицированный файл  \n     - `A` — добавленный файл  \n     - `D` — удалённый файл  \n     - `R` — переименованный файл (формат: `R oldfile -> newfile`)  \n     - `C` — скопированный файл  \n     - `??` — неотслеживаемый файл  \n   - Реализация функции `parseGitStatusPorcelain` на Kotlin с обработкой всех статусов, включая переименованные и неотслеживаемые файлы  \n   - Примеры bash-скриптов для парсинга вывода:  \n     ```bash\n     git status --porcelain | while read line; do\n         status=$(echo \"$line\" | cut -c1-2)\n         file=$(echo \"$line\" | cut -c4-)\n         echo \"Status: $status, File: $file\"\n     done\n     ```\n   - Примеры вывода и ожидаемых результатов для различных сценариев\n\n3. **Чтение данных задачи из tasks.json**:  \n   - Реализация функции `readLocalTask` на Kotlin с поддержкой тегов  \n   - Альтернативный метод прямого парсинга JSON с использованием библиотеки Jackson  \n   - Примеры использования для извлечения id, title, description:  \n     ```kotlin\n     data class Task(val id: Int, val title: String, val description: String)\n     fun readLocalTask(): Task {\n         val json = File(\"tasks.json\").readText()\n         return jacksonObjectMapper().readValue(json, Task::class.java)\n     }\n     ```\n\n4. **Дополнительные разделы**:  \n   - **Command Reference**: Справочник всех команд workflow с примерами использования  \n   - **Testing the Implementation**: Примеры тестирования парсинга и проверки git репозитория, включая сценарии с различными статусами файлов и ошибками\n\nВся документация содержит детальные примеры команд, реализации и тестирования для всех пяти шагов процесса генерации commit message.\n</info added on 2025-11-30T17:18:42.913Z>",
         "testStrategy": "Test the implementation by simulating various git file change scenarios and verifying that the function correctly identifies all changed files with their statuses. Validate that task data is accurately read from `tasks.json`. Confirm that `generateCommitMessage` produces the expected commit message format. Review the documentation in `git_commit.mdc` for completeness and clarity.",
         "subtasks": []
       },
       {
-        "id": "38",
+        "id": 38,
         "title": "Generate Structured Commit Message",
         "description": "Format a commit message using the collected task data and changed files.",
         "details": "Implement a template-based message generator that follows the specified format:\n```\nfeat(task-{id}): {task_title}\n\n{task_description}\n\nChanges:\n- {list of changed files or summary}\n\nTask: {id} - {title}\nStatus: done\n```\nEnsure the message is properly escaped and formatted.",
@@ -705,7 +707,7 @@
         "subtasks": []
       },
       {
-        "id": "39",
+        "id": 39,
         "title": "Execute Git Add and Commit",
         "description": "Perform the actual git operations to stage changes and create a commit.",
         "details": "Write a script that:\n- Runs `git add .` to stage all changes\n- Checks if there are staged changes\n- Executes `git commit` with the generated message\n- Uses `--no-verify` to avoid hooks blocking automation\n- Handles git errors gracefully (no repo, no changes, etc.)",
@@ -718,7 +720,7 @@
         "subtasks": []
       },
       {
-        "id": "40",
+        "id": 40,
         "title": "Document Git Commit Workflow",
         "description": "Update documentation to describe the new automatic commit workflow.",
         "details": "Add/update `.cursor/rules/taskmaster_integration.mdc` to document:\n- When and how commits are triggered\n- Commit message format\n- Error handling behavior\n- Any configuration options\nInclude examples of expected commit messages.",
@@ -729,16 +731,122 @@
         ],
         "status": "pending",
         "subtasks": []
+      },
+      {
+        "id": 41,
+        "title": "Fix Compilation Errors in Tests",
+        "description": "Resolve all compilation errors in test files, especially in RoutingConfig and ValidationTest, to allow tests to run after validation refactoring.",
+        "details": "Identify and fix all compilation errors introduced by the validation refactoring. Pay special attention to RoutingConfig initialization and any usage of old string field paths that now need to use ValidationPath objects. Update imports and object instantiations as needed.",
+        "testStrategy": "Run all unit and integration tests to ensure no compilation errors remain. Confirm that all tests can be executed.",
+        "priority": "high",
+        "dependencies": [],
+        "status": "done",
+        "subtasks": [],
+        "updatedAt": "2025-11-30T12:44:31.650Z"
+      },
+      {
+        "id": 42,
+        "title": "Update Test Assertions for ValidationPath",
+        "description": "Modify test assertions to correctly handle ValidationPath objects instead of string field paths.",
+        "details": "Locate all test assertions that expect string field paths and update them to work with ValidationPath objects. Update HttpTestHelpers to support field error assertions with ValidationPath. Ensure all assertions are checking the correct properties of ValidationPath.",
+        "testStrategy": "Verify that all assertions pass and correctly validate the expected ValidationPath format. Run affected tests to confirm correct behavior.",
+        "priority": "high",
+        "dependencies": [
+          "41"
+        ],
+        "status": "done",
+        "subtasks": [],
+        "updatedAt": "2025-11-30T12:44:32.204Z"
+      },
+      {
+        "id": 43,
+        "title": "Fix QueryBuilder Tests for NOT_IN and NE Operators",
+        "description": "Update QueryBuilder tests to correctly test NOT_IN and NE operators after validation refactoring.",
+        "details": "Review QueryBuilder tests and update any assertions or test data that rely on old validation logic. Ensure that tests for NOT_IN and NE operators are using the new validation API and correctly assert expected outcomes.",
+        "testStrategy": "Run QueryBuilder tests specifically for NOT_IN and NE operators. Confirm that all tests pass and that the operators behave as expected.",
+        "priority": "medium",
+        "dependencies": [
+          "41"
+        ],
+        "status": "done",
+        "subtasks": [],
+        "updatedAt": "2025-11-30T12:44:32.819Z"
+      },
+      {
+        "id": 44,
+        "title": "Ensure ValidationTest.kt Works with New Validation API",
+        "description": "Update ValidationTest.kt to use the new validation API and ensure all tests pass.",
+        "details": "Review ValidationTest.kt and update any test cases that are not compatible with the new validation API. Ensure all test cases are using the correct validation methods and assertions.",
+        "testStrategy": "Run ValidationTest.kt and confirm all tests pass. Verify that the test cases cover all validation scenarios.",
+        "priority": "medium",
+        "dependencies": [
+          "41",
+          "42"
+        ],
+        "status": "done",
+        "subtasks": [],
+        "updatedAt": "2025-11-30T12:44:33.202Z"
+      },
+      {
+        "id": 45,
+        "title": "Run and Verify All Tests",
+        "description": "Execute all unit and integration tests to ensure they pass after all fixes.",
+        "details": "Run the full test suite, including all 209+ unit tests and 53+ integration tests. Address any remaining failures or issues. Ensure no compilation errors and all assertions are correct.",
+        "testStrategy": "Execute the complete test suite and verify that all tests pass. Confirm that the success criteria are met.",
+        "priority": "high",
+        "dependencies": [
+          "41",
+          "42",
+          "43",
+          "44"
+        ],
+        "status": "done",
+        "subtasks": [],
+        "updatedAt": "2025-11-30T12:44:33.549Z"
+      },
+      {
+        "id": 46,
+        "title": "Configure jOOQ Code Generation Dependency for Kotlin Compilation and Validate Imports/Output Location",
+        "description": "Ensure jOOQ classes are generated before Kotlin compilation and verify all jOOQ imports and output locations are correct.",
+        "status": "done",
+        "dependencies": [
+          "41",
+          "42",
+          "43",
+          "44",
+          "45"
+        ],
+        "priority": "high",
+        "details": "After recent changes, jOOQ-generated classes are not being generated automatically after a clean build, causing test compilation failures. To resolve this:\n\n1. Update the Gradle build configuration to make the `compileKotlin` task depend on the `generateJooq` task. This ensures that jOOQ code generation always runs before Kotlin compilation.\n\n   Example (Gradle Kotlin DSL):\n   ```kotlin\n   tasks.compileKotlin { dependsOn(tasks.named(\"generateJooq\")) }\n   ```\n\n2. Verify that the jOOQ code generation configuration specifies the correct output directory (typically `build/generated-sources/jooq` or similar) and that this directory is included in the source sets for compilation.\n\n3. Check all imports in test and main code that reference jOOQ-generated classes. Ensure they match the actual package and class names generated by jOOQ.\n\n4. Confirm that the jOOQ configuration in `build.gradle.kts` or equivalent specifies the correct schema and target package, and that the generated classes appear in the expected location after running the build.\n\n5. If using custom generator strategies or extensions, ensure they are correctly referenced and available on the classpath during code generation.\n\n6. Run a clean build and verify that jOOQ classes are generated and available for compilation.\n\n7. Ensure that tasks such as `compileKotlin`, `test`, and `build` are properly conditioned to run after the jOOQ code generation task, especially when using containerized databases for code generation.\n\n8. Set up any additional tooling tasks (e.g., ktlint) to run after jOOQ code generation using `mustRunAfter` or similar mechanisms to avoid race conditions.",
+        "testStrategy": "1. Run a clean build (`./gradlew clean build`) and confirm that jOOQ-generated classes are present in the expected output directory.\n2. Verify that all tests compile and run without errors related to missing jOOQ classes.\n3. Check that all jOOQ imports in the codebase are correct and that generated classes are used as expected.\n4. Confirm that the `compileKotlin` task does not start until after the `generateJooq` task has completed successfully.\n5. Ensure that containerized database tasks are correctly conditioned to run before code generation and that all dependent tasks (compileKotlin, test, build) are executed after code generation.\n6. Validate that tooling tasks like ktlint run after code generation and do not interfere with the build process.",
+        "subtasks": [],
+        "updatedAt": "2025-11-30T12:48:35.470Z"
+      },
+      {
+        "id": 47,
+        "title": "Add Edge Case Tests for Validation, Pagination, and Coordinates",
+        "description": "Implement comprehensive unit tests targeting boundary conditions for validation logic, pagination parameters, and coordinate inputs to ensure robust handling of edge cases.",
+        "details": "Create two new Kotlin test classes: EdgeCaseValidationTest.kt and PaginationEdgeCaseTest.kt. In EdgeCaseValidationTest.kt, develop tests covering boundary values for coordinate inputs, including NaN, Infinity, and out-of-range values, as well as string inputs with maximum length, minimum length, empty strings, and strings containing only whitespace. In PaginationEdgeCaseTest.kt, implement tests for pagination parameters with edge cases such as negative numbers, extremely large values, and invalid string inputs. Use parameterized tests where appropriate to efficiently cover multiple edge scenarios. Ensure tests use the updated validation API and follow existing project conventions for assertions and test structure. Maintain test isolation and clarity with descriptive test names. Integrate these tests into the existing test suite to run automatically during CI builds.",
+        "testStrategy": "Verify that all new tests in EdgeCaseValidationTest.kt and PaginationEdgeCaseTest.kt execute successfully without failures. Confirm that tests correctly detect invalid inputs by asserting expected validation errors or exceptions. Run the full test suite to ensure no regressions occur. Use parameterized test reports to confirm coverage of all specified edge cases. Review test logs to ensure descriptive output for each edge case scenario. Additionally, perform code review to ensure tests adhere to project standards and effectively cover boundary conditions as specified.",
+        "status": "pending",
+        "dependencies": [
+          44
+        ],
+        "priority": "low",
+        "subtasks": []
       }
     ],
     "metadata": {
       "version": "1.0.0",
-      "lastModified": "2025-11-30T12:00:08.225Z",
-      "taskCount": 40,
-      "completedCount": 19,
+      "lastModified": "2025-11-30T12:48:35.470Z",
+      "taskCount": 46,
+      "completedCount": 28,
       "tags": [
         "master"
-      ]
+      ],
+      "created": "2025-11-30T17:18:30.988Z",
+      "description": "Tasks for master context",
+      "updated": "2025-11-30T17:56:08.078Z"
     }
   }
 }

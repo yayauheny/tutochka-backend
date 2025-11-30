@@ -10,9 +10,6 @@ import yayauheny.by.model.city.CityResponseDto
 import yayauheny.by.model.city.CityUpdateDto
 import yayauheny.by.repository.CityRepository
 import yayauheny.by.repository.CountryRepository
-import yayauheny.by.service.validation.validateCityOnCreate
-import yayauheny.by.service.validation.validateOrThrow
-import yayauheny.by.service.validation.validateRegion
 
 class CityService(
     private val cityRepository: CityRepository,
@@ -33,14 +30,6 @@ class CityService(
     ): PageResponse<CityResponseDto> = cityRepository.findByName(name, pagination)
 
     suspend fun createCity(createDto: CityCreateDto): CityResponseDto {
-        createDto.validateOrThrow(validateCityOnCreate)
-
-        val regionErrors = validateRegion(createDto.region)
-        if (regionErrors.isNotEmpty()) {
-            throw yayauheny.by.common.errors
-                .ValidationException(errors = regionErrors)
-        }
-
         countryRepository.findById(createDto.countryId)
             ?: throw IllegalArgumentException("Страна с ID '${createDto.countryId}' не найдена")
 

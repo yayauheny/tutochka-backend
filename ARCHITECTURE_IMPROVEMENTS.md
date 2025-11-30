@@ -1,6 +1,6 @@
 # Архитектурный анализ и план улучшений проекта Tutochka Backend
 
-## Дата анализа: 2025-01-XX
+## Дата последнего обновления: 2025-11-30
 ## Версия проекта: 0.0.1
 
 ---
@@ -20,588 +20,203 @@
 
 ## Производительность
 
-### Проблема 1.1: Отсутствие явных транзакций
+### ✅ Проблема 1.1: Отсутствие явных транзакций - ВЫПОЛНЕНО
 
-**Текущее состояние:**
-- `DatabaseConfig.kt:42` - `isAutoCommit = true`
-- Все операции выполняются в режиме auto-commit
-- Нет явных границ транзакций для атомарных операций
+**Статус:** ✅ Реализовано (Task 1, 2)
 
-**Проблемы:**
-- Операции `save()` и `update()` в репозиториях могут быть не атомарными
-- При ошибке между INSERT и SELECT в `CityRepositoryImpl.save()` может остаться "висячая" запись
-- Нет возможности откатить изменения при ошибках
+**Выполненные работы:**
+- ✅ Отключен auto-commit в `DatabaseConfig.kt` (isAutoCommit = false)
+- ✅ Создана extension функция `transactionSuspend` в `TransactionExtensions.kt`
+- ✅ Все методы `save()`, `update()`, `deleteById()` обернуты в транзакции
+- ✅ Добавлены интеграционные тесты для проверки атомарности операций
 
-**Пример проблемы:**
-```kotlin
-// CityRepositoryImpl.kt:186-222
-override suspend fun save(dto: CityCreateDto): CityResponseDto =
-    withContext(Dispatchers.IO) {
-        // INSERT выполняется в одной транзакции
-        val idRec = insert.returning(r.ID).fetchOne()
-        // SELECT выполняется в другой транзакции (auto-commit)
-        val rec = ctx.select(*cityProjection())
-            .from(r)
-            .where(r.ID.eq(insertedId))
-            .fetchOne()
-        // Если SELECT упадет, INSERT уже закоммичен
-    }
-```
-
-**Решение:**
-1. Отключить auto-commit в `DatabaseConfig.kt`
-2. Использовать `ctx.transaction()` для атомарных операций
-3. Обернуть методы `save()`, `update()`, `deleteById()` в транзакции
-
-**План исправления:**
-```kotlin
-// Шаг 1: DatabaseConfig.kt
-fun createDataSource(): HikariDataSource =
-    HikariDataSource(
-        HikariConfig().apply {
-            // ...
-            isAutoCommit = false  // Изменить на false
-            // ...
-        }
-    )
-
-// Шаг 2: Создать extension функцию для транзакций
-// util/TransactionExtensions.kt
-suspend fun <T> DSLContext.transactionSuspend(block: suspend (DSLContext) -> T): T {
-    return transaction { configuration ->
-        val ctx = DSL.using(configuration)
-        block(ctx)
-    }
-}
-
-// Шаг 3: Обновить репозитории
-override suspend fun save(dto: CityCreateDto): CityResponseDto =
-    withContext(Dispatchers.IO) {
-        ctx.transactionSuspend { txCtx ->
-            // Все операции в одной транзакции
-            val idRec = txCtx.insertInto(r)...
-            val rec = txCtx.select(*cityProjection())...
-            CityMapper.mapFromRecord(rec)
-        }
-    }
-```
-
-**Приоритет:** ВЫСОКИЙ
-**Оценка времени:** 4-6 часов
+**Файлы:**
+- `src/main/kotlin/yayauheny/by/config/DatabaseConfig.kt`
+- `src/main/kotlin/yayauheny/by/util/TransactionExtensions.kt`
+- `src/main/kotlin/yayauheny/by/repository/impl/*RepositoryImpl.kt`
 
 ---
 
-### Проблема 1.2: Дублирование кода для координат
+### ⚠️ Проблема 1.2: Дублирование кода для координат - ЧАСТИЧНО ВЫПОЛНЕНО
+
+**Статус:** ⚠️ Частично реализовано (Task 3)
 
 **Текущее состояние:**
-- В каждом методе репозитория повторяется создание `latField` и `lonField`
-- Код дублируется в `findAll()`, `findById()`, `findSingle()`, `save()`, `update()`
+- ✅ Созданы extension функции `latAlias()` и `lonAlias()` в `GeoDsl.kt`
+- ⚠️ Код все еще дублируется в репозиториях (используются `latAlias()` и `lonAlias()`, но не через helper-метод)
 
-**Пример:**
-```kotlin
-// RestroomRepositoryImpl.kt - повторяется в 6 методах
-val latField = RESTROOMS.COORDINATES.latAlias()
-val lonField = RESTROOMS.COORDINATES.lonAlias()
-```
+**Рекомендация:**
+Создать helper-метод `selectWithCoordinates()` для полного устранения дублирования, как планировалось в Task 3.
 
-**Решение:**
-Создать helper-метод или extension property для получения проекции с координатами
-
-**План исправления:**
-```kotlin
-// Шаг 1: Создать extension в GeoDsl.kt или RepositoryExtensions.kt
-fun RESTROOMS.selectWithCoordinates(): List<Field<*>> {
-    return getAllRestroomsFieldsExceptCoordinates() + 
-           this.COORDINATES.latAlias() + 
-           this.COORDINATES.lonAlias()
-}
-
-// Шаг 2: Использовать в репозиториях
-override suspend fun findAll(...): PageResponse<RestroomResponseDto> =
-    withContext(Dispatchers.IO) {
-        val baseQuery = ctx
-            .select(*RESTROOMS.selectWithCoordinates().toTypedArray())
-            .from(RESTROOMS)
-            // ...
-    }
-```
-
-**Приоритет:** СРЕДНИЙ
-**Оценка времени:** 2-3 часа
+**Приоритет:** НИЗКИЙ (код работает, но можно улучшить)
 
 ---
 
-### Проблема 1.3: Неоптимальный fetchCount
+### ✅ Проблема 1.3: Неоптимальный fetchCount - ВЫПОЛНЕНО
 
-**Текущее состояние:**
-- `QueryExecutor.kt:100` - `ctx.fetchCount(filtered)` выполняется всегда
-- На больших таблицах COUNT может быть медленным
-- Нет опции для отключения подсчета
+**Статус:** ✅ Реализовано (Task 4)
 
-**Проблемы:**
-- COUNT(*) на больших таблицах с фильтрами может быть медленным
-- Нет кэширования результатов подсчета
-- Нет опции для "бесконечной" пагинации без подсчета
+**Выполненные работы:**
+- ✅ Добавлен параметр `fetchCount: Boolean = true` в `executePaginated()`
+- ✅ Параметр используется во всех вызовах `executePaginated()`
+- ✅ COUNT запросы можно отключать для оптимизации производительности
 
-**Решение:**
-1. Добавить параметр `fetchCount: Boolean = true` в `executePaginated()`
-2. Для некоторых эндпоинтов отключать подсчет (например, для `/nearest`)
-3. Рассмотреть использование приблизительного подсчета для больших таблиц
-
-**План исправления:**
-```kotlin
-// QueryExecutor.kt - уже есть параметр fetchCount, но используется не везде
-// Нужно проверить все вызовы executePaginated и добавить fetchCount = false где нужно
-
-// Пример для nearest restrooms (если будет пагинация)
-executor.executePaginated(
-    baseQuery = baseQuery,
-    request = pagination,
-    builder = restroomQueryBuilder,
-    fetchCount = false  // Для nearest не нужен точный count
-)
-```
-
-**Приоритет:** СРЕДНИЙ
-**Оценка времени:** 1-2 часа
+**Файлы:**
+- `src/main/kotlin/yayauheny/by/common/query/builder/QueryExecutor.kt`
 
 ---
 
-### Проблема 1.4: Отсутствие кэширования
+### ⏳ Проблема 1.4: Отсутствие кэширования - В ПЛАНЕ
+
+**Статус:** ⏳ Запланировано (Task 5, статус: pending)
 
 **Текущее состояние:**
-- Нет кэширования для часто запрашиваемых данных
 - Страны и города запрашиваются из БД каждый раз
+- Нет кэширования для часто запрашиваемых данных
 
-**Проблемы:**
-- `CountryService.getCountryById()` - каждый раз идет в БД
-- `CityService.getCityById()` - каждый раз идет в БД
-- Списки стран/городов не кэшируются
+**План:**
+- Добавить Caffeine зависимость
+- Создать `CacheConfig.kt` для настройки кэшей
+- Интегрировать кэширование в `CountryService` и `CityService`
+- Инвалидировать кэш при изменениях
 
-**Решение:**
-1. Добавить простой in-memory кэш для стран (редко меняются)
-2. Использовать Caffeine или простой ConcurrentHashMap с TTL
-3. Кэшировать только чтение, не запись
-
-**План исправления:**
-```kotlin
-// Шаг 1: Добавить зависимость в libs.versions.toml
-caffeine = "3.1.8"
-
-// Шаг 2: Создать CacheConfig.kt
-class CacheConfig {
-    fun createCountryCache(): Cache<UUID, CountryResponseDto> {
-        return Caffeine.newBuilder()
-            .maximumSize(300)  // ~300 стран в мире
-            .expireAfterWrite(1, TimeUnit.HOURS)
-            .build()
-    }
-}
-
-// Шаг 3: Обновить CountryService
-class CountryService(
-    private val countryRepository: CountryRepository,
-    private val cache: Cache<UUID, CountryResponseDto>
-) {
-    suspend fun getCountryById(id: UUID): CountryResponseDto? {
-        return cache.get(id) {
-            countryRepository.findById(id)
-        }
-    }
-    
-    suspend fun createCountry(dto: CountryCreateDto): CountryResponseDto {
-        val result = countryRepository.save(dto)
-        cache.invalidateAll()  // Инвалидируем при изменении
-        return result
-    }
-}
-```
-
-**Приоритет:** НИЗКИЙ (можно отложить)
+**Приоритет:** НИЗКИЙ
 **Оценка времени:** 3-4 часа
 
 ---
 
 ## Читаемость кода
 
-### Проблема 2.1: Длинные методы в репозиториях
+### ✅ Проблема 2.1: Длинные методы в репозиториях - ВЫПОЛНЕНО
 
-**Текущее состояние:**
-- `RestroomRepositoryImpl.save()` - 55 строк
-- `CityRepositoryImpl.save()` - 37 строк с комментариями
-- Много повторяющегося кода
+**Статус:** ✅ Реализовано (Task 6)
 
-**Решение:**
-Вынести логику построения запросов в отдельные методы
+**Выполненные работы:**
+- ✅ Вынесена логика построения запросов в отдельные методы (`buildInsertQuery`, `buildUpdateQuery`, `buildReturningFields`)
+- ✅ Методы репозиториев стали короче и читабельнее
 
-**План исправления:**
-```kotlin
-// RestroomRepositoryImpl.kt
-private fun buildInsertQuery(
-    createDto: RestroomCreateDto,
-    id: UUID,
-    now: Instant
-): InsertSetStep<RestroomsRecord> {
-    val r = RESTROOMS
-    return ctx.insertInto(r)
-        .set(r.ID, id)
-        .set(r.CITY_ID, createDto.cityId)
-        .set(r.NAME, createDto.name)
-        // ... остальные поля
-}
-
-private fun buildReturningFields(): List<Field<*>> {
-    val r = RESTROOMS
-    return listOf(
-        r.ID, r.CITY_ID, r.NAME, /* ... */,
-        r.COORDINATES.latAlias(), r.COORDINATES.lonAlias()
-    )
-}
-
-override suspend fun save(createDto: RestroomCreateDto): RestroomResponseDto =
-    withContext(Dispatchers.IO) {
-        val id = UUID.randomUUID()
-        val now = Instant.now()
-        
-        val rec = buildInsertQuery(createDto, id, now)
-            .returning(*buildReturningFields().toTypedArray())
-            .fetchOne() ?: error("Ошибка при сохранении туалета")
-            
-        RestroomMapper.mapFromRecord(rec)
-    }
-```
-
-**Приоритет:** СРЕДНИЙ
-**Оценка времени:** 3-4 часа
+**Файлы:**
+- `src/main/kotlin/yayauheny/by/repository/impl/RestroomRepositoryImpl.kt`
+- `src/main/kotlin/yayauheny/by/repository/impl/CityRepositoryImpl.kt`
 
 ---
 
-### Проблема 2.2: Магические строки и числа
+### ✅ Проблема 2.2: Магические строки и числа - ВЫПОЛНЕНО
 
-**Текущее состояние:**
-- `ApplicationCallExtensions.kt:12` - `defaultSize: Int = 10`, `maxSize: Int = 100`
-- `RestroomController.kt:55` - `limit = 5`, `distanceMeters = 1000`
-- Валидация использует магические числа: `maxLength(255)`
+**Статус:** ✅ Реализовано (Task 7)
 
-**Решение:**
-Вынести константы в отдельный объект
+**Выполненные работы:**
+- ✅ Создан объект `ApiConstants` в `config/ApiConstants.kt`
+- ✅ Все магические числа и строки заменены на константы
+- ✅ Константы используются в валидации, пагинации и других местах
 
-**План исправления:**
-```kotlin
-// config/Constants.kt
-object ApiConstants {
-    const val DEFAULT_PAGE_SIZE = 10
-    const val MAX_PAGE_SIZE = 100
-    const val DEFAULT_NEAREST_LIMIT = 5
-    const val DEFAULT_SEARCH_RADIUS_METERS = 1000
-    const val MAX_ADDRESS_LENGTH = 255
-    const val MAX_NAME_LENGTH = 255
-}
-
-// Использование:
-fun ApplicationCall.toPaginationRequest(
-    defaultSize: Int = ApiConstants.DEFAULT_PAGE_SIZE,
-    maxSize: Int = ApiConstants.MAX_PAGE_SIZE
-): PaginationRequest { ... }
-```
-
-**Приоритет:** НИЗКИЙ
-**Оценка времени:** 1-2 часа
+**Файлы:**
+- `src/main/kotlin/yayauheny/by/config/ApiConstants.kt`
 
 ---
 
-### Проблема 2.3: Смешанные языки в сообщениях
+### ⏳ Проблема 2.3: Смешанные языки в сообщениях - ОТЛОЖЕНО
+
+**Статус:** ⏳ Отложено (Task 8, статус: pending)
 
 **Текущее состояние:**
 - Сообщения об ошибках на русском языке
-- Логи могут быть на английском
-- Нет единообразия
+- Согласно PROGRESS_TRACKING.md, сообщения остаются на русском
 
-**Решение:**
-1. Вынести все сообщения в ресурсный файл или константы
-2. Использовать i18n для будущей поддержки нескольких языков
-3. Или стандартизировать на английском для API
-
-**План исправления:**
-```kotlin
-// common/errors/ErrorMessages.kt
-object ErrorMessages {
-    const val RESTROOM_NOT_FOUND = "Restroom with ID '{0}' not found"
-    const val CITY_NOT_FOUND = "City with ID '{0}' not found"
-    const val COUNTRY_NOT_FOUND = "Country with ID '{0}' not found"
-    const val INVALID_COORDINATES = "Invalid coordinates"
-    const val DUPLICATE_CITY_NAME = "City with name '{0}' already exists in this country"
-    
-    fun format(template: String, vararg args: Any): String {
-        var result = template
-        args.forEachIndexed { index, arg ->
-            result = result.replace("{$index}", arg.toString())
-        }
-        return result
-    }
-}
-
-// Использование:
-throw NotFoundException(ErrorMessages.format(ErrorMessages.RESTROOM_NOT_FOUND, id))
-```
-
-**Приоритет:** СРЕДНИЙ
-**Оценка времени:** 2-3 часа
+**Приоритет:** НИЗКИЙ (отложено на будущий спринт)
 
 ---
 
 ## Валидация
 
-### Проблема 3.1: Неполная валидация DTO
+### ✅ Проблема 3.1: Неполная валидация DTO - ВЫПОЛНЕНО
 
-**Текущее состояние:**
-- `RestroomValidators.kt` - валидирует только `address` и `coordinates`
-- Не валидируются: `name`, `description`, `phones`, `workTime`, `amenities`
-- Нет валидации длины строк
+**Статус:** ✅ Реализовано (Task 9)
 
-**Проблемы:**
-- Можно отправить `name` длиной 10000 символов
-- `description` не ограничен по длине
-- `phones` и `workTime` не валидируются на структуру JSON
+**Выполненные работы:**
+- ✅ Расширена валидация для всех полей DTO
+- ✅ Добавлены проверки длины для `name`, `description`, `address`
+- ✅ Добавлена валидация JSON объектов для `phones`, `workTime`, `amenities`
+- ✅ Используются константы из `ApiConstants`
 
-**Решение:**
-Расширить валидаторы для всех полей
-
-**План исправления:**
-```kotlin
-// RestroomValidators.kt
-val validateRestroomOnCreate =
-    Validation<RestroomCreateDto> {
-        RestroomCreateDto::address {
-            minLength(1) hint "Адрес обязателен"
-            maxLength(ApiConstants.MAX_ADDRESS_LENGTH) hint "Адрес слишком длинный"
-        }
-        RestroomCreateDto::name {
-            maxLength(ApiConstants.MAX_NAME_LENGTH) hint "Название слишком длинное"
-        }
-        RestroomCreateDto::description {
-            maxLength(1000) hint "Описание слишком длинное"
-        }
-        RestroomCreateDto::coordinates {
-            run(validateLatLon)
-        }
-        RestroomCreateDto::phones {
-            run(validateJsonObject) hint "Неверный формат JSON для phones"
-        }
-        RestroomCreateDto::workTime {
-            run(validateJsonObject) hint "Неверный формат JSON для workTime"
-        }
-    }
-
-// Создать GeoValidators.kt расширение
-val validateJsonObject = Validation<JsonObject?> {
-    // Проверка структуры JSON (если нужна специфичная валидация)
-}
-```
-
-**Приоритет:** СРЕДНИЙ
-**Оценка времени:** 2-3 часа
+**Файлы:**
+- `src/main/kotlin/yayauheny/by/service/validation/RestroomValidators.kt`
+- `src/main/kotlin/yayauheny/by/service/validation/CityValidators.kt`
+- `src/main/kotlin/yayauheny/by/service/validation/CountryValidators.kt`
 
 ---
 
-### Проблема 3.2: Дублирование валидации
+### ✅ Проблема 3.2: Дублирование валидации - ВЫПОЛНЕНО
 
-**Текущее состояние:**
-- Валидация выполняется и в контроллере (`validateAndThen`), и в сервисе (`validateOrThrow`)
-- `CityService.createCity()` - валидация в сервисе
-- `RestroomController.post()` - валидация в контроллере
+**Статус:** ✅ Реализовано (Task 10)
 
-**Решение:**
-Стандартизировать: валидация только в контроллере, сервис получает уже валидированные данные
+**Выполненные работы:**
+- ✅ Валидация выполняется только в контроллерах
+- ✅ Удалены вызовы `validateOrThrow` из сервисов
+- ✅ Сервисы получают уже валидированные данные
 
-**План исправления:**
-```kotlin
-// Убрать validateOrThrow из CityService.createCity()
-// Оставить только validateAndThen в контроллере
-suspend fun createCity(createDto: CityCreateDto): CityResponseDto {
-    // createDto уже валидирован в контроллере
-    // Проверяем только бизнес-логику
-    countryRepository.findById(createDto.countryId)
-        ?: throw NotFoundException("Страна не найдена")
-    // ...
-}
-```
-
-**Приоритет:** НИЗКИЙ
-**Оценка времени:** 1-2 часа
+**Файлы:**
+- `src/main/kotlin/yayauheny/by/service/CountryService.kt`
+- `src/main/kotlin/yayauheny/by/service/CityService.kt`
 
 ---
 
-### Проблема 3.3: Валидация координат через reflection
+### ✅ Проблема 3.3: Валидация координат через reflection - ВЫПОЛНЕНО
 
-**Текущее состояние:**
-- `ValidationExtension.kt:23-37` - используется reflection для извлечения пути поля
-- `pathAsString()` парсит строковое представление ошибки
+**Статус:** ✅ Реализовано (Task 11)
 
-**Проблемы:**
-- Reflection может быть медленным
-- Парсинг строк ненадежен
-- Может сломаться при обновлении библиотеки konform
+**Выполненные работы:**
+- ✅ Удалена логика с reflection
+- ✅ Используется официальный API konform через `path.toString()`
+- ✅ Упрощена функция `pathAsString()` для надежности
 
-**Решение:**
-Использовать официальный API konform для получения путей полей
-
-**План исправления:**
-```kotlin
-// Проверить актуальную версию konform и использовать официальный API
-// Если reflection - единственный способ, добавить кэширование
-
-private val pathCache = ConcurrentHashMap<ValidationError, String>()
-
-fun ValidationError.pathAsString(): String {
-    return pathCache.getOrPut(this) {
-        // Текущая реализация с кэшированием
-    }
-}
-```
-
-**Приоритет:** НИЗКИЙ
-**Оценка времени:** 2-3 часа
+**Файлы:**
+- `src/main/kotlin/yayauheny/by/service/validation/ValidationExtension.kt`
 
 ---
 
 ## Обработка ошибок
 
-### Проблема 4.1: Общая обработка PSQLException
+### ✅ Проблема 4.1: Общая обработка PSQLException - ВЫПОЛНЕНО
 
-**Текущее состояние:**
-- `ErrorHandlingPlugin.kt:86-109` - обрабатывает только `sqlState == "23505"` (unique violation)
-- Остальные ошибки БД возвращают общее сообщение "Ошибка базы данных"
+**Статус:** ✅ Реализовано (Task 12)
 
-**Проблемы:**
-- Не различаются разные типы ошибок БД
-- Нет обработки foreign key violations, check constraints, etc.
+**Выполненные работы:**
+- ✅ Расширена обработка различных SQL состояний (23505, 23503, 23514, 23502, 42P01)
+- ✅ Каждое состояние маппится на соответствующий HTTP статус
+- ✅ Добавлены интеграционные тесты для проверки обработки ошибок
 
-**Решение:**
-Расширить обработку различных SQL состояний
-
-**План исправления:**
-```kotlin
-// ErrorHandlingPlugin.kt
-exception<PSQLException> { call, cause ->
-    logger.error("PostgreSQL exception: ${cause.message}", cause)
-    
-    val errorResponse = when (cause.sqlState) {
-        "23505" -> ErrorResponse(  // Unique violation
-            status = HttpStatusCode.Conflict.value,
-            message = "Resource already exists",
-            path = call.request.path()
-        )
-        "23503" -> ErrorResponse(  // Foreign key violation
-            status = HttpStatusCode.BadRequest.value,
-            message = "Referenced resource does not exist",
-            path = call.request.path()
-        )
-        "23514" -> ErrorResponse(  // Check constraint violation
-            status = HttpStatusCode.BadRequest.value,
-            message = "Data validation failed",
-            path = call.request.path()
-        )
-        "23502" -> ErrorResponse(  // Not null violation
-            status = HttpStatusCode.BadRequest.value,
-            message = "Required field is missing",
-            path = call.request.path()
-        )
-        "42P01" -> ErrorResponse(  // Undefined table
-            status = HttpStatusCode.InternalServerError.value,
-            message = "Database configuration error",
-            path = call.request.path()
-        )
-        else -> ErrorResponse(
-            status = HttpStatusCode.InternalServerError.value,
-            message = "Database error occurred",
-            path = call.request.path()
-        )
-    }
-    
-    val statusCode = when (cause.sqlState) {
-        "23505" -> HttpStatusCode.Conflict
-        "23503", "23514", "23502" -> HttpStatusCode.BadRequest
-        else -> HttpStatusCode.InternalServerError
-    }
-    
-    call.respond(statusCode, errorResponse)
-}
-```
-
-**Приоритет:** СРЕДНИЙ
-**Оценка времени:** 2-3 часа
+**Файлы:**
+- `src/main/kotlin/yayauheny/by/common/plugins/ErrorHandlingPlugin.kt`
 
 ---
 
-### Проблема 4.2: Использование error() вместо исключений
+### ✅ Проблема 4.2: Использование error() вместо исключений - ВЫПОЛНЕНО
 
-**Текущее состояние:**
-- `RestroomRepositoryImpl.kt:229` - `error("Ошибка при сохранении туалета")`
-- `RestroomRepositoryImpl.kt:273` - `error("Не удалось обновить туалет $id")`
-- `CityRepositoryImpl.kt:211` - `error("Ошибка при сохранении города")`
+**Статус:** ✅ Реализовано (Task 13)
 
-**Проблемы:**
-- `error()` бросает `IllegalStateException`, который обрабатывается как общая ошибка
-- Нет специфичного типа исключения для ошибок репозитория
-- Сложно различать типы ошибок в логах
+**Выполненные работы:**
+- ✅ Созданы классы `RepositoryException` и `EntityNotFoundException`
+- ✅ Заменены все вызовы `error()` на специфичные исключения
+- ✅ Обновлена обработка ошибок для распознавания новых исключений
 
-**Решение:**
-Создать специфичные исключения для репозиториев
-
-**План исправления:**
-```kotlin
-// common/errors/RepositoryException.kt
-class RepositoryException(
-    message: String,
-    cause: Throwable? = null
-) : RuntimeException(message, cause)
-
-class EntityNotFoundException(
-    entityType: String,
-    id: Any,
-    cause: Throwable? = null
-) : RepositoryException("$entityType with ID '$id' not found", cause)
-
-// Использование:
-val rec = insert.returning(...).fetchOne()
-    ?: throw RepositoryException("Failed to save restroom")
-
-val city = select(...).fetchOne()
-    ?: throw EntityNotFoundException("City", id)
-```
-
-**Приоритет:** СРЕДНИЙ
-**Оценка времени:** 2-3 часа
+**Файлы:**
+- `src/main/kotlin/yayauheny/by/common/errors/RestExceptions.kt`
+- `src/main/kotlin/yayauheny/by/repository/impl/*RepositoryImpl.kt`
 
 ---
 
-### Проблема 4.3: Нет логирования контекста ошибок
+### ⏳ Проблема 4.3: Нет логирования контекста ошибок - В ПЛАНЕ
+
+**Статус:** ⏳ Запланировано (Task 14, статус: pending)
 
 **Текущее состояние:**
 - Логирование есть, но без достаточного контекста
 - Не логируются параметры запросов при ошибках
 
-**Решение:**
-Добавить структурированное логирование с контекстом
-
-**План исправления:**
-```kotlin
-// ErrorHandlingPlugin.kt
-exception<RestException> { call, cause ->
-    logger.warn(
-        "REST exception occurred: ${cause.message}",
-        cause,
-        mapOf(
-            "path" to call.request.path(),
-            "method" to call.request.httpMethod.value,
-            "status" to cause.httpStatus.value,
-            "queryParams" to call.request.queryParameters.toString()
-        )
-    )
-    // ...
-}
-```
+**План:**
+- Добавить структурированное логирование с контекстом (path, method, status, query parameters)
+- Использовать `logger.warn` или `logger.error` с map контекста
 
 **Приоритет:** НИЗКИЙ
 **Оценка времени:** 1-2 часа
@@ -610,115 +225,52 @@ exception<RestException> { call, cause ->
 
 ## Структура пакетов
 
-### Проблема 5.1: Смешение DTO и Entity в model
+### ⏳ Проблема 5.1: Смешение DTO и Entity в model - В ПЛАНЕ
+
+**Статус:** ⏳ Запланировано (Task 15, статус: pending)
 
 **Текущее состояние:**
-- `model/city/` содержит `CityCreateDto`, `CityResponseDto`, `CityUpdateDto`, `CountryEntity`
-- `model/restroom/` содержит DTO и `RestroomEntity`
+- DTO и Entity смешаны в пакете `model/`
 - Нет четкого разделения между слоями
 
-**Решение:**
-Реорганизовать структуру пакетов
-
-**План исправления:**
-```
-Текущая структура:
-model/
-  city/
-    CityCreateDto.kt
-    CityResponseDto.kt
-    CityUpdateDto.kt
-    CountryEntity.kt  # Неправильно!
-
-Предлагаемая структура:
-model/
-  dto/
-    city/
-      CityCreateDto.kt
-      CityResponseDto.kt
-      CityUpdateDto.kt
-    restroom/
-      RestroomCreateDto.kt
-      RestroomResponseDto.kt
-      RestroomUpdateDto.kt
-  entity/  # Если нужны entity (сейчас используются jOOQ Record)
-    CountryEntity.kt
-    CityEntity.kt
-    RestroomEntity.kt
-```
+**План:**
+- Создать `model/dto` и `model/entity` подпакеты
+- Переместить классы соответственно
+- Обновить импорты
 
 **Приоритет:** НИЗКИЙ (рефакторинг, не критично)
 **Оценка времени:** 4-6 часов
 
 ---
 
-### Проблема 5.2: Перегруженный пакет common
+### ⏳ Проблема 5.2: Перегруженный пакет common - В ПЛАНЕ
+
+**Статус:** ⏳ Запланировано (Task 16, статус: pending)
 
 **Текущее состояние:**
-- `common/` содержит: errors, mapper, plugins, query
+- Пакет `common/` содержит: errors, mapper, plugins, query
 - Слишком много разнородных компонентов
 
-**Решение:**
-Разделить на более специфичные пакеты
-
-**План исправления:**
-```
-Текущая структура:
-common/
-  errors/
-  mapper/
-  plugins/
-  query/
-
-Предлагаемая структура:
-api/
-  errors/
-  plugins/
-mapper/
-  CityMapper.kt
-  CountryMapper.kt
-  RestroomMapper.kt
-query/
-  builder/
-  FieldMeta.kt
-  ...
-```
+**План:**
+- Разделить на `api/errors`, `api/plugins`, `mapper/`, `query/builder/`
+- Переместить классы соответственно
 
 **Приоритет:** НИЗКИЙ
 **Оценка времени:** 3-4 часа
 
 ---
 
-### Проблема 5.3: Разрозненные утилиты в util
+### ⏳ Проблема 5.3: Разрозненные утилиты в util - В ПЛАНЕ
+
+**Статус:** ⏳ Запланировано (Task 17, статус: pending)
 
 **Текущее состояние:**
-- `util/` содержит: ApplicationCallExtensions, CommonExtensions, EnvironmentExtensions, GeoDsl, RepositoryExtensions, Serializers
+- Утилиты разбросаны в пакете `util/`
 - Нет группировки по функциональности
 
-**Решение:**
-Группировать по доменам
-
-**План исправления:**
-```
-Текущая структура:
-util/
-  ApplicationCallExtensions.kt
-  GeoDsl.kt
-  ...
-
-Предлагаемая структура:
-util/
-  http/
-    ApplicationCallExtensions.kt
-  geo/
-    GeoDsl.kt
-  db/
-    RepositoryExtensions.kt
-  serialization/
-    Serializers.kt
-  config/
-    EnvironmentExtensions.kt
-```
+**План:**
+- Создать подпакеты: `util/http`, `util/geo`, `util/db`, `util/serialization`, `util/config`
+- Переместить файлы соответственно
 
 **Приоритет:** НИЗКИЙ
 **Оценка времени:** 2-3 часа
@@ -727,158 +279,55 @@ util/
 
 ## Тестовое покрытие
 
-### Проблема 6.1: Отсутствие тестов для QueryBuilder/QueryExecutor
+### ✅ Проблема 6.1: Отсутствие тестов для QueryBuilder/QueryExecutor - РЕШЕНО
 
-**Текущее состояние:**
-- Нет unit-тестов для `QueryBuilder.kt`
-- Нет unit-тестов для `QueryExecutor.kt`
-- Эти компоненты критичны для работы приложения
+**Статус:** ✅ Решено (Task 18)
 
 **Решение:**
-Добавить comprehensive unit-тесты
-
-**План исправления:**
-```kotlin
-// test/kotlin/yayauheny/by/unit/query/QueryBuilderTest.kt
-class QueryBuilderTest {
-    @Test
-    fun `buildFilters should return empty list for empty filters`() {
-        val builder = QueryBuilder(emptyMap())
-        val result = builder.buildFilters(emptyList())
-        assertTrue(result.isEmpty())
-    }
-    
-    @Test
-    fun `buildFilters should handle EQ operator`() {
-        val fields = mapOf(
-            "id" to FieldMeta(
-                field = RESTROOMS.ID,
-                parser = FieldParsers.uuid,
-                allowedOps = setOf(FilterOperator.EQ)
-            )
-        )
-        val builder = QueryBuilder(fields)
-        val filters = listOf(FilterCriteria("id", FilterOperator.EQ, testUuid.toString()))
-        val result = builder.buildFilters(filters)
-        assertEquals(1, result.size)
-    }
-    
-    // Тесты для всех операторов, IN, NOT_IN, LIKE, ILIKE, etc.
-}
-
-// test/kotlin/yayauheny/by/unit/query/QueryExecutorTest.kt
-class QueryExecutorTest {
-    // Тесты для executePaginated, executeSingle, executeList
-    // Мокировать DSLContext
-}
-```
-
-**Приоритет:** СРЕДНИЙ
-**Оценка времени:** 4-6 часов
+Тесты для QueryExecutor были пропущены по запросу пользователя, так как существующие тесты сервисов и контроллеров достаточно покрывают функциональность QueryExecutor.
 
 ---
 
-### Проблема 6.2: Отсутствие тестов для мапперов
+### ✅ Проблема 6.2: Отсутствие тестов для мапперов - ВЫПОЛНЕНО
 
-**Текущее состояние:**
-- Нет тестов для `RestroomMapper`, `CityMapper`, `CountryMapper`
-- Мапперы критичны для корректности данных
+**Статус:** ✅ Реализовано (Task 19)
 
-**Решение:**
-Добавить unit-тесты с моками jOOQ Record
+**Выполненные работы:**
+- ✅ Добавлены unit-тесты для `RestroomMapper`, `CityMapper`, `CountryMapper`
+- ✅ Тесты используют моки jOOQ Record для проверки корректности маппинга
 
-**План исправления:**
-```kotlin
-// test/kotlin/yayauheny/by/unit/mapper/RestroomMapperTest.kt
-class RestroomMapperTest {
-    @Test
-    fun `mapFromRecord should map all fields correctly`() {
-        val record = mockk<Record>()
-        every { record.reqDouble("lat") } returns 55.7558
-        every { record.reqDouble("lon") } returns 37.6176
-        every { record[RESTROOMS.ID] } returns testUuid
-        every { record[RESTROOMS.ADDRESS] } returns "Test Address"
-        // ... остальные поля
-        
-        val result = RestroomMapper.mapFromRecord(record)
-        
-        assertEquals(testUuid, result.id)
-        assertEquals("Test Address", result.address)
-        assertEquals(55.7558, result.coordinates.lat)
-        // ...
-    }
-}
-```
-
-**Приоритет:** СРЕДНИЙ
-**Оценка времени:** 3-4 часа
+**Файлы:**
+- `src/test/kotlin/yayauheny/by/unit/mapper/*MapperTest.kt`
 
 ---
 
-### Проблема 6.3: Отсутствие тестов для утилит
+### ⏳ Проблема 6.3: Отсутствие тестов для утилит - В ПЛАНЕ
+
+**Статус:** ⏳ Запланировано (Task 20, статус: pending)
 
 **Текущее состояние:**
-- Есть только `EnvironmentConfigTest.kt`
 - Нет тестов для `GeoDsl`, `ApplicationCallExtensions`, `RepositoryExtensions`
 
-**Решение:**
-Добавить тесты для всех утилитных функций
-
-**План исправления:**
-```kotlin
-// test/kotlin/yayauheny/by/unit/util/GeoDslTest.kt
-class GeoDslTest {
-    @Test
-    fun `pointExpr should create correct SQL`() {
-        val field = RESTROOMS.COORDINATES
-        val result = pointExpr(37.6176, 55.7558, field)
-        // Проверить SQL выражение
-    }
-    
-    @Test
-    fun `distanceGeographyTo should calculate distance`() {
-        // Интеграционный тест с реальной БД или мок
-    }
-}
-
-// test/kotlin/yayauheny/by/unit/util/ApplicationCallExtensionsTest.kt
-class ApplicationCallExtensionsTest {
-    @Test
-    fun `toPaginationRequest should parse query parameters correctly`() {
-        // Мок ApplicationCall и проверка парсинга
-    }
-}
-```
+**План:**
+- Добавить unit-тесты для всех утилитных функций
+- Использовать параметризованные тесты для граничных случаев
 
 **Приоритет:** НИЗКИЙ
 **Оценка времени:** 4-6 часов
 
 ---
 
-### Проблема 6.4: Нет тестов для граничных случаев
+### ⏳ Проблема 6.4: Нет тестов для граничных случаев - НОВАЯ ЗАДАЧА
+
+**Статус:** ⏳ Не запланировано
 
 **Текущее состояние:**
 - Тесты покрывают основные сценарии
 - Нет тестов для edge cases: пустые списки, null значения, очень большие числа
 
-**Решение:**
-Добавить параметризованные тесты для граничных случаев
-
-**План исправления:**
-```kotlin
-// Расширить существующие тесты
-@ParameterizedTest
-@ValueSource(ints = [0, -1, 1000, Int.MAX_VALUE])
-fun `pagination should handle edge cases for page size`(size: Int) {
-    // Тест обработки граничных значений
-}
-
-@ParameterizedTest
-@ValueSource(doubles = [-90.1, 90.1, -180.1, 180.1])
-fun `coordinates validation should reject out of range values`(lat: Double) {
-    // Тест валидации координат
-}
-```
+**План:**
+- Добавить параметризованные тесты для граничных случаев
+- Тестировать обработку пустых коллекций, null значений, boundary values
 
 **Приоритет:** НИЗКИЙ
 **Оценка времени:** 2-3 часа
@@ -887,79 +336,51 @@ fun `coordinates validation should reject out of range values`(lat: Double) {
 
 ## Безопасность
 
-### Проблема 7.1: Отсутствие rate limiting
+### ⏳ Проблема 7.1: Отсутствие rate limiting - НОВАЯ ЗАДАЧА
+
+**Статус:** ⏳ Не запланировано
 
 **Текущее состояние:**
 - Нет ограничения частоты запросов
 - Возможны DDoS атаки или злоупотребление API
 
-**Решение:**
-Добавить rate limiting middleware
-
-**План исправления:**
-```kotlin
-// Добавить зависимость
-ktorServerRateLimit = { module = "io.ktor:ktor-server-rate-limit", version = "..." }
-
-// Application.kt
-install(RateLimiter) {
-    registerLimit(
-        limit = 100,
-        window = 60.seconds,
-        keyGenerator = { call -> call.request.origin.remoteHost }
-    )
-}
-```
+**План:**
+- Добавить rate limiting middleware (например, Ktor Rate Limiter)
+- Настроить лимиты по IP адресу
 
 **Приоритет:** СРЕДНИЙ
 **Оценка времени:** 2-3 часа
 
 ---
 
-### Проблема 7.2: Отсутствие валидации размера запросов
+### ⏳ Проблема 7.2: Отсутствие валидации размера запросов - НОВАЯ ЗАДАЧА
+
+**Статус:** ⏳ Не запланировано
 
 **Текущее состояние:**
 - Нет ограничения на размер тела запроса
 - Возможны атаки через большие JSON payloads
 
-**Решение:**
-Добавить ограничение размера запроса в Ktor
-
-**План исправления:**
-```kotlin
-// application.yaml
-ktor:
-    deployment:
-        maxContentLength: 1048576  # 1MB
-```
+**План:**
+- Добавить ограничение размера запроса в конфигурации Ktor
+- Установить разумный лимит (например, 1MB)
 
 **Приоритет:** СРЕДНИЙ
 **Оценка времени:** 30 минут
 
 ---
 
-### Проблема 7.3: Отсутствие CORS конфигурации
+### ⏳ Проблема 7.3: Отсутствие CORS конфигурации - НОВАЯ ЗАДАЧА
+
+**Статус:** ⏳ Не запланировано
 
 **Текущее состояние:**
 - Нет явной конфигурации CORS
 - Может быть проблема при использовании из браузера
 
-**Решение:**
-Добавить CORS плагин с правильной конфигурацией
-
-**План исправления:**
-```kotlin
-// Application.kt
-install(CORS) {
-    allowMethod(HttpMethod.Get)
-    allowMethod(HttpMethod.Post)
-    allowMethod(HttpMethod.Put)
-    allowMethod(HttpMethod.Delete)
-    allowHeader(HttpHeaders.ContentType)
-    allowCredentials = true
-    anyHost()  // Или конкретные домены в production
-}
-```
+**План:**
+- Добавить CORS плагин с правильной конфигурацией
+- Настроить разрешенные методы и заголовки
 
 **Приоритет:** НИЗКИЙ (если API не используется из браузера)
 **Оценка времени:** 1 час
@@ -968,111 +389,48 @@ install(CORS) {
 
 ## Конфигурация и инфраструктура
 
-### Проблема 8.1: Хардкод значений по умолчанию
+### ⚠️ Проблема 8.1: Хардкод значений по умолчанию - ЧАСТИЧНО ВЫПОЛНЕНО
+
+**Статус:** ⚠️ Частично реализовано
 
 **Текущее состояние:**
-- `DatabaseConfig.kt` - значения по умолчанию в коде
-- Нет валидации конфигурации при старте
+- ✅ `DatabaseConfig.kt` использует переменные окружения с значениями по умолчанию
+- ⚠️ Нет валидации конфигурации при старте
+- ⚠️ Некоторые значения все еще могут быть хардкодными
 
-**Решение:**
-Вынести все значения в application.yaml с валидацией
-
-**План исправления:**
-```kotlin
-// config/DatabaseConfig.kt
-data class DatabaseConfig(
-    val host: String,
-    val port: Int,
-    val name: String,
-    val user: String,
-    val password: String,
-    val maxPoolSize: Int,
-    val minIdle: Int,
-    val connectionTimeout: Long,
-    val idleTimeout: Long,
-    val maxLifetime: Long
-) {
-    init {
-        require(maxPoolSize > 0) { "maxPoolSize must be positive" }
-        require(minIdle >= 0) { "minIdle must be non-negative" }
-        require(minIdle <= maxPoolSize) { "minIdle must be <= maxPoolSize" }
-    }
-}
-
-// application.yaml
-database:
-    host: ${DB_HOST:localhost}
-    port: ${DB_PORT:5432}
-    # ...
-```
+**Рекомендация:**
+Добавить валидацию конфигурации в init блок `DatabaseConfig` для проверки корректности значений.
 
 **Приоритет:** НИЗКИЙ
-**Оценка времени:** 2-3 часа
+**Оценка времени:** 1-2 часа
 
 ---
 
-### Проблема 8.2: Отсутствие health checks
+### ✅ Проблема 8.2: Отсутствие health checks - ВЫПОЛНЕНО
 
-**Текущее состояние:**
-- Нет эндпоинта для health check
-- Сложно мониторить состояние приложения
+**Статус:** ✅ Реализовано (Task 21)
 
-**Решение:**
-Добавить health check endpoint
+**Выполненные работы:**
+- ✅ Создан `HealthController.kt` с эндпоинтами `/health`, `/health/ready`, `/health/live`
+- ✅ Реализована проверка подключения к базе данных
+- ✅ Добавлены unit-тесты для health endpoints
 
-**План исправления:**
-```kotlin
-// controller/HealthController.kt
-class HealthController {
-    fun Route.healthRoutes() {
-        get("/health") {
-            val dbHealthy = checkDatabaseHealth()  // Простой SELECT 1
-            val status = if (dbHealthy) HttpStatusCode.OK else HttpStatusCode.ServiceUnavailable
-            call.respond(status, mapOf("status" to "ok", "database" to if (dbHealthy) "up" else "down"))
-        }
-        
-        get("/health/ready") {
-            // Readiness check
-        }
-        
-        get("/health/live") {
-            // Liveness check
-        }
-    }
-}
-```
-
-**Приоритет:** СРЕДНИЙ
-**Оценка времени:** 2-3 часа
+**Файлы:**
+- `src/main/kotlin/yayauheny/by/controller/HealthController.kt`
 
 ---
 
-### Проблема 8.3: Отсутствие метрик
+### ⏳ Проблема 8.3: Отсутствие метрик - НОВАЯ ЗАДАЧА
+
+**Статус:** ⏳ Не запланировано
 
 **Текущее состояние:**
 - Нет метрик для мониторинга производительности
-- Нет метрик для бизнес-логики (количество запросов, время ответа)
+- Нет метрик для бизнес-логики
 
-**Решение:**
-Добавить Micrometer или простые метрики
-
-**План исправления:**
-```kotlin
-// Добавить зависимость
-micrometer = { module = "io.micrometer:micrometer-core", version = "..." }
-
-// config/MetricsConfig.kt
-class MetricsConfig {
-    fun createMeterRegistry(): MeterRegistry {
-        return SimpleMeterRegistry()
-    }
-}
-
-// Использование в контроллерах
-private val requestCounter = Counter.builder("http.requests")
-    .tag("method", "GET")
-    .register(meterRegistry)
-```
+**План:**
+- Добавить Micrometer или простые метрики
+- Настроить счетчики запросов, время ответа, метрики БД
 
 **Приоритет:** НИЗКИЙ
 **Оценка времени:** 4-6 часов
@@ -1081,61 +439,69 @@ private val requestCounter = Counter.builder("http.requests")
 
 ## Приоритизация задач
 
-### Критичные (выполнить в первую очередь):
-1. **Проблема 1.1** - Отсутствие явных транзакций (ВЫСОКИЙ приоритет)
-2. **Проблема 4.2** - Использование error() вместо исключений (СРЕДНИЙ приоритет)
+### Выполненные задачи (28 задач):
+1. ✅ Транзакции (Task 1, 2)
+2. ✅ Координаты helper (Task 3 - частично)
+3. ✅ fetchCount оптимизация (Task 4)
+4. ✅ Рефакторинг методов репозиториев (Task 6)
+5. ✅ Константы (Task 7)
+6. ✅ Расширенная валидация DTO (Task 9)
+7. ✅ Валидация только в контроллерах (Task 10)
+8. ✅ Замена reflection на API konform (Task 11)
+9. ✅ Расширенная обработка PSQLException (Task 12)
+10. ✅ RepositoryException (Task 13)
+11. ✅ Тесты мапперов (Task 19)
+12. ✅ Health checks (Task 21)
+13. ✅ Исправление тестов (Tasks 41-45)
+14. ✅ jOOQ code generation (Task 46)
 
-### Важные (выполнить во вторую очередь):
-3. **Проблема 1.2** - Дублирование кода для координат
-4. **Проблема 1.3** - Неоптимальный fetchCount
-5. **Проблема 3.1** - Неполная валидация DTO
-6. **Проблема 4.1** - Общая обработка PSQLException
-7. **Проблема 6.1** - Отсутствие тестов для QueryBuilder/QueryExecutor
-8. **Проблема 6.2** - Отсутствие тестов для мапперов
+### Актуальные задачи (приоритет: СРЕДНИЙ):
+1. **Проблема 7.1** - Rate limiting (безопасность)
+2. **Проблема 7.2** - Валидация размера запросов (безопасность)
+3. **Проблема 1.2** - Полное устранение дублирования координат (опционально)
 
-### Желательные (можно отложить):
-9. **Проблема 1.4** - Отсутствие кэширования
-10. **Проблема 2.1** - Длинные методы в репозиториях
-11. **Проблема 2.2** - Магические строки и числа
-12. **Проблема 2.3** - Смешанные языки в сообщениях
-13. **Проблема 7.1** - Отсутствие rate limiting
-14. **Проблема 7.2** - Отсутствие валидации размера запросов
-15. **Проблема 8.2** - Отсутствие health checks
-
-### Рефакторинг (низкий приоритет):
-16. **Проблема 5.1** - Смешение DTO и Entity в model
-17. **Проблема 5.2** - Перегруженный пакет common
-18. **Проблема 5.3** - Разрозненные утилиты в util
+### Актуальные задачи (приоритет: НИЗКИЙ):
+1. **Проблема 1.4** - Кэширование (Task 5)
+2. **Проблема 4.3** - Структурированное логирование (Task 14)
+3. **Проблема 5.1-5.3** - Реорганизация пакетов (Tasks 15-17)
+4. **Проблема 6.3** - Тесты утилит (Task 20)
+5. **Проблема 6.4** - Тесты граничных случаев
+6. **Проблема 7.3** - CORS конфигурация
+7. **Проблема 8.1** - Валидация конфигурации
+8. **Проблема 8.3** - Метрики
 
 ---
 
 ## Итоговая оценка времени
 
-- **Критичные задачи:** 6-9 часов
-- **Важные задачи:** 20-30 часов
-- **Желательные задачи:** 15-25 часов
-- **Рефакторинг:** 9-13 часов
+- **Выполнено:** 28 задач
+- **Актуальные задачи (СРЕДНИЙ приоритет):** ~5-7 часов
+- **Актуальные задачи (НИЗКИЙ приоритет):** ~20-30 часов
 
-**Общая оценка:** 50-77 часов работы
+**Общая оценка оставшихся задач:** 25-37 часов работы
 
 ---
 
 ## Рекомендации по внедрению
 
-1. **Начать с критичных задач** - транзакции и обработка ошибок
-2. **Добавить тесты перед рефакторингом** - обеспечить безопасность изменений
-3. **Внедрять постепенно** - по одной проблеме за раз
-4. **Проверять производительность** - после каждого изменения измерять метрики
-5. **Документировать изменения** - обновлять README и архитектурную документацию
+1. **Приоритет безопасности** - начать с rate limiting и валидации размера запросов
+2. **Постепенное внедрение** - выполнять задачи по одной, проверяя после каждого изменения
+3. **Тестирование** - добавлять тесты перед рефакторингом для безопасности изменений
+4. **Мониторинг** - после внедрения метрик отслеживать производительность
 
 ---
 
 ## Заключение
 
-Проект имеет хорошую базовую архитектуру, но есть области для улучшения:
-- **Производительность:** Требуется добавить транзакции и оптимизировать запросы
-- **Надежность:** Улучшить обработку ошибок и валидацию
-- **Тестирование:** Расширить покрытие тестами критичных компонентов
-- **Безопасность:** Добавить базовые меры защиты
+Проект имеет хорошую базовую архитектуру. Большинство критичных задач выполнено:
+- ✅ Транзакции реализованы
+- ✅ Валидация улучшена
+- ✅ Обработка ошибок расширена
+- ✅ Тестовое покрытие улучшено
+- ✅ Health checks добавлены
 
-Большинство проблем не критичны и могут быть исправлены постепенно. Приоритет следует отдать транзакциям и тестам.
+Оставшиеся задачи в основном относятся к:
+- Безопасности (rate limiting, валидация размера запросов)
+- Рефакторингу структуры (низкий приоритет)
+- Дополнительному тестированию (низкий приоритет)
+- Мониторингу и метрикам (низкий приоритет)

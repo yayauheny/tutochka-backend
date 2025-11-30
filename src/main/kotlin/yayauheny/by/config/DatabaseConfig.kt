@@ -24,6 +24,21 @@ data class DatabaseConfig(
     val idleTimeout: Long = "DB_IDLE_TIMEOUT".envLong(600000L),
     val maxLifetime: Long = "DB_MAX_LIFETIME".envLong(1800000L)
 ) {
+    init {
+        require(host.isNotBlank()) { "Database host cannot be blank" }
+        require(port in 1..65535) { "Database port must be between 1 and 65535, got: $port" }
+        require(name.isNotBlank()) { "Database name cannot be blank" }
+        require(user.isNotBlank()) { "Database user cannot be blank" }
+        require(password.isNotBlank()) { "Database password cannot be blank" }
+        require(maxPoolSize > 0) { "maxPoolSize must be positive, got: $maxPoolSize" }
+        require(minIdle >= 0) { "minIdle must be non-negative, got: $minIdle" }
+        require(minIdle <= maxPoolSize) { "minIdle ($minIdle) must be <= maxPoolSize ($maxPoolSize)" }
+        require(connectionTimeout > 0) { "connectionTimeout must be positive, got: $connectionTimeout" }
+        require(idleTimeout > 0) { "idleTimeout must be positive, got: $idleTimeout" }
+        require(maxLifetime > 0) { "maxLifetime must be positive, got: $maxLifetime" }
+        require(idleTimeout <= maxLifetime) { "idleTimeout ($idleTimeout) must be <= maxLifetime ($maxLifetime)" }
+    }
+
     fun createDataSource(): HikariDataSource =
         HikariDataSource(
             HikariConfig().apply {

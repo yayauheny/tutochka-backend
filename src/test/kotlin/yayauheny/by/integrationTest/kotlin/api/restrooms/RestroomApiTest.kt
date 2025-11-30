@@ -30,7 +30,6 @@ import yayauheny.by.helpers.assertBodyContainsAll
 import yayauheny.by.helpers.testGet
 import yayauheny.by.helpers.testPost
 import yayauheny.by.helpers.parseErrorResponse
-import yayauheny.by.helpers.assertHasFieldError
 import yayauheny.by.helpers.assertHasValidationErrors
 import yayauheny.by.helpers.createRestroomJsonFromTestData
 import yayauheny.by.model.enums.RestroomStatus
@@ -506,8 +505,15 @@ class RestroomApiTest : BaseIntegrationTest() {
 
                     val errorResponse = response.parseErrorResponse()
                     errorResponse.assertHasValidationErrors()
-                    // For nested coordinates validation, errors are reported on "coordinates" field
-                    errorResponse.assertHasFieldError("coordinates", "не более 90 градусов")
+                    // For nested coordinates validation, errors are reported on "coordinates.lat" or "coordinates.lon" field
+                    // Check for either coordinates.lat or coordinates.lon since lat=91.0 is out of range
+                    assertTrue(
+                        errorResponse.errors?.any {
+                            (it.field == "coordinates.lat" || it.field == "coordinates") &&
+                                it.message.contains("не более 90 градусов")
+                        } == true,
+                        "Error response should contain field error for 'coordinates.lat' or 'coordinates' with message about 90 degrees, but got: ${errorResponse.errors}"
+                    )
                 }
             }
 

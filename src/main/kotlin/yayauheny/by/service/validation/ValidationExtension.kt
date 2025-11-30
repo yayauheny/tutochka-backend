@@ -8,45 +8,32 @@ import yayauheny.by.common.errors.FieldError
 import yayauheny.by.common.errors.ValidationException
 
 /**
- * Извлекает путь поля из ValidationError как строку.
+ * Извлекает путь поля из ValidationError как строку, используя официальный API konform.
  *
- * Konform использует внутреннее представление путей через reflection и PropRef.
- * Эта функция пытается извлечь читаемое имя поля для использования в FieldError.
+ * Использует официальный API konform через свойство path и его метод toString().
+ * Konform возвращает путь в формате "ValidationPath(PropRef(field1), PropRef(field2))",
+ * поэтому мы извлекаем имена полей и соединяем их точками для читаемого формата.
  *
- * Алгоритм:
- * 1. Пытается получить dataPath через reflection (внутреннее поле konform)
- * 2. Если не удалось, парсит строковое представление path, извлекая PropRef(...)
- * 3. В качестве fallback возвращает "field"
+ * Этот подход использует публичный API (toString()), а не reflection, что делает его
+ * более надежным и производительным.
  *
  * @return читаемое имя поля (например, "nameRu", "coordinates.lat")
  */
 fun ValidationError.pathAsString(): String {
-    return try {
-        // Попытка получить dataPath через reflection (внутреннее поле konform)
-        val dataPath = this::class.java.getDeclaredField("dataPath")
-        dataPath.isAccessible = true
-        val pathValue = dataPath.get(this) as? List<*>
-        if (pathValue != null && pathValue.isNotEmpty()) {
-            pathValue.joinToString(".") { it.toString() }
-        } else {
-            parsePathFromString()
-        }
-    } catch (e: Exception) {
-        // Fallback: парсинг строкового представления
-        parsePathFromString()
-    }.ifBlank { "field" }
-}
-
-private fun ValidationError.parsePathFromString(): String {
     val pathStr = this.path.toString()
-    return when {
-        pathStr.contains("PropRef(") -> {
-            // PropRef - внутренний класс konform для property references
-            // Извлекаем имя свойства из строки вида "PropRef(nameRu)"
-            val match = Regex("PropRef\\(([^)]+)\\)").find(pathStr)
-            match?.groupValues?.get(1) ?: pathStr
-        }
-        else -> pathStr
+    if (pathStr.isBlank()) return "field"
+
+    // Извлекаем имена полей из строки вида "ValidationPath(PropRef(field1), PropRef(field2))"
+    // используя регулярное выражение для надежного парсинга
+    val fieldPattern = Regex("PropRef\\(([^)]+)\\)")
+    val matches = fieldPattern.findAll(pathStr)
+    val fields = matches.map { it.groupValues[1] }.toList()
+
+    return if (fields.isNotEmpty()) {
+        fields.joinToString(".")
+    } else {
+        // Fallback: если паттерн не сработал, возвращаем исходную строку
+        pathStr.ifBlank { "field" }
     }
 }
 

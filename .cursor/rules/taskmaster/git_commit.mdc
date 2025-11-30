@@ -53,26 +53,179 @@ Status: done
 ## Implementation Pattern
 
 ### Step 1: Check Git Repository
+
+**Command to Verify Git Repository:**
 ```bash
-# Check if in git repo
+# Check if in git repo (returns 0 if repo exists, non-zero otherwise)
 git rev-parse --git-dir > /dev/null 2>&1
+echo $?  # 0 = git repo exists, non-zero = not a git repo
 ```
 
-### Step 2: Collect Changed Files
+**Alternative Checks:**
 ```bash
-# Get list of changed files
+# Check if .git directory exists
+test -d .git && echo "Git repo" || echo "Not a git repo"
+
+# Check git command availability
+command -v git > /dev/null 2>&1 && echo "Git installed" || echo "Git not found"
+
+# Get git root directory (fails if not in repo)
+git rev-parse --show-toplevel 2>/dev/null
+```
+
+**Implementation Example:**
+```kotlin
+fun isGitRepository(): Boolean {
+    val result = runCommand("git rev-parse --git-dir")
+    return result.exitCode == 0
+}
+
+// Usage
+if (isGitRepository()) {
+    // Proceed with git operations
+} else {
+    // Skip git commit, continue workflow
+    log.info("Not a git repository, skipping commit")
+}
+```
+
+**Error Handling:**
+- If command fails (not a git repo), return false and skip commit
+- If git is not installed, return false and skip commit
+- Never throw exceptions - gracefully handle all cases
+
+### Step 2: Collect Changed Files
+
+**Git Status Porcelain Format:**
+The `git status --porcelain` command outputs lines in the format:
+- `XY filename` for staged/unstaged changes
+- `?? filename` for untracked files
+- `R  oldfile -> newfile` for renamed files
+
+**Status Codes:**
+- First character (X): staging area status
+  - ` ` (space) = unmodified
+  - `M` = modified
+  - `A` = added
+  - `D` = deleted
+  - `R` = renamed
+  - `C` = copied
+- Second character (Y): working tree status
+  - ` ` (space) = unmodified
+  - `M` = modified
+  - `D` = deleted
+  - `?` = untracked
+
+**Parsing Implementation:**
+```bash
+# Simple extraction (works for most cases)
 git status --porcelain | awk '{print $2}'
-# Output: list of modified/added/deleted files
+
+# Better: handle renamed files and status codes
+git status --porcelain | while IFS= read -r line; do
+    if [[ $line =~ ^R ]]; then
+        # Renamed: "R  oldfile -> newfile"
+        echo "${line#*-> }"
+    elif [[ $line =~ ^\?\? ]]; then
+        # Untracked: "?? filename"
+        echo "${line#?? }"
+    else
+        # Modified/Added/Deleted: "XY filename"
+        echo "${line#* }"
+    fi
+done
+```
+
+**Kotlin/Python Parsing Example:**
+```kotlin
+fun parseGitStatusPorcelain(output: String): List<String> {
+    return output.lines()
+        .filter { it.isNotBlank() }
+        .map { line ->
+            when {
+                line.startsWith("R ") -> {
+                    // Renamed: "R  oldfile -> newfile"
+                    line.substringAfter("-> ").trim()
+                }
+                line.startsWith("?? ") -> {
+                    // Untracked: "?? filename"
+                    line.substringAfter("?? ").trim()
+                }
+                else -> {
+                    // Modified/Added/Deleted: "XY filename" or "XY  filename"
+                    // Remove status codes (first 2-3 chars) and trim
+                    line.substring(3).trim()
+                }
+            }
+        }
+        .filter { it.isNotEmpty() }
+}
+```
+
+**Example Output:**
+```bash
+$ git status --porcelain
+ M src/main/kotlin/Service.kt
+A  src/main/kotlin/NewFile.kt
+D  src/main/kotlin/OldFile.kt
+?? src/main/kotlin/Untracked.kt
+R  src/main/kotlin/OldName.kt -> src/main/kotlin/NewName.kt
+```
+
+**Parsed Result:**
+```
+src/main/kotlin/Service.kt
+src/main/kotlin/NewFile.kt
+src/main/kotlin/OldFile.kt
+src/main/kotlin/Untracked.kt
+src/main/kotlin/NewName.kt
 ```
 
 ### Step 3: Get Task Data
+
+**Read Task from Local tasks.json:**
 ```kotlin
 // Read from tasks.json (local, no API)
-val tasks = readFile(".taskmaster/tasks/tasks.json")
-val task = tasks.find { it.id == taskId }
-val taskId = task.id
-val taskTitle = task.title
-val taskDescription = task.description
+fun readLocalTask(taskId: String, tag: String = "master"): Task? {
+    val tasksJson = readFile(".taskmaster/tasks/tasks.json")
+    val json = Json.parseToJsonElement(tasksJson)
+    val masterTasks = json.jsonObject[tag]?.jsonObject?.get("tasks")?.jsonArray
+    
+    return masterTasks?.firstOrNull { 
+        it.jsonObject["id"]?.jsonPrimitive?.content == taskId 
+    }?.let { taskJson ->
+        Task(
+            id = taskJson.jsonObject["id"]?.jsonPrimitive?.content ?: "",
+            title = taskJson.jsonObject["title"]?.jsonPrimitive?.content ?: "",
+            description = taskJson.jsonObject["description"]?.jsonPrimitive?.content ?: ""
+        )
+    }
+}
+
+// Usage
+val task = readLocalTask(taskId)
+if (task != null) {
+    val taskId = task.id
+    val taskTitle = task.title
+    val taskDescription = task.description
+}
+```
+
+**Alternative: Direct JSON Parsing:**
+```kotlin
+// Simple approach if using JSON library
+val tasksJson = readFile(".taskmaster/tasks/tasks.json")
+val json = JSONObject(tasksJson)
+val master = json.getJSONObject("master")
+val tasks = master.getJSONArray("tasks")
+
+val task = (0 until tasks.length())
+    .map { tasks.getJSONObject(it) }
+    .firstOrNull { it.getString("id") == taskId }
+
+val taskId = task?.getString("id") ?: ""
+val taskTitle = task?.getString("title") ?: ""
+val taskDescription = task?.getString("description") ?: ""
 ```
 
 ### Step 4: Generate Commit Message
@@ -128,12 +281,33 @@ if (taskStatus == "done") {
     try {
         // 1. Check git repo
         if (runCommand("git rev-parse --git-dir").exitCode == 0) {
-            // 2. Get changed files
-            val changedFiles = runCommand("git status --porcelain")
-                .output
-                .lines()
-                .map { it.split(" ").last() }
-                .filter { it.isNotEmpty() }
+            // 2. Get changed files with proper parsing
+            val gitStatusOutput = runCommand("git status --porcelain").output
+            val changedFiles = parseGitStatusPorcelain(gitStatusOutput)
+            
+            // Helper function for parsing
+            fun parseGitStatusPorcelain(output: String): List<String> {
+                return output.lines()
+                    .filter { it.isNotBlank() }
+                    .map { line ->
+                        when {
+                            line.startsWith("R ") -> {
+                                // Renamed: "R  oldfile -> newfile"
+                                line.substringAfter("-> ").trim()
+                            }
+                            line.startsWith("?? ") -> {
+                                // Untracked: "?? filename"
+                                line.substringAfter("?? ").trim()
+                            }
+                            else -> {
+                                // Modified/Added/Deleted: "XY filename" or "XY  filename"
+                                // Remove status codes (first 2-3 chars) and trim
+                                line.substring(3).trim()
+                            }
+                        }
+                    }
+                    .filter { it.isNotEmpty() }
+            }
             
             if (changedFiles.isNotEmpty()) {
                 // 3. Get task data from tasks.json (local)
@@ -202,6 +376,96 @@ Task: 36.1 - Add commit step to workflow
 Status: done
 ```
 
+## Command Reference
+
+### Complete Workflow Commands
+
+**1. Check Git Repository:**
+```bash
+git rev-parse --git-dir > /dev/null 2>&1 && echo "Git repo exists" || echo "Not a git repo"
+```
+
+**2. Get Changed Files:**
+```bash
+# Simple list
+git status --porcelain | awk '{print $2}'
+
+# With proper parsing (handles renames)
+git status --porcelain | while IFS= read -r line; do
+    if [[ $line =~ ^R ]]; then
+        echo "${line#*-> }"
+    elif [[ $line =~ ^\?\? ]]; then
+        echo "${line#?? }"
+    else
+        echo "${line#* }"
+    fi
+done
+```
+
+**3. Read Task from tasks.json:**
+```bash
+# Extract task data using jq (if available)
+task_id="37"
+jq -r ".master.tasks[] | select(.id == \"$task_id\") | {id, title, description}" .taskmaster/tasks/tasks.json
+```
+
+**4. Generate and Execute Commit:**
+```bash
+# Stage all changes
+git add .
+
+# Check if there are staged changes
+if ! git diff --cached --quiet; then
+    # Create commit with message file
+    git commit -F commit_message.txt --no-verify
+fi
+```
+
 ## Integration
 
 This rule is automatically applied after `set_task_status` when status is "done". No manual intervention required.
+
+## Testing the Implementation
+
+**Test Git Repository Check:**
+```bash
+# In a git repo
+cd /path/to/git/repo
+git rev-parse --git-dir > /dev/null 2>&1 && echo "PASS" || echo "FAIL"
+
+# Outside a git repo
+cd /tmp
+git rev-parse --git-dir > /dev/null 2>&1 && echo "FAIL" || echo "PASS"
+```
+
+**Test File Parsing:**
+```bash
+# Create test git status output
+cat > /tmp/test_status <<EOF
+ M src/main/kotlin/Service.kt
+A  src/main/kotlin/NewFile.kt
+D  src/main/kotlin/OldFile.kt
+?? src/main/kotlin/Untracked.kt
+R  src/main/kotlin/OldName.kt -> src/main/kotlin/NewName.kt
+EOF
+
+# Test parsing
+cat /tmp/test_status | while IFS= read -r line; do
+    if [[ $line =~ ^R ]]; then
+        echo "${line#*-> }"
+    elif [[ $line =~ ^\?\? ]]; then
+        echo "${line#?? }"
+    else
+        echo "${line#* }"
+    fi
+done
+```
+
+**Expected Output:**
+```
+src/main/kotlin/Service.kt
+src/main/kotlin/NewFile.kt
+src/main/kotlin/OldFile.kt
+src/main/kotlin/Untracked.kt
+src/main/kotlin/NewName.kt
+```
