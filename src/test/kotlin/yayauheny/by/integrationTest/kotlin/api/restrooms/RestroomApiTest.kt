@@ -3,12 +3,8 @@ package integration.api.restrooms
 import integration.base.BaseIntegrationTest
 import integration.base.KtorTestApplication
 import io.ktor.client.request.get
-import io.ktor.client.request.post
-import io.ktor.client.request.setBody
 import io.ktor.client.statement.bodyAsText
-import io.ktor.http.ContentType
 import io.ktor.http.HttpStatusCode
-import io.ktor.http.contentType
 import kotlin.test.assertEquals
 import kotlin.test.assertNotNull
 import kotlin.test.assertTrue
@@ -17,7 +13,6 @@ import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.jsonArray
 import kotlinx.serialization.json.jsonObject
 import kotlinx.serialization.json.jsonPrimitive
-import kotlinx.serialization.json.intOrNull
 import kotlinx.serialization.json.doubleOrNull
 import org.junit.jupiter.api.DisplayName
 import org.junit.jupiter.api.Nested
@@ -26,154 +21,22 @@ import org.junit.jupiter.api.Test
 import yayauheny.by.helpers.DatabaseTestHelper
 import yayauheny.by.helpers.assertJsonContentType
 import yayauheny.by.helpers.assertStatusAndJsonContent
-import yayauheny.by.helpers.assertBodyContainsAll
 import yayauheny.by.helpers.testGet
-import yayauheny.by.helpers.testPost
 import yayauheny.by.helpers.parseErrorResponse
 import yayauheny.by.helpers.assertHasValidationErrors
-import yayauheny.by.helpers.createRestroomJsonFromTestData
 import yayauheny.by.model.enums.RestroomStatus
 
 @Tag("integration")
 class RestroomApiTest : BaseIntegrationTest() {
-    @Test
-    @DisplayName("GIVEN multiple restrooms WHEN GET with pagination THEN return paginated results")
-    fun given_multiple_restrooms_when_get_with_pagination_then_return_paginated_results() =
-        runTest {
-            val testEnv = DatabaseTestHelper.createTestEnvironment(dslContext)
-            DatabaseTestHelper.insertTestRestroom(
-                dslContext,
-                testEnv.cityId,
-                DatabaseTestHelper.createTestRestroomData(name = "Test Restroom")
-            )
-
-            KtorTestApplication.withApp(dslContext) { client ->
-                val response =
-                    client.get("/api/v1/restrooms") {
-                        url {
-                            parameters.append("page", "0")
-                            parameters.append("size", "2")
-                        }
-                        headers.append("Accept", ContentType.Application.Json.toString())
-                    }
-
-                response.assertStatusAndJsonContent(HttpStatusCode.OK)
-                response.assertBodyContainsAll("\"content\"", "\"totalElements\"")
-            }
-        }
-
-    @Test
-    @DisplayName("GIVEN no restrooms WHEN GET with pagination THEN return empty results")
-    fun given_no_restrooms_when_get_with_pagination_then_return_empty_results() =
-        runTest {
-            KtorTestApplication.withApp(dslContext) { client ->
-                val response =
-                    client.get("/api/v1/restrooms") {
-                        url {
-                            parameters.append("page", "0")
-                            parameters.append("size", "10")
-                        }
-                        headers.append("Accept", ContentType.Application.Json.toString())
-                    }
-
-                response.assertStatusAndJsonContent(HttpStatusCode.OK)
-                val json = Json.parseToJsonElement(response.bodyAsText()).jsonObject
-                assertEquals(0, json["totalElements"]!!.jsonPrimitive.intOrNull)
-            }
-        }
-
-    @Test
-    @DisplayName("GIVEN existing restroom WHEN GET by valid ID THEN return restroom details")
-    fun given_existing_restroom_when_get_by_valid_id_then_return_restroom_details() =
-        runTest {
-            val testEnv = DatabaseTestHelper.createTestEnvironment(dslContext)
-            val restroomData = DatabaseTestHelper.createTestRestroomData(name = "Premium Restroom")
-            val restroomId = DatabaseTestHelper.insertTestRestroom(dslContext, testEnv.cityId, restroomData)
-
-            KtorTestApplication.withApp(dslContext) { client ->
-                val response =
-                    client.get("/api/v1/restrooms/$restroomId") {
-                        headers.append("Accept", ContentType.Application.Json.toString())
-                    }
-
-                response.assertStatusAndJsonContent(HttpStatusCode.OK)
-                val json = Json.parseToJsonElement(response.bodyAsText()).jsonObject
-                assertTrue(json.containsKey("id"))
-                assertEquals("Premium Restroom", json["name"]?.jsonPrimitive?.content)
-            }
-        }
-
-    @Test
-    @DisplayName("GIVEN valid restroom data WHEN POST new restroom THEN create successfully")
-    fun given_valid_restroom_data_when_post_new_restroom_then_create_successfully() =
-        runTest {
-            val testEnv = DatabaseTestHelper.createTestEnvironment(dslContext)
-            val testData =
-                DatabaseTestHelper.createTestRestroomData(
-                    name = "New Restroom",
-                    description = "Test restroom description",
-                    address = "123 New Street",
-                    phones = null, // Не добавляем phones
-                    workTime = null // Не добавляем workTime
-                )
-            val restroomData = createRestroomJsonFromTestData(testData, testEnv.cityId)
-
-            KtorTestApplication.withApp(dslContext) { client ->
-                val response = client.testPost("/api/v1/restrooms", restroomData)
-
-                response.assertStatusAndJsonContent(HttpStatusCode.Created)
-                val json = Json.parseToJsonElement(response.bodyAsText()).jsonObject
-                assertTrue(json.containsKey("id"))
-                assertEquals("New Restroom", json["name"]?.jsonPrimitive?.content)
-            }
-        }
-
-    @Test
-    @DisplayName("GIVEN restroom with minimal valid data WHEN POST THEN create successfully")
-    fun given_restroom_with_minimal_valid_data_when_post_then_create_successfully() =
-        runTest {
-            val testData =
-                DatabaseTestHelper.createTestRestroomData(
-                    name = "Minimal Restroom",
-                    description = "Minimal description",
-                    address = "Minimal Address",
-                    phones = null,
-                    workTime = null
-                )
-            val minimalData = createRestroomJsonFromTestData(testData)
-
-            KtorTestApplication.withApp(dslContext) { client ->
-                val response = client.testPost("/api/v1/restrooms", minimalData)
-
-                response.assertStatusAndJsonContent(HttpStatusCode.Created)
-                val json = Json.parseToJsonElement(response.bodyAsText()).jsonObject
-                assertEquals("Minimal Address", json["address"]?.jsonPrimitive?.content)
-            }
-        }
-
-    @Test
-    @DisplayName("GIVEN invalid restroom data WHEN POST THEN return error response")
-    fun given_invalid_restroom_data_when_post_then_return_error_response() =
-        runTest {
-            val invalidData = """{"invalid": "data"}"""
-
-            KtorTestApplication.withApp(dslContext) { client ->
-                val response =
-                    client.post("/api/v1/restrooms") {
-                        contentType(ContentType.Application.Json)
-                        setBody(invalidData)
-                    }
-
-                response.assertStatusAndJsonContent(HttpStatusCode.BadRequest)
-                val json = Json.parseToJsonElement(response.bodyAsText()).jsonObject
-                assertEquals(400, json["status"]!!.jsonPrimitive.intOrNull)
-            }
-        }
+    // NOTE: Basic CRUD operations (GET /restrooms, GET /restrooms/{id}, POST /restrooms)
+    // are covered by unit tests (RestroomControllerTest, RestroomServiceTest).
+    // Integration tests focus on E2E scenarios with real database queries.
 
     @Test
     @DisplayName("GIVEN existing restrooms WHEN GET nearest with valid coordinates THEN return nearest restrooms with distance")
     fun given_existing_restrooms_when_get_nearest_with_valid_coordinates_then_return_nearest_restrooms() =
         runTest {
+            // Given
             val testEnv = DatabaseTestHelper.createTestEnvironment(dslContext)
             DatabaseTestHelper.insertTestRestroom(
                 dslContext,
@@ -194,6 +57,7 @@ class RestroomApiTest : BaseIntegrationTest() {
                 )
             )
 
+            // When
             KtorTestApplication.withApp(dslContext) { client ->
                 val response =
                     client.testGet(
@@ -201,6 +65,7 @@ class RestroomApiTest : BaseIntegrationTest() {
                         mapOf("lat" to "55.7558", "lon" to "37.6176", "limit" to "5")
                     )
 
+                // Then
                 response.assertStatusAndJsonContent(HttpStatusCode.OK)
                 val jsonArray = Json.parseToJsonElement(response.bodyAsText()).jsonArray
                 assertTrue(jsonArray.isNotEmpty(), "Response should contain at least one restroom")
@@ -220,6 +85,10 @@ class RestroomApiTest : BaseIntegrationTest() {
     @DisplayName("GIVEN no restrooms WHEN GET nearest with valid coordinates THEN return empty array")
     fun given_no_restrooms_when_get_nearest_with_valid_coordinates_then_return_empty_array() =
         runTest {
+            // Given
+            // (no restrooms in database)
+
+            // When
             KtorTestApplication.withApp(dslContext) { client ->
                 val response =
                     client.testGet(
@@ -227,6 +96,7 @@ class RestroomApiTest : BaseIntegrationTest() {
                         mapOf("lat" to "55.7558", "lon" to "37.6176", "limit" to "5")
                     )
 
+                // Then
                 assertEquals(HttpStatusCode.OK, response.status)
                 response.assertJsonContentType()
                 val body = response.bodyAsText()
@@ -238,6 +108,7 @@ class RestroomApiTest : BaseIntegrationTest() {
     @DisplayName("GIVEN multiple restrooms WHEN GET nearest THEN return sorted by distance with correct distance values")
     fun given_multiple_restrooms_when_get_nearest_then_return_sorted_by_distance() =
         runTest {
+            // Given
             val testEnv = DatabaseTestHelper.createTestEnvironment(dslContext)
             DatabaseTestHelper.insertTestRestroom(
                 dslContext,
@@ -267,6 +138,7 @@ class RestroomApiTest : BaseIntegrationTest() {
                 )
             )
 
+            // When
             KtorTestApplication.withApp(dslContext) { client ->
                 val response =
                     client.testGet(
@@ -274,6 +146,7 @@ class RestroomApiTest : BaseIntegrationTest() {
                         mapOf("lat" to "55.7558", "lon" to "37.6176", "limit" to "10")
                     )
 
+                // Then
                 assertEquals(HttpStatusCode.OK, response.status)
                 response.assertJsonContentType()
                 val body = response.bodyAsText()
@@ -349,6 +222,7 @@ class RestroomApiTest : BaseIntegrationTest() {
     @DisplayName("GIVEN many restrooms WHEN GET nearest with small limit THEN return only limited results")
     fun given_many_restrooms_when_get_nearest_with_small_limit_then_return_only_limited_results() =
         runTest {
+            // Given
             val testEnv = DatabaseTestHelper.createTestEnvironment(dslContext)
             repeat(10) { i ->
                 DatabaseTestHelper.insertTestRestroom(
@@ -362,6 +236,7 @@ class RestroomApiTest : BaseIntegrationTest() {
                 )
             }
 
+            // When
             KtorTestApplication.withApp(dslContext) { client ->
                 val response =
                     client.testGet(
@@ -369,6 +244,7 @@ class RestroomApiTest : BaseIntegrationTest() {
                         mapOf("lat" to "55.7558", "lon" to "37.6176", "limit" to "3")
                     )
 
+                // Then
                 assertEquals(HttpStatusCode.OK, response.status)
                 response.assertJsonContentType()
                 val body = response.bodyAsText()
@@ -395,6 +271,7 @@ class RestroomApiTest : BaseIntegrationTest() {
     @DisplayName("GIVEN active and inactive restrooms WHEN GET nearest THEN return only active restrooms")
     fun given_active_and_inactive_restrooms_when_get_nearest_then_return_only_active_restrooms() =
         runTest {
+            // Given
             val testEnv = DatabaseTestHelper.createTestEnvironment(dslContext)
 
             DatabaseTestHelper.insertTestRestroom(
@@ -418,6 +295,7 @@ class RestroomApiTest : BaseIntegrationTest() {
                 )
             )
 
+            // When
             KtorTestApplication.withApp(dslContext) { client ->
                 val response =
                     client.testGet(
@@ -425,6 +303,7 @@ class RestroomApiTest : BaseIntegrationTest() {
                         mapOf("lat" to "55.7558", "lon" to "37.6176", "limit" to "10")
                     )
 
+                // Then
                 assertEquals(HttpStatusCode.OK, response.status)
                 response.assertJsonContentType()
                 val body = response.bodyAsText()
@@ -448,49 +327,21 @@ class RestroomApiTest : BaseIntegrationTest() {
         }
 
     @Nested
-    @DisplayName("Negative Test Cases")
-    inner class NegativeTestCases {
-        @Test
-        @DisplayName("GET /api/v1/restrooms/{id} with invalid UUID returns 400")
-        fun get_restroom_invalid_uuid() =
-            runTest {
-                KtorTestApplication.withApp(dslContext) { client ->
-                    val response = client.testGet("/api/v1/restrooms/invalid-uuid")
-                    response.assertStatusAndJsonContent(HttpStatusCode.BadRequest)
-                }
-            }
-
-        @Test
-        @DisplayName("GET /api/v1/restrooms/city/{cityId} with invalid UUID returns 400")
-        fun get_restrooms_by_city_invalid_uuid() =
-            runTest {
-                KtorTestApplication.withApp(dslContext) { client ->
-                    val response = client.testGet("/api/v1/restrooms/city/invalid-uuid")
-                    response.assertStatusAndJsonContent(HttpStatusCode.BadRequest)
-                }
-            }
-
-        @Test
-        @DisplayName("GET /api/v1/restrooms/{id} with non-existing UUID returns 404")
-        fun get_restroom_non_existing_uuid() =
-            runTest {
-                KtorTestApplication.withApp(dslContext) { client ->
-                    val nonExistentId = "550e8400-e29b-41d4-a716-446655440000"
-                    val response = client.testGet("/api/v1/restrooms/$nonExistentId")
-                    response.assertStatusAndJsonContent(HttpStatusCode.NotFound)
-                    val json = Json.parseToJsonElement(response.bodyAsText()).jsonObject
-                    val message = json["message"]?.jsonPrimitive?.content
-                    // Проверяем, что сообщение об ошибке присутствует (может быть на русском или английском)
-                    assertTrue(message != null && (message.lowercase().contains("not found") || message.contains("не найден")))
-                }
-            }
+    @DisplayName("E2E Negative Test Cases for /nearest endpoint")
+    inner class NearestNegativeTestCases {
+        // NOTE: Basic validation errors (invalid UUID, invalid JSON, invalid enum) are covered
+        // by unit tests (RestroomControllerTest). Integration tests focus on E2E scenarios
+        // with real database queries, particularly for the /nearest endpoint.
 
         @Test
         @DisplayName("GET /api/v1/restrooms/nearest with invalid lat type returns 400")
         fun nearest_invalid_lat_type() =
             runTest {
+                // Given
+                // When
                 KtorTestApplication.withApp(dslContext) { client ->
                     val response = client.testGet("/api/v1/restrooms/nearest", mapOf("lat" to "abc", "lon" to "37.6"))
+                    // Then
                     response.assertStatusAndJsonContent(HttpStatusCode.BadRequest)
                 }
             }
@@ -499,8 +350,11 @@ class RestroomApiTest : BaseIntegrationTest() {
         @DisplayName("GET /api/v1/restrooms/nearest with out-of-range coordinates returns 400 with validation errors")
         fun nearest_out_of_range_coordinates() =
             runTest {
+                // Given
+                // When
                 KtorTestApplication.withApp(dslContext) { client ->
                     val response = client.testGet("/api/v1/restrooms/nearest", mapOf("lat" to "91.0", "lon" to "37.6"))
+                    // Then
                     response.assertStatusAndJsonContent(HttpStatusCode.BadRequest)
 
                     val errorResponse = response.parseErrorResponse()
@@ -514,42 +368,6 @@ class RestroomApiTest : BaseIntegrationTest() {
                         } == true,
                         "Error response should contain field error for 'coordinates.lat' or 'coordinates' with message about 90 degrees, but got: ${errorResponse.errors}"
                     )
-                }
-            }
-
-        @Test
-        @DisplayName("POST /api/v1/restrooms with invalid JSON returns 400")
-        fun post_restroom_invalid_json() =
-            runTest {
-                KtorTestApplication.withApp(dslContext) { client ->
-                    val response = client.testPost("/api/v1/restrooms", """{"invalid": "data"}""")
-                    response.assertStatusAndJsonContent(HttpStatusCode.BadRequest)
-                }
-            }
-
-        @Test
-        @DisplayName("POST /api/v1/restrooms with invalid enum returns 400")
-        fun post_restroom_invalid_enum() =
-            runTest {
-                KtorTestApplication.withApp(dslContext) { client ->
-                    val invalidEnumJson =
-                        """
-                        {
-                            "status": "ACTIVE",
-                            "name": "Test Restroom",
-                            "address": "Test Address",
-                            "feeType": "UNKNOWN",
-                            "accessibilityType": "UNISEX",
-                            "coordinates": {
-                                "lat": 55.7,
-                                "lon": 37.6
-                            },
-                            "dataSource": "MANUAL",
-                            "amenities": {}
-                        }
-                        """.trimIndent()
-                    val response = client.testPost("/api/v1/restrooms", invalidEnumJson)
-                    response.assertStatusAndJsonContent(HttpStatusCode.BadRequest)
                 }
             }
     }
