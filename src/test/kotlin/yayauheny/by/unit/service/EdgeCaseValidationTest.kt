@@ -378,8 +378,6 @@ class EdgeCaseValidationTest {
         @Test
         @DisplayName("Null required fields should fail validation")
         fun null_required_fields_should_fail() {
-            // Note: This test depends on how validation handles nulls
-            // If the DTO itself doesn't allow nulls, this would be a compile-time check
             // For runtime validation, we test with empty strings or invalid values
         }
     }

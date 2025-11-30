@@ -20,9 +20,6 @@ import yayauheny.by.helpers.testPost
 
 @Tag("integration")
 class CountryApiTest : BaseIntegrationTest() {
-    // NOTE: Basic CRUD operations (GET /countries, GET /countries/{id}, POST /countries)
-    // are covered by unit tests (CountryControllerTest, CountryServiceTest).
-    // Integration tests focus on E2E scenarios with real database constraints.
 
     @Nested
     @DisplayName("E2E Test Cases - Database Constraints")

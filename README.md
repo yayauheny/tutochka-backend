@@ -2,6 +2,7 @@
 
 > **A REST API for finding public restrooms and toilets worldwide**
 
+[![Version](https://img.shields.io/badge/Version-0.1.0-blue.svg)](https://github.com/your-org/tutochka-backend/releases/tag/v0.1.0)
 [![Kotlin](https://img.shields.io/badge/Kotlin-2.1.10-blue.svg)](https://kotlinlang.org/)
 [![Ktor](https://img.shields.io/badge/Ktor-3.2.3-green.svg)](https://ktor.io/)
 [![PostgreSQL](https://img.shields.io/badge/PostgreSQL-42.7.7-blue.svg)](https://postgresql.org/)
@@ -114,7 +115,7 @@ APP_ENV=development
    
    # Or build and run / Или соберите и запустите
    ./gradlew build
-   java -jar build/libs/tutochka-backend-0.0.1.jar
+   java -jar build/libs/tutochka-backend-0.1.0.jar
    ```
 
 5. **Access the API / Получите доступ к API:**
@@ -223,6 +224,66 @@ docker-compose up -d
 
 - **Email:** support@tutochka.by
 - **Issues:** [GitHub Issues](https://github.com/your-org/tutochka-backend/issues)
+
+---
+
+## 🗺️ Roadmap & Future Improvements / Дорожная карта и улучшения
+
+### High Priority / Высокий приоритет
+
+#### Performance & Scalability / Производительность и масштабируемость
+- [ ] **In-memory caching** - Implement Caffeine cache for countries and cities to reduce database load (Task #5)
+- [ ] **API optimization** - Batch write operations to Task Master AI to reduce API calls (Task #27)
+- [ ] **Query optimization** - Review and optimize database queries, especially for nearest restrooms endpoint
+
+#### Code Quality & Maintainability / Качество кода и поддерживаемость
+- [ ] **Standardize error messages** - Centralize error messages and implement i18n-ready constants (Task #8)
+- [ ] **Structured logging** - Add context (request path, method, status, query params) to error logs (Task #14)
+- [ ] **Update repository exception tests** - Complete tests for RepositoryException and EntityNotFoundException (Task #13.1)
+
+### Medium Priority / Средний приоритет
+
+#### Testing & Quality Assurance / Тестирование и качество
+- [ ] **Test quality audit** - Assess test code for readability, duplication, complexity (Task #58)
+- [ ] **Test performance analysis** - Identify slow tests and bottlenecks (Task #59)
+- [ ] **Test stability** - Detect and fix flaky tests, timing dependencies (Task #60)
+- [ ] **Missing test scenarios** - Identify gaps in error handling, edge cases, integration scenarios (Task #61)
+- [ ] **Mock usage review** - Evaluate mock patterns and test data creation (Task #62)
+- [ ] **Edge case tests** - Add comprehensive tests for validation, pagination, coordinates (Task #47)
+
+#### Architecture & Refactoring / Архитектура и рефакторинг
+- [ ] **Package reorganization** - Separate DTOs and entities in model package (Task #15)
+- [ ] **Split common package** - Organize into api.errors, mapper, query.builder subpackages (Task #16)
+- [ ] **Group utility functions** - Organize util package by domain (http, geo, db, serialization, config) (Task #17)
+
+#### Features / Функциональность
+- [ ] **Filtering and status checking** - Implement local task filtering by status, priority, dependencies (Task #29)
+- [ ] **AI model integration** - Configure economical models (sonar, gemini-2.0-flash) for operations (Task #28)
+
+### Low Priority / Низкий приоритет
+
+#### Development Tools / Инструменты разработки
+- [ ] **Structured logging format** - Enforce markdown format for implementation logs (Task #75)
+- [ ] **Commit message format** - Standardize git commit messages (Task #76)
+- [ ] **Utility tests** - Add unit tests for GeoDsl, ApplicationCallExtensions, RepositoryExtensions (Task #20)
+
+#### Documentation / Документация
+- [ ] **API documentation improvements** - Enhance OpenAPI specs with more examples
+- [ ] **Architecture documentation** - Expand ARCHITECTURE_IMPROVEMENTS.md with detailed diagrams
+- [ ] **Contributing guide** - Add CONTRIBUTING.md with development guidelines
+
+### Future Considerations / Будущие улучшения
+
+- [ ] **Authentication & Authorization** - Add JWT-based authentication for protected endpoints
+- [ ] **Rate limiting** - Implement rate limiting to prevent abuse
+- [ ] **Metrics & Monitoring** - Add Prometheus metrics and health checks
+- [ ] **CI/CD Pipeline** - Set up GitHub Actions for automated testing and deployment
+- [ ] **API versioning** - Implement proper API versioning strategy
+- [ ] **GraphQL support** - Consider adding GraphQL endpoint alongside REST
+- [ ] **Full-text search** - Add Elasticsearch for advanced search capabilities
+- [ ] **Image upload** - Support for restroom photos and images
+- [ ] **User reviews & ratings** - Allow users to rate and review restrooms
+- [ ] **Real-time updates** - WebSocket support for real-time restroom status updates
 
 ---
 

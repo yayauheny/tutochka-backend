@@ -2,7 +2,7 @@ openapi: 3.0.3
 info:
   title: Tutochka Backend API
   description: REST API for managing countries, cities, and restrooms
-  version: 1.0.0
+  version: 0.1.0
   contact:
     name: Tutochka Team
     email: support@tutochka.by
