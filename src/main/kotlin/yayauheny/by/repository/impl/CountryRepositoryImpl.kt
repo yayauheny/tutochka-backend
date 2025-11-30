@@ -3,6 +3,7 @@ package yayauheny.by.repository.impl
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import org.jooq.DSLContext
+import yayauheny.by.common.errors.EntityNotFoundException
 import yayauheny.by.common.mapper.CountryMapper
 import yayauheny.by.common.query.*
 import yayauheny.by.common.query.builder.QueryBuilder
@@ -162,7 +163,7 @@ class CountryRepositoryImpl(
                         COUNTRIES.NAME_RU,
                         COUNTRIES.NAME_EN
                     ).fetchOne()
-                    ?: error("Не удалось обновить страну $id")
+                    ?: throw EntityNotFoundException("Страна", id.toString())
             CountryMapper.mapFromRecord(rec)
         }
 

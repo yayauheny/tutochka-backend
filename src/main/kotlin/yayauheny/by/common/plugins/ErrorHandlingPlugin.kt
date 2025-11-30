@@ -11,7 +11,9 @@ import kotlinx.serialization.SerializationException
 import org.slf4j.LoggerFactory
 import org.postgresql.util.PSQLException
 import yayauheny.by.common.errors.ConflictException
+import yayauheny.by.common.errors.EntityNotFoundException
 import yayauheny.by.common.errors.ErrorResponse
+import yayauheny.by.common.errors.RepositoryException
 import yayauheny.by.common.errors.RestException
 import yayauheny.by.common.errors.ValidationException
 
@@ -83,29 +85,63 @@ fun Application.configureErrorHandling() {
             call.respond(HttpStatusCode.Conflict, errorResponse)
         }
 
+        exception<EntityNotFoundException> { call, cause ->
+            logger.warn("Entity not found: ${cause.message}", cause)
+
+            val errorResponse =
+                ErrorResponse(
+                    status = HttpStatusCode.NotFound.value,
+                    message = cause.message,
+                    path = call.request.path()
+                )
+
+            call.respond(HttpStatusCode.NotFound, errorResponse)
+        }
+
+        exception<RepositoryException> { call, cause ->
+            logger.error("Repository error: ${cause.message}", cause)
+
+            val errorResponse =
+                ErrorResponse(
+                    status = HttpStatusCode.InternalServerError.value,
+                    message = "Ошибка доступа к данным",
+                    path = call.request.path()
+                )
+
+            call.respond(HttpStatusCode.InternalServerError, errorResponse)
+        }
+
         exception<PSQLException> { call, cause ->
             logger.warn("PostgreSQL exception occurred: ${cause.message}", cause)
 
-            // Обработка ошибки уникальности (23505)
-            val errorResponse =
-                if (cause.sqlState == "23505") {
-                    ErrorResponse(
-                        status = HttpStatusCode.Conflict.value,
-                        message = "Город с таким названием уже существует в этой стране",
-                        path = call.request.path()
-                    )
-                } else {
-                    ErrorResponse(
-                        status = HttpStatusCode.InternalServerError.value,
-                        message = "Ошибка базы данных",
-                        path = call.request.path()
-                    )
+            val (statusCode, message) =
+                when (cause.sqlState) {
+                    // Unique violation
+                    "23505" -> HttpStatusCode.Conflict to "Нарушение уникальности: запись с такими данными уже существует"
+                    // Foreign key violation
+                    "23503" -> HttpStatusCode.BadRequest to "Нарушение внешнего ключа: связанная запись не найдена"
+                    // Not null violation
+                    "23502" -> HttpStatusCode.BadRequest to "Нарушение ограничения: обязательное поле не может быть пустым"
+                    // Check constraint violation
+                    "23514" -> HttpStatusCode.BadRequest to "Нарушение ограничения проверки: данные не соответствуют требованиям"
+                    // Undefined table
+                    "42P01" -> HttpStatusCode.InternalServerError to "Ошибка базы данных: таблица не найдена"
+                    // Connection errors
+                    "08000", "08003", "08006", "08001", "08004", "08007", "08P01" ->
+                        HttpStatusCode.ServiceUnavailable to
+                            "Ошибка подключения к базе данных"
+                    // Other database errors
+                    else -> HttpStatusCode.InternalServerError to "Ошибка базы данных"
                 }
 
-            call.respond(
-                if (cause.sqlState == "23505") HttpStatusCode.Conflict else HttpStatusCode.InternalServerError,
-                errorResponse
-            )
+            val errorResponse =
+                ErrorResponse(
+                    status = statusCode.value,
+                    message = message,
+                    path = call.request.path()
+                )
+
+            call.respond(statusCode, errorResponse)
         }
 
         exception<IllegalArgumentException> { call, cause ->

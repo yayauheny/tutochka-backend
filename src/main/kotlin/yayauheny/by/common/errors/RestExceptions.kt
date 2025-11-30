@@ -46,3 +46,25 @@ class ServiceUnavailableException(
     cause: Throwable? = null,
     val retryAfter: Int? = null
 ) : RestException(HttpStatusCode.ServiceUnavailable, message, cause)
+
+/**
+ * Базовое исключение для ошибок репозитория.
+ * Используется для внутренних ошибок доступа к данным.
+ */
+class RepositoryException(
+    message: String,
+    cause: Throwable? = null
+) : Exception(message, cause)
+
+/**
+ * Исключение, выбрасываемое когда сущность не найдена в репозитории.
+ * Автоматически преобразуется в NotFoundException на уровне обработки ошибок.
+ */
+class EntityNotFoundException(
+    entityType: String,
+    entityId: String? = null,
+    cause: Throwable? = null
+) : Exception(
+        entityId?.let { "$entityType с ID $it не найден" } ?: "$entityType не найден",
+        cause
+    )

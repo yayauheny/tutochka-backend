@@ -5,6 +5,7 @@ import java.util.UUID
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import org.jooq.DSLContext
+import yayauheny.by.common.errors.EntityNotFoundException
 import yayauheny.by.common.mapper.RestroomMapper
 import yayauheny.by.common.query.FieldMeta
 import yayauheny.by.common.query.FieldParsers
@@ -22,6 +23,7 @@ import yayauheny.by.model.restroom.RestroomUpdateDto
 import yayauheny.by.repository.RestroomRepository
 import yayauheny.by.tables.references.RESTROOMS
 import yayauheny.by.util.getAllRestroomsFieldsExceptCoordinates
+import yayauheny.by.util.getAllRestroomsFieldsWithCoordinates
 import yayauheny.by.util.distanceGeographyTo
 import yayauheny.by.util.knnOrderTo
 import yayauheny.by.util.latAlias
@@ -127,12 +129,9 @@ class RestroomRepositoryImpl(
 
     override suspend fun findAll(pagination: PaginationRequest): PageResponse<RestroomResponseDto> =
         withContext(Dispatchers.IO) {
-            val latField = RESTROOMS.COORDINATES.latAlias()
-            val lonField = RESTROOMS.COORDINATES.lonAlias()
-
             val baseQuery =
                 ctx
-                    .select(*(getAllRestroomsFieldsExceptCoordinates() + latField + lonField).toTypedArray())
+                    .select(*getAllRestroomsFieldsWithCoordinates().toTypedArray())
                     .from(RESTROOMS)
                     .where(RESTROOMS.IS_DELETED.eq(false).or(RESTROOMS.IS_DELETED.isNull))
             executor.executePaginated(
@@ -144,12 +143,9 @@ class RestroomRepositoryImpl(
 
     override suspend fun findSingle(filters: List<FilterCriteria>): RestroomResponseDto? =
         withContext(Dispatchers.IO) {
-            val latField = RESTROOMS.COORDINATES.latAlias()
-            val lonField = RESTROOMS.COORDINATES.lonAlias()
-
             val baseQuery =
                 ctx
-                    .select(*(getAllRestroomsFieldsExceptCoordinates() + latField + lonField).toTypedArray())
+                    .select(*getAllRestroomsFieldsWithCoordinates().toTypedArray())
                     .from(RESTROOMS)
                     .where(RESTROOMS.IS_DELETED.eq(false).or(RESTROOMS.IS_DELETED.isNull))
             executor.executeSingle(
@@ -161,11 +157,8 @@ class RestroomRepositoryImpl(
 
     override suspend fun findById(id: UUID): RestroomResponseDto? =
         withContext(Dispatchers.IO) {
-            val latField = RESTROOMS.COORDINATES.latAlias()
-            val lonField = RESTROOMS.COORDINATES.lonAlias()
-
             ctx
-                .select(*getAllRestroomsFieldsExceptCoordinates().toTypedArray(), latField, lonField)
+                .select(*getAllRestroomsFieldsWithCoordinates().toTypedArray())
                 .from(RESTROOMS)
                 .where(
                     RESTROOMS.ID
@@ -206,28 +199,9 @@ class RestroomRepositoryImpl(
                     .set(r.INHERIT_PARENT_SCHEDULE, createDto.inheritParentSchedule)
                     .set(r.CREATED_AT, now)
                     .set(r.UPDATED_AT, now)
-                    .returning(
-                        r.ID,
-                        r.CITY_ID,
-                        r.NAME,
-                        r.DESCRIPTION,
-                        r.ADDRESS,
-                        r.PHONES,
-                        r.WORK_TIME,
-                        r.FEE_TYPE,
-                        r.ACCESSIBILITY_TYPE,
-                        r.DATA_SOURCE,
-                        r.STATUS,
-                        r.AMENITIES,
-                        r.PARENT_PLACE_NAME,
-                        r.PARENT_PLACE_TYPE,
-                        r.INHERIT_PARENT_SCHEDULE,
-                        r.CREATED_AT,
-                        r.UPDATED_AT,
-                        latF,
-                        lonF
-                    ).fetchOne()
-                    ?: error("Ошибка при сохранении туалета")
+                    .returningResult(getAllRestroomsFieldsWithCoordinates())
+                    .fetchOne()
+                    ?: throw EntityNotFoundException("Туалет", "не удалось сохранить")
 
             RestroomMapper.mapFromRecord(rec)
         }
@@ -250,28 +224,9 @@ class RestroomRepositoryImpl(
                         pointExpr(updateDto.coordinates.lon, updateDto.coordinates.lat, r.COORDINATES)
                     ).set(r.UPDATED_AT, Instant.now())
                     .where(r.ID.eq(id))
-                    .returning(
-                        r.ID,
-                        r.CITY_ID,
-                        r.NAME,
-                        r.DESCRIPTION,
-                        r.ADDRESS,
-                        r.PHONES,
-                        r.WORK_TIME,
-                        r.FEE_TYPE,
-                        r.ACCESSIBILITY_TYPE,
-                        r.DATA_SOURCE,
-                        r.STATUS,
-                        r.AMENITIES,
-                        r.PARENT_PLACE_NAME,
-                        r.PARENT_PLACE_TYPE,
-                        r.INHERIT_PARENT_SCHEDULE,
-                        r.CREATED_AT,
-                        r.UPDATED_AT,
-                        latF,
-                        lonF
-                    ).fetchOne()
-                    ?: error("Не удалось обновить туалет $id")
+                    .returningResult(getAllRestroomsFieldsWithCoordinates())
+                    .fetchOne()
+                    ?: throw EntityNotFoundException("Туалет", id.toString())
 
             RestroomMapper.mapFromRecord(rec)
         }
@@ -321,14 +276,11 @@ class RestroomRepositoryImpl(
         pagination: PaginationRequest
     ): PageResponse<RestroomResponseDto> =
         withContext(Dispatchers.IO) {
-            val latField = RESTROOMS.COORDINATES.latAlias()
-            val lonField = RESTROOMS.COORDINATES.lonAlias()
-
             val cityFilter = FilterCriteria("cityId", FilterOperator.EQ, cityId.toString())
             val filters = pagination.filters + cityFilter
             val baseQuery =
                 ctx
-                    .select(*(getAllRestroomsFieldsExceptCoordinates() + latField + lonField).toTypedArray())
+                    .select(*getAllRestroomsFieldsWithCoordinates().toTypedArray())
                     .from(RESTROOMS)
                     .where(RESTROOMS.IS_DELETED.eq(false).or(RESTROOMS.IS_DELETED.isNull))
             executor.executePaginated(
