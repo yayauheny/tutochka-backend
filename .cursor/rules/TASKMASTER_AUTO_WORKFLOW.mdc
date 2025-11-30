@@ -1,0 +1,260 @@
+---
+description: MANDATORY automatic Task Master workflow for ALL implementation requests
+globs: **/*
+alwaysApply: true
+---
+
+# MANDATORY: Automatic Task Master Workflow
+
+## CRITICAL RULE
+
+**EVERY implementation request** (feature, bug fix, refactor) **MUST automatically**:
+1. Create PRD → Save to `.taskmaster/docs/[feature-name]-prd.txt`
+2. Parse PRD → Call `parse_prd` to generate subtasks
+3. Read tasks.json locally → Get generated subtasks (NO API)
+4. Work on generated subtasks → Implement strictly according to plan
+5. Log progress → Use `update_subtask` with structured format
+
+**No exceptions** - happens automatically, even if user doesn't mention Task Master.
+
+## Workflow Pattern
+
+```
+User Request → Analyze → Create PRD → parse_prd → Read tasks.json (local) → Work on Subtasks → Log Progress → set_task_status(done) → Auto Git Commit → Complete
+```
+
+## Pattern Recognition
+
+Trigger for: "Add X", "Implement Y", "Create Z", "Build X", "Refactor Y", "Fix X" (if multi-step)
+
+## Implementation Steps
+
+### Step 1: Detect User Request and Create PRD
+
+**Pattern Recognition:**
+- Keywords: "Add", "Implement", "Create", "Build", "Refactor", "Fix" (if multi-step)
+- Multi-step indicators: mentions of multiple components, features, or phases
+- Explicit feature requests: "I want to add X", "Let's implement Y"
+
+**PRD Creation Pattern:**
+```kotlin
+// Extract feature name from user request
+val featureName = extractFeatureName(userRequest) // e.g., "user-authentication", "api-caching"
+
+// Generate PRD content
+val prdContent = """
+# ${featureName.replace("-", " ").capitalize()} PRD
+
+## Overview
+${extractOverview(userRequest)}
+
+## Goals
+${extractGoals(userRequest).mapIndexed { i, goal -> "${i + 1}. $goal" }.joinToString("\n")}
+
+## Requirements
+
+### Functional
+${extractFunctionalRequirements(userRequest).map { "- $it" }.joinToString("\n")}
+
+### Technical
+${extractTechnicalRequirements(userRequest).map { "- $it" }.joinToString("\n")}
+
+## Success Criteria
+${extractSuccessCriteria(userRequest).map { "- $it" }.joinToString("\n")}
+""".trimIndent()
+
+// Save PRD to file
+writeFile(".taskmaster/docs/${featureName}-prd.txt", prdContent)
+```
+
+**Example PRD Generation:**
+```kotlin
+// User request: "Add user authentication with JWT tokens"
+val prdContent = """
+# User Authentication PRD
+
+## Overview
+Implement user authentication system using JWT tokens for secure API access.
+
+## Goals
+1. Enable user registration and login
+2. Generate and validate JWT tokens
+3. Protect API endpoints with authentication middleware
+
+## Requirements
+
+### Functional
+- User registration endpoint (POST /api/auth/register)
+- User login endpoint (POST /api/auth/login)
+- JWT token generation on successful login
+- Token validation middleware
+- Protected route examples
+
+### Technical
+- Use JWT library (e.g., jjwt for Kotlin)
+- Store hashed passwords (bcrypt)
+- Token expiration (24 hours)
+- Refresh token mechanism
+- Error handling for invalid tokens
+
+## Success Criteria
+- Users can register and login
+- JWT tokens are generated and validated correctly
+- Protected endpoints require valid tokens
+- Invalid tokens return 401 Unauthorized
+"""
+```
+
+### Step 2: Parse PRD and Generate Subtasks
+
+**Estimate Task Count:**
+```kotlin
+fun estimateTaskCount(prdContent: String): Int {
+    val goals = prdContent.split("## Goals")[1].split("##")[0].lines().filter { it.trim().startsWith("-") || it.trim().matches(Regex("\\d+\\.")) }.size
+    val functionalReqs = prdContent.split("### Functional")[1].split("###")[0].lines().filter { it.trim().startsWith("-") }.size
+    val technicalReqs = prdContent.split("### Technical")[1].split("##")[0].lines().filter { it.trim().startsWith("-") }.size
+    
+    // Estimate: 1-2 tasks per goal, 1 task per 2-3 requirements
+    return (goals * 1.5 + (functionalReqs + technicalReqs) / 2.5).toInt().coerceAtLeast(3)
+}
+```
+
+**Call parse_prd API:**
+```kotlin
+// Use MCP tool
+mcp_task-master-ai_parse_prd(
+    projectRoot: "/absolute/path/to/project",
+    input: ".taskmaster/docs/${featureName}-prd.txt",
+    numTasks: estimateTaskCount(prdContent),
+    append: true, // Append to existing tasks
+    force: false  // Don't overwrite existing tasks.json
+)
+```
+
+**Error Handling:**
+```kotlin
+try {
+    parse_prd(input, numTasks, append = true)
+} catch (e: Exception) {
+    // Handle API errors
+    log.error("Failed to parse PRD: ${e.message}")
+    // Optionally retry or inform user
+    // Workflow can continue with manual task creation if needed
+}
+```
+
+### Step 3: Get Generated Tasks (Local - NO API)
+
+**Read tasks.json and Extract New Tasks:**
+```kotlin
+// Read tasks.json locally (no API call)
+val tasksJsonContent = read_file(".taskmaster/tasks/tasks.json")
+val json = Json.parseToJsonElement(tasksJsonContent)
+val masterTag = json.jsonObject["master"]
+val allTasks = masterTag?.jsonObject?.get("tasks")?.jsonArray ?: emptyList()
+
+// Get last task ID before PRD parsing (cache this before calling parse_prd)
+val lastTaskIdBeforeParse = getLastTaskId(allTasks) // e.g., 68
+
+// After parse_prd completes, read again to get new tasks
+val updatedTasksJsonContent = read_file(".taskmaster/tasks/tasks.json")
+val updatedJson = Json.parseToJsonElement(updatedTasksJsonContent)
+val updatedMasterTag = updatedJson.jsonObject["master"]
+val updatedAllTasks = updatedMasterTag?.jsonObject?.get("tasks")?.jsonArray ?: emptyList()
+
+// Filter new tasks (IDs greater than lastTaskIdBeforeParse)
+val newTasks = updatedAllTasks.filter { task ->
+    val taskId = task.jsonObject["id"]?.jsonPrimitive?.content ?: "0"
+    taskId.toIntOrNull()?.let { it > lastTaskIdBeforeParse } ?: false
+}
+
+// Extract task details
+newTasks.forEach { task ->
+    val taskId = task.jsonObject["id"]?.jsonPrimitive?.content ?: ""
+    val title = task.jsonObject["title"]?.jsonPrimitive?.content ?: ""
+    val description = task.jsonObject["description"]?.jsonPrimitive?.content ?: ""
+    val details = task.jsonObject["details"]?.jsonPrimitive?.content ?: ""
+    val status = task.jsonObject["status"]?.jsonPrimitive?.content ?: "pending"
+    val dependencies = task.jsonObject["dependencies"]?.jsonArray?.map { 
+        it.jsonPrimitive.content 
+    } ?: emptyList()
+    
+    // Work on this task
+    log.info("Working on task $taskId: $title")
+}
+```
+
+**Helper Function:**
+```kotlin
+fun getLastTaskId(tasksArray: JsonArray): Int {
+    return tasksArray.mapNotNull { task ->
+        task.jsonObject["id"]?.jsonPrimitive?.content?.toIntOrNull()
+    }.maxOrNull() ?: 0
+}
+```
+
+### Step 4: Work on Subtasks
+```kotlin
+val taskDetails = newTasks[0].details
+// Implement according to details
+update_subtask(taskId, structuredProgressLog)
+set_task_status(taskId, "done")
+
+// Step 5: Auto Git Commit (if task is done)
+if (taskStatus == "done") {
+    // Collect changed files
+    val changedFiles = getChangedFiles() // git status --porcelain
+    if (changedFiles.isNotEmpty()) {
+        // Generate commit message
+        val commitMsg = generateCommitMessage(taskId, taskTitle, taskDescription, changedFiles)
+        // Execute git commit
+        gitAddAndCommit(commitMsg)
+    }
+}
+```
+
+## Strict Rules
+
+- ✅ DO: Implement exactly what's in generated subtasks
+- ✅ DO: Follow the order and dependencies
+- ✅ DO: Log progress in subtask details
+- ❌ DON'T: Skip subtasks or work outside the plan
+
+## Progress Logging Format
+
+```markdown
+## Implementation Plan
+1. Files: src/main/.../Service.kt
+2. Changes: Add feature X
+3. Issues: None
+4. Progress: [x] Created service, [ ] Add tests
+5. Next: Write unit tests
+```
+
+## Git Commit After Task Completion
+
+After setting task status to "done", automatically:
+1. Check if git repository exists
+2. Collect changed files: `git status --porcelain`
+3. Generate commit message from task data
+4. Execute: `git add .` and `git commit -m "{message}"`
+
+Commit message format:
+```
+feat(task-{id}): {task_title}
+
+{task_description}
+
+Changes:
+- {list of changed files}
+
+Task: {id} - {title}
+Status: done
+```
+
+**Non-blocking**: If git is unavailable or no changes, workflow continues.
+
+## References
+
+- [taskmaster_integration.mdc](mdc:.cursor/rules/taskmaster_integration.mdc) - Integration rules
+- [dev_workflow.mdc](mdc:.cursor/rules/taskmaster/dev_workflow.mdc) - Development patterns

@@ -1,0 +1,769 @@
+{
+  "master": {
+    "tasks": [
+      {
+        "id": "5",
+        "title": "Implement in-memory caching for countries and cities using Caffeine",
+        "description": "Add caching layer for frequently requested read-only data like countries and cities to reduce database load.",
+        "details": "Add Caffeine dependency version 3.1.8. Create CacheConfig.kt to configure caches with maximumSize and expireAfterWrite TTL. Inject caches into CountryService and CityService. Use cache.get(key) with loader lambda for reads. Invalidate cache on writes.",
+        "testStrategy": "Unit tests for cache hit/miss scenarios. Integration tests to verify cache invalidation after create/update operations.",
+        "priority": "low",
+        "dependencies": [],
+        "status": "pending",
+        "subtasks": []
+      },
+      {
+        "id": "8",
+        "title": "Standardize error messages and implement i18n-ready error constants",
+        "description": "Centralize all error messages in a resource file or constants object and standardize language to English for API consistency and future i18n support.",
+        "status": "pending",
+        "dependencies": [],
+        "priority": "medium",
+        "details": "Create ErrorMessages object with formatted string constants for common errors. Replace inline error strings in exceptions and logs with references to ErrorMessages. Consider integration with i18n libraries for future multi-language support.\n<info added on 2025-11-30T10:29:34.826Z>\nTask deferred for later implementation. Per PROGRESS_TRACKING.md, error messages will remain in Russian. This task has low priority and will be completed in a future sprint.\n</info added on 2025-11-30T10:29:34.826Z>\n\nRecent validation logic has been added to DatabaseConfig.kt in the init block, covering required fields (host, name, user, password), port range (1-65535), positive values for maxPoolSize, connectionTimeout, idleTimeout, maxLifetime, and minIdle constraints (>=0 and <= maxPoolSize, idleTimeout <= maxLifetime). DatabaseConfigTest.kt includes tests for all boundary cases. Error messages from this validation should also be centralized and standardized as part of this task, ensuring consistency with future API error handling standards (e.g., RFC 7807 or RFC 9457 for structured error responses).",
+        "testStrategy": "Verify all error messages are replaced. Test error responses for correct message formatting. Ensure validation error messages from DatabaseConfig.kt are included and follow the standardized format.",
+        "subtasks": []
+      },
+      {
+        "id": "13",
+        "title": "Replace error() calls with specific repository exceptions",
+        "description": "Create custom exception classes for repository errors and replace generic error() calls with throwing these exceptions for better error classification.",
+        "details": "Define RepositoryException and EntityNotFoundException classes. Replace error() calls in repositories with throw RepositoryException or EntityNotFoundException with descriptive messages. Update error handling to recognize these exceptions.",
+        "testStrategy": "Unit tests to verify exceptions are thrown as expected. Logging tests to confirm exception types are logged correctly.",
+        "priority": "medium",
+        "dependencies": [
+          "12"
+        ],
+        "status": "done",
+        "subtasks": [
+          {
+            "id": 1,
+            "title": "Update tests for new repository exceptions",
+            "description": "Update existing tests to verify that RepositoryException and EntityNotFoundException are thrown correctly and handled properly",
+            "details": "",
+            "status": "pending",
+            "dependencies": [],
+            "parentTaskId": 13,
+            "parentId": "undefined"
+          }
+        ],
+        "updatedAt": "2025-11-30T10:22:15.615Z"
+      },
+      {
+        "id": "14",
+        "title": "Add structured logging with context for error handling",
+        "description": "Improve error logs by including structured context such as request path, method, status, and query parameters for better diagnostics.",
+        "details": "Enhance ErrorHandlingPlugin.kt to log exceptions with structured data maps including path, HTTP method, status code, and query parameters. Use logger.warn or logger.error accordingly.",
+        "testStrategy": "Review logs during error scenarios to confirm presence of structured context. Automated tests to verify logging calls.",
+        "priority": "low",
+        "dependencies": [
+          "12"
+        ],
+        "status": "pending",
+        "subtasks": []
+      },
+      {
+        "id": "15",
+        "title": "Reorganize model package to separate DTOs and entities",
+        "description": "Refactor project package structure to clearly separate DTOs and entity classes for better maintainability and clarity.",
+        "details": "Create model/dto and model/entity subpackages. Move CityCreateDto, CityResponseDto, etc. to dto/, and CountryEntity, CityEntity to entity/. Update imports and references accordingly.",
+        "testStrategy": "Build and run tests to ensure no import errors. Code review for package structure consistency.",
+        "priority": "low",
+        "dependencies": [],
+        "status": "pending",
+        "subtasks": []
+      },
+      {
+        "id": "16",
+        "title": "Split common package into api, mapper, and query subpackages",
+        "description": "Refactor common package to reduce overload by dividing into more focused packages like api.errors, mapper, and query.builder.",
+        "details": "Create new packages api.errors, mapper, query.builder. Move relevant classes and files accordingly. Update project references and imports.",
+        "testStrategy": "Verify project builds and tests pass after refactoring. Code review for package usage.",
+        "priority": "low",
+        "dependencies": [
+          "15"
+        ],
+        "status": "pending",
+        "subtasks": []
+      },
+      {
+        "id": "17",
+        "title": "Group utility functions in util package by domain",
+        "description": "Organize utility classes into domain-specific subpackages within util for better modularity and discoverability.",
+        "details": "Create util/http, util/geo, util/db, util/serialization, util/config subpackages. Move ApplicationCallExtensions.kt to http/, GeoDsl.kt to geo/, RepositoryExtensions.kt to db/, Serializers.kt to serialization/, EnvironmentExtensions.kt to config/.",
+        "testStrategy": "Build and run tests to confirm no breakage. Code review for consistent usage.",
+        "priority": "low",
+        "dependencies": [
+          "16"
+        ],
+        "status": "pending",
+        "subtasks": []
+      },
+      {
+        "id": "18",
+        "title": "Add comprehensive unit tests for QueryBuilder and QueryExecutor",
+        "description": "The task to add unit tests for QueryExecutor has been skipped per user request. Existing tests on services and controllers already cover QueryExecutor functionality. The task is marked as completed.",
+        "status": "done",
+        "dependencies": [],
+        "priority": "medium",
+        "details": "Tests for QueryExecutor were removed because service and controller tests sufficiently cover its functionality. Focus remains on QueryBuilder tests if needed separately. All previous fixes and improvements to QueryExecutorTest compilation and runtime issues are preserved in completed subtasks.",
+        "testStrategy": "No additional unit tests for QueryExecutor will be added. Existing service and controller tests provide coverage. The task is considered complete based on user direction.",
+        "subtasks": [
+          {
+            "id": 3,
+            "title": "Implement parameterized tests for edge cases",
+            "description": "Create parameterized tests to cover edge cases for all filter operators and query execution scenarios.",
+            "dependencies": [
+              2
+            ],
+            "details": "This subtask is no longer applicable as tests for QueryExecutor have been removed per user request. Focus remains on existing service and controller tests for coverage.",
+            "status": "cancelled",
+            "testStrategy": "No tests implemented due to task skip.",
+            "updatedAt": "2025-11-30T11:53:49.388Z",
+            "parentId": "undefined"
+          },
+          {
+            "id": 4,
+            "title": "Generate coverage reports",
+            "description": "Run tests with coverage reports to ensure critical paths are tested.",
+            "dependencies": [
+              3
+            ],
+            "details": "This subtask is no longer applicable as the testing scope for QueryExecutor has been removed. Coverage reports should be reviewed on service and controller tests instead.",
+            "status": "cancelled",
+            "testStrategy": "No coverage reports generated for QueryExecutor tests due to task skip.",
+            "parentId": "undefined",
+            "updatedAt": "2025-11-30T11:53:49.391Z"
+          },
+          {
+            "id": 1,
+            "title": "Fix compilation errors in QueryExecutorTest.kt",
+            "description": "Add imports for extension functions, correct mock chains for JOOQ types, mock where() on SelectWhereStep, and fix map() call types.",
+            "dependencies": [],
+            "details": "Ensure all required imports for extension functions are present. Correct the mock setup for JOOQ types to ensure proper type chaining. Mock the where() method on SelectWhereStep for use in applyAdditionalConditions. Fix the types used in map() calls to match expected return types.",
+            "status": "completed",
+            "testStrategy": "Verify that tests compile without errors.",
+            "parentId": "undefined"
+          },
+          {
+            "id": 2,
+            "title": "Fix runtime failures in QueryExecutorTest",
+            "description": "Improve mock logic for extension functions and private methods to ensure tests pass at runtime.",
+            "dependencies": [
+              1
+            ],
+            "details": "Refactor mocks to properly handle extension functions and private methods. Ensure that all mocked objects behave as expected during test execution.\n<info added on 2025-11-30T11:48:17.704Z>\nПроверены и исправлены моки для всех цепочек вызовов: ensure that where(), orderBy(), and(), and map() are properly mocked with correct return types and behaviors. Убедились, что моки для extension функций applyFilters и applySorting корректно делегируют вызовы реальным методам jOOQ. Все тесты запущены — оставшиеся runtime ошибки исправлены путем настройки правильных возвращаемых значений и последовательности вызовов на моках.\n</info added on 2025-11-30T11:48:17.704Z>",
+            "status": "done",
+            "testStrategy": "Run tests and verify that they pass without runtime errors.",
+            "parentId": "undefined",
+            "updatedAt": "2025-11-30T11:50:03.781Z"
+          }
+        ],
+        "updatedAt": "2025-11-30T11:53:56.310Z"
+      },
+      {
+        "id": "20",
+        "title": "Add unit tests for utility functions and edge cases",
+        "description": "Implement unit tests for utility classes like GeoDsl, ApplicationCallExtensions, and RepositoryExtensions including edge cases and boundary conditions.",
+        "details": "Write tests for GeoDsl functions like pointExpr and distanceGeographyTo. Mock ApplicationCall to test toPaginationRequest parsing. Add parameterized tests for edge cases such as empty lists, nulls, and invalid values.",
+        "testStrategy": "Use parameterized and boundary tests to cover edge cases. Verify expected exceptions or results.",
+        "priority": "low",
+        "dependencies": [
+          "17"
+        ],
+        "status": "pending",
+        "subtasks": []
+      },
+      {
+        "id": "27",
+        "title": "Optimize API Usage with Batched Write Operations",
+        "description": "Reduce the number of API calls by batching updates and write operations to Task Master AI.",
+        "details": "Implement batching logic for write operations such as `update_subtask`, `add_task`, and `expand_task`. Accumulate multiple updates in memory and send them in a single API call to minimize overhead and resource consumption. Ensure batching respects session context and does not delay critical updates excessively.",
+        "testStrategy": "Measure API call frequency before and after batching implementation. Confirm that batched calls correctly update Task Master state without data loss. Test system responsiveness and consistency under various workloads.",
+        "priority": "medium",
+        "dependencies": [
+          "22"
+        ],
+        "status": "pending",
+        "subtasks": []
+      },
+      {
+        "id": "28",
+        "title": "Integrate Economical AI Models for Main and Fallback Operations",
+        "description": "Configure and integrate cost-effective AI models (sonar for main/research, gemini-2.0-flash for fallback) to optimize resource usage.",
+        "details": "Set up model selection logic to use the sonar model for main and research tasks and gemini-2.0-flash as a fallback model. Ensure seamless switching between models based on availability and task type. Update configuration templates to reflect these model preferences.",
+        "testStrategy": "Test model selection under normal and fallback conditions. Validate that tasks use the correct models as per configuration. Monitor resource usage and cost metrics to confirm optimization.",
+        "priority": "medium",
+        "dependencies": [
+          "25"
+        ],
+        "status": "pending",
+        "subtasks": []
+      },
+      {
+        "id": "29",
+        "title": "Implement Filtering and Status Checking for Local Task Operations",
+        "description": "Enable efficient local filtering of tasks by status, priority, and dependencies, and implement subtask status checks without API calls.",
+        "details": "Develop functions to filter tasks read from `tasks.json` based on status, priority, and dependencies. Implement logic to check and update subtask statuses locally by parsing the `details` field. Ensure these operations are performant and accurate to support local-first management and recovery.",
+        "testStrategy": "Test filtering accuracy with various task datasets. Validate subtask status detection and updates locally. Confirm no API calls occur during these operations. Benchmark performance for large task sets.",
+        "priority": "medium",
+        "dependencies": [
+          "22"
+        ],
+        "status": "pending",
+        "subtasks": []
+      },
+      {
+        "id": "36",
+        "title": "Add Git Commit Rule After Task Completion",
+        "description": "Implement a workflow rule that triggers after a task status is set to 'done' to initiate a git commit.",
+        "status": "done",
+        "dependencies": [],
+        "priority": "high",
+        "details": "Modify `.cursor/rules/TASKMASTER_AUTO_WORKFLOW.mdc` to add a new step after `set_task_status`. This step should check if the task status is 'done' and, if so, proceed to execute the git commit logic. Ensure the rule is non-blocking and gracefully handles errors. The implementation has been completed as follows:\n- Step 5 added in TASKMASTER_AUTO_WORKFLOW.mdc for automatic git commit after set_task_status\n- New file .cursor/rules/taskmaster/git_commit.mdc created with detailed rules\n- Section \"Git Commit After Task Completion\" added in workflow\n- Rule is non-blocking - workflow continues even if git is unavailable\n- Commit message template is described in the rules",
+        "testStrategy": "Unit test the workflow rule by simulating task completion and verifying that the commit step is triggered only for 'done' tasks. Confirm that workflow continues even if git is unavailable. Test should also validate that the commit message template is correctly applied and that the workflow behaves as expected in edge cases (e.g., no git repo, no changes to commit).",
+        "subtasks": [
+          {
+            "id": 1,
+            "title": "Add step 5 in TASKMASTER_AUTO_WORKFLOW.mdc for git commit after set_task_status",
+            "description": "Add a new workflow step after set_task_status to trigger git commit if task status is 'done'.",
+            "dependencies": [],
+            "details": "Step 5 added in TASKMASTER_AUTO_WORKFLOW.mdc for automatic git commit after set_task_status.",
+            "status": "done",
+            "testStrategy": "Verify step is present and triggers only for 'done' tasks.",
+            "parentId": "undefined"
+          },
+          {
+            "id": 2,
+            "title": "Create .cursor/rules/taskmaster/git_commit.mdc with detailed rules",
+            "description": "Create a new file to define the git commit logic and rules.",
+            "dependencies": [],
+            "details": "New file .cursor/rules/taskmaster/git_commit.mdc created with detailed rules.",
+            "status": "done",
+            "testStrategy": "Review file for completeness and correctness.",
+            "parentId": "undefined"
+          },
+          {
+            "id": 3,
+            "title": "Add 'Git Commit After Task Completion' section in workflow",
+            "description": "Add a section in the workflow documentation describing the new commit step.",
+            "dependencies": [],
+            "details": "Section 'Git Commit After Task Completion' added in workflow.",
+            "status": "done",
+            "testStrategy": "Review documentation for clarity and completeness.",
+            "parentId": "undefined"
+          },
+          {
+            "id": 4,
+            "title": "Ensure rule is non-blocking and handles errors gracefully",
+            "description": "Make sure the workflow continues even if git is unavailable.",
+            "dependencies": [],
+            "details": "Rule is non-blocking - workflow continues even if git is unavailable.",
+            "status": "done",
+            "testStrategy": "Simulate git errors and verify workflow continues.",
+            "parentId": "undefined"
+          },
+          {
+            "id": 5,
+            "title": "Document commit message template in rules",
+            "description": "Describe the commit message template in the rules file.",
+            "dependencies": [],
+            "details": "Commit message template is described in the rules.",
+            "status": "done",
+            "testStrategy": "Verify template is correctly documented and matches actual implementation.",
+            "parentId": "undefined"
+          },
+          {
+            "id": 6,
+            "title": "Verify commit message template is applied correctly",
+            "description": "Ensure the generated commit message matches the documented template.",
+            "dependencies": [],
+            "details": "Test that the commit message template is correctly applied in practice.",
+            "status": "pending",
+            "testStrategy": "Test with various task and file change combinations. Validate output format and content.",
+            "parentId": "undefined"
+          },
+          {
+            "id": 7,
+            "title": "Test workflow in edge cases",
+            "description": "Test workflow behavior when git is unavailable or there are no changes to commit.",
+            "dependencies": [],
+            "details": "Simulate edge cases such as no git repo or no changes to commit.",
+            "status": "pending",
+            "testStrategy": "Verify workflow continues and handles errors gracefully in edge cases.",
+            "parentId": "undefined"
+          },
+          {
+            "id": 8,
+            "title": "Update documentation with examples of expected commit messages",
+            "description": "Add examples of expected commit messages to the documentation.",
+            "dependencies": [],
+            "details": "Include examples in the workflow documentation to clarify expected output.",
+            "status": "pending",
+            "testStrategy": "Review documentation for clarity and completeness.",
+            "parentId": "undefined"
+          }
+        ],
+        "updatedAt": "2025-11-30T11:25:58.889Z"
+      },
+      {
+        "id": "37",
+        "title": "Collect Changed Files and Task Data",
+        "description": "Gather detailed information about changed files and task details for generating the commit message, using a structured and documented approach.",
+        "status": "in-progress",
+        "dependencies": [],
+        "priority": "medium",
+        "details": "Implement a function or script that performs the following five-step process:\n1. Verify if the current directory is a git repository using appropriate git commands.\n2. Collect the list of changed files using `git status --porcelain` with detailed parsing to identify file states.\n3. Retrieve task data (ID, title, description) locally from `tasks.json` without relying on external APIs.\n4. Implement a function `generateCommitMessage` that accepts parameters for changed files and task data to produce a structured commit message.\n5. Document all steps, commands, and function usage comprehensively in `git_commit.mdc` for maintainability and clarity.\n\nInclude example git commands for repository verification and file collection as part of the implementation documentation.\n<info added on 2025-11-30T17:18:42.913Z>\nРабота над задачей 37 завершена. В документацию `git_commit.mdc` добавлена детальная информация по всем пяти шагам процесса генерации commit message:\n\n1. **Проверка Git репозитория**:  \n   - Примеры команд для проверки наличия git репозитория:  \n     - `git rev-parse --is-inside-work-tree`  \n     - `git status`  \n   - Альтернативные методы проверки:  \n     - Проверка наличия директории `.git`  \n     - Использование `git rev-parse --git-dir`  \n   - Пример реализации на Kotlin с обработкой ошибок:  \n     ```kotlin\n     fun isGitRepository(): Boolean {\n         return try {\n             val process = Runtime.getRuntime().exec(\"git rev-parse --is-inside-work-tree\")\n             process.waitFor() == 0\n         } catch (e: Exception) {\n             false\n         }\n     }\n     ```\n\n2. **Парсинг git status --porcelain**:  \n   - Описание формата вывода команды `git status --porcelain`  \n   - Статусные коды:  \n     - `M` — модифицированный файл  \n     - `A` — добавленный файл  \n     - `D` — удалённый файл  \n     - `R` — переименованный файл (формат: `R oldfile -> newfile`)  \n     - `C` — скопированный файл  \n     - `??` — неотслеживаемый файл  \n   - Реализация функции `parseGitStatusPorcelain` на Kotlin с обработкой всех статусов, включая переименованные и неотслеживаемые файлы  \n   - Примеры bash-скриптов для парсинга вывода:  \n     ```bash\n     git status --porcelain | while read line; do\n         status=$(echo \"$line\" | cut -c1-2)\n         file=$(echo \"$line\" | cut -c4-)\n         echo \"Status: $status, File: $file\"\n     done\n     ```\n   - Примеры вывода и ожидаемых результатов для различных сценариев\n\n3. **Чтение данных задачи из tasks.json**:  \n   - Реализация функции `readLocalTask` на Kotlin с поддержкой тегов  \n   - Альтернативный метод прямого парсинга JSON с использованием библиотеки Jackson  \n   - Примеры использования для извлечения id, title, description:  \n     ```kotlin\n     data class Task(val id: Int, val title: String, val description: String)\n     fun readLocalTask(): Task {\n         val json = File(\"tasks.json\").readText()\n         return jacksonObjectMapper().readValue(json, Task::class.java)\n     }\n     ```\n\n4. **Дополнительные разделы**:  \n   - **Command Reference**: Справочник всех команд workflow с примерами использования  \n   - **Testing the Implementation**: Примеры тестирования парсинга и проверки git репозитория, включая сценарии с различными статусами файлов и ошибками\n\nВся документация содержит детальные примеры команд, реализации и тестирования для всех пяти шагов процесса генерации commit message.\n</info added on 2025-11-30T17:18:42.913Z>",
+        "testStrategy": "Test the implementation by simulating various git file change scenarios and verifying that the function correctly identifies all changed files with their statuses. Validate that task data is accurately read from `tasks.json`. Confirm that `generateCommitMessage` produces the expected commit message format. Review the documentation in `git_commit.mdc` for completeness and clarity.",
+        "subtasks": []
+      },
+      {
+        "id": "38",
+        "title": "Generate Structured Commit Message",
+        "description": "Format a commit message using the collected task data and changed files.",
+        "details": "Implement a template-based message generator that follows the specified format:\n```\nfeat(task-{id}): {task_title}\n\n{task_description}\n\nChanges:\n- {list of changed files or summary}\n\nTask: {id} - {title}\nStatus: done\n```\nEnsure the message is properly escaped and formatted.",
+        "testStrategy": "Test with various task and file change combinations. Validate that the output matches the required format and includes all necessary information.",
+        "priority": "medium",
+        "dependencies": [
+          "37"
+        ],
+        "status": "pending",
+        "subtasks": []
+      },
+      {
+        "id": "40",
+        "title": "Document Git Commit Workflow",
+        "description": "Update documentation to describe the new automatic commit workflow.",
+        "details": "Add/update `.cursor/rules/taskmaster_integration.mdc` to document:\n- When and how commits are triggered\n- Commit message format\n- Error handling behavior\n- Any configuration options\nInclude examples of expected commit messages.",
+        "testStrategy": "Review documentation for clarity and completeness. Verify it matches actual implementation behavior.",
+        "priority": "medium",
+        "dependencies": [
+          "39"
+        ],
+        "status": "pending",
+        "subtasks": []
+      },
+      {
+        "id": "47",
+        "title": "Add Edge Case Tests for Validation, Pagination, and Coordinates",
+        "description": "Implement comprehensive unit tests targeting boundary conditions for validation logic, pagination parameters, and coordinate inputs to ensure robust handling of edge cases.",
+        "details": "Create two new Kotlin test classes: EdgeCaseValidationTest.kt and PaginationEdgeCaseTest.kt. In EdgeCaseValidationTest.kt, develop tests covering boundary values for coordinate inputs, including NaN, Infinity, and out-of-range values, as well as string inputs with maximum length, minimum length, empty strings, and strings containing only whitespace. In PaginationEdgeCaseTest.kt, implement tests for pagination parameters with edge cases such as negative numbers, extremely large values, and invalid string inputs. Use parameterized tests where appropriate to efficiently cover multiple edge scenarios. Ensure tests use the updated validation API and follow existing project conventions for assertions and test structure. Maintain test isolation and clarity with descriptive test names. Integrate these tests into the existing test suite to run automatically during CI builds.",
+        "testStrategy": "Verify that all new tests in EdgeCaseValidationTest.kt and PaginationEdgeCaseTest.kt execute successfully without failures. Confirm that tests correctly detect invalid inputs by asserting expected validation errors or exceptions. Run the full test suite to ensure no regressions occur. Use parameterized test reports to confirm coverage of all specified edge cases. Review test logs to ensure descriptive output for each edge case scenario. Additionally, perform code review to ensure tests adhere to project standards and effectively cover boundary conditions as specified.",
+        "status": "pending",
+        "dependencies": [
+          "44"
+        ],
+        "priority": "low",
+        "subtasks": []
+      },
+      {
+        "id": "58",
+        "title": "Conduct Test Quality and Maintainability Assessment",
+        "description": "Evaluate test code for readability, duplication, complexity, independence, and test data management using static analysis and manual review.",
+        "details": "Use IDE built-in static analysis tools to detect test code smells, duplicated logic, complex methods, and missing assertions. Manually review test helper classes, mock setups, and test data builders for clarity and reusability. Assess test isolation and data management practices.",
+        "testStrategy": "Run static analysis tools and verify detection of quality issues. Perform manual code reviews and document maintainability concerns. Validate findings with sample test cases and helper classes.",
+        "priority": "medium",
+        "dependencies": [
+          "56"
+        ],
+        "status": "pending",
+        "subtasks": []
+      },
+      {
+        "id": "59",
+        "title": "Analyze Test Execution Performance and Identify Bottlenecks",
+        "description": "Measure individual test execution times, identify slow tests and suites, and detect inefficiencies such as database query overhead and setup/teardown delays.",
+        "details": "Instrument tests to record execution times per test and per suite. Analyze test logs and metrics to find slow-running tests (>1 second). Investigate integration tests for database query inefficiencies and excessive setup/teardown overhead. Identify candidates for parallel execution.",
+        "testStrategy": "Collect and analyze timing data from test runs. Confirm identification of slow tests and bottlenecks. Validate findings by profiling database queries and setup/teardown operations.",
+        "priority": "medium",
+        "dependencies": [
+          "56"
+        ],
+        "status": "pending",
+        "subtasks": []
+      },
+      {
+        "id": "60",
+        "title": "Assess Test Stability and Flakiness",
+        "description": "Detect flaky tests, timing dependencies, shared state issues, and improper cleanup that cause intermittent test failures.",
+        "details": "Analyze test failure patterns and logs to identify non-deterministic behavior. Review tests for timing dependencies and shared mutable state. Check test cleanup procedures to ensure proper isolation. Document tests prone to intermittent failures.",
+        "testStrategy": "Monitor test runs over multiple executions to detect flakiness. Validate isolation by running tests in random order and parallel. Confirm cleanup effectiveness by checking for residual state.",
+        "priority": "medium",
+        "dependencies": [
+          "56"
+        ],
+        "status": "pending",
+        "subtasks": []
+      },
+      {
+        "id": "61",
+        "title": "Identify Missing Test Scenarios and Edge Cases",
+        "description": "Review coverage and test suite to find missing tests for error handling, edge cases, integration scenarios, validation, and performance.",
+        "details": "Analyze coverage gaps and business-critical paths to infer missing test scenarios. Cross-check with requirements and known risk areas. Document missing tests for error handling paths, boundary conditions, integration points, and performance-critical code.",
+        "testStrategy": "Compare documented missing scenarios against coverage reports and requirements. Validate completeness by consulting with stakeholders and reviewing defect history.",
+        "priority": "medium",
+        "dependencies": [
+          "57"
+        ],
+        "status": "pending",
+        "subtasks": []
+      },
+      {
+        "id": "62",
+        "title": "Review Mock Usage and Test Data Patterns",
+        "description": "Evaluate mock usage for over-mocking, verification completeness, and setup complexity. Assess test data creation patterns for hardcoding and isolation issues.",
+        "details": "Analyze test code to identify mock usage patterns and complexity. Check for missing mock verifications and excessive mocking. Review test data builders and hardcoded data usage. Assess whether test data is isolated and reusable.",
+        "testStrategy": "Perform static and manual analysis of mock and test data code. Validate findings by running tests with altered mocks and data to check impact on stability and maintainability.",
+        "priority": "low",
+        "dependencies": [
+          "58"
+        ],
+        "status": "pending",
+        "subtasks": []
+      },
+      {
+        "id": "63",
+        "title": "Compile and Prioritize Improvement Recommendations",
+        "description": "Consolidate findings from coverage, quality, performance, stability, and gap analyses into a prioritized list of actionable improvements with effort and impact estimates.",
+        "details": "Aggregate all identified issues and missing scenarios. Prioritize based on criticality, impact, and effort required. Prepare actionable recommendations with clear descriptions, estimated effort, and expected benefits. Format recommendations for stakeholder review.",
+        "testStrategy": "Review recommendations for completeness and clarity. Validate prioritization criteria with stakeholders. Ensure recommendations are feasible and aligned with project constraints.",
+        "priority": "high",
+        "dependencies": [
+          "57",
+          "58",
+          "59",
+          "60",
+          "61",
+          "62"
+        ],
+        "status": "pending",
+        "subtasks": []
+      },
+      {
+        "id": "74",
+        "title": "Integrate API Calls with Local Fallback",
+        "description": "Call Task Master MCP tools and use local files as fallback.",
+        "details": "Call `parse_prd`, `update_subtask`, `set_task_status` APIs. Handle errors gracefully. Batch API calls when possible. Use local files as fallback for all read operations.",
+        "testStrategy": "Test API calls and simulate failures to verify fallback to local files.",
+        "priority": "medium",
+        "dependencies": [
+          "69",
+          "70",
+          "71"
+        ],
+        "status": "pending",
+        "subtasks": []
+      },
+      {
+        "id": "75",
+        "title": "Implement Structured Logging Format",
+        "description": "Enforce structured logging format for all implementation details.",
+        "details": "Use markdown format for logs: Plan, Files, Changes, Issues, Progress, Next steps. Ensure all logs follow this structure.",
+        "testStrategy": "Validate log output against required format with sample data.",
+        "priority": "low",
+        "dependencies": [
+          "71"
+        ],
+        "status": "pending",
+        "subtasks": []
+      },
+      {
+        "id": "76",
+        "title": "Implement Commit Message Format",
+        "description": "Generate structured commit messages for git commits.",
+        "details": "Use format: `feat(task-{id}): {task_title}`, description, changes list, task ID and title, status. Ensure all commits follow this format.",
+        "testStrategy": "Verify commit message format with sample task data.",
+        "priority": "low",
+        "dependencies": [
+          "73"
+        ],
+        "status": "pending",
+        "subtasks": []
+      },
+      {
+        "id": "82",
+        "title": "Merge feature/refactoring into develop",
+        "description": "Выполнить слияние ветки feature/refactoring в develop",
+        "details": "Переключиться на develop, выполнить merge feature/refactoring, разрешить конфликты если есть",
+        "testStrategy": "Проверить, что все изменения из feature/refactoring присутствуют в develop",
+        "priority": "high",
+        "dependencies": [],
+        "status": "in-progress",
+        "subtasks": [],
+        "updatedAt": "2025-11-30T19:42:18.512Z"
+      },
+      {
+        "id": "83",
+        "title": "Merge develop into main",
+        "description": "Выполнить слияние ветки develop в main",
+        "details": "Переключиться на main, выполнить merge develop, разрешить конфликты если есть",
+        "testStrategy": "Проверить, что все изменения из develop присутствуют в main",
+        "priority": "high",
+        "dependencies": [
+          "82"
+        ],
+        "status": "pending",
+        "subtasks": []
+      },
+      {
+        "id": "84",
+        "title": "Update version to 0.1.0",
+        "description": "Обновить версию приложения до 0.1.0 в build.gradle.kts",
+        "details": "Изменить version = \"0.0.1\" на version = \"0.1.0\" в build.gradle.kts",
+        "testStrategy": "Проверить, что версия обновлена в build.gradle.kts",
+        "priority": "high",
+        "dependencies": [
+          "83"
+        ],
+        "status": "pending",
+        "subtasks": []
+      },
+      {
+        "id": "85",
+        "title": "Update README.md with version 0.1.0",
+        "description": "Обновить README.md с информацией о версии 0.1.0",
+        "details": "Добавить информацию о версии 0.1.0 в README.md, обновить badges если нужно",
+        "testStrategy": "Проверить, что README.md содержит информацию о версии 0.1.0",
+        "priority": "high",
+        "dependencies": [
+          "84"
+        ],
+        "status": "pending",
+        "subtasks": []
+      },
+      {
+        "id": "86",
+        "title": "Remove unnecessary comments from code",
+        "description": "Удалить лишние комментарии, TODO, FIXME из кода",
+        "details": "Найти и удалить все лишние комментарии, отладочные комментарии, TODO, FIXME из исходного кода",
+        "testStrategy": "Проверить, что код не содержит лишних комментариев",
+        "priority": "medium",
+        "dependencies": [
+          "84"
+        ],
+        "status": "pending",
+        "subtasks": []
+      },
+      {
+        "id": "87",
+        "title": "Create git tag v0.1.0",
+        "description": "Создать тег версии v0.1.0",
+        "details": "Создать аннотированный тег v0.1.0 с описанием релиза, запушть тег в удаленный репозиторий",
+        "testStrategy": "Проверить, что тег создан и запушен",
+        "priority": "high",
+        "dependencies": [
+          "85",
+          "86"
+        ],
+        "status": "pending",
+        "subtasks": []
+      },
+      {
+        "id": "88",
+        "title": "Final release preparation check",
+        "description": "Финальная проверка готовности к релизу",
+        "details": "Проверить конфигурацию, зависимости, документацию, убедиться что все готово к релизу",
+        "testStrategy": "Запустить тесты, проверить сборку, проверить документацию",
+        "priority": "high",
+        "dependencies": [
+          "87"
+        ],
+        "status": "pending",
+        "subtasks": []
+      },
+      {
+        "id": "89",
+        "title": "Merge Branches and Create Release Tag",
+        "description": "Perform git operations to merge current branch into develop, then merge develop into master, ensuring all changes are committed and no conflicts exist. Create an annotated git tag v0.1.0 with release description.",
+        "details": "Use `git merge` commands to merge current branch into develop and then develop into master. Verify no merge conflicts occur. Confirm all changes are committed before merging. Create annotated tag with `git tag -a v0.1.0 -m \"Release 0.1.0 - Internal release\"`. Push branches and tags to remote repository.",
+        "testStrategy": "Verify merges completed without conflicts by checking git logs and branch status. Confirm tag v0.1.0 exists with correct annotation. Validate that all intended commits are present in master branch.",
+        "priority": "high",
+        "dependencies": [],
+        "status": "done",
+        "subtasks": [],
+        "updatedAt": "2025-11-30T19:44:40.955Z"
+      },
+      {
+        "id": "90",
+        "title": "Unify Version Numbers Across Project Files",
+        "description": "Check and update version numbers to 0.1.0 in build.gradle.kts, openapi.yaml, README.md, and any other relevant files to ensure consistency.",
+        "details": "Edit build.gradle.kts to set `version = \"0.1.0\"`. Update `version: 0.1.0` in openapi.yaml replacing 1.0.0. Search README.md for version mentions and badges, update to 0.1.0. Scan other project files if necessary to confirm version consistency.",
+        "testStrategy": "Automate verification by grepping for version strings in project files to confirm all are set to 0.1.0. Manually review README.md and openapi.yaml for correctness.",
+        "priority": "high",
+        "dependencies": [
+          "89"
+        ],
+        "status": "done",
+        "subtasks": [],
+        "updatedAt": "2025-11-30T19:44:49.541Z"
+      },
+      {
+        "id": "91",
+        "title": "Update and Prepare Documentation",
+        "description": "Revise README.md, openapi.yaml, and create CHANGELOG.md with accurate information reflecting version 0.1.0, including endpoints, installation instructions, tech stack, and changelog entries.",
+        "details": "Update README.md to include project description (RU/EN), version 0.1.0, current API endpoints and descriptions, installation and run instructions, and technology stack. Update openapi.yaml with API version 0.1.0 and verify endpoint accuracy and data schemas. Create CHANGELOG.md following Keep a Changelog format documenting changes for 0.1.0 release.",
+        "testStrategy": "Review documentation for completeness and accuracy. Validate openapi.yaml with OpenAPI validators. Confirm CHANGELOG.md format compliance and content correctness.",
+        "priority": "high",
+        "dependencies": [
+          "90"
+        ],
+        "status": "done",
+        "subtasks": [],
+        "updatedAt": "2025-11-30T19:45:00.358Z"
+      },
+      {
+        "id": "92",
+        "title": "Clean Up Code Comments and Remove Dead Code",
+        "description": "Identify and remove all TODO, FIXME, XXX, HACK, debug, temporary, and non-critical NOTE comments from source and test code, excluding specified config and ignored files. Remove commented-out code and ensure public APIs have KDoc comments.",
+        "details": "Use grep or ripgrep to find specified comment tags in src/main and src/test excluding .git, build, .taskmaster, and config rules directories. Remove all non-critical comments and commented-out code. Review public API code to ensure presence of KDoc comments for documentation.",
+        "testStrategy": "Run comment search tools post-cleanup to verify no forbidden comments remain. Manually inspect public APIs for KDoc completeness. Run build and tests to ensure no code breakage.",
+        "priority": "high",
+        "dependencies": [
+          "91"
+        ],
+        "status": "done",
+        "subtasks": [],
+        "updatedAt": "2025-11-30T19:45:18.467Z"
+      },
+      {
+        "id": "93",
+        "title": "Verify Application Configuration for Release",
+        "description": "Check application.yaml and related configuration files for correct settings including server port, database, logging, and security parameters for production readiness.",
+        "details": "Review application.yaml to confirm correct port settings, database connection parameters, and logging configurations. Ensure no debug logging enabled in production. Validate security settings: no hardcoded secrets, proper error handling without stack trace leaks, and correct CORS settings if applicable.",
+        "testStrategy": "Manually inspect configuration files. Run application in production mode and verify logs and error handling behavior. Use security scanning tools to detect secrets or misconfigurations.",
+        "priority": "high",
+        "dependencies": [
+          "92"
+        ],
+        "status": "done",
+        "subtasks": [],
+        "updatedAt": "2025-11-30T19:45:28.068Z"
+      },
+      {
+        "id": "94",
+        "title": "Validate Logging Configuration and Error Handling",
+        "description": "Ensure logging levels are appropriate for production, debug logs are disabled, and error handling logs errors correctly without exposing sensitive information.",
+        "details": "Check logging framework configuration files and code to confirm production log levels (e.g., INFO or WARN). Remove or disable debug logs. Verify error handling code logs errors properly and does not leak stack traces or sensitive data.",
+        "testStrategy": "Perform test runs simulating errors and verify logs contain expected information without debug noise or sensitive data. Review logging config files for correct level settings.",
+        "priority": "medium",
+        "dependencies": [
+          "93"
+        ],
+        "status": "done",
+        "subtasks": [],
+        "updatedAt": "2025-11-30T19:45:28.104Z"
+      },
+      {
+        "id": "95",
+        "title": "Review and Validate Docker Configuration Files",
+        "description": "Check Dockerfile, docker-compose.yml, and .dockerignore files for correctness and alignment with release requirements.",
+        "details": "Review Dockerfile for up-to-date base images, build steps, and environment variables. Validate docker-compose.yml for correct service definitions and dependencies. Ensure .dockerignore excludes unnecessary files and directories to optimize image size.",
+        "testStrategy": "Build Docker images and run containers locally to verify successful startup and correct behavior. Inspect image size and contents. Confirm no excluded files are included.",
+        "priority": "medium",
+        "dependencies": [
+          "93"
+        ],
+        "status": "done",
+        "subtasks": [],
+        "updatedAt": "2025-11-30T19:45:28.106Z"
+      },
+      {
+        "id": "96",
+        "title": "Final Release Readiness Verification and Documentation",
+        "description": "Perform final checks to ensure all release criteria are met, including successful merges, version consistency, documentation updates, code cleanup, configuration, logging, security, and Docker setup. Document release readiness status.",
+        "details": "Review all previous tasks completion and success criteria. Compile release notes and readiness checklist. Prepare internal communication for release 0.1.0. Archive final documentation and tag information for future reference.",
+        "testStrategy": "Cross-check success criteria from PRD against actual project state. Conduct peer review or sign-off from QA and DevOps teams. Confirm all automated and manual tests pass.",
+        "priority": "high",
+        "dependencies": [
+          "89",
+          "90",
+          "91",
+          "92",
+          "93",
+          "94",
+          "95"
+        ],
+        "status": "done",
+        "subtasks": [],
+        "updatedAt": "2025-11-30T19:45:33.083Z"
+      },
+      {
+        "id": "97",
+        "title": "Verify Presence and Correctness of Standard Project Files",
+        "description": "Check that all required standard files exist in the project and verify their correctness and relevance.",
+        "details": "Implement a script or manual checklist to verify the presence of LICENSE (preferably MIT or other valid license), .gitignore (properly configured), .editorconfig, .dockerignore, docker-compose.yml, Dockerfile (up-to-date), CHANGELOG.md, .github/workflows directory (if CI/CD is used), gradle.properties, and settings.gradle.kts files. For each file, validate content correctness and conformity to best practices (e.g., LICENSE text matches chosen license, .gitignore covers relevant files). Document findings for each file.",
+        "testStrategy": "Run the verification script or checklist on the project repository. Confirm all files are present and content matches expected standards. Report any missing or incorrect files. Manual review may be used to validate ambiguous cases.",
+        "priority": "high",
+        "dependencies": [],
+        "status": "done",
+        "subtasks": [],
+        "updatedAt": "2025-11-30T19:48:30.067Z"
+      },
+      {
+        "id": "98",
+        "title": "Review and Validate README.md Content and Structure",
+        "description": "Assess README.md for completeness, correctness, and clarity according to best practices and project requirements.",
+        "details": "Check README.md for the following sections: project description (in English and Russian if applicable), technology stack, installation instructions, run instructions, API usage examples, development information, documentation links, version information, and badges (version, license, technologies). Ensure the README is well-structured with a table of contents for easy navigation. Use Markdown formatting for readability. Validate that instructions are clear and examples are functional. Suggest improvements based on best practices from authoritative sources.",
+        "testStrategy": "Manually review README.md against the checklist of required sections and formatting guidelines. Optionally, use Markdown linters and preview tools to verify formatting. Confirm that all links and examples work as intended.",
+        "priority": "high",
+        "dependencies": [
+          "97"
+        ],
+        "status": "done",
+        "subtasks": [],
+        "updatedAt": "2025-11-30T19:48:30.071Z"
+      },
+      {
+        "id": "99",
+        "title": "Analyze Existing Tasks and Plans from tasks.json",
+        "description": "Parse and analyze the existing tasks.json file to identify improvement tasks, categorize them, and determine priorities.",
+        "details": "Load tasks.json and extract all tasks. Filter tasks related to service improvements. Categorize these tasks into performance, features, refactoring, and testing. Assign priority levels (High, Medium, Low) based on task descriptions and project goals. Identify dependencies among tasks where applicable. Prepare a structured dataset summarizing these tasks for use in TODO list creation.",
+        "testStrategy": "Validate parsing correctness by cross-checking extracted tasks with tasks.json content. Confirm categorization and priority assignments align with documented criteria. Review dependency mapping for accuracy.",
+        "priority": "medium",
+        "dependencies": [
+          "97"
+        ],
+        "status": "done",
+        "subtasks": [],
+        "updatedAt": "2025-11-30T19:48:30.073Z"
+      },
+      {
+        "id": "100",
+        "title": "Create Structured TODO List with Priorities and Categories",
+        "description": "Generate a Markdown-formatted TODO list structured by priority and category, including task descriptions and dependencies.",
+        "details": "Using the analyzed tasks data, create a Markdown document structured first by priority (High, Medium, Low), then by category (performance, features, refactoring, testing). For each task, include a concise description and reference related tasks from tasks.json with links if applicable. Clearly indicate dependencies between tasks. Follow the specified format and ensure readability and logical ordering to facilitate project planning.",
+        "testStrategy": "Review the generated TODO list for correct Markdown syntax, logical structure, and completeness. Verify that all tasks from analysis are included and correctly categorized and prioritized. Check that dependencies are clearly indicated and links to tasks.json are functional.",
+        "priority": "medium",
+        "dependencies": [
+          "99"
+        ],
+        "status": "done",
+        "subtasks": [],
+        "updatedAt": "2025-11-30T19:48:30.076Z"
+      },
+      {
+        "id": "101",
+        "title": "Integrate TODO List into Project README.md",
+        "description": "Add the structured TODO list into the project README.md under a dedicated section for visibility and maintainability.",
+        "details": "Insert the generated TODO list into README.md, preferably under a new section titled 'Roadmap' or 'Future Improvements'. Ensure the insertion preserves existing README content and formatting. Commit the change using git amend to update the last commit, maintaining project history cleanliness. Provide instructions for future updates to the TODO list within the README or project documentation.",
+        "testStrategy": "Verify that the README.md renders correctly with the new TODO section in Markdown viewers and on GitHub or equivalent platforms. Confirm the git amend operation updates the commit as intended without creating new commits. Check that the TODO list remains accessible and visible to users.",
+        "priority": "medium",
+        "dependencies": [
+          "98",
+          "100"
+        ],
+        "status": "done",
+        "subtasks": [],
+        "updatedAt": "2025-11-30T19:48:30.077Z"
+      }
+    ],
+    "metadata": {
+      "version": "1.0.0",
+      "lastModified": "2025-11-30T19:48:30.078Z",
+      "taskCount": 46,
+      "completedCount": 16,
+      "tags": [
+        "master"
+      ]
+    }
+  }
+}
