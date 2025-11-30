@@ -262,10 +262,11 @@
             "dependencies": [
               1
             ],
-            "details": "Refactor mocks to properly handle extension functions and private methods. Ensure that all mocked objects behave as expected during test execution.",
-            "status": "pending",
+            "details": "Refactor mocks to properly handle extension functions and private methods. Ensure that all mocked objects behave as expected during test execution.\n<info added on 2025-11-30T11:48:17.704Z>\nПроверены и исправлены моки для всех цепочек вызовов: ensure that where(), orderBy(), and(), and map() are properly mocked with correct return types and behaviors. Убедились, что моки для extension функций applyFilters и applySorting корректно делегируют вызовы реальным методам jOOQ. Все тесты запущены — оставшиеся runtime ошибки исправлены путем настройки правильных возвращаемых значений и последовательности вызовов на моках.\n</info added on 2025-11-30T11:48:17.704Z>",
+            "status": "done",
             "testStrategy": "Run tests and verify that they pass without runtime errors.",
-            "parentId": "undefined"
+            "parentId": "undefined",
+            "updatedAt": "2025-11-30T11:50:03.781Z"
           },
           {
             "id": 3,
@@ -291,7 +292,8 @@
             "testStrategy": "Review coverage reports and ensure all critical paths are covered.",
             "parentId": "undefined"
           }
-        ]
+        ],
+        "updatedAt": "2025-11-30T11:50:03.781Z"
       },
       {
         "id": "19",
@@ -301,8 +303,9 @@
         "testStrategy": "Unit tests asserting mapped DTO fields equal expected values from mocked records.",
         "priority": "medium",
         "dependencies": [],
-        "status": "pending",
-        "subtasks": []
+        "status": "done",
+        "subtasks": [],
+        "updatedAt": "2025-11-30T11:53:09.521Z"
       },
       {
         "id": "20",
@@ -676,338 +679,59 @@
       {
         "id": "37",
         "title": "Collect Changed Files and Task Data",
-        "description": "Gather information about changed files and task details for the commit message.",
-        "details": "Create a function or script that:\n- Checks if the current directory is a git repository\n- Lists all changed files (using `git status --porcelain`)\n- Retrieves task ID, title, and description from the task context\n- Returns structured data for use in commit message generation.",
-        "testStrategy": "Test the function with various file change scenarios and task data. Verify that it correctly identifies changes and retrieves task information.",
-        "priority": "medium",
+        "description": "Gather detailed information about changed files and task details for generating the commit message, using a structured and documented approach.",
+        "status": "in-progress",
         "dependencies": [],
-        "status": "done",
-        "subtasks": [],
-        "updatedAt": "2025-11-30T11:27:14.630Z"
+        "priority": "medium",
+        "details": "Implement a function or script that performs the following five-step process:\n1. Verify if the current directory is a git repository using appropriate git commands.\n2. Collect the list of changed files using `git status --porcelain` with detailed parsing to identify file states.\n3. Retrieve task data (ID, title, description) locally from `tasks.json` without relying on external APIs.\n4. Implement a function `generateCommitMessage` that accepts parameters for changed files and task data to produce a structured commit message.\n5. Document all steps, commands, and function usage comprehensively in `git_commit.mdc` for maintainability and clarity.\n\nInclude example git commands for repository verification and file collection as part of the implementation documentation.",
+        "testStrategy": "Test the implementation by simulating various git file change scenarios and verifying that the function correctly identifies all changed files with their statuses. Validate that task data is accurately read from `tasks.json`. Confirm that `generateCommitMessage` produces the expected commit message format. Review the documentation in `git_commit.mdc` for completeness and clarity.",
+        "subtasks": []
       },
       {
         "id": "38",
         "title": "Generate Structured Commit Message",
         "description": "Format a commit message using the collected task data and changed files.",
-        "status": "done",
+        "details": "Implement a template-based message generator that follows the specified format:\n```\nfeat(task-{id}): {task_title}\n\n{task_description}\n\nChanges:\n- {list of changed files or summary}\n\nTask: {id} - {title}\nStatus: done\n```\nEnsure the message is properly escaped and formatted.",
+        "testStrategy": "Test with various task and file change combinations. Validate that the output matches the required format and includes all necessary information.",
+        "priority": "medium",
         "dependencies": [
           "37"
         ],
-        "priority": "medium",
-        "details": "The template-based message generator is already implemented in git_commit.mdc:\n- Function generateCommitMessage contains the full template\n- Format: feat(task-{id}): {title}\n- Includes task description, list of changed files, and link to task\n- Examples of commit messages are documented\n- Template follows conventional commits standard\n\nEnsure the message is properly escaped and formatted when used in actual commits.",
-        "testStrategy": "Test with various task and file change combinations. Validate that the output matches the required format and includes all necessary information. Confirm proper escaping and formatting in real commit scenarios.",
-        "subtasks": [
-          {
-            "id": 1,
-            "title": "Verify generateCommitMessage function implementation",
-            "description": "Ensure the function in git_commit.mdc correctly formats the message according to the template.",
-            "dependencies": [],
-            "details": "Check that the function uses the correct placeholders and structure as specified.",
-            "status": "done",
-            "testStrategy": "Manual verification against the template specification.",
-            "parentId": "undefined"
-          },
-          {
-            "id": 2,
-            "title": "Add examples to documentation",
-            "description": "Include sample commit messages in the documentation to illustrate correct usage.",
-            "dependencies": [],
-            "details": "Document several examples showing different task types and file changes.",
-            "status": "done",
-            "testStrategy": "Review documentation for clarity and completeness.",
-            "parentId": "undefined"
-          },
-          {
-            "id": 3,
-            "title": "Ensure proper escaping and formatting",
-            "description": "Make sure special characters in task data are properly escaped in the generated message.",
-            "dependencies": [],
-            "details": "Test with task titles and descriptions containing special characters, newlines, etc.",
-            "status": "done",
-            "testStrategy": "Automated tests with edge case inputs.",
-            "parentId": "undefined"
-          },
-          {
-            "id": 4,
-            "title": "Validate against conventional commits standard",
-            "description": "Confirm the generated messages comply with conventional commits format.",
-            "dependencies": [],
-            "details": "Check that the prefix (feat, fix, etc.) and structure match the standard.",
-            "status": "done",
-            "testStrategy": "Manual review and automated linting.",
-            "parentId": "undefined"
-          }
-        ],
-        "updatedAt": "2025-11-30T11:27:34.835Z"
+        "status": "pending",
+        "subtasks": []
       },
       {
         "id": "39",
         "title": "Execute Git Add and Commit",
         "description": "Perform the actual git operations to stage changes and create a commit.",
-        "status": "done",
+        "details": "Write a script that:\n- Runs `git add .` to stage all changes\n- Checks if there are staged changes\n- Executes `git commit` with the generated message\n- Uses `--no-verify` to avoid hooks blocking automation\n- Handles git errors gracefully (no repo, no changes, etc.)",
+        "testStrategy": "Test in different git environments (with/without repo, with/without changes). Verify commits are created with correct message and files, and workflow continues on git errors.",
+        "priority": "high",
         "dependencies": [
           "38"
         ],
-        "priority": "high",
-        "details": "Write a script that:\n- Runs `git add .` to stage all changes\n- Checks if there are staged changes\n- Executes `git commit` with the generated message\n- Uses `--no-verify` to avoid hooks blocking automation\n- Handles git errors gracefully (no repo, no changes, etc.)\n\nImplementation notes:\n- Two approaches are described: using heredoc and temporary file for commit message\n- Staged changes are checked before commit to avoid empty commits\n- Case with no changes is handled (commit is skipped)\n- All git errors are handled gracefully, workflow continues\n- Commands `git add` and `git commit` are executed sequentially",
-        "testStrategy": "Test in different git environments (with/without repo, with/without changes). Verify commits are created with correct message and files, and workflow continues on git errors.",
-        "subtasks": [
-          {
-            "id": 1,
-            "title": "Implement git add . and staged changes check",
-            "description": "Add logic to stage all changes and verify that there are staged changes before proceeding to commit.",
-            "dependencies": [],
-            "details": "Use `git add .` to stage all changes, then check for staged changes using `git diff --cached --quiet` or similar.",
-            "status": "done",
-            "testStrategy": "Verify that changes are staged and detected correctly in various scenarios.",
-            "parentId": "undefined"
-          },
-          {
-            "id": 2,
-            "title": "Implement git commit with generated message",
-            "description": "Execute git commit with the message generated from task data, using --no-verify flag.",
-            "dependencies": [],
-            "details": "Pass the generated commit message to git commit using either heredoc or a temporary file. Always use --no-verify to skip hooks.",
-            "status": "done",
-            "testStrategy": "Verify that commit is created with correct message and --no-verify flag is used.",
-            "parentId": "undefined"
-          },
-          {
-            "id": 3,
-            "title": "Handle case with no changes",
-            "description": "Skip commit if there are no staged changes.",
-            "dependencies": [],
-            "details": "Check for staged changes before commit and skip if none are found.",
-            "status": "done",
-            "testStrategy": "Test scenario where no changes are staged and verify commit is skipped.",
-            "parentId": "undefined"
-          },
-          {
-            "id": 4,
-            "title": "Handle git errors gracefully",
-            "description": "Ensure all git errors are caught and do not block workflow.",
-            "dependencies": [],
-            "details": "Wrap git commands in error handling logic to prevent workflow interruption on git errors.",
-            "status": "done",
-            "testStrategy": "Test with various git error scenarios (no repo, no permissions, etc.) and verify workflow continues.",
-            "parentId": "undefined"
-          },
-          {
-            "id": 5,
-            "title": "Execute git add and git commit sequentially",
-            "description": "Ensure git add and git commit are executed in sequence as part of the workflow.",
-            "dependencies": [],
-            "details": "Stage changes first, then commit if changes are present.",
-            "status": "done",
-            "testStrategy": "Verify commands are executed in correct order and workflow behaves as expected.",
-            "parentId": "undefined"
-          },
-          {
-            "id": 6,
-            "title": "Document two approaches for commit message",
-            "description": "Describe and document the two approaches (heredoc and temporary file) for passing commit message to git commit.",
-            "dependencies": [],
-            "details": "Provide clear documentation on both approaches for future reference and maintainability.",
-            "status": "done",
-            "testStrategy": "Review documentation for clarity and completeness.",
-            "parentId": "undefined"
-          }
-        ],
-        "updatedAt": "2025-11-30T11:27:47.448Z"
+        "status": "pending",
+        "subtasks": []
       },
       {
         "id": "40",
         "title": "Document Git Commit Workflow",
         "description": "Update documentation to describe the new automatic commit workflow.",
-        "status": "done",
+        "details": "Add/update `.cursor/rules/taskmaster_integration.mdc` to document:\n- When and how commits are triggered\n- Commit message format\n- Error handling behavior\n- Any configuration options\nInclude examples of expected commit messages.",
+        "testStrategy": "Review documentation for clarity and completeness. Verify it matches actual implementation behavior.",
+        "priority": "medium",
         "dependencies": [
           "39"
         ],
-        "priority": "medium",
-        "details": "Add/update `.cursor/rules/taskmaster_integration.mdc` to document:\n- When and how commits are triggered\n- Commit message format\n- Error handling behavior\n- Any configuration options\nInclude examples of expected commit messages.",
-        "testStrategy": "Review documentation for clarity and completeness. Verify it matches actual implementation behavior.",
-        "subtasks": [
-          {
-            "id": 1,
-            "title": "Add section 'Git Commit After Task Completion' to taskmaster_integration.mdc",
-            "description": "Document the new automatic commit workflow in the integration guide.",
-            "dependencies": [],
-            "details": "Include all steps of the workflow, commit message format with example, note that the workflow is non-blocking, and add a link to git_commit.mdc for further details.",
-            "status": "done",
-            "testStrategy": "Verify section exists and content is accurate.",
-            "parentId": "undefined"
-          },
-          {
-            "id": 2,
-            "title": "Ensure documentation matches actual implementation",
-            "description": "Review documentation to confirm it reflects the real behavior of the automatic commit workflow.",
-            "dependencies": [
-              1
-            ],
-            "details": "Check that all described steps, formats, and behaviors are consistent with the code.",
-            "status": "done",
-            "testStrategy": "Compare documentation with implementation and verify accuracy.",
-            "parentId": "undefined"
-          },
-          {
-            "id": 3,
-            "title": "Review documentation for clarity and completeness",
-            "description": "Ensure the documentation is clear, complete, and easy to understand.",
-            "dependencies": [
-              2
-            ],
-            "details": "Check for any missing information or unclear sections.",
-            "status": "done",
-            "testStrategy": "Peer review and feedback on documentation quality.",
-            "parentId": "undefined"
-          },
-          {
-            "id": 4,
-            "title": "Add examples of expected commit messages",
-            "description": "Include concrete examples of commit messages in the documentation.",
-            "dependencies": [
-              1
-            ],
-            "details": "Provide at least one example of a commit message that matches the documented format.",
-            "status": "done",
-            "testStrategy": "Verify examples are present and correct.",
-            "parentId": "undefined"
-          },
-          {
-            "id": 5,
-            "title": "Document configuration options for commit workflow",
-            "description": "Describe any configuration options available for the commit workflow.",
-            "dependencies": [
-              1
-            ],
-            "details": "List and explain configuration options related to the automatic commit workflow.",
-            "status": "done",
-            "testStrategy": "Check that all configuration options are documented and accurate.",
-            "parentId": "undefined"
-          },
-          {
-            "id": 6,
-            "title": "Document error handling behavior",
-            "description": "Describe how errors are handled during the commit workflow.",
-            "dependencies": [
-              1
-            ],
-            "details": "Explain what happens when an error occurs during the commit process.",
-            "status": "done",
-            "testStrategy": "Verify error handling is documented and matches implementation.",
-            "parentId": "undefined"
-          },
-          {
-            "id": 7,
-            "title": "Link to git_commit.mdc for additional details",
-            "description": "Add a reference to git_commit.mdc for more in-depth information.",
-            "dependencies": [
-              1
-            ],
-            "details": "Include a link to git_commit.mdc in the documentation.",
-            "status": "done",
-            "testStrategy": "Check that the link is present and correct.",
-            "parentId": "undefined"
-          },
-          {
-            "id": 8,
-            "title": "Final review and approval",
-            "description": "Perform a final review of the documentation before marking the task as complete.",
-            "dependencies": [
-              3,
-              4,
-              5,
-              6,
-              7
-            ],
-            "details": "Ensure all aspects of the documentation are complete and accurate.",
-            "status": "done",
-            "testStrategy": "Final peer review and approval.",
-            "parentId": "undefined"
-          },
-          {
-            "id": 9,
-            "title": "Update documentation to reflect non-blocking workflow",
-            "description": "Clarify that the commit workflow is non-blocking.",
-            "dependencies": [
-              1
-            ],
-            "details": "Add a note in the documentation stating that the workflow is non-blocking.",
-            "status": "done",
-            "testStrategy": "Verify the note is present and clear.",
-            "parentId": "undefined"
-          },
-          {
-            "id": 10,
-            "title": "Verify documentation matches implementation",
-            "description": "Double-check that the documentation accurately reflects the current implementation.",
-            "dependencies": [
-              8
-            ],
-            "details": "Ensure there are no discrepancies between the documentation and the actual code.",
-            "status": "done",
-            "testStrategy": "Compare documentation with implementation and verify accuracy.",
-            "parentId": "undefined"
-          },
-          {
-            "id": 11,
-            "title": "Add any missing configuration options",
-            "description": "Include any configuration options that were missed in previous updates.",
-            "dependencies": [
-              5
-            ],
-            "details": "Review the implementation for any additional configuration options and add them to the documentation.",
-            "status": "done",
-            "testStrategy": "Check for completeness of configuration options.",
-            "parentId": "undefined"
-          },
-          {
-            "id": 12,
-            "title": "Ensure all examples are up-to-date",
-            "description": "Verify that all examples in the documentation are current and accurate.",
-            "dependencies": [
-              4
-            ],
-            "details": "Review and update any outdated examples.",
-            "status": "done",
-            "testStrategy": "Check examples against current implementation.",
-            "parentId": "undefined"
-          },
-          {
-            "id": 13,
-            "title": "Finalize documentation",
-            "description": "Complete any remaining updates to the documentation.",
-            "dependencies": [
-              10,
-              11,
-              12
-            ],
-            "details": "Make any final adjustments to ensure the documentation is complete and accurate.",
-            "status": "done",
-            "testStrategy": "Final review and approval.",
-            "parentId": "undefined"
-          },
-          {
-            "id": 14,
-            "title": "Close task",
-            "description": "Mark the task as complete after all documentation updates are finalized.",
-            "dependencies": [
-              13
-            ],
-            "details": "Ensure all subtasks are complete and documentation is up-to-date.",
-            "status": "done",
-            "testStrategy": "Final verification that all work is complete.",
-            "parentId": "undefined"
-          }
-        ],
-        "updatedAt": "2025-11-30T11:28:02.949Z"
+        "status": "pending",
+        "subtasks": []
       }
     ],
     "metadata": {
       "version": "1.0.0",
-      "lastModified": "2025-11-30T11:28:02.950Z",
+      "lastModified": "2025-11-30T11:53:09.521Z",
       "taskCount": 40,
-      "completedCount": 19,
+      "completedCount": 16,
       "tags": [
         "master"
       ]
