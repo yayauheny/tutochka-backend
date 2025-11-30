@@ -53,7 +53,13 @@ class EnvironmentConfigTest {
     @Test
     @DisplayName("should_return_default_boolean_value_when_environment_variable_is_not_set")
     fun should_return_default_boolean_value_when_environment_variable_is_not_set() {
+        // Given
+        // (non-existent environment variable)
+
+        // When
         val result = EnvironmentConfig.getBoolean("NON_EXISTENT_VAR", true)
+
+        // Then
         assertTrue(result)
     }
 
@@ -61,14 +67,26 @@ class EnvironmentConfigTest {
     @ValueSource(strings = ["true", "TRUE", "True"])
     @DisplayName("should_return_true_for_various_boolean_string_representations")
     fun should_return_true_for_various_boolean_string_representations(value: String) {
+        // Given
+        // (non-existent environment variable, value parameter not used in this test)
+
+        // When
         val result = EnvironmentConfig.getBoolean("NON_EXISTENT_VAR", true)
+
+        // Then
         assertTrue(result)
     }
 
     @Test
     @DisplayName("should_return_false_for_default_boolean_when_not_set")
     fun should_return_false_for_default_boolean_when_not_set() {
+        // Given
+        // (non-existent environment variable)
+
+        // When
         val result = EnvironmentConfig.getBoolean("NON_EXISTENT_VAR", false)
+
+        // Then
         assertFalse(result)
     }
 }
