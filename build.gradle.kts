@@ -299,15 +299,28 @@ tasks.jacocoTestReport {
     reports {
         xml.required.set(true)
         html.required.set(true)
-        csv.required.set(false)
+        csv.required.set(true) // Enable CSV for programmatic analysis
         html.outputLocation.set(layout.buildDirectory.dir("reports/jacoco/html"))
+        xml.outputLocation.set(layout.buildDirectory.file("reports/jacoco/jacocoTestReport.xml"))
+        csv.outputLocation.set(layout.buildDirectory.file("reports/jacoco/jacocoTestReport.csv"))
     }
 
-    executionData.setFrom(fileTree(layout.buildDirectory.dir("jacoco")).include("**/*.exec"))
+    // Collect execution data from both unit and integration tests
+    executionData.setFrom(
+        fileTree(layout.buildDirectory.dir("jacoco")).include("**/*.exec")
+    )
 
+    // Configure class directories with exclusions
     classDirectories.setFrom(
         files(classDirectories.files.map { fileTree(it).excludeJacocoPatterns() })
     )
+
+    // Enable detailed reporting by package and class
+    doLast {
+        logger.lifecycle("JaCoCo HTML report: ${reports.html.outputLocation.get().asFile.absolutePath}/index.html")
+        logger.lifecycle("JaCoCo XML report: ${reports.xml.outputLocation.get().asFile.absolutePath}")
+        logger.lifecycle("JaCoCo CSV report: ${reports.csv.outputLocation.get().asFile.absolutePath}")
+    }
 }
 
 tasks.jacocoTestCoverageVerification {
