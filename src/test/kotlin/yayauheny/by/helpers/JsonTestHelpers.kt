@@ -34,8 +34,7 @@ import kotlinx.serialization.json.*
  * }
  * ```
  */
-// Используем общий testJson из HttpTestHelpers.kt
-private val json = testJson
+private val json = testJson // Используем общий testJson из HttpTestHelpers.kt
 
 // ---- JSON path (поддержка $.a.b[0].c)
 private fun JsonElement.getByPath(path: String): JsonElement? {
