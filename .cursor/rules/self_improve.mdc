@@ -39,7 +39,7 @@ alwaysApply: true
     where: { status: 'ACTIVE' }
   });
   
-  // Consider adding to [prisma.mdc](mdc:.cursor/rules/prisma.mdc):
+  // Consider adding to project-specific rules:
   // - Standard select fields
   // - Common where conditions
   // - Performance optimization patterns

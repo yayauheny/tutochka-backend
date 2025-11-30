@@ -1,0 +1,30 @@
+---
+description: Task Master automatic workflow template for new projects
+globs: **/*
+alwaysApply: true
+---
+
+# Task Master Automatic Workflow
+
+## **Mandatory Workflow for All Implementation Requests**
+
+Every implementation request automatically follows this pattern:
+
+1. **Analyze Request** → Understand what user wants
+2. **Create PRD** → Format as PRD in `.taskmaster/docs/`
+3. **Parse PRD** → Call `parse_prd` to generate subtasks
+4. **Work on Subtasks** → Implement strictly according to generated subtasks
+5. **Log Progress** → Use `update_subtask` for detailed logging
+6. **Complete** → Mark subtasks/tasks as done
+
+## **Local-First Strategy**
+- Read `.taskmaster/tasks/tasks.json` for all read operations
+- Cache task context in memory
+- Use API calls only for writes (update, add, expand)
+
+## **Context Preservation**
+- All details in task `details` field
+- Structured logging format
+- Research saved to `.taskmaster/docs/research/`
+
+See full rules in `.cursor/rules/TASKMASTER_AUTO_WORKFLOW.mdc`

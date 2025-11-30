@@ -1,0 +1,126 @@
+---
+description: Task Master integration - automatic workflow and local-first efficiency
+globs: **/*
+alwaysApply: true
+---
+
+# Task Master Integration
+
+## Automatic Workflow
+
+**EVERY implementation request** (feature, bug fix, refactor) **MUST** automatically:
+1. Create PRD → Save to `.taskmaster/docs/[feature-name]-prd.txt`
+2. Parse PRD → Call `parse_prd` to generate subtasks
+3. Read tasks.json locally → Get generated subtasks (NO API)
+4. Work on generated subtasks → Implement strictly according to plan
+5. Log progress → Use `update_subtask` with structured format
+
+**No exceptions** - happens automatically, even if user doesn't mention Task Master.
+
+## Local-First Strategy
+
+### Read Operations (No API)
+- Read `.taskmaster/tasks/tasks.json` directly
+- Parse task details from local file
+- Filter by status, priority, dependencies locally
+- Cache context in memory during session
+
+### Write Operations (API Only When Needed)
+- `parse_prd` - Generate tasks (requires AI)
+- `update_subtask` - Log progress (requires AI)
+- `set_task_status` - Update status
+- `add_task` - Add new task (requires AI)
+- `expand_task` - Break down task (requires AI)
+
+## Workflow Pattern
+
+```
+User Request → Analyze → Create PRD → parse_prd → Read tasks.json (local) → Work on Subtasks → Log Progress → set_task_status(done) → Auto Git Commit → Complete
+```
+
+## Context Preservation
+
+All context stored locally:
+- `.taskmaster/tasks/tasks.json` - Complete task structure
+- Task `details` field - Full implementation logs
+- `.taskmaster/docs/research/` - Research results
+
+**Recovery works without API calls** - just read local files.
+
+## Session Workflow
+
+### Start
+```kotlin
+// Read tasks.json once (no API)
+val tasks = readFile(".taskmaster/tasks/tasks.json")
+val currentTask = tasks.find { it.status == "in-progress" }
+val context = currentTask.details // Full implementation log
+```
+
+### During Work
+```kotlin
+// Accumulate progress in memory
+val progress = mutableListOf<String>()
+// ... do work ...
+progress.add("Fixed issue X")
+
+// Update once at breakpoint
+update_subtask(id, progress.joinToString("\n"))
+```
+
+### Recovery
+```kotlin
+// Read local file (no API)
+val tasks = readFile(".taskmaster/tasks/tasks.json")
+val lastTask = tasks.find { it.status == "in-progress" }
+val context = lastTask.details // Resume from here
+```
+
+## API Optimization
+
+- Batch updates: `set_task_status(id="1,2,3", status="done")`
+- Accumulate progress, update once
+- Check local state before API calls
+- Cache task context in memory
+
+## Progress Logging
+
+```markdown
+## Implementation Plan
+1. Files: src/main/.../Service.kt
+2. Changes: Add feature X
+3. Issues: None
+4. Progress: [x] Created service, [ ] Add tests
+5. Next: Write unit tests
+```
+
+## Git Commit After Task Completion
+
+After setting task status to "done", automatically:
+1. Check if git repository exists
+2. Collect changed files via `git status --porcelain`
+3. Generate commit message from task data (ID, title, description)
+4. Execute `git add .` and `git commit` with generated message
+
+**Commit message format:**
+```
+feat(task-{id}): {task_title}
+
+{task_description}
+
+Changes:
+- {list of changed files}
+
+Task: {id} - {title}
+Status: done
+```
+
+**Non-blocking**: Workflow continues even if git is unavailable or no changes exist.
+
+See [git_commit.mdc](mdc:.cursor/rules/taskmaster/git_commit.mdc) for detailed implementation.
+
+## References
+
+- [TASKMASTER_AUTO_WORKFLOW.mdc](mdc:.cursor/rules/TASKMASTER_AUTO_WORKFLOW.mdc) - Workflow details
+- [git_commit.mdc](mdc:.cursor/rules/taskmaster/git_commit.mdc) - Git commit rules
+- [dev_workflow.mdc](mdc:.cursor/rules/taskmaster/dev_workflow.mdc) - Development patterns

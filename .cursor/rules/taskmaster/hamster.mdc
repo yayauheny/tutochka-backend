@@ -118,7 +118,7 @@ tm context <brief url>
 
 ## **Integration with Git Workflow**
 
-When working with Hamster briefs, follow the standard Git workflow patterns outlined in [git_workflow.mdc](mdc:.cursor/rules/git_workflow.mdc):
+When working with Hamster briefs, follow standard Git workflow patterns:
 
 - Create task-specific branches: `task-XXX`
 - Commit subtask work incrementally
@@ -168,6 +168,5 @@ flowchart TD
 
 ## **Related Rules**
 
-- [git_workflow.mdc](mdc:.cursor/rules/git_workflow.mdc) - Standard Git branching and PR practices
 - [dev_workflow.mdc](mdc:.cursor/rules/taskmaster/dev_workflow.mdc) - General Task Master development patterns
-- [tasks.mdc](mdc:.cursor/rules/tasks.mdc) - Task structure and operations
+- [taskmaster_integration.mdc](mdc:.cursor/rules/taskmaster_integration.mdc) - Integration rules

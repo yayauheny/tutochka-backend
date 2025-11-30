@@ -1,0 +1,25 @@
+---
+description: Task Master integration rules template for Cursor Agent
+globs: **/*
+alwaysApply: true
+---
+
+# Task Master Agent Integration Template
+
+## **Local-First Strategy**
+- Always read `.taskmaster/tasks/tasks.json` for read operations
+- Cache task context in memory during session
+- Use API calls only for write operations
+- Batch updates at logical breakpoints
+
+## **Automatic Workflow**
+- Every implementation request → PRD → parse_prd → work on subtasks
+- Log progress in subtask details
+- Work strictly according to generated subtasks
+
+## **Context Preservation**
+- All details in task `details` field
+- Research saved to `.taskmaster/docs/research/`
+- Structured logging format
+
+See full rules in `.cursor/rules/taskmaster_integration.mdc`

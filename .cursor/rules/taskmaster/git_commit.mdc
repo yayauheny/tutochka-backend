@@ -1,0 +1,207 @@
+---
+description: Automatic git commit workflow after task completion
+globs: **/*
+alwaysApply: true
+---
+
+# Git Commit After Task Completion
+
+## Automatic Commit Workflow
+
+After setting task status to "done", automatically execute git commit with structured message.
+
+## Workflow Steps
+
+1. **Check Git Repository**
+   ```bash
+   git rev-parse --git-dir > /dev/null 2>&1
+   ```
+
+2. **Collect Changed Files**
+   ```bash
+   git status --porcelain
+   ```
+
+3. **Generate Commit Message**
+   - Format: `feat(task-{id}): {title}`
+   - Include task description
+   - List changed files
+   - Add task reference
+
+4. **Execute Commit**
+   ```bash
+   git add .
+   git commit -m "{generated_message}" --no-verify
+   ```
+
+## Commit Message Template
+
+```
+feat(task-{id}): {task_title}
+
+{task_description}
+
+Changes:
+- {file1}
+- {file2}
+- ...
+
+Task: {id} - {title}
+Status: done
+```
+
+## Implementation Pattern
+
+### Step 1: Check Git Repository
+```bash
+# Check if in git repo
+git rev-parse --git-dir > /dev/null 2>&1
+```
+
+### Step 2: Collect Changed Files
+```bash
+# Get list of changed files
+git status --porcelain | awk '{print $2}'
+# Output: list of modified/added/deleted files
+```
+
+### Step 3: Get Task Data
+```kotlin
+// Read from tasks.json (local, no API)
+val tasks = readFile(".taskmaster/tasks/tasks.json")
+val task = tasks.find { it.id == taskId }
+val taskId = task.id
+val taskTitle = task.title
+val taskDescription = task.description
+```
+
+### Step 4: Generate Commit Message
+```kotlin
+fun generateCommitMessage(
+    taskId: String,
+    title: String,
+    description: String,
+    changedFiles: List<String>
+): String {
+    val filesList = changedFiles.joinToString("\n- ", "- ")
+    return """
+feat(task-${taskId}): ${title}
+
+${description}
+
+Changes:
+${filesList}
+
+Task: ${taskId} - ${title}
+Status: done
+""".trimIndent()
+}
+```
+
+### Step 5: Execute Commit
+```bash
+# Stage all changes
+git add .
+
+# Check if there are staged changes (skip if none)
+if ! git diff --cached --quiet; then
+    # Escape commit message for shell
+    git commit -m "$(cat <<'EOF'
+{commitMessage}
+EOF
+)" --no-verify
+fi
+```
+
+### Alternative: Direct Command Execution
+```bash
+# Single command approach
+git add . && git diff --cached --quiet || git commit -F - --no-verify <<EOF
+{commitMessage}
+EOF
+```
+
+### Complete Pattern
+```kotlin
+// After set_task_status(taskId, "done")
+if (taskStatus == "done") {
+    try {
+        // 1. Check git repo
+        if (runCommand("git rev-parse --git-dir").exitCode == 0) {
+            // 2. Get changed files
+            val changedFiles = runCommand("git status --porcelain")
+                .output
+                .lines()
+                .map { it.split(" ").last() }
+                .filter { it.isNotEmpty() }
+            
+            if (changedFiles.isNotEmpty()) {
+                // 3. Get task data from tasks.json (local)
+                val task = readLocalTask(taskId)
+                
+                // 4. Generate commit message
+                val commitMsg = generateCommitMessage(
+                    taskId = task.id,
+                    title = task.title,
+                    description = task.description,
+                    files = changedFiles
+                )
+                
+                // 5. Execute commit
+                runCommand("git add .")
+                // Check if there are staged changes
+                val hasChanges = runCommand("git diff --cached --quiet").exitCode != 0
+                if (hasChanges) {
+                    // Use file or heredoc for multi-line message
+                    val tempFile = createTempFile("commit-msg", commitMsg)
+                    runCommand("git commit -F ${tempFile.path} --no-verify")
+                    tempFile.delete()
+                }
+            }
+        }
+    } catch (e: Exception) {
+        // Log error but don't block workflow
+        log.warn("Git commit failed: ${e.message}")
+    }
+}
+```
+
+## Error Handling
+
+- **No git repo**: Skip commit, continue workflow
+- **No changes**: Skip commit, continue workflow
+- **Git error**: Log warning, continue workflow
+- **Never block**: Workflow always continues even if commit fails
+
+## Examples
+
+### Example 1: Simple Task
+```
+feat(task-36): Add Git Commit Rule After Task Completion
+
+Implement a workflow rule that triggers after a task status is set to 'done' to initiate a git commit.
+
+Changes:
+- .cursor/rules/TASKMASTER_AUTO_WORKFLOW.mdc
+- .cursor/rules/taskmaster/git_commit.mdc
+
+Task: 36 - Add Git Commit Rule After Task Completion
+Status: done
+```
+
+### Example 2: Subtask
+```
+feat(task-36.1): Add commit step to workflow
+
+Add new step after set_task_status to trigger git commit.
+
+Changes:
+- .cursor/rules/TASKMASTER_AUTO_WORKFLOW.mdc
+
+Task: 36.1 - Add commit step to workflow
+Status: done
+```
+
+## Integration
+
+This rule is automatically applied after `set_task_status` when status is "done". No manual intervention required.
