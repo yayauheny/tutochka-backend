@@ -25,7 +25,6 @@ import yayauheny.by.helpers.testPost
 
 @Tag("integration")
 class CityApiTest : BaseIntegrationTest() {
-
     @Nested
     @DisplayName("GET /api/v1/cities/country/{countryId}")
     inner class GetCitiesByCountry {

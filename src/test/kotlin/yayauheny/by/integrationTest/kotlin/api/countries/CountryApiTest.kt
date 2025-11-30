@@ -20,7 +20,6 @@ import yayauheny.by.helpers.testPost
 
 @Tag("integration")
 class CountryApiTest : BaseIntegrationTest() {
-
     @Nested
     @DisplayName("E2E Test Cases - Database Constraints")
     inner class E2EDatabaseConstraints {
