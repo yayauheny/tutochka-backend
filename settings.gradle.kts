@@ -1,9 +1,15 @@
 pluginManagement {
-    plugins {
-        kotlin("jvm") version "2.2.20"
+    repositories {
+        mavenCentral()
+        gradlePluginPortal()
     }
 }
-rootProject.name = "tutochka-backend"
+
+rootProject.name = "tutochka"
+
+include("backend")
+include("bot")
+include("shared")
 
 dependencyResolutionManagement {
     repositories {
