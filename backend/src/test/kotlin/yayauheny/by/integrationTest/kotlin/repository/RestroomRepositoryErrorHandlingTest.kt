@@ -40,7 +40,9 @@ class RestroomRepositoryErrorHandlingTest : BaseIntegrationTest() {
         fun given_duplicate_coordinates_when_save_restroom_then_throw_unique_violation() =
             runTest {
                 val testEnv = DatabaseTestHelper.createTestEnvironment(dslContext)
-                val duplicateCoordinates = by.yayauheny.shared.dto.LatLon(lat = 55.7558, lon = 37.6176)
+                val duplicateCoordinates =
+                    by.yayauheny.shared.dto
+                        .LatLon(lat = 55.7558, lon = 37.6176)
                 val firstRestroomDto =
                     TestDataHelpers.createRestroomCreateDto(
                         cityId = testEnv.cityId,
@@ -214,7 +216,9 @@ class RestroomRepositoryErrorHandlingTest : BaseIntegrationTest() {
         fun given_save_throws_exception_when_transaction_rollback_then_no_data_persisted() =
             runTest {
                 val testEnv = DatabaseTestHelper.createTestEnvironment(dslContext)
-                val duplicateCoordinates = by.yayauheny.shared.dto.LatLon(lat = 55.7558, lon = 37.6176)
+                val duplicateCoordinates =
+                    by.yayauheny.shared.dto
+                        .LatLon(lat = 55.7558, lon = 37.6176)
                 val firstRestroomDto =
                     TestDataHelpers.createRestroomCreateDto(
                         cityId = testEnv.cityId,

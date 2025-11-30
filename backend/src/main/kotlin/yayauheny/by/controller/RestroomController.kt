@@ -61,7 +61,13 @@ class RestroomController(
                 val limit = call.getIntFromQuery("limit") ?: 5
                 val distanceMeters = call.getIntFromQuery("distanceMeters") ?: ApiConstants.DEFAULT_MAX_DISTANCE_METERS
 
-                val params = NearestRestroomsParams(by.yayauheny.shared.dto.LatLon(lat, lon), limit, distanceMeters)
+                val params =
+                    NearestRestroomsParams(
+                        by.yayauheny.shared.dto
+                            .LatLon(lat, lon),
+                        limit,
+                        distanceMeters
+                    )
                 val restrooms =
                     params
                         .validateAndThen(validateNearestRestroomsParams) { valid ->

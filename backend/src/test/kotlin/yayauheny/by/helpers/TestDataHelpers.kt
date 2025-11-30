@@ -72,7 +72,9 @@ object TestDataHelpers {
         nameRu = nameRu,
         nameEn = nameEn,
         region = region,
-        coordinates = by.yayauheny.shared.dto.LatLon(lat = lat, lon = lon)
+        coordinates =
+            by.yayauheny.shared.dto
+                .LatLon(lat = lat, lon = lon)
     )
 
     fun createCityUpdateDto(
@@ -80,7 +82,9 @@ object TestDataHelpers {
         nameRu: String = "Минск",
         nameEn: String = "Minsk",
         region: String? = "Минская область",
-        coordinates: by.yayauheny.shared.dto.LatLon = by.yayauheny.shared.dto.LatLon(lat = 53.9006, lon = 27.5590)
+        coordinates: by.yayauheny.shared.dto.LatLon =
+            by.yayauheny.shared.dto
+                .LatLon(lat = 53.9006, lon = 27.5590)
     ) = CityUpdateDto(
         countryId = countryId,
         nameRu = nameRu,
@@ -103,7 +107,9 @@ object TestDataHelpers {
         nameRu = nameRu,
         nameEn = nameEn,
         region = region,
-        coordinates = by.yayauheny.shared.dto.LatLon(lat = lat, lon = lon)
+        coordinates =
+            by.yayauheny.shared.dto
+                .LatLon(lat = lat, lon = lon)
     )
 
     fun createCityList(
@@ -148,7 +154,9 @@ object TestDataHelpers {
         workTime = workTime,
         feeType = feeType,
         accessibilityType = accessibilityType,
-        coordinates = by.yayauheny.shared.dto.LatLon(lat = lat, lon = lon),
+        coordinates =
+            by.yayauheny.shared.dto
+                .LatLon(lat = lat, lon = lon),
         dataSource = dataSource,
         amenities = amenities,
         parentPlaceName = parentPlaceName,
@@ -165,7 +173,9 @@ object TestDataHelpers {
         workTime: JsonObject? = createBasicWorkTime(),
         feeType: FeeType = FeeType.FREE,
         accessibilityType: AccessibilityType = AccessibilityType.DISABLED,
-        coordinates: by.yayauheny.shared.dto.LatLon = by.yayauheny.shared.dto.LatLon(lat = 40.7829, lon = -73.9654),
+        coordinates: by.yayauheny.shared.dto.LatLon =
+            by.yayauheny.shared.dto
+                .LatLon(lat = 40.7829, lon = -73.9654),
         status: RestroomStatus = RestroomStatus.ACTIVE,
         amenities: JsonObject? = createBasicAmenities(),
         parentPlaceName: String? = null,
@@ -218,7 +228,9 @@ object TestDataHelpers {
         workTime = workTime,
         feeType = feeType,
         accessibilityType = accessibilityType,
-        coordinates = by.yayauheny.shared.dto.LatLon(lat = lat, lon = lon),
+        coordinates =
+            by.yayauheny.shared.dto
+                .LatLon(lat = lat, lon = lon),
         dataSource = dataSource,
         status = status,
         amenities = amenities,
@@ -257,7 +269,9 @@ object TestDataHelpers {
         id = id,
         name = name,
         address = address,
-        coordinates = by.yayauheny.shared.dto.LatLon(lat = lat, lon = lon),
+        coordinates =
+            by.yayauheny.shared.dto
+                .LatLon(lat = lat, lon = lon),
         distanceMeters = distanceMeters,
         feeType = feeType,
         isOpen = isOpen
