@@ -34,23 +34,26 @@ class RestroomRepositoryErrorHandlingTest : BaseIntegrationTest() {
             runTest {
                 val testEnv = DatabaseTestHelper.createTestEnvironment(dslContext)
                 val duplicateCoordinates = yayauheny.by.model.LatLon(lat = 55.7558, lon = 37.6176)
-                val firstRestroomDto = TestDataHelpers.createRestroomCreateDto(
-                    cityId = testEnv.cityId,
-                    lat = duplicateCoordinates.lat,
-                    lon = duplicateCoordinates.lon
-                )
+                val firstRestroomDto =
+                    TestDataHelpers.createRestroomCreateDto(
+                        cityId = testEnv.cityId,
+                        lat = duplicateCoordinates.lat,
+                        lon = duplicateCoordinates.lon
+                    )
 
                 repository.save(firstRestroomDto)
 
-                val duplicateRestroomDto = TestDataHelpers.createRestroomCreateDto(
-                    cityId = testEnv.cityId,
-                    lat = duplicateCoordinates.lat,
-                    lon = duplicateCoordinates.lon
-                )
+                val duplicateRestroomDto =
+                    TestDataHelpers.createRestroomCreateDto(
+                        cityId = testEnv.cityId,
+                        lat = duplicateCoordinates.lat,
+                        lon = duplicateCoordinates.lon
+                    )
 
-                val exception = assertFailsWith<PSQLException> {
-                    repository.save(duplicateRestroomDto)
-                }
+                val exception =
+                    assertFailsWith<PSQLException> {
+                        repository.save(duplicateRestroomDto)
+                    }
 
                 assertTrue(
                     exception.sqlState == "23505",
@@ -58,17 +61,18 @@ class RestroomRepositoryErrorHandlingTest : BaseIntegrationTest() {
                 )
                 assertNotNull(exception.message)
 
-                val restroomsWithSameCoordinates = dslContext
-                    .selectCount()
-                    .from(RESTROOMS)
-                    .where(
-                        DSL.condition(
-                            "ST_Equals({0}, {1})",
-                            RESTROOMS.COORDINATES,
-                            pointExpr(duplicateCoordinates.lon, duplicateCoordinates.lat, RESTROOMS.COORDINATES)
-                        )
-                    )
-                    .fetchOne()?.value1() ?: 0
+                val restroomsWithSameCoordinates =
+                    dslContext
+                        .selectCount()
+                        .from(RESTROOMS)
+                        .where(
+                            DSL.condition(
+                                "ST_Equals({0}, {1})",
+                                RESTROOMS.COORDINATES,
+                                pointExpr(duplicateCoordinates.lon, duplicateCoordinates.lat, RESTROOMS.COORDINATES)
+                            )
+                        ).fetchOne()
+                        ?.value1() ?: 0
 
                 assertTrue(restroomsWithSameCoordinates == 1, "Only one restroom with these coordinates should exist")
             }
@@ -80,9 +84,10 @@ class RestroomRepositoryErrorHandlingTest : BaseIntegrationTest() {
                 val nonExistentCityId = UUID.randomUUID()
                 val restroomDto = TestDataHelpers.createRestroomCreateDto(cityId = nonExistentCityId)
 
-                val exception = assertFailsWith<PSQLException> {
-                    repository.save(restroomDto)
-                }
+                val exception =
+                    assertFailsWith<PSQLException> {
+                        repository.save(restroomDto)
+                    }
 
                 assertTrue(
                     exception.sqlState == "23503",
@@ -90,11 +95,13 @@ class RestroomRepositoryErrorHandlingTest : BaseIntegrationTest() {
                 )
                 assertNotNull(exception.message)
 
-                val savedRestroomsCount = dslContext
-                    .selectCount()
-                    .from(RESTROOMS)
-                    .where(RESTROOMS.CITY_ID.eq(nonExistentCityId))
-                    .fetchOne()?.value1() ?: 0
+                val savedRestroomsCount =
+                    dslContext
+                        .selectCount()
+                        .from(RESTROOMS)
+                        .where(RESTROOMS.CITY_ID.eq(nonExistentCityId))
+                        .fetchOne()
+                        ?.value1() ?: 0
 
                 assertTrue(savedRestroomsCount == 0, "No restroom should be saved with non-existent cityId")
             }
@@ -104,18 +111,21 @@ class RestroomRepositoryErrorHandlingTest : BaseIntegrationTest() {
         fun given_empty_address_when_save_restroom_then_validation_should_prevent_save() =
             runTest {
                 val testEnv = DatabaseTestHelper.createTestEnvironment(dslContext)
-                val restroomDtoWithEmptyAddress = TestDataHelpers.createRestroomCreateDto(
-                    cityId = testEnv.cityId,
-                    address = ""
-                )
+                val restroomDtoWithEmptyAddress =
+                    TestDataHelpers.createRestroomCreateDto(
+                        cityId = testEnv.cityId,
+                        address = ""
+                    )
 
                 try {
                     repository.save(restroomDtoWithEmptyAddress)
-                    val restroomsWithEmptyAddress = dslContext
-                        .selectCount()
-                        .from(RESTROOMS)
-                        .where(RESTROOMS.ADDRESS.eq(""))
-                        .fetchOne()?.value1() ?: 0
+                    val restroomsWithEmptyAddress =
+                        dslContext
+                            .selectCount()
+                            .from(RESTROOMS)
+                            .where(RESTROOMS.ADDRESS.eq(""))
+                            .fetchOne()
+                            ?.value1() ?: 0
                     assertTrue(restroomsWithEmptyAddress == 0, "Empty address should not be saved")
                 } catch (e: Exception) {
                     assertTrue(
@@ -147,9 +157,10 @@ class RestroomRepositoryErrorHandlingTest : BaseIntegrationTest() {
                 val nonExistentId = UUID.randomUUID()
                 val updateDto = TestDataHelpers.createRestroomUpdateDto(cityId = testEnv.cityId)
 
-                val exception = assertFailsWith<EntityNotFoundException> {
-                    repository.update(nonExistentId, updateDto)
-                }
+                val exception =
+                    assertFailsWith<EntityNotFoundException> {
+                        repository.update(nonExistentId, updateDto)
+                    }
 
                 assertNotNull(exception.message)
                 assertTrue(
@@ -157,11 +168,13 @@ class RestroomRepositoryErrorHandlingTest : BaseIntegrationTest() {
                     "Exception message should mention entity type"
                 )
 
-                val restroomsWithNonExistentId = dslContext
-                    .selectCount()
-                    .from(RESTROOMS)
-                    .where(RESTROOMS.ID.eq(nonExistentId))
-                    .fetchOne()?.value1() ?: 0
+                val restroomsWithNonExistentId =
+                    dslContext
+                        .selectCount()
+                        .from(RESTROOMS)
+                        .where(RESTROOMS.ID.eq(nonExistentId))
+                        .fetchOne()
+                        ?.value1() ?: 0
 
                 assertTrue(restroomsWithNonExistentId == 0, "No restroom should exist with non-existent ID")
             }
@@ -185,30 +198,35 @@ class RestroomRepositoryErrorHandlingTest : BaseIntegrationTest() {
             runTest {
                 val testEnv = DatabaseTestHelper.createTestEnvironment(dslContext)
                 val duplicateCoordinates = yayauheny.by.model.LatLon(lat = 55.7558, lon = 37.6176)
-                val firstRestroomDto = TestDataHelpers.createRestroomCreateDto(
-                    cityId = testEnv.cityId,
-                    lat = duplicateCoordinates.lat,
-                    lon = duplicateCoordinates.lon
-                )
+                val firstRestroomDto =
+                    TestDataHelpers.createRestroomCreateDto(
+                        cityId = testEnv.cityId,
+                        lat = duplicateCoordinates.lat,
+                        lon = duplicateCoordinates.lon
+                    )
 
                 repository.save(firstRestroomDto)
 
-                val duplicateRestroomDto = TestDataHelpers.createRestroomCreateDto(
-                    cityId = testEnv.cityId,
-                    lat = duplicateCoordinates.lat,
-                    lon = duplicateCoordinates.lon
-                )
+                val duplicateRestroomDto =
+                    TestDataHelpers.createRestroomCreateDto(
+                        cityId = testEnv.cityId,
+                        lat = duplicateCoordinates.lat,
+                        lon = duplicateCoordinates.lon
+                    )
 
-                val exception = assertFailsWith<PSQLException> {
-                    repository.save(duplicateRestroomDto)
-                }
+                val exception =
+                    assertFailsWith<PSQLException> {
+                        repository.save(duplicateRestroomDto)
+                    }
 
                 assertTrue(exception.sqlState == "23505", "Expected unique constraint violation")
 
-                val totalRestroomsCount = dslContext
-                    .selectCount()
-                    .from(RESTROOMS)
-                    .fetchOne()?.value1() ?: 0
+                val totalRestroomsCount =
+                    dslContext
+                        .selectCount()
+                        .from(RESTROOMS)
+                        .fetchOne()
+                        ?.value1() ?: 0
 
                 assertTrue(totalRestroomsCount == 1, "Only the first restroom should exist after rollback")
             }
