@@ -1,7 +1,7 @@
 package by.yayauheny.tutochkatgbot.service;
 
-import by.yayauheny.tutochkatgbot.integration.dto.NearestRestroomResponseDto;
-import by.yayauheny.tutochkatgbot.integration.dto.RestroomResponseDto;
+import by.yayauheny.shared.dto.NearestRestroomResponseDto;
+import by.yayauheny.shared.dto.RestroomResponseDto;
 import by.yayauheny.tutochkatgbot.messages.Messages;
 import by.yayauheny.tutochkatgbot.util.DistanceFormat;
 import by.yayauheny.tutochkatgbot.util.Links;
@@ -16,14 +16,14 @@ import java.util.Optional;
 public class FormatterService {
 
     public String toiletDetails(RestroomResponseDto toilet) {
-        String name = Optional.ofNullable(toilet.name()).orElse("Туалет");
-        String address = Optional.ofNullable(toilet.address()).orElse("Адрес не указан");
+        String name = Optional.ofNullable(toilet.getName()).orElse("Туалет");
+        String address = Optional.ofNullable(toilet.getAddress()).orElse("Адрес не указан");
         
-        String description = Optional.ofNullable(toilet.description())
+        String description = Optional.ofNullable(toilet.getDescription())
             .filter(desc -> !desc.trim().isEmpty())
             .orElseGet(() -> {
-                if (toilet.workTime() != null && !toilet.workTime().isEmpty()) {
-                    String workTime = WorkTimeFormatter.formatWorkTime(toilet.workTime());
+                if (toilet.getWorkTime() != null && !toilet.getWorkTime().toString().isEmpty()) {
+                    String workTime = WorkTimeFormatter.formatWorkTime(toilet.getWorkTime());
                     if (!"Время работы не указано".equals(workTime)) {
                         return workTime;
                     }
@@ -39,19 +39,11 @@ public class FormatterService {
     }
 
     public String toiletListItem(NearestRestroomResponseDto toilet) {
-        String name = Optional.ofNullable(toilet.name()).orElse("Туалет");
-        String distance = DistanceFormat.meters(toilet.distanceMeters());
-        String feeType = toilet.feeType() == by.yayauheny.tutochkatgbot.integration.dto.FeeType.FREE ? "Бесплатный" : "Платный";
+        String name = Optional.ofNullable(toilet.getName()).orElse("Туалет");
+        String distance = DistanceFormat.meters(toilet.getDistanceMeters());
+        String feeType = toilet.getFeeType() == by.yayauheny.shared.enums.FeeType.FREE ? "Бесплатный" : "Платный";
         
-        String workTimeInfo = "";
-        if (toilet.workTime() != null && !toilet.workTime().isEmpty()) {
-            String workTime = WorkTimeFormatter.getSimplifiedWorkTime(toilet.workTime());
-            if (workTime != null && !workTime.trim().isEmpty()) {
-                workTimeInfo = " • " + workTime;
-            }
-        }
-        
-        return String.format("🐥 %s (%s) — %s%s", name, feeType, distance, workTimeInfo);
+        return String.format("🐥 %s (%s) — %s", name, feeType, distance);
     }
 
     public String toiletsFound(int count) {
@@ -59,10 +51,10 @@ public class FormatterService {
     }
 
     public String generateMapsLink(RestroomResponseDto toilet) {
-        return Links.getDefaultMapsLink(toilet.lat(), toilet.lon());
+        return Links.getDefaultMapsLink(toilet.getCoordinates().getLat(), toilet.getCoordinates().getLon());
     }
 
     public String generateMapsLink(NearestRestroomResponseDto toilet) {
-        return Links.getDefaultMapsLink(toilet.lat(), toilet.lon());
+        return Links.getDefaultMapsLink(toilet.getCoordinates().getLat(), toilet.getCoordinates().getLon());
     }
 }

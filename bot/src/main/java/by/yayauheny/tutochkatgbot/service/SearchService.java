@@ -1,8 +1,8 @@
 package by.yayauheny.tutochkatgbot.service;
 
+import by.yayauheny.shared.dto.NearestRestroomResponseDto;
+import by.yayauheny.shared.dto.RestroomResponseDto;
 import by.yayauheny.tutochkatgbot.integration.BackendClient;
-import by.yayauheny.tutochkatgbot.integration.dto.NearestRestroomResponseDto;
-import by.yayauheny.tutochkatgbot.integration.dto.RestroomResponseDto;
 import org.springframework.stereotype.Service;
 
 import java.util.Comparator;
@@ -30,8 +30,8 @@ public class SearchService {
      */
     public List<NearestRestroomResponseDto> findNearby(double lat, double lon, int radiusMeters, int limit) {
         return backend.findNearest(lat, lon, limit).stream()
-            .filter(r -> r.distanceMeters() <= radiusMeters)
-            .sorted(Comparator.comparingInt(NearestRestroomResponseDto::distanceMeters))
+            .filter(r -> r.getDistanceMeters() <= radiusMeters)
+            .sorted(Comparator.comparingDouble(NearestRestroomResponseDto::getDistanceMeters))
             .toList();
     }
 

@@ -1,8 +1,8 @@
 package by.yayauheny.tutochkatgbot.keyboard;
 
 import by.yayauheny.tutochkatgbot.callback.CallbackData;
-import by.yayauheny.tutochkatgbot.integration.dto.NearestRestroomResponseDto;
-import by.yayauheny.tutochkatgbot.integration.dto.RestroomResponseDto;
+import by.yayauheny.shared.dto.NearestRestroomResponseDto;
+import by.yayauheny.shared.dto.RestroomResponseDto;
 import by.yayauheny.tutochkatgbot.messages.Messages;
 import by.yayauheny.tutochkatgbot.service.FormatterService;
 import by.yayauheny.tutochkatgbot.util.DistanceFormat;
@@ -102,7 +102,7 @@ public class InlineKeyboardFactory {
         
         return InlineKeyboardButton.builder()
                 .text(buttonText)
-                .callbackData(CallbackData.detail(toilet.id()))
+                .callbackData(CallbackData.detail(toilet.getId().toString()))
                 .build();
     }
 }

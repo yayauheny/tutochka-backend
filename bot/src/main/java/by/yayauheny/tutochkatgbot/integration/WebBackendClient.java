@@ -1,8 +1,8 @@
 package by.yayauheny.tutochkatgbot.integration;
 
 import by.yayauheny.tutochkatgbot.config.BackendProperties;
-import by.yayauheny.tutochkatgbot.integration.dto.NearestRestroomResponseDto;
-import by.yayauheny.tutochkatgbot.integration.dto.RestroomResponseDto;
+import by.yayauheny.shared.dto.NearestRestroomResponseDto;
+import by.yayauheny.shared.dto.RestroomResponseDto;
 import org.springframework.http.MediaType;
 import org.springframework.stereotype.Component;
 import org.springframework.web.client.RestClient;
