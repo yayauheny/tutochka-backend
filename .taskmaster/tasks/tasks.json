@@ -89,12 +89,13 @@
         "id": "8",
         "title": "Standardize error messages and implement i18n-ready error constants",
         "description": "Centralize all error messages in a resource file or constants object and standardize language to English for API consistency and future i18n support.",
-        "details": "Create ErrorMessages object with formatted string constants for common errors. Replace inline error strings in exceptions and logs with references to ErrorMessages. Consider integration with i18n libraries for future multi-language support.",
+        "details": "Create ErrorMessages object with formatted string constants for common errors. Replace inline error strings in exceptions and logs with references to ErrorMessages. Consider integration with i18n libraries for future multi-language support.\n<info added on 2025-11-30T10:29:34.826Z>\nTask deferred for later implementation. Per PROGRESS_TRACKING.md, error messages will remain in Russian. This task has low priority and will be completed in a future sprint.\n</info added on 2025-11-30T10:29:34.826Z>",
         "testStrategy": "Verify all error messages are replaced. Test error responses for correct message formatting.",
         "priority": "medium",
         "dependencies": [],
         "status": "pending",
-        "subtasks": []
+        "subtasks": [],
+        "updatedAt": "2025-11-30T10:29:29.703Z"
       },
       {
         "id": "9",
@@ -143,19 +144,21 @@
         "testStrategy": "Integration tests simulating various SQL exceptions and verifying correct HTTP responses and messages.",
         "priority": "medium",
         "dependencies": [],
-        "status": "pending",
+        "status": "done",
         "subtasks": [
           {
             "id": 1,
             "title": "Update integration tests for PSQLException handling",
             "description": "Add integration tests to verify correct HTTP responses and error messages for various database error scenarios (23505, 23503, 23502, 23514, 42P01)",
             "details": "",
-            "status": "pending",
+            "status": "done",
             "dependencies": [],
             "parentTaskId": 12,
-            "parentId": "undefined"
+            "parentId": "undefined",
+            "updatedAt": "2025-11-30T10:32:08.337Z"
           }
-        ]
+        ],
+        "updatedAt": "2025-11-30T10:32:08.337Z"
       },
       {
         "id": "13",
@@ -283,9 +286,9 @@
     ],
     "metadata": {
       "version": "1.0.0",
-      "lastModified": "2025-11-30T10:27:00.714Z",
+      "lastModified": "2025-11-30T10:32:08.338Z",
       "taskCount": 21,
-      "completedCount": 6,
+      "completedCount": 7,
       "tags": [
         "master"
       ]

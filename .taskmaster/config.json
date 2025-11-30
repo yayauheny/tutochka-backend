@@ -2,7 +2,7 @@
   "models": {
     "main": {
       "provider": "perplexity",
-      "modelId": "sonar-pro",
+      "modelId": "sonar",
       "maxTokens": 8700,
       "temperature": 0.2
     },
@@ -13,7 +13,9 @@
       "temperature": 0.1
     },
     "fallback": {
-      "maxTokens": 65536,
+      "provider": "anthropic",
+      "modelId": "claude-3-7-sonnet-20250219",
+      "maxTokens": 120000,
       "temperature": 0.2
     }
   },
