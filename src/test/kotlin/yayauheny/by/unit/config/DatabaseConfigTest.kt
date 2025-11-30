@@ -12,6 +12,7 @@ class DatabaseConfigTest {
     @Test
     @DisplayName("Valid configuration should be created successfully")
     fun valid_configuration_should_be_created_successfully() {
+        // Given
         val config =
             DatabaseConfig(
                 host = "localhost",
@@ -26,6 +27,7 @@ class DatabaseConfigTest {
                 maxLifetime = 1800000L
             )
 
+        // Then
         assertNotNull(config)
         assertEquals("localhost", config.host)
         assertEquals(5432, config.port)
@@ -34,6 +36,7 @@ class DatabaseConfigTest {
     @Test
     @DisplayName("Blank host should throw IllegalArgumentException")
     fun blank_host_should_throw_exception() {
+        // When & Then
         assertThrows<IllegalArgumentException> {
             DatabaseConfig(host = "")
         }
@@ -45,6 +48,7 @@ class DatabaseConfigTest {
     @Test
     @DisplayName("Invalid port should throw IllegalArgumentException")
     fun invalid_port_should_throw_exception() {
+        // When & Then
         assertThrows<IllegalArgumentException> {
             DatabaseConfig(port = 0)
         }
@@ -62,16 +66,19 @@ class DatabaseConfigTest {
     @Test
     @DisplayName("Valid port boundaries should pass")
     fun valid_port_boundaries_should_pass() {
+        // Given & When
         val config1 = DatabaseConfig(port = 1)
-        assertEquals(1, config1.port)
-
         val config2 = DatabaseConfig(port = 65535)
+
+        // Then
+        assertEquals(1, config1.port)
         assertEquals(65535, config2.port)
     }
 
     @Test
     @DisplayName("Blank database name should throw IllegalArgumentException")
     fun blank_database_name_should_throw_exception() {
+        // When & Then
         assertThrows<IllegalArgumentException> {
             DatabaseConfig(name = "")
         }
@@ -80,6 +87,7 @@ class DatabaseConfigTest {
     @Test
     @DisplayName("Blank user should throw IllegalArgumentException")
     fun blank_user_should_throw_exception() {
+        // When & Then
         assertThrows<IllegalArgumentException> {
             DatabaseConfig(user = "")
         }
@@ -88,6 +96,7 @@ class DatabaseConfigTest {
     @Test
     @DisplayName("Blank password should throw IllegalArgumentException")
     fun blank_password_should_throw_exception() {
+        // When & Then
         assertThrows<IllegalArgumentException> {
             DatabaseConfig(password = "")
         }
@@ -96,6 +105,7 @@ class DatabaseConfigTest {
     @Test
     @DisplayName("Zero or negative maxPoolSize should throw IllegalArgumentException")
     fun invalid_max_pool_size_should_throw_exception() {
+        // When & Then
         assertThrows<IllegalArgumentException> {
             DatabaseConfig(maxPoolSize = 0)
         }
@@ -107,6 +117,7 @@ class DatabaseConfigTest {
     @Test
     @DisplayName("Negative minIdle should throw IllegalArgumentException")
     fun negative_min_idle_should_throw_exception() {
+        // When & Then
         assertThrows<IllegalArgumentException> {
             DatabaseConfig(minIdle = -1)
         }
@@ -115,6 +126,7 @@ class DatabaseConfigTest {
     @Test
     @DisplayName("minIdle greater than maxPoolSize should throw IllegalArgumentException")
     fun min_idle_greater_than_max_pool_size_should_throw_exception() {
+        // When & Then
         assertThrows<IllegalArgumentException> {
             DatabaseConfig(maxPoolSize = 5, minIdle = 10)
         }
@@ -123,7 +135,10 @@ class DatabaseConfigTest {
     @Test
     @DisplayName("minIdle equal to maxPoolSize should pass")
     fun min_idle_equal_to_max_pool_size_should_pass() {
+        // Given & When
         val config = DatabaseConfig(maxPoolSize = 10, minIdle = 10)
+
+        // Then
         assertEquals(10, config.maxPoolSize)
         assertEquals(10, config.minIdle)
     }
@@ -131,6 +146,7 @@ class DatabaseConfigTest {
     @Test
     @DisplayName("Zero or negative connectionTimeout should throw IllegalArgumentException")
     fun invalid_connection_timeout_should_throw_exception() {
+        // When & Then
         assertThrows<IllegalArgumentException> {
             DatabaseConfig(connectionTimeout = 0)
         }
@@ -142,6 +158,7 @@ class DatabaseConfigTest {
     @Test
     @DisplayName("Zero or negative idleTimeout should throw IllegalArgumentException")
     fun invalid_idle_timeout_should_throw_exception() {
+        // When & Then
         assertThrows<IllegalArgumentException> {
             DatabaseConfig(idleTimeout = 0)
         }

@@ -14,21 +14,39 @@ class EnvironmentConfigTest {
     @Test
     @DisplayName("should_return_default_string_value_when_environment_variable_is_not_set")
     fun should_return_default_string_value_when_environment_variable_is_not_set() {
+        // Given
+        // (non-existent environment variable)
+
+        // When
         val result = EnvironmentConfig.getString("NON_EXISTENT_VAR", "default")
+
+        // Then
         assertEquals("default", result)
     }
 
     @Test
     @DisplayName("should_return_default_int_value_when_environment_variable_is_not_set")
     fun should_return_default_int_value_when_environment_variable_is_not_set() {
+        // Given
+        // (non-existent environment variable)
+
+        // When
         val result = EnvironmentConfig.getInt("NON_EXISTENT_VAR", 42)
+
+        // Then
         assertEquals(42, result)
     }
 
     @Test
     @DisplayName("should_return_default_long_value_when_environment_variable_is_not_set")
     fun should_return_default_long_value_when_environment_variable_is_not_set() {
+        // Given
+        // (non-existent environment variable)
+
+        // When
         val result = EnvironmentConfig.getLong("NON_EXISTENT_VAR", 123L)
+
+        // Then
         assertEquals(123L, result)
     }
 
