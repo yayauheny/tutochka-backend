@@ -121,6 +121,7 @@ class ValidationTest {
         @Test
         @DisplayName("Valid data should pass validation")
         fun givenValidCountryData_whenValidating_thenPasses() {
+            // Given
             val validDto =
                 CountryCreateDto(
                     nameRu = "Соединенные Штаты",
@@ -128,8 +129,10 @@ class ValidationTest {
                     code = "US"
                 )
 
+            // When
             val result = validDto.validateWith(validateCountryOnCreate)
 
+            // Then
             assertTrue(result.isSuccess)
             assertEquals(validDto, result.getOrNull())
         }
@@ -141,8 +144,13 @@ class ValidationTest {
             dto: CountryCreateDto,
             expectedErrorCount: Int
         ) {
+            // Given
+            // (dto and expectedErrorCount provided as parameters)
+
+            // When
             val result = dto.validateWith(validateCountryOnCreate)
 
+            // Then
             if (expectedErrorCount == 0) {
                 assertTrue(result.isSuccess)
             } else {
@@ -160,6 +168,7 @@ class ValidationTest {
         @Test
         @DisplayName("Valid data should pass validation")
         fun givenValidCityData_whenValidating_thenPasses() {
+            // Given
             val validDto =
                 CityCreateDto(
                     countryId = UUID.randomUUID(),
@@ -169,8 +178,10 @@ class ValidationTest {
                     coordinates = LatLon(lat = 53.9006, lon = 27.5590)
                 )
 
+            // When
             val result = validDto.validateWith(validateCityOnCreate)
 
+            // Then
             assertTrue(result.isSuccess)
             assertEquals(validDto, result.getOrNull())
         }
@@ -178,6 +189,7 @@ class ValidationTest {
         @Test
         @DisplayName("Valid boundary values should pass validation")
         fun givenBoundaryCoordinates_whenValidatingCity_thenPasses() {
+            // Given
             val validDto =
                 CityCreateDto(
                     countryId = UUID.randomUUID(),
@@ -187,8 +199,10 @@ class ValidationTest {
                     coordinates = LatLon(lat = 90.0, lon = 180.0)
                 )
 
+            // When
             val result = validDto.validateWith(validateCityOnCreate)
 
+            // Then
             assertTrue(result.isSuccess)
         }
 
@@ -199,8 +213,13 @@ class ValidationTest {
             dto: CityCreateDto,
             expectedErrorCount: Int
         ) {
+            // Given
+            // (dto and expectedErrorCount provided as parameters)
+
+            // When
             val result = dto.validateWith(validateCityOnCreate)
 
+            // Then
             if (expectedErrorCount == 0) {
                 assertTrue(result.isSuccess)
             } else {
@@ -218,6 +237,7 @@ class ValidationTest {
         @Test
         @DisplayName("Valid data should pass validation")
         fun validDataShouldPassValidation() {
+            // Given
             val validDto =
                 RestroomCreateDto(
                     cityId = UUID.randomUUID(),
@@ -237,7 +257,10 @@ class ValidationTest {
                     inheritParentSchedule = false
                 )
 
+            // When
             val result = validDto.validateWith(validateRestroomOnCreate)
+
+            // Then
             assertTrue(result.isSuccess)
             assertEquals(validDto, result.getOrNull())
         }
@@ -249,7 +272,13 @@ class ValidationTest {
             dto: RestroomCreateDto,
             expectedErrorCount: Int
         ) {
+            // Given
+            // (dto and expectedErrorCount provided as parameters)
+
+            // When
             val result = dto.validateWith(validateRestroomOnCreate)
+
+            // Then
             assertTrue(result.isFailure)
             val exception = result.exceptionOrNull() as? ValidationException
             assertNotNull(exception)
@@ -264,8 +293,10 @@ class ValidationTest {
         @DisplayName("validateOrThrow should throw ValidationException for invalid data")
         fun validateOrThrowShouldThrowForInvalidData() =
             runTest {
+                // Given
                 val invalidDto = CountryCreateDto("", "United States", "US")
 
+                // When & Then
                 val exception =
                     assertFailsWith<ValidationException> {
                         invalidDto.validateOrThrow(validateCountryOnCreate)
@@ -281,9 +312,13 @@ class ValidationTest {
         @DisplayName("validateOrThrow should return valid data without throwing")
         fun validateOrThrowShouldReturnValidDataWithoutThrowing() =
             runTest {
+                // Given
                 val validDto = CountryCreateDto("США", "United States", "US")
 
+                // When
                 val result = validDto.validateOrThrow(validateCountryOnCreate)
+
+                // Then
                 assertEquals(validDto, result)
             }
     }
@@ -294,9 +329,13 @@ class ValidationTest {
         @Test
         @DisplayName("Country with multiple issues should return all validation errors")
         fun countryWithMultipleIssuesShouldReturnAllErrors() {
+            // Given
             val invalidDto = CountryCreateDto("", "", "U") // Multiple issues
 
+            // When
             val result = invalidDto.validateWith(validateCountryOnCreate)
+
+            // Then
             assertTrue(result.isFailure)
             val exception = result.exceptionOrNull() as? ValidationException
             assertNotNull(exception)
@@ -312,6 +351,7 @@ class ValidationTest {
         @Test
         @DisplayName("City with multiple issues should return all validation errors")
         fun cityWithMultipleIssuesShouldReturnAllErrors() {
+            // Given
             val invalidDto =
                 CityCreateDto(
                     countryId = UUID.randomUUID(),
@@ -321,7 +361,10 @@ class ValidationTest {
                     coordinates = LatLon(lat = 91.0, lon = 181.0)
                 ) // Multiple issues
 
+            // When
             val result = invalidDto.validateWith(validateCityOnCreate)
+
+            // Then
             assertTrue(result.isFailure)
             val exception = result.exceptionOrNull() as? ValidationException
             assertNotNull(exception)
@@ -342,6 +385,7 @@ class ValidationTest {
         @Test
         @DisplayName("Restroom with multiple issues should return all validation errors")
         fun restroomWithMultipleIssuesShouldReturnAllErrors() {
+            // Given
             val invalidDto =
                 RestroomCreateDto(
                     cityId = UUID.randomUUID(),
@@ -361,7 +405,10 @@ class ValidationTest {
                     inheritParentSchedule = false
                 ) // Multiple issues
 
+            // When
             val result = invalidDto.validateWith(validateRestroomOnCreate)
+
+            // Then
             assertTrue(result.isFailure)
             val exception = result.exceptionOrNull() as? ValidationException
             assertNotNull(exception)
@@ -384,8 +431,13 @@ class ValidationTest {
         @Test
         @DisplayName("Valid parameters should pass validation")
         fun valid_params_should_pass() {
+            // Given
             val params = NearestRestroomsParams(LatLon(lat = 55.7558, lon = 37.6176), 10, 1000)
+
+            // When
             val result = params.validateWith(validateNearestRestroomsParams)
+
+            // Then
             assertTrue(result.isSuccess)
             assertEquals(params, result.getOrNull())
         }
@@ -394,8 +446,13 @@ class ValidationTest {
         @DisplayName("Valid parameters should pass with validateOrThrow")
         fun valid_params_should_pass_with_validateOrThrow() =
             runTest {
+                // Given
                 val params = NearestRestroomsParams(LatLon(lat = 55.7558, lon = 37.6176), 10, 1000)
+
+                // When
                 val result = params.validateOrThrow(validateNearestRestroomsParams)
+
+                // Then
                 assertEquals(params, result)
             }
 
@@ -406,7 +463,13 @@ class ValidationTest {
             params: NearestRestroomsParams,
             expectedErrorCount: Int
         ) {
+            // Given
+            // (params and expectedErrorCount provided as parameters)
+
+            // When
             val result = params.validateWith(validateNearestRestroomsParams)
+
+            // Then
             assertTrue(result.isFailure)
             val exception = result.exceptionOrNull() as? ValidationException
             assertNotNull(exception)
@@ -420,6 +483,10 @@ class ValidationTest {
             params: NearestRestroomsParams,
             expectedErrorCount: Int
         ) = runTest {
+            // Given
+            // (params provided as parameter)
+
+            // When & Then
             assertFailsWith<ValidationException> {
                 params.validateOrThrow(validateNearestRestroomsParams)
             }

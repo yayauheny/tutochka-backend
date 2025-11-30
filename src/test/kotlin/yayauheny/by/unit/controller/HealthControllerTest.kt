@@ -77,12 +77,15 @@ class HealthControllerTest {
         @DisplayName("GIVEN healthy database WHEN GET /health THEN return 200 with healthy status")
         fun health_endpoint_with_healthy_db_returns_200() =
             runTest {
+                // Given
                 every { mockCtx.select(DSL.field("1")) } returns mockSelectStep
                 every { mockSelectStep.fetchOne() } returns mockRecord
 
+                // When
                 withRoutingApp { client ->
                     val response = client.testGet("/health")
 
+                    // Then
                     assertEquals(HttpStatusCode.OK, response.status)
                     response.assertJsonContentType()
                     val body = response.bodyAsText()
@@ -95,11 +98,14 @@ class HealthControllerTest {
         @DisplayName("GIVEN unhealthy database WHEN GET /health THEN return 503 with unhealthy status")
         fun health_endpoint_with_unhealthy_db_returns_503() =
             runTest {
+                // Given
                 every { mockCtx.select(DSL.field("1")) } throws RuntimeException("Database connection failed")
 
+                // When
                 withRoutingApp { client ->
                     val response = client.testGet("/health")
 
+                    // Then
                     assertEquals(HttpStatusCode.ServiceUnavailable, response.status)
                     response.assertJsonContentType()
                     val body = response.bodyAsText()
@@ -112,12 +118,15 @@ class HealthControllerTest {
         @DisplayName("GIVEN healthy database WHEN GET /health/ready THEN return 200 with ready status")
         fun health_ready_endpoint_with_healthy_db_returns_200() =
             runTest {
+                // Given
                 every { mockCtx.select(DSL.field("1")) } returns mockSelectStep
                 every { mockSelectStep.fetchOne() } returns mockRecord
 
+                // When
                 withRoutingApp { client ->
                     val response = client.testGet("/health/ready")
 
+                    // Then
                     assertEquals(HttpStatusCode.OK, response.status)
                     response.assertJsonContentType()
                     val body = response.bodyAsText()
@@ -130,11 +139,14 @@ class HealthControllerTest {
         @DisplayName("GIVEN unhealthy database WHEN GET /health/ready THEN return 503 with not ready status")
         fun health_ready_endpoint_with_unhealthy_db_returns_503() =
             runTest {
+                // Given
                 every { mockCtx.select(DSL.field("1")) } throws RuntimeException("Database connection failed")
 
+                // When
                 withRoutingApp { client ->
                     val response = client.testGet("/health/ready")
 
+                    // Then
                     assertEquals(HttpStatusCode.ServiceUnavailable, response.status)
                     response.assertJsonContentType()
                     val body = response.bodyAsText()
@@ -147,9 +159,14 @@ class HealthControllerTest {
         @DisplayName("GIVEN any state WHEN GET /health/live THEN return 200 with alive status")
         fun health_live_endpoint_always_returns_200() =
             runTest {
+                // Given
+                // (no setup needed for liveness check)
+
+                // When
                 withRoutingApp { client ->
                     val response = client.testGet("/health/live")
 
+                    // Then
                     assertEquals(HttpStatusCode.OK, response.status)
                     response.assertJsonContentType()
                     val body = response.bodyAsText()
