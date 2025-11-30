@@ -4,8 +4,10 @@ import by.yayauheny.shared.dto.NearestRestroomResponseDto;
 import by.yayauheny.shared.dto.RestroomResponseDto;
 import kotlin.coroutines.CoroutineContext;
 import kotlinx.coroutines.CoroutineScope;
+import kotlinx.coroutines.CoroutineScopeKt;
 import kotlinx.coroutines.Dispatchers;
 import kotlinx.coroutines.future.FutureKt;
+import org.springframework.context.annotation.Primary;
 import org.springframework.stereotype.Component;
 import yayauheny.by.service.RestroomService;
 
@@ -19,8 +21,11 @@ import java.util.concurrent.CompletableFuture;
  * without REST API calls. This eliminates network latency and improves performance.
  * 
  * Uses Kotlin coroutines to call suspend functions from Java.
+ * 
+ * This is the primary implementation - WebBackendClient is kept for fallback/testing.
  */
 @Component
+@Primary
 public class DirectBackendClient implements BackendClient {
     private final RestroomService restroomService;
     private final CoroutineScope coroutineScope;
@@ -28,7 +33,7 @@ public class DirectBackendClient implements BackendClient {
     public DirectBackendClient(RestroomService restroomService) {
         this.restroomService = restroomService;
         CoroutineContext context = Dispatchers.getDefault();
-        this.coroutineScope = new CoroutineScope(context);
+        this.coroutineScope = CoroutineScopeKt.CoroutineScope(context);
     }
 
     @Override
