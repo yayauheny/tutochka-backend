@@ -29,40 +29,168 @@ Trigger for: "Add X", "Implement Y", "Create Z", "Build X", "Refactor Y", "Fix X
 
 ## Implementation Steps
 
-### Step 1: Create PRD
+### Step 1: Detect User Request and Create PRD
+
+**Pattern Recognition:**
+- Keywords: "Add", "Implement", "Create", "Build", "Refactor", "Fix" (if multi-step)
+- Multi-step indicators: mentions of multiple components, features, or phases
+- Explicit feature requests: "I want to add X", "Let's implement Y"
+
+**PRD Creation Pattern:**
 ```kotlin
+// Extract feature name from user request
+val featureName = extractFeatureName(userRequest) // e.g., "user-authentication", "api-caching"
+
+// Generate PRD content
 val prdContent = """
-# [Feature Name] PRD
+# ${featureName.replace("-", " ").capitalize()} PRD
+
 ## Overview
-[Description]
+${extractOverview(userRequest)}
+
 ## Goals
-1. [Goal 1]
-2. [Goal 2]
+${extractGoals(userRequest).mapIndexed { i, goal -> "${i + 1}. $goal" }.joinToString("\n")}
+
 ## Requirements
+
 ### Functional
-- [Requirement 1]
+${extractFunctionalRequirements(userRequest).map { "- $it" }.joinToString("\n")}
+
 ### Technical
-- [Tech requirement 1]
+${extractTechnicalRequirements(userRequest).map { "- $it" }.joinToString("\n")}
+
 ## Success Criteria
-- [Criterion 1]
-"""
+${extractSuccessCriteria(userRequest).map { "- $it" }.joinToString("\n")}
+""".trimIndent()
+
+// Save PRD to file
 writeFile(".taskmaster/docs/${featureName}-prd.txt", prdContent)
 ```
 
-### Step 2: Parse PRD
+**Example PRD Generation:**
 ```kotlin
-parse_prd(
+// User request: "Add user authentication with JWT tokens"
+val prdContent = """
+# User Authentication PRD
+
+## Overview
+Implement user authentication system using JWT tokens for secure API access.
+
+## Goals
+1. Enable user registration and login
+2. Generate and validate JWT tokens
+3. Protect API endpoints with authentication middleware
+
+## Requirements
+
+### Functional
+- User registration endpoint (POST /api/auth/register)
+- User login endpoint (POST /api/auth/login)
+- JWT token generation on successful login
+- Token validation middleware
+- Protected route examples
+
+### Technical
+- Use JWT library (e.g., jjwt for Kotlin)
+- Store hashed passwords (bcrypt)
+- Token expiration (24 hours)
+- Refresh token mechanism
+- Error handling for invalid tokens
+
+## Success Criteria
+- Users can register and login
+- JWT tokens are generated and validated correctly
+- Protected endpoints require valid tokens
+- Invalid tokens return 401 Unauthorized
+"""
+```
+
+### Step 2: Parse PRD and Generate Subtasks
+
+**Estimate Task Count:**
+```kotlin
+fun estimateTaskCount(prdContent: String): Int {
+    val goals = prdContent.split("## Goals")[1].split("##")[0].lines().filter { it.trim().startsWith("-") || it.trim().matches(Regex("\\d+\\.")) }.size
+    val functionalReqs = prdContent.split("### Functional")[1].split("###")[0].lines().filter { it.trim().startsWith("-") }.size
+    val technicalReqs = prdContent.split("### Technical")[1].split("##")[0].lines().filter { it.trim().startsWith("-") }.size
+    
+    // Estimate: 1-2 tasks per goal, 1 task per 2-3 requirements
+    return (goals * 1.5 + (functionalReqs + technicalReqs) / 2.5).toInt().coerceAtLeast(3)
+}
+```
+
+**Call parse_prd API:**
+```kotlin
+// Use MCP tool
+mcp_task-master-ai_parse_prd(
+    projectRoot: "/absolute/path/to/project",
     input: ".taskmaster/docs/${featureName}-prd.txt",
     numTasks: estimateTaskCount(prdContent),
-    append: true
+    append: true, // Append to existing tasks
+    force: false  // Don't overwrite existing tasks.json
 )
 ```
 
-### Step 3: Get Generated Tasks (Local)
+**Error Handling:**
 ```kotlin
-val tasks = readFile(".taskmaster/tasks/tasks.json")
-val lastTaskId = getLastTaskId(tasks)
-val newTasks = tasks.filter { it.id > lastTaskId }
+try {
+    parse_prd(input, numTasks, append = true)
+} catch (e: Exception) {
+    // Handle API errors
+    log.error("Failed to parse PRD: ${e.message}")
+    // Optionally retry or inform user
+    // Workflow can continue with manual task creation if needed
+}
+```
+
+### Step 3: Get Generated Tasks (Local - NO API)
+
+**Read tasks.json and Extract New Tasks:**
+```kotlin
+// Read tasks.json locally (no API call)
+val tasksJsonContent = read_file(".taskmaster/tasks/tasks.json")
+val json = Json.parseToJsonElement(tasksJsonContent)
+val masterTag = json.jsonObject["master"]
+val allTasks = masterTag?.jsonObject?.get("tasks")?.jsonArray ?: emptyList()
+
+// Get last task ID before PRD parsing (cache this before calling parse_prd)
+val lastTaskIdBeforeParse = getLastTaskId(allTasks) // e.g., 68
+
+// After parse_prd completes, read again to get new tasks
+val updatedTasksJsonContent = read_file(".taskmaster/tasks/tasks.json")
+val updatedJson = Json.parseToJsonElement(updatedTasksJsonContent)
+val updatedMasterTag = updatedJson.jsonObject["master"]
+val updatedAllTasks = updatedMasterTag?.jsonObject?.get("tasks")?.jsonArray ?: emptyList()
+
+// Filter new tasks (IDs greater than lastTaskIdBeforeParse)
+val newTasks = updatedAllTasks.filter { task ->
+    val taskId = task.jsonObject["id"]?.jsonPrimitive?.content ?: "0"
+    taskId.toIntOrNull()?.let { it > lastTaskIdBeforeParse } ?: false
+}
+
+// Extract task details
+newTasks.forEach { task ->
+    val taskId = task.jsonObject["id"]?.jsonPrimitive?.content ?: ""
+    val title = task.jsonObject["title"]?.jsonPrimitive?.content ?: ""
+    val description = task.jsonObject["description"]?.jsonPrimitive?.content ?: ""
+    val details = task.jsonObject["details"]?.jsonPrimitive?.content ?: ""
+    val status = task.jsonObject["status"]?.jsonPrimitive?.content ?: "pending"
+    val dependencies = task.jsonObject["dependencies"]?.jsonArray?.map { 
+        it.jsonPrimitive.content 
+    } ?: emptyList()
+    
+    // Work on this task
+    log.info("Working on task $taskId: $title")
+}
+```
+
+**Helper Function:**
+```kotlin
+fun getLastTaskId(tasksArray: JsonArray): Int {
+    return tasksArray.mapNotNull { task ->
+        task.jsonObject["id"]?.jsonPrimitive?.content?.toIntOrNull()
+    }.maxOrNull() ?: 0
+}
 ```
 
 ### Step 4: Work on Subtasks

@@ -47,6 +47,89 @@ All context stored locally:
 
 **Recovery works without API calls** - just read local files.
 
+## Fallback Recovery Mechanism
+
+### Full State Recovery from Local Files
+
+**Recovery Process:**
+```kotlin
+// Step 1: Read tasks.json
+val tasksJsonContent = read_file(".taskmaster/tasks/tasks.json")
+val json = Json.parseToJsonElement(tasksJsonContent)
+
+// Step 2: Reconstruct task state for all tags
+fun recoverAllTaskStates(json: JsonObject): Map<String, List<TaskState>> {
+    val result = mutableMapOf<String, List<TaskState>>()
+    
+    json.jsonObject.forEach { (tagName, tagData) ->
+        val tasksArray = tagData.jsonObject["tasks"]?.jsonArray ?: emptyList()
+        val taskStates = tasksArray.map { task ->
+            TaskState(
+                id = task.jsonObject["id"]?.jsonPrimitive?.content ?: "",
+                title = task.jsonObject["title"]?.jsonPrimitive?.content ?: "",
+                description = task.jsonObject["description"]?.jsonPrimitive?.content ?: "",
+                status = task.jsonObject["status"]?.jsonPrimitive?.content ?: "pending",
+                priority = task.jsonObject["priority"]?.jsonPrimitive?.content ?: "medium",
+                dependencies = task.jsonObject["dependencies"]?.jsonArray?.map { 
+                    it.jsonPrimitive.content 
+                } ?: emptyList(),
+                details = task.jsonObject["details"]?.jsonPrimitive?.content ?: "",
+                subtasks = task.jsonObject["subtasks"]?.jsonArray?.map { subtask ->
+                    SubtaskState(
+                        id = subtask.jsonObject["id"]?.jsonPrimitive?.intOrNull ?: 0,
+                        title = subtask.jsonObject["title"]?.jsonPrimitive?.content ?: "",
+                        status = subtask.jsonObject["status"]?.jsonPrimitive?.content ?: "pending",
+                        details = subtask.jsonObject["details"]?.jsonPrimitive?.content ?: ""
+                    )
+                } ?: emptyList()
+            )
+        }
+        result[tagName] = taskStates
+    }
+    
+    return result
+}
+
+// Step 3: Restore current working context
+val allStates = recoverAllTaskStates(json)
+val masterTasks = allStates["master"] ?: emptyList()
+val inProgressTasks = masterTasks.filter { it.status == "in-progress" }
+
+// Step 4: Resume from last in-progress task
+if (inProgressTasks.isNotEmpty()) {
+    val currentTask = inProgressTasks.first()
+    val context = currentTask.details // Full implementation log
+    val nextSteps = extractNextSteps(context)
+    
+    log.info("Recovered task ${currentTask.id}: ${currentTask.title}")
+    log.info("Resuming from: $nextSteps")
+}
+```
+
+### Recovery Without API Calls
+
+**Complete Independence:**
+- All task data read from `.taskmaster/tasks/tasks.json`
+- All implementation logs in task `details` field
+- All research results in `.taskmaster/docs/research/`
+- Status, priorities, dependencies all in JSON
+- No API calls required for recovery
+
+**Error Recovery:**
+```kotlin
+// If API fails, fallback to local files
+try {
+    val task = mcp_task-master-ai_get_task(id = "70")
+} catch (e: Exception) {
+    // Fallback to local read
+    log.warn("API call failed, using local file: ${e.message}")
+    val tasksJsonContent = read_file(".taskmaster/tasks/tasks.json")
+    val json = Json.parseToJsonElement(tasksJsonContent)
+    val task = getTaskById(json, "70")
+    // Continue with local data
+}
+```
+
 ## Session Workflow
 
 ### Start
@@ -76,6 +159,200 @@ val lastTask = tasks.find { it.status == "in-progress" }
 val context = lastTask.details // Resume from here
 ```
 
+## Local File Reading Patterns
+
+### Reading tasks.json Structure
+
+**JSON Structure:**
+```json
+{
+  "master": {
+    "tasks": [
+      {
+        "id": "1",
+        "title": "Task Title",
+        "description": "Task description",
+        "details": "Implementation details...",
+        "status": "pending",
+        "priority": "high",
+        "dependencies": ["2", "3"],
+        "subtasks": [
+          {
+            "id": 1,
+            "title": "Subtask 1",
+            "status": "done"
+          }
+        ]
+      }
+    ],
+    "metadata": {
+      "created": "2025-11-30T10:00:00.000Z",
+      "updated": "2025-11-30T10:00:00.000Z"
+    }
+  }
+}
+```
+
+### Parsing Tasks from Local File
+
+**Using read_file tool (Cursor Agent):**
+```kotlin
+// Read entire file
+val tasksJsonContent = read_file(".taskmaster/tasks/tasks.json")
+
+// Parse JSON (using kotlinx.serialization or similar)
+val json = Json.parseToJsonElement(tasksJsonContent)
+val masterTag = json.jsonObject["master"]
+val tasksArray = masterTag?.jsonObject?.get("tasks")?.jsonArray
+
+// Extract task by ID
+val taskId = "69"
+val task = tasksArray?.firstOrNull { 
+    it.jsonObject["id"]?.jsonPrimitive?.content == taskId 
+}
+
+// Extract task fields
+val title = task?.jsonObject["title"]?.jsonPrimitive?.content ?: ""
+val description = task?.jsonObject["description"]?.jsonPrimitive?.content ?: ""
+val status = task?.jsonObject["status"]?.jsonPrimitive?.content ?: "pending"
+val details = task?.jsonObject["details"]?.jsonPrimitive?.content ?: ""
+val priority = task?.jsonObject["priority"]?.jsonPrimitive?.content ?: "medium"
+val dependencies = task?.jsonObject["dependencies"]?.jsonArray?.map { 
+    it.jsonPrimitive.content 
+} ?: emptyList()
+```
+
+### Filtering Tasks Locally
+
+**Filter by status:**
+```kotlin
+val pendingTasks = tasksArray?.filter { 
+    it.jsonObject["status"]?.jsonPrimitive?.content == "pending" 
+} ?: emptyList()
+
+val inProgressTasks = tasksArray?.filter { 
+    it.jsonObject["status"]?.jsonPrimitive?.content == "in-progress" 
+} ?: emptyList()
+```
+
+**Filter by priority:**
+```kotlin
+val highPriorityTasks = tasksArray?.filter { 
+    it.jsonObject["priority"]?.jsonPrimitive?.content == "high" 
+} ?: emptyList()
+```
+
+**Filter by dependencies (all dependencies done):**
+```kotlin
+fun getTasksWithDependenciesSatisfied(tasksArray: JsonArray): List<JsonElement> {
+    val taskMap = tasksArray.associateBy { 
+        it.jsonObject["id"]?.jsonPrimitive?.content ?: "" 
+    }
+    
+    return tasksArray.filter { task ->
+        val deps = task.jsonObject["dependencies"]?.jsonArray?.map { 
+            it.jsonPrimitive.content 
+        } ?: emptyList()
+        
+        deps.all { depId ->
+            val depTask = taskMap[depId]
+            depTask?.jsonObject["status"]?.jsonPrimitive?.content == "done"
+        }
+    }
+}
+```
+
+**Filter by tag:**
+```kotlin
+fun getTasksByTag(tag: String = "master"): JsonArray? {
+    val tasksJsonContent = read_file(".taskmaster/tasks/tasks.json")
+    val json = Json.parseToJsonElement(tasksJsonContent)
+    return json.jsonObject[tag]?.jsonObject?.get("tasks")?.jsonArray
+}
+```
+
+### Caching Strategy
+
+**In-Memory Cache Pattern:**
+```kotlin
+// Session-level cache (initialize once per session)
+var cachedTasksJson: JsonObject? = null
+var cacheTimestamp: Long = 0
+val CACHE_TTL_MS = 60000 // 1 minute
+
+fun getCachedTasks(tag: String = "master"): JsonArray? {
+    val now = System.currentTimeMillis()
+    
+    if (cachedTasksJson == null || (now - cacheTimestamp) > CACHE_TTL_MS) {
+        val tasksJsonContent = read_file(".taskmaster/tasks/tasks.json")
+        cachedTasksJson = Json.parseToJsonElement(tasksJsonContent).jsonObject
+        cacheTimestamp = now
+    }
+    
+    return cachedTasksJson?.get(tag)?.jsonObject?.get("tasks")?.jsonArray
+}
+
+// Use cached data for reads
+val tasks = getCachedTasks("master")
+val task = tasks?.firstOrNull { /* filter */ }
+```
+
+### Error Handling
+
+**File Not Found:**
+```kotlin
+try {
+    val tasksJsonContent = read_file(".taskmaster/tasks/tasks.json")
+    // Process file
+} catch (e: FileNotFoundException) {
+    // Handle: create default structure or inform user
+    log.warn("tasks.json not found, initializing default structure")
+    // Optionally create default file
+}
+```
+
+**JSON Parsing Errors:**
+```kotlin
+try {
+    val json = Json.parseToJsonElement(tasksJsonContent)
+} catch (e: JsonException) {
+    // Handle: log error, use fallback, or inform user
+    log.error("Failed to parse tasks.json: ${e.message}")
+    // Optionally use empty structure or last known good state
+}
+```
+
+**Missing Fields:**
+```kotlin
+// Always use safe navigation and default values
+val taskId = task?.jsonObject["id"]?.jsonPrimitive?.content ?: ""
+val status = task?.jsonObject["status"]?.jsonPrimitive?.content ?: "pending"
+val details = task?.jsonObject["details"]?.jsonPrimitive?.content ?: ""
+```
+
+### Reading Subtasks
+
+**Extract subtasks from task:**
+```kotlin
+val subtasks = task?.jsonObject["subtasks"]?.jsonArray ?: emptyList()
+
+subtasks.forEach { subtask ->
+    val subtaskId = subtask.jsonObject["id"]?.jsonPrimitive?.intOrNull ?: 0
+    val subtaskTitle = subtask.jsonObject["title"]?.jsonPrimitive?.content ?: ""
+    val subtaskStatus = subtask.jsonObject["status"]?.jsonPrimitive?.content ?: "pending"
+}
+```
+
+### UTF-8 Encoding
+
+**Ensure UTF-8 when reading:**
+```kotlin
+// read_file tool handles UTF-8 automatically
+// For manual file reading:
+val file = File(".taskmaster/tasks/tasks.json")
+val content = file.readText(Charsets.UTF_8)
+```
+
 ## API Optimization
 
 - Batch updates: `set_task_status(id="1,2,3", status="done")`
@@ -85,6 +362,9 @@ val context = lastTask.details // Resume from here
 
 ## Progress Logging
 
+### Structured Logging Format
+
+**Standard Format:**
 ```markdown
 ## Implementation Plan
 1. Files: src/main/.../Service.kt
@@ -92,6 +372,137 @@ val context = lastTask.details // Resume from here
 3. Issues: None
 4. Progress: [x] Created service, [ ] Add tests
 5. Next: Write unit tests
+```
+
+### Detailed Logging Pattern
+
+**Full Implementation Log:**
+```markdown
+## Implementation Plan
+
+### Files Modified/Created
+- src/main/kotlin/yayauheny/by/service/UserService.kt (created)
+- src/main/kotlin/yayauheny/by/repository/UserRepository.kt (created)
+- src/test/kotlin/yayauheny/by/service/UserServiceTest.kt (created)
+
+### Changes Made
+1. Created UserService with register() and login() methods
+2. Implemented UserRepository with save() and findByEmail() methods
+3. Added JWT token generation in login() method
+4. Created unit tests for UserService
+
+### Issues Encountered
+- Issue 1: JWT library dependency not found → Resolved by adding to build.gradle.kts
+- Issue 2: Password hashing took longer than expected → Optimized bcrypt rounds
+
+### Progress Checklist
+- [x] Created UserService
+- [x] Implemented UserRepository
+- [x] Added JWT token generation
+- [x] Created unit tests
+- [ ] Add integration tests
+- [ ] Add error handling for duplicate emails
+
+### Next Steps
+1. Add integration tests for UserService
+2. Implement error handling for duplicate email registration
+3. Add refresh token mechanism
+```
+
+### Using update_subtask API
+
+**Log Progress:**
+```kotlin
+// Accumulate progress during implementation
+val progressLog = mutableListOf<String>()
+
+progressLog.add("## Implementation Plan")
+progressLog.add("")
+progressLog.add("### Files Modified/Created")
+progressLog.add("- src/main/kotlin/Service.kt (created)")
+progressLog.add("")
+progressLog.add("### Changes Made")
+progressLog.add("1. Created Service class")
+progressLog.add("2. Implemented business logic")
+progressLog.add("")
+progressLog.add("### Issues Encountered")
+progressLog.add("- None")
+progressLog.add("")
+progressLog.add("### Progress Checklist")
+progressLog.add("- [x] Created Service")
+progressLog.add("- [ ] Add tests")
+progressLog.add("")
+progressLog.add("### Next Steps")
+progressLog.add("1. Write unit tests")
+
+// Update subtask with structured log
+mcp_task-master-ai_update_subtask(
+    projectRoot: "/absolute/path/to/project",
+    id: "70.1", // subtask ID
+    prompt: progressLog.joinToString("\n")
+)
+```
+
+### Character Limit Enforcement
+
+**50,000 Character Limit:**
+```kotlin
+fun truncateLogIfNeeded(logContent: String, maxLength: Int = 50000): String {
+    return if (logContent.length > maxLength) {
+        val truncated = logContent.take(maxLength - 100)
+        val suffix = "\n\n... (log truncated, ${logContent.length - maxLength} characters removed)"
+        truncated + suffix
+    } else {
+        logContent
+    }
+}
+
+// Before updating subtask
+val finalLog = truncateLogIfNeeded(progressLog.joinToString("\n"))
+update_subtask(id, finalLog)
+```
+
+### Saving Research Outputs
+
+**Save Research to File:**
+```kotlin
+// Use research tool with save-to-file
+mcp_task-master-ai_research(
+    projectRoot: "/absolute/path/to/project",
+    query: "Best practices for JWT authentication in Kotlin Ktor",
+    saveToFile: true, // Saves to .taskmaster/docs/research/
+    taskIds: "70,70.1" // Include task context
+)
+
+// Research file saved to: .taskmaster/docs/research/research-[timestamp].md
+```
+
+### Context Preservation
+
+**All Context Stored Locally:**
+- `.taskmaster/tasks/tasks.json` - Complete task structure with details field
+- `.taskmaster/docs/research/` - Research results
+- Task `details` field - Full implementation logs (up to 50,000 chars)
+
+**Recovery Pattern:**
+```kotlin
+// Read full context from local files
+val tasksJsonContent = read_file(".taskmaster/tasks/tasks.json")
+val json = Json.parseToJsonElement(tasksJsonContent)
+val task = getTaskById(json, taskId)
+
+// Extract implementation log from details field
+val implementationLog = task?.jsonObject["details"]?.jsonPrimitive?.content ?: ""
+
+// Parse structured log
+val filesSection = extractSection(implementationLog, "### Files")
+val changesSection = extractSection(implementationLog, "### Changes")
+val issuesSection = extractSection(implementationLog, "### Issues")
+val progressSection = extractSection(implementationLog, "### Progress")
+val nextStepsSection = extractSection(implementationLog, "### Next Steps")
+
+// Resume work from saved context
+log.info("Resuming from: $nextStepsSection")
 ```
 
 ## Git Commit After Task Completion
