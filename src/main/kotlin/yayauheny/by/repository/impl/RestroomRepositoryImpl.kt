@@ -24,10 +24,9 @@ import yayauheny.by.repository.RestroomRepository
 import yayauheny.by.tables.references.RESTROOMS
 import yayauheny.by.util.getAllRestroomsFieldsExceptCoordinates
 import yayauheny.by.util.getAllRestroomsFieldsWithCoordinates
+import yayauheny.by.util.getRestroomsCoordinateFields
 import yayauheny.by.util.distanceGeographyTo
 import yayauheny.by.util.knnOrderTo
-import yayauheny.by.util.latAlias
-import yayauheny.by.util.lonAlias
 import yayauheny.by.util.pointExpr
 import yayauheny.by.util.reqDouble
 import yayauheny.by.util.toJSONBOrEmpty
@@ -256,13 +255,12 @@ class RestroomRepositoryImpl(
     ): List<NearestRestroomResponseDto> =
         withContext(Dispatchers.IO) {
             val maxDistance = (distanceMeters ?: ApiConstants.DEFAULT_MAX_DISTANCE_METERS).toDouble()
-            val latField = RESTROOMS.COORDINATES.latAlias()
-            val lonField = RESTROOMS.COORDINATES.lonAlias()
+            val coordinateFields = getRestroomsCoordinateFields()
             val knnField = RESTROOMS.COORDINATES.knnOrderTo(latitude, longitude)
             val distanceField = RESTROOMS.COORDINATES.distanceGeographyTo(latitude, longitude)
 
             ctx
-                .select(*getAllRestroomsFieldsExceptCoordinates().toTypedArray(), latField, lonField, distanceField.`as`("distance"))
+                .select(*(getAllRestroomsFieldsExceptCoordinates() + coordinateFields + distanceField.`as`("distance")).toTypedArray())
                 .from(RESTROOMS)
                 .where(
                     RESTROOMS.COORDINATES

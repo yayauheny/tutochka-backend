@@ -10,14 +10,19 @@ import io.ktor.server.routing.post
 import io.ktor.server.routing.put
 import io.ktor.server.routing.route
 import yayauheny.by.common.errors.NotFoundException
+import yayauheny.by.common.errors.ValidationException
 import yayauheny.by.config.ApiConstants
 import yayauheny.by.model.restroom.RestroomCreateDto
+import yayauheny.by.model.restroom.RestroomUpdateDto
 import yayauheny.by.service.RestroomService
 import yayauheny.by.service.validation.NearestRestroomsParams
 import yayauheny.by.service.validation.validateAndThen
 import yayauheny.by.service.validation.validateNearestRestroomsParams
+import yayauheny.by.service.validation.validateRestroomCreateFields
 import yayauheny.by.service.validation.validateRestroomOnCreate
 import yayauheny.by.service.validation.validateRestroomOnUpdate
+import yayauheny.by.service.validation.validateRestroomUpdateFields
+import yayauheny.by.service.validation.validateOrThrow
 import yayauheny.by.util.createPaginationFromQuery
 import yayauheny.by.util.getDoubleFromQuery
 import yayauheny.by.util.getIntFromQuery
@@ -72,22 +77,28 @@ class RestroomController(
 
             post {
                 val createDto = call.receive<RestroomCreateDto>()
-                val restroom =
-                    createDto
-                        .validateAndThen(validateRestroomOnCreate) { valid ->
-                            restroomService.createRestroom(valid)
-                        }.getOrThrow()
+                // Валидация через konform
+                createDto.validateOrThrow(validateRestroomOnCreate)
+                // Дополнительная валидация nullable полей
+                val additionalErrors = validateRestroomCreateFields(createDto)
+                if (additionalErrors.isNotEmpty()) {
+                    throw ValidationException(additionalErrors)
+                }
+                val restroom = restroomService.createRestroom(createDto)
                 call.respond(HttpStatusCode.Created, restroom)
             }
 
             put("/{id}") {
                 val id = call.getUuidFromPath("id")
-                val updateDto = call.receive<yayauheny.by.model.restroom.RestroomUpdateDto>()
-                val restroom =
-                    updateDto
-                        .validateAndThen(validateRestroomOnUpdate) { valid ->
-                            restroomService.updateRestroom(id, valid)
-                        }.getOrThrow()
+                val updateDto = call.receive<RestroomUpdateDto>()
+                // Валидация через konform
+                updateDto.validateOrThrow(validateRestroomOnUpdate)
+                // Дополнительная валидация nullable полей
+                val additionalErrors = validateRestroomUpdateFields(updateDto)
+                if (additionalErrors.isNotEmpty()) {
+                    throw ValidationException(additionalErrors)
+                }
+                val restroom = restroomService.updateRestroom(id, updateDto)
                 call.respond(HttpStatusCode.OK, restroom)
             }
 

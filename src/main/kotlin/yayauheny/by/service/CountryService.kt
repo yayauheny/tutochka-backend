@@ -10,8 +10,6 @@ import yayauheny.by.model.country.CountryCreateDto
 import yayauheny.by.model.country.CountryResponseDto
 import yayauheny.by.model.country.CountryUpdateDto
 import yayauheny.by.repository.CountryRepository
-import yayauheny.by.service.validation.validateCountryOnCreate
-import yayauheny.by.service.validation.validateOrThrow
 
 class CountryService(
     private val countryRepository: CountryRepository
@@ -26,8 +24,6 @@ class CountryService(
         )
 
     suspend fun createCountry(createDto: CountryCreateDto): CountryResponseDto {
-        createDto.validateOrThrow(validateCountryOnCreate)
-
         val existing =
             countryRepository.findSingle(
                 listOf(FilterCriteria("code", FilterOperator.EQ, createDto.code))

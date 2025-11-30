@@ -6,7 +6,11 @@ import io.ktor.server.application.install
 import io.ktor.server.plugins.contentnegotiation.ContentNegotiation
 import io.ktor.server.testing.ApplicationTestBuilder
 import io.ktor.server.testing.testApplication
+import io.mockk.every
 import io.mockk.mockk
+import org.jooq.Record1
+import org.jooq.SelectSelectStep
+import org.jooq.impl.DSL
 import org.koin.core.module.Module
 import org.koin.dsl.module
 import org.koin.ktor.plugin.Koin
@@ -15,7 +19,9 @@ import yayauheny.by.common.plugins.configureErrorHandling
 import yayauheny.by.config.configureRouting
 import yayauheny.by.controller.CityController
 import yayauheny.by.controller.CountryController
+import yayauheny.by.controller.HealthController
 import yayauheny.by.controller.RestroomController
+import org.jooq.DSLContext
 import yayauheny.by.service.CityService
 import yayauheny.by.service.CountryService
 import yayauheny.by.service.RestroomService
@@ -24,6 +30,14 @@ abstract class RoutingTestBase {
     protected val countryService = mockk<CountryService>()
     protected val cityService = mockk<CityService>()
     protected val restroomService = mockk<RestroomService>()
+    private val dslContext =
+        mockk<DSLContext>(relaxed = true) {
+            // Настраиваем DSLContext для успешного health check
+            val mockSelectStep = mockk<SelectSelectStep<Record1<Any>>>(relaxed = true)
+            val mockRecord = mockk<Record1<Any>>(relaxed = true)
+            every { select(DSL.field("1")) } returns mockSelectStep
+            every { mockSelectStep.fetchOne() } returns mockRecord
+        }
 
     private fun buildMockModules(): List<Module> =
         listOf(
@@ -31,11 +45,13 @@ abstract class RoutingTestBase {
                 single<CountryService> { countryService }
                 single<CityService> { cityService }
                 single<RestroomService> { restroomService }
+                single<DSLContext> { dslContext }
             },
             module {
                 single { CountryController(get()) }
                 single { CityController(get()) }
                 single { RestroomController(get()) }
+                single { HealthController(get()) }
             }
         )
 

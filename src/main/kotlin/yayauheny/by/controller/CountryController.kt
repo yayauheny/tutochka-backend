@@ -12,9 +12,9 @@ import io.ktor.server.routing.route
 import yayauheny.by.common.errors.NotFoundException
 import yayauheny.by.model.country.CountryCreateDto
 import yayauheny.by.service.CountryService
-import yayauheny.by.service.validation.validateAndThen
 import yayauheny.by.service.validation.validateCountryOnCreate
 import yayauheny.by.service.validation.validateCountryOnUpdate
+import yayauheny.by.service.validation.validateOrThrow
 import yayauheny.by.util.getStringFromPath
 import yayauheny.by.util.getUuidFromPath
 import yayauheny.by.util.toPaginationRequest
@@ -48,22 +48,16 @@ class CountryController(
 
             post {
                 val createDto = call.receive<CountryCreateDto>()
-                val country =
-                    createDto
-                        .validateAndThen(validateCountryOnCreate) { valid ->
-                            countryService.createCountry(valid)
-                        }.getOrThrow()
+                createDto.validateOrThrow(validateCountryOnCreate)
+                val country = countryService.createCountry(createDto)
                 call.respond(HttpStatusCode.Created, country)
             }
 
             put("/{id}") {
                 val id = call.getUuidFromPath("id")
                 val updateDto = call.receive<yayauheny.by.model.country.CountryUpdateDto>()
-                val country =
-                    updateDto
-                        .validateAndThen(validateCountryOnUpdate) { valid ->
-                            countryService.updateCountry(id, valid)
-                        }.getOrThrow()
+                updateDto.validateOrThrow(validateCountryOnUpdate)
+                val country = countryService.updateCountry(id, updateDto)
                 call.respond(HttpStatusCode.OK, country)
             }
 

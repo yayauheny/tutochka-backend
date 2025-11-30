@@ -22,8 +22,7 @@ import yayauheny.by.model.city.CityResponseDto
 import yayauheny.by.model.city.CityUpdateDto
 import yayauheny.by.repository.CityRepository
 import yayauheny.by.tables.references.CITIES
-import yayauheny.by.util.latAlias
-import yayauheny.by.util.lonAlias
+import yayauheny.by.util.getCitiesCoordinateFields
 import yayauheny.by.util.pointExpr
 import yayauheny.by.util.transactionSuspend
 
@@ -117,8 +116,7 @@ class CityRepositoryImpl(
      * Включает все поля таблицы + lat/lon координаты.
      */
     private fun cityProjection(): Array<SelectFieldOrAsterisk> {
-        val latF = CITIES.COORDINATES.latAlias()
-        val lonF = CITIES.COORDINATES.lonAlias()
+        val coordinateFields = getCitiesCoordinateFields()
 
         // Не используем CITIES.asterisk(), потому что оно включает coordinates (Geometry),
         // который jOOQ не может правильно прочитать без специальной обработки.
@@ -133,8 +131,7 @@ class CityRepositoryImpl(
             CITIES.CREATED_AT,
             CITIES.UPDATED_AT,
             CITIES.IS_DELETED,
-            latF,
-            lonF
+            *coordinateFields.toTypedArray()
         )
     }
 
