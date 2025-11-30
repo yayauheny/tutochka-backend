@@ -478,13 +478,213 @@
         ],
         "status": "pending",
         "subtasks": []
+      },
+      {
+        "id": "82",
+        "title": "Merge feature/refactoring into develop",
+        "description": "Выполнить слияние ветки feature/refactoring в develop",
+        "details": "Переключиться на develop, выполнить merge feature/refactoring, разрешить конфликты если есть",
+        "testStrategy": "Проверить, что все изменения из feature/refactoring присутствуют в develop",
+        "priority": "high",
+        "dependencies": [],
+        "status": "in-progress",
+        "subtasks": [],
+        "updatedAt": "2025-11-30T19:42:18.512Z"
+      },
+      {
+        "id": "83",
+        "title": "Merge develop into main",
+        "description": "Выполнить слияние ветки develop в main",
+        "details": "Переключиться на main, выполнить merge develop, разрешить конфликты если есть",
+        "testStrategy": "Проверить, что все изменения из develop присутствуют в main",
+        "priority": "high",
+        "dependencies": [
+          "82"
+        ],
+        "status": "pending",
+        "subtasks": []
+      },
+      {
+        "id": "84",
+        "title": "Update version to 0.1.0",
+        "description": "Обновить версию приложения до 0.1.0 в build.gradle.kts",
+        "details": "Изменить version = \"0.0.1\" на version = \"0.1.0\" в build.gradle.kts",
+        "testStrategy": "Проверить, что версия обновлена в build.gradle.kts",
+        "priority": "high",
+        "dependencies": [
+          "83"
+        ],
+        "status": "pending",
+        "subtasks": []
+      },
+      {
+        "id": "85",
+        "title": "Update README.md with version 0.1.0",
+        "description": "Обновить README.md с информацией о версии 0.1.0",
+        "details": "Добавить информацию о версии 0.1.0 в README.md, обновить badges если нужно",
+        "testStrategy": "Проверить, что README.md содержит информацию о версии 0.1.0",
+        "priority": "high",
+        "dependencies": [
+          "84"
+        ],
+        "status": "pending",
+        "subtasks": []
+      },
+      {
+        "id": "86",
+        "title": "Remove unnecessary comments from code",
+        "description": "Удалить лишние комментарии, TODO, FIXME из кода",
+        "details": "Найти и удалить все лишние комментарии, отладочные комментарии, TODO, FIXME из исходного кода",
+        "testStrategy": "Проверить, что код не содержит лишних комментариев",
+        "priority": "medium",
+        "dependencies": [
+          "84"
+        ],
+        "status": "pending",
+        "subtasks": []
+      },
+      {
+        "id": "87",
+        "title": "Create git tag v0.1.0",
+        "description": "Создать тег версии v0.1.0",
+        "details": "Создать аннотированный тег v0.1.0 с описанием релиза, запушть тег в удаленный репозиторий",
+        "testStrategy": "Проверить, что тег создан и запушен",
+        "priority": "high",
+        "dependencies": [
+          "85",
+          "86"
+        ],
+        "status": "pending",
+        "subtasks": []
+      },
+      {
+        "id": "88",
+        "title": "Final release preparation check",
+        "description": "Финальная проверка готовности к релизу",
+        "details": "Проверить конфигурацию, зависимости, документацию, убедиться что все готово к релизу",
+        "testStrategy": "Запустить тесты, проверить сборку, проверить документацию",
+        "priority": "high",
+        "dependencies": [
+          "87"
+        ],
+        "status": "pending",
+        "subtasks": []
+      },
+      {
+        "id": "89",
+        "title": "Merge Branches and Create Release Tag",
+        "description": "Perform git operations to merge current branch into develop, then merge develop into master, ensuring all changes are committed and no conflicts exist. Create an annotated git tag v0.1.0 with release description.",
+        "details": "Use `git merge` commands to merge current branch into develop and then develop into master. Verify no merge conflicts occur. Confirm all changes are committed before merging. Create annotated tag with `git tag -a v0.1.0 -m \"Release 0.1.0 - Internal release\"`. Push branches and tags to remote repository.",
+        "testStrategy": "Verify merges completed without conflicts by checking git logs and branch status. Confirm tag v0.1.0 exists with correct annotation. Validate that all intended commits are present in master branch.",
+        "priority": "high",
+        "dependencies": [],
+        "status": "in-progress",
+        "subtasks": [],
+        "updatedAt": "2025-11-30T19:44:02.578Z"
+      },
+      {
+        "id": "90",
+        "title": "Unify Version Numbers Across Project Files",
+        "description": "Check and update version numbers to 0.1.0 in build.gradle.kts, openapi.yaml, README.md, and any other relevant files to ensure consistency.",
+        "details": "Edit build.gradle.kts to set `version = \"0.1.0\"`. Update `version: 0.1.0` in openapi.yaml replacing 1.0.0. Search README.md for version mentions and badges, update to 0.1.0. Scan other project files if necessary to confirm version consistency.",
+        "testStrategy": "Automate verification by grepping for version strings in project files to confirm all are set to 0.1.0. Manually review README.md and openapi.yaml for correctness.",
+        "priority": "high",
+        "dependencies": [
+          "89"
+        ],
+        "status": "pending",
+        "subtasks": []
+      },
+      {
+        "id": "91",
+        "title": "Update and Prepare Documentation",
+        "description": "Revise README.md, openapi.yaml, and create CHANGELOG.md with accurate information reflecting version 0.1.0, including endpoints, installation instructions, tech stack, and changelog entries.",
+        "details": "Update README.md to include project description (RU/EN), version 0.1.0, current API endpoints and descriptions, installation and run instructions, and technology stack. Update openapi.yaml with API version 0.1.0 and verify endpoint accuracy and data schemas. Create CHANGELOG.md following Keep a Changelog format documenting changes for 0.1.0 release.",
+        "testStrategy": "Review documentation for completeness and accuracy. Validate openapi.yaml with OpenAPI validators. Confirm CHANGELOG.md format compliance and content correctness.",
+        "priority": "high",
+        "dependencies": [
+          "90"
+        ],
+        "status": "pending",
+        "subtasks": []
+      },
+      {
+        "id": "92",
+        "title": "Clean Up Code Comments and Remove Dead Code",
+        "description": "Identify and remove all TODO, FIXME, XXX, HACK, debug, temporary, and non-critical NOTE comments from source and test code, excluding specified config and ignored files. Remove commented-out code and ensure public APIs have KDoc comments.",
+        "details": "Use grep or ripgrep to find specified comment tags in src/main and src/test excluding .git, build, .taskmaster, and config rules directories. Remove all non-critical comments and commented-out code. Review public API code to ensure presence of KDoc comments for documentation.",
+        "testStrategy": "Run comment search tools post-cleanup to verify no forbidden comments remain. Manually inspect public APIs for KDoc completeness. Run build and tests to ensure no code breakage.",
+        "priority": "high",
+        "dependencies": [
+          "91"
+        ],
+        "status": "pending",
+        "subtasks": []
+      },
+      {
+        "id": "93",
+        "title": "Verify Application Configuration for Release",
+        "description": "Check application.yaml and related configuration files for correct settings including server port, database, logging, and security parameters for production readiness.",
+        "details": "Review application.yaml to confirm correct port settings, database connection parameters, and logging configurations. Ensure no debug logging enabled in production. Validate security settings: no hardcoded secrets, proper error handling without stack trace leaks, and correct CORS settings if applicable.",
+        "testStrategy": "Manually inspect configuration files. Run application in production mode and verify logs and error handling behavior. Use security scanning tools to detect secrets or misconfigurations.",
+        "priority": "high",
+        "dependencies": [
+          "92"
+        ],
+        "status": "pending",
+        "subtasks": []
+      },
+      {
+        "id": "94",
+        "title": "Validate Logging Configuration and Error Handling",
+        "description": "Ensure logging levels are appropriate for production, debug logs are disabled, and error handling logs errors correctly without exposing sensitive information.",
+        "details": "Check logging framework configuration files and code to confirm production log levels (e.g., INFO or WARN). Remove or disable debug logs. Verify error handling code logs errors properly and does not leak stack traces or sensitive data.",
+        "testStrategy": "Perform test runs simulating errors and verify logs contain expected information without debug noise or sensitive data. Review logging config files for correct level settings.",
+        "priority": "medium",
+        "dependencies": [
+          "93"
+        ],
+        "status": "pending",
+        "subtasks": []
+      },
+      {
+        "id": "95",
+        "title": "Review and Validate Docker Configuration Files",
+        "description": "Check Dockerfile, docker-compose.yml, and .dockerignore files for correctness and alignment with release requirements.",
+        "details": "Review Dockerfile for up-to-date base images, build steps, and environment variables. Validate docker-compose.yml for correct service definitions and dependencies. Ensure .dockerignore excludes unnecessary files and directories to optimize image size.",
+        "testStrategy": "Build Docker images and run containers locally to verify successful startup and correct behavior. Inspect image size and contents. Confirm no excluded files are included.",
+        "priority": "medium",
+        "dependencies": [
+          "93"
+        ],
+        "status": "pending",
+        "subtasks": []
+      },
+      {
+        "id": "96",
+        "title": "Final Release Readiness Verification and Documentation",
+        "description": "Perform final checks to ensure all release criteria are met, including successful merges, version consistency, documentation updates, code cleanup, configuration, logging, security, and Docker setup. Document release readiness status.",
+        "details": "Review all previous tasks completion and success criteria. Compile release notes and readiness checklist. Prepare internal communication for release 0.1.0. Archive final documentation and tag information for future reference.",
+        "testStrategy": "Cross-check success criteria from PRD against actual project state. Conduct peer review or sign-off from QA and DevOps teams. Confirm all automated and manual tests pass.",
+        "priority": "high",
+        "dependencies": [
+          "89",
+          "90",
+          "91",
+          "92",
+          "93",
+          "94",
+          "95"
+        ],
+        "status": "pending",
+        "subtasks": []
       }
     ],
     "metadata": {
       "version": "1.0.0",
-      "lastModified": "2025-11-30T19:35:26.445Z",
-      "taskCount": 81,
-      "completedCount": 58,
+      "lastModified": "2025-11-30T19:44:02.579Z",
+      "taskCount": 41,
+      "completedCount": 3,
       "tags": [
         "master"
       ]
