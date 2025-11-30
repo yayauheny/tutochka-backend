@@ -137,7 +137,8 @@ class RestroomRepositoryImpl(
             executor.executePaginated(
                 baseQuery = baseQuery,
                 request = pagination,
-                builder = restroomQueryBuilder
+                builder = restroomQueryBuilder,
+                fetchCount = true
             )
         }
 
@@ -286,7 +287,8 @@ class RestroomRepositoryImpl(
             executor.executePaginated(
                 baseQuery = baseQuery,
                 request = pagination.copy(filters = filters),
-                builder = restroomQueryBuilder
+                builder = restroomQueryBuilder,
+                fetchCount = true
             )
         }
 }

@@ -1,0 +1,293 @@
+{
+  "master": {
+    "tasks": [
+      {
+        "id": "1",
+        "title": "Disable auto-commit and implement explicit transactions in DatabaseConfig",
+        "description": "Modify database configuration to disable auto-commit and enable explicit transaction management for atomic operations.",
+        "details": "Update DatabaseConfig.kt to set isAutoCommit = false in HikariConfig. Use Kotlin coroutines withContext(Dispatchers.IO) for database operations. Implement a suspend extension function transactionSuspend on DSLContext that wraps operations in a transaction block using jOOQ's transaction method.",
+        "testStrategy": "Verify that save(), update(), and deleteById() repository methods execute within a single transaction by simulating failures between operations and ensuring no partial commits occur. Use integration tests with rollback verification.",
+        "priority": "high",
+        "dependencies": [],
+        "status": "done",
+        "subtasks": [],
+        "updatedAt": "2025-11-30T10:22:15.607Z"
+      },
+      {
+        "id": "2",
+        "title": "Refactor repository methods to use transactionSuspend for atomic operations",
+        "description": "Update repository methods save(), update(), and deleteById() to wrap all database calls within transactionSuspend to ensure atomicity.",
+        "details": "In repository implementations like CityRepositoryImpl and RestroomRepositoryImpl, wrap all related DB calls (e.g., insert and select) inside ctx.transactionSuspend { txCtx -> ... } to ensure they execute in one transaction. Remove any auto-commit reliance.",
+        "testStrategy": "Unit and integration tests to confirm that partial failures do not leave inconsistent data. Test rollback behavior on exceptions within transactionSuspend blocks.",
+        "priority": "high",
+        "dependencies": [
+          "1"
+        ],
+        "status": "done",
+        "subtasks": [],
+        "updatedAt": "2025-11-30T10:22:15.611Z"
+      },
+      {
+        "id": "3",
+        "title": "Create extension helper for coordinate field projections to eliminate duplication",
+        "description": "Implement an extension function or property to provide coordinate fields projection to avoid repeated code in repositories.",
+        "details": "Create an extension function like selectWithCoordinates() on relevant table references (e.g., RESTROOMS) returning a list of fields including latAlias() and lonAlias(). Replace duplicated coordinate field declarations in repository methods with this helper.",
+        "testStrategy": "Code review to ensure all coordinate field usages are replaced. Unit tests for repository methods to verify correct fields are selected.",
+        "priority": "medium",
+        "dependencies": [],
+        "status": "done",
+        "subtasks": [],
+        "updatedAt": "2025-11-30T10:22:15.613Z"
+      },
+      {
+        "id": "4",
+        "title": "Add fetchCount parameter to executePaginated and optimize count queries",
+        "description": "Modify executePaginated to accept a fetchCount boolean parameter to optionally skip COUNT queries for performance optimization.",
+        "details": "Update QueryExecutor.kt to propagate fetchCount parameter. For endpoints like /nearest, call executePaginated with fetchCount=false to avoid expensive COUNT(*) queries. Consider approximate counts or caching for large tables in future iterations.",
+        "testStrategy": "Benchmark response times with fetchCount true vs false on large datasets. Verify pagination behavior remains correct when count is skipped.",
+        "priority": "medium",
+        "dependencies": [],
+        "status": "done",
+        "subtasks": [],
+        "updatedAt": "2025-11-30T10:25:21.893Z"
+      },
+      {
+        "id": "5",
+        "title": "Implement in-memory caching for countries and cities using Caffeine",
+        "description": "Add caching layer for frequently requested read-only data like countries and cities to reduce database load.",
+        "details": "Add Caffeine dependency version 3.1.8. Create CacheConfig.kt to configure caches with maximumSize and expireAfterWrite TTL. Inject caches into CountryService and CityService. Use cache.get(key) with loader lambda for reads. Invalidate cache on writes.",
+        "testStrategy": "Unit tests for cache hit/miss scenarios. Integration tests to verify cache invalidation after create/update operations.",
+        "priority": "low",
+        "dependencies": [],
+        "status": "pending",
+        "subtasks": []
+      },
+      {
+        "id": "6",
+        "title": "Refactor long repository methods by extracting query building logic",
+        "description": "Improve code readability by extracting complex query construction into smaller private methods in repositories.",
+        "details": "In RestroomRepositoryImpl and CityRepositoryImpl, create private methods like buildInsertQuery() and buildReturningFields() that return InsertSetStep and list of fields respectively. Use these methods in save() and update() to reduce method length and duplication.",
+        "testStrategy": "Code review for method length reduction. Unit tests to verify extracted methods produce correct queries and results.",
+        "priority": "medium",
+        "dependencies": [],
+        "status": "pending",
+        "subtasks": []
+      },
+      {
+        "id": "7",
+        "title": "Extract magic numbers and strings into centralized constants object",
+        "description": "Centralize all magic numbers and strings used in validation, pagination, and defaults into a Constants.kt object for maintainability.",
+        "details": "Create ApiConstants object in config package with constants like DEFAULT_PAGE_SIZE=10, MAX_PAGE_SIZE=100, MAX_NAME_LENGTH=255, etc. Replace all hardcoded literals in codebase with references to these constants.",
+        "testStrategy": "Code inspection to ensure no magic numbers remain. Regression tests to confirm behavior unchanged.",
+        "priority": "low",
+        "dependencies": [],
+        "status": "pending",
+        "subtasks": []
+      },
+      {
+        "id": "8",
+        "title": "Standardize error messages and implement i18n-ready error constants",
+        "description": "Centralize all error messages in a resource file or constants object and standardize language to English for API consistency and future i18n support.",
+        "details": "Create ErrorMessages object with formatted string constants for common errors. Replace inline error strings in exceptions and logs with references to ErrorMessages. Consider integration with i18n libraries for future multi-language support.",
+        "testStrategy": "Verify all error messages are replaced. Test error responses for correct message formatting.",
+        "priority": "medium",
+        "dependencies": [],
+        "status": "pending",
+        "subtasks": []
+      },
+      {
+        "id": "9",
+        "title": "Expand DTO validation to cover all fields with length and structure checks",
+        "description": "Enhance validation logic for DTOs to include all relevant fields with proper length limits and JSON structure validation.",
+        "details": "In RestroomValidators.kt, add validation rules for name, description, phones, workTime, and amenities fields. Use maxLength constraints from ApiConstants. Implement validateJsonObject for JSON structure validation of phones and workTime fields.",
+        "testStrategy": "Unit tests for validation rules with valid and invalid inputs. Test rejection of overly long strings and malformed JSON.",
+        "priority": "medium",
+        "dependencies": [
+          "7"
+        ],
+        "status": "pending",
+        "subtasks": []
+      },
+      {
+        "id": "10",
+        "title": "Standardize validation to occur only in controllers, remove service-level validation",
+        "description": "Refactor validation logic to be performed exclusively in controllers, ensuring services receive already validated data.",
+        "details": "Remove validateOrThrow calls from service methods like CityService.createCity(). Keep validateAndThen in controllers. Services should only perform business logic validation and throw domain exceptions if needed.",
+        "testStrategy": "Integration tests to verify invalid data is rejected at controller level. Confirm services do not perform redundant validation.",
+        "priority": "low",
+        "dependencies": [
+          "9"
+        ],
+        "status": "pending",
+        "subtasks": []
+      },
+      {
+        "id": "11",
+        "title": "Replace reflection-based validation error path extraction with official konform API",
+        "description": "Improve reliability and performance of validation error path extraction by using konform's official API instead of reflection and string parsing.",
+        "details": "Update ValidationExtension.kt to use konform's API for error path retrieval. Implement caching if necessary to optimize repeated calls. Remove fragile string parsing logic.",
+        "testStrategy": "Unit tests for error path extraction correctness. Performance tests comparing old and new implementations.",
+        "priority": "low",
+        "dependencies": [
+          "9"
+        ],
+        "status": "pending",
+        "subtasks": []
+      },
+      {
+        "id": "12",
+        "title": "Enhance PSQLException handling to cover multiple SQL error states",
+        "description": "Expand database error handling to differentiate unique violations, foreign key violations, check constraints, not-null violations, and others with specific HTTP responses.",
+        "details": "In ErrorHandlingPlugin.kt, extend exception handler for PSQLException to switch on sqlState codes like 23505, 23503, 23514, 23502, 42P01. Map each to appropriate HTTP status and error message. Log errors with context.\n<info added on 2025-11-30T10:22:21.251Z>\nPSQLException handling for error codes 23505, 23503, 23502, 23514, and 42P01 has already been implemented with appropriate HTTP status mappings. The remaining work focuses on two areas: (1) structured logging with context information (request path, HTTP method, status code, query parameters) which is being handled as a separate task 14, and (2) updating integration tests to verify correct HTTP responses and error messages for various database error scenarios including unique constraint violations, foreign key violations, not-null violations, check constraint violations, and table not found errors.\n</info added on 2025-11-30T10:22:21.251Z>",
+        "testStrategy": "Integration tests simulating various SQL exceptions and verifying correct HTTP responses and messages.",
+        "priority": "medium",
+        "dependencies": [],
+        "status": "pending",
+        "subtasks": [
+          {
+            "id": 1,
+            "title": "Update integration tests for PSQLException handling",
+            "description": "Add integration tests to verify correct HTTP responses and error messages for various database error scenarios (23505, 23503, 23502, 23514, 42P01)",
+            "details": "",
+            "status": "pending",
+            "dependencies": [],
+            "parentTaskId": 12,
+            "parentId": "undefined"
+          }
+        ]
+      },
+      {
+        "id": "13",
+        "title": "Replace error() calls with specific repository exceptions",
+        "description": "Create custom exception classes for repository errors and replace generic error() calls with throwing these exceptions for better error classification.",
+        "details": "Define RepositoryException and EntityNotFoundException classes. Replace error() calls in repositories with throw RepositoryException or EntityNotFoundException with descriptive messages. Update error handling to recognize these exceptions.",
+        "testStrategy": "Unit tests to verify exceptions are thrown as expected. Logging tests to confirm exception types are logged correctly.",
+        "priority": "medium",
+        "dependencies": [
+          "12"
+        ],
+        "status": "done",
+        "subtasks": [
+          {
+            "id": 1,
+            "title": "Update tests for new repository exceptions",
+            "description": "Update existing tests to verify that RepositoryException and EntityNotFoundException are thrown correctly and handled properly",
+            "details": "",
+            "status": "pending",
+            "dependencies": [],
+            "parentTaskId": 13,
+            "parentId": "undefined"
+          }
+        ],
+        "updatedAt": "2025-11-30T10:22:15.615Z"
+      },
+      {
+        "id": "14",
+        "title": "Add structured logging with context for error handling",
+        "description": "Improve error logs by including structured context such as request path, method, status, and query parameters for better diagnostics.",
+        "details": "Enhance ErrorHandlingPlugin.kt to log exceptions with structured data maps including path, HTTP method, status code, and query parameters. Use logger.warn or logger.error accordingly.",
+        "testStrategy": "Review logs during error scenarios to confirm presence of structured context. Automated tests to verify logging calls.",
+        "priority": "low",
+        "dependencies": [
+          "12"
+        ],
+        "status": "pending",
+        "subtasks": []
+      },
+      {
+        "id": "15",
+        "title": "Reorganize model package to separate DTOs and entities",
+        "description": "Refactor project package structure to clearly separate DTOs and entity classes for better maintainability and clarity.",
+        "details": "Create model/dto and model/entity subpackages. Move CityCreateDto, CityResponseDto, etc. to dto/, and CountryEntity, CityEntity to entity/. Update imports and references accordingly.",
+        "testStrategy": "Build and run tests to ensure no import errors. Code review for package structure consistency.",
+        "priority": "low",
+        "dependencies": [],
+        "status": "pending",
+        "subtasks": []
+      },
+      {
+        "id": "16",
+        "title": "Split common package into api, mapper, and query subpackages",
+        "description": "Refactor common package to reduce overload by dividing into more focused packages like api.errors, mapper, and query.builder.",
+        "details": "Create new packages api.errors, mapper, query.builder. Move relevant classes and files accordingly. Update project references and imports.",
+        "testStrategy": "Verify project builds and tests pass after refactoring. Code review for package usage.",
+        "priority": "low",
+        "dependencies": [
+          "15"
+        ],
+        "status": "pending",
+        "subtasks": []
+      },
+      {
+        "id": "17",
+        "title": "Group utility functions in util package by domain",
+        "description": "Organize utility classes into domain-specific subpackages within util for better modularity and discoverability.",
+        "details": "Create util/http, util/geo, util/db, util/serialization, util/config subpackages. Move ApplicationCallExtensions.kt to http/, GeoDsl.kt to geo/, RepositoryExtensions.kt to db/, Serializers.kt to serialization/, EnvironmentExtensions.kt to config/.",
+        "testStrategy": "Build and run tests to confirm no breakage. Code review for consistent usage.",
+        "priority": "low",
+        "dependencies": [
+          "16"
+        ],
+        "status": "pending",
+        "subtasks": []
+      },
+      {
+        "id": "18",
+        "title": "Add comprehensive unit tests for QueryBuilder and QueryExecutor",
+        "description": "Develop thorough unit tests covering all operators and scenarios in QueryBuilder and QueryExecutor to ensure correctness and prevent regressions.",
+        "details": "Implement tests for all filter operators (EQ, IN, LIKE, etc.) in QueryBuilderTest. Mock DSLContext in QueryExecutorTest to test executePaginated, executeSingle, and executeList methods. Use parameterized tests for edge cases.",
+        "testStrategy": "Run tests with coverage reports to ensure critical paths are tested. Use mocks to isolate components.",
+        "priority": "medium",
+        "dependencies": [],
+        "status": "pending",
+        "subtasks": []
+      },
+      {
+        "id": "19",
+        "title": "Add unit tests for mappers with mocked jOOQ Records",
+        "description": "Create unit tests for RestroomMapper, CityMapper, and CountryMapper to verify correct mapping from jOOQ Records to DTOs.",
+        "details": "Use mocking frameworks like MockK to mock Record objects with expected field values. Test mapFromRecord methods to ensure all fields are correctly mapped.",
+        "testStrategy": "Unit tests asserting mapped DTO fields equal expected values from mocked records.",
+        "priority": "medium",
+        "dependencies": [],
+        "status": "pending",
+        "subtasks": []
+      },
+      {
+        "id": "20",
+        "title": "Add unit tests for utility functions and edge cases",
+        "description": "Implement unit tests for utility classes like GeoDsl, ApplicationCallExtensions, and RepositoryExtensions including edge cases and boundary conditions.",
+        "details": "Write tests for GeoDsl functions like pointExpr and distanceGeographyTo. Mock ApplicationCall to test toPaginationRequest parsing. Add parameterized tests for edge cases such as empty lists, nulls, and invalid values.",
+        "testStrategy": "Use parameterized and boundary tests to cover edge cases. Verify expected exceptions or results.",
+        "priority": "low",
+        "dependencies": [
+          "17"
+        ],
+        "status": "pending",
+        "subtasks": []
+      },
+      {
+        "id": "21",
+        "title": "Implement health check endpoints with database connectivity verification",
+        "description": "Create health check endpoints (/health, /health/ready, /health/live) that include database connectivity status, implemented in HealthController.kt with routing configured in RoutingConfig.kt, and provide comprehensive unit tests.",
+        "details": "1. Create HealthController.kt to define three endpoints: /health, /health/ready, and /health/live. Each endpoint should return appropriate HTTP status and JSON indicating service health.\n\n2. Implement a database connectivity check within the health endpoints by executing a lightweight query or ping against the database using the existing database configuration (ensuring it uses explicit transactions as per Task 1).\n\n3. Integrate these endpoints into the application's routing by adding routes in RoutingConfig.kt, ensuring they are accessible and follow REST conventions.\n\n4. Structure the health responses to comply with common microservice health check standards, distinguishing readiness and liveness checks (e.g., readiness includes database connectivity, liveness confirms service is running).\n\n5. Write unit tests for HealthController to verify each endpoint returns correct status codes and payloads under normal and simulated failure conditions (e.g., database down).\n\n6. Follow Kotlin coroutine best practices for asynchronous database calls and HTTP handling.\n\n7. Ensure logging and error handling are consistent with existing project standards.",
+        "testStrategy": "1. Unit test each health endpoint to assert HTTP 200 OK with expected JSON when the database is reachable.\n\n2. Simulate database connectivity failure and verify endpoints return appropriate failure status (e.g., HTTP 503 Service Unavailable) and error details.\n\n3. Test routing configuration to confirm endpoints are correctly registered and accessible.\n\n4. Perform integration tests to confirm health endpoints reflect real database connectivity status.\n\n5. Code review to ensure adherence to project coding standards and proper use of coroutines and transactions.",
+        "status": "pending",
+        "dependencies": [
+          "1"
+        ],
+        "priority": "medium",
+        "subtasks": []
+      }
+    ],
+    "metadata": {
+      "version": "1.0.0",
+      "lastModified": "2025-11-30T10:25:21.893Z",
+      "taskCount": 21,
+      "completedCount": 5,
+      "tags": [
+        "master"
+      ]
+    }
+  }
+}
