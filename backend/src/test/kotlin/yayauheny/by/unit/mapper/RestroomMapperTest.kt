@@ -12,10 +12,10 @@ import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
 import yayauheny.by.common.mapper.RestroomMapper
 import yayauheny.by.model.LatLon
-import yayauheny.by.model.enums.AccessibilityType
-import yayauheny.by.model.enums.DataSourceType
-import yayauheny.by.model.enums.FeeType
-import yayauheny.by.model.enums.RestroomStatus
+import by.yayauheny.shared.enums.AccessibilityType
+import by.yayauheny.shared.enums.DataSourceType
+import by.yayauheny.shared.enums.FeeType
+import by.yayauheny.shared.enums.RestroomStatus
 import yayauheny.by.tables.references.RESTROOMS
 import java.time.Instant
 import java.util.UUID

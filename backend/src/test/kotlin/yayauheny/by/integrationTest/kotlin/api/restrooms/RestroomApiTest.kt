@@ -24,7 +24,7 @@ import yayauheny.by.helpers.assertStatusAndJsonContent
 import yayauheny.by.helpers.testGet
 import yayauheny.by.helpers.parseErrorResponse
 import yayauheny.by.helpers.assertHasValidationErrors
-import yayauheny.by.model.enums.RestroomStatus
+import by.yayauheny.shared.enums.RestroomStatus
 
 @Tag("integration")
 class RestroomApiTest : BaseIntegrationTest() {

@@ -5,7 +5,7 @@ import java.util.UUID
 import kotlinx.serialization.Contextual
 import kotlinx.serialization.Serializable
 import yayauheny.by.model.LatLon
-import yayauheny.by.model.enums.FeeType
+import by.yayauheny.shared.enums.FeeType
 
 @Serializable
 @Schema(description = "Restroom nearest search response data")

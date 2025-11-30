@@ -28,10 +28,10 @@ import yayauheny.by.common.query.PaginationRequest
 import yayauheny.by.common.query.PageResponse
 import yayauheny.by.model.restroom.RestroomCreateDto
 import yayauheny.by.model.restroom.RestroomResponseDto
-import yayauheny.by.model.enums.AccessibilityType
-import yayauheny.by.model.enums.DataSourceType
-import yayauheny.by.model.enums.FeeType
-import yayauheny.by.model.enums.RestroomStatus
+import by.yayauheny.shared.enums.AccessibilityType
+import by.yayauheny.shared.enums.DataSourceType
+import by.yayauheny.shared.enums.FeeType
+import by.yayauheny.shared.enums.RestroomStatus
 import yayauheny.by.repository.RestroomRepository
 import yayauheny.by.service.RestroomService
 

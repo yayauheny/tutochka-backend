@@ -5,10 +5,10 @@ import org.jooq.Record
 import org.jooq.UpdateSetFirstStep
 import org.jooq.UpdateSetMoreStep
 import yayauheny.by.model.LatLon
-import yayauheny.by.model.enums.AccessibilityType
-import yayauheny.by.model.enums.DataSourceType
-import yayauheny.by.model.enums.FeeType
-import yayauheny.by.model.enums.RestroomStatus
+import by.yayauheny.shared.enums.AccessibilityType
+import by.yayauheny.shared.enums.DataSourceType
+import by.yayauheny.shared.enums.FeeType
+import by.yayauheny.shared.enums.RestroomStatus
 import yayauheny.by.model.restroom.NearestRestroomResponseDto
 import yayauheny.by.model.restroom.RestroomResponseDto
 import yayauheny.by.model.restroom.RestroomUpdateDto

@@ -7,10 +7,10 @@ import kotlinx.serialization.json.JsonPrimitive
 import kotlinx.serialization.json.buildJsonObject
 import org.jooq.DSLContext
 import org.jooq.impl.DSL
-import yayauheny.by.model.enums.AccessibilityType
-import yayauheny.by.model.enums.DataSourceType
-import yayauheny.by.model.enums.FeeType
-import yayauheny.by.model.enums.RestroomStatus
+import by.yayauheny.shared.enums.AccessibilityType
+import by.yayauheny.shared.enums.DataSourceType
+import by.yayauheny.shared.enums.FeeType
+import by.yayauheny.shared.enums.RestroomStatus
 import yayauheny.by.tables.references.CITIES
 import yayauheny.by.tables.references.COUNTRIES
 import yayauheny.by.tables.references.RESTROOMS
