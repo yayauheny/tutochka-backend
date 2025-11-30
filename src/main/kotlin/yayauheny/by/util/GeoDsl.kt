@@ -117,3 +117,12 @@ fun getAllRestroomsFieldsExceptCoordinates(): List<org.jooq.Field<*>> {
         r.DELETED_AT
     )
 }
+
+/**
+ * Возвращает все поля таблицы RESTROOMS с координатами (lat/lon) для SELECT запросов.
+ * Устраняет дублирование кода создания latField и lonField в репозиториях.
+ */
+fun getAllRestroomsFieldsWithCoordinates(): List<org.jooq.Field<*>> {
+    val r = yayauheny.by.tables.references.RESTROOMS
+    return getAllRestroomsFieldsExceptCoordinates() + r.COORDINATES.latAlias() + r.COORDINATES.lonAlias()
+}

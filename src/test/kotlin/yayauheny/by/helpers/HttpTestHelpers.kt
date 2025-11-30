@@ -290,3 +290,41 @@ fun createRestroomJson(
         }
     return json.toString()
 }
+
+/**
+ * Creates a JSON string for restroom creation request from TestRestroomData.
+ */
+fun createRestroomJsonFromTestData(
+    testData: yayauheny.by.helpers.TestRestroomData,
+    cityId: java.util.UUID? = null
+): String {
+    val json =
+        buildJsonObject {
+            if (cityId != null) {
+                put("cityId", cityId.toString())
+            }
+            if (testData.name != null) {
+                put("name", testData.name)
+            }
+            if (testData.description != null) {
+                put("description", testData.description)
+            }
+            put("address", testData.address)
+            put("status", testData.status.name)
+            put("feeType", testData.feeType.name)
+            put("accessibilityType", testData.accessibilityType.name)
+            put("dataSource", testData.dataSource.name)
+            put(
+                "coordinates",
+                buildJsonObject {
+                    put("lat", testData.lat)
+                    put("lon", testData.lon)
+                }
+            )
+            put("amenities", testData.amenities)
+            // Используем пустые объекты если phones/workTime null, как в unit тестах
+            put("phones", testData.phones ?: buildJsonObject {})
+            put("workTime", testData.workTime ?: buildJsonObject {})
+        }
+    return json.toString()
+}

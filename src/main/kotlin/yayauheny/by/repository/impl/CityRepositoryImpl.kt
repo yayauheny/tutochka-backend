@@ -1,12 +1,13 @@
 package yayauheny.by.repository.impl
 
 import java.time.Instant
-import java.util.*
+import java.util.UUID
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import org.jooq.DSLContext
 import org.jooq.SelectFieldOrAsterisk
 import org.jooq.impl.DSL
+import yayauheny.by.common.errors.EntityNotFoundException
 import yayauheny.by.common.mapper.CityMapper
 import yayauheny.by.common.query.FieldMeta
 import yayauheny.by.common.query.FieldParsers
@@ -209,7 +210,7 @@ class CityRepositoryImpl(
             val idRec =
                 insert
                     .returning(r.ID)
-                    .fetchOne() ?: error("Ошибка при сохранении города: ${dto.nameEn}")
+                    .fetchOne() ?: throw EntityNotFoundException("Город", "не удалось сохранить: ${dto.nameEn}")
             val insertedId = idRec[r.ID]!!
 
             val rec =
@@ -217,7 +218,7 @@ class CityRepositoryImpl(
                     .select(*cityProjection())
                     .from(r)
                     .where(r.ID.eq(insertedId))
-                    .fetchOne() ?: error("Город не найден после вставки: ${dto.nameEn}")
+                    .fetchOne() ?: throw EntityNotFoundException("Город", insertedId.toString())
 
             CityMapper.mapFromRecord(rec)
         }
@@ -239,7 +240,7 @@ class CityRepositoryImpl(
                     .where(r.ID.eq(id))
                     .returning(*cityProjection())
                     .fetchOne()
-                    ?: error("Не удалось обновить город $id")
+                    ?: throw EntityNotFoundException("Город", id.toString())
 
             CityMapper.mapFromRecord(rec)
         }

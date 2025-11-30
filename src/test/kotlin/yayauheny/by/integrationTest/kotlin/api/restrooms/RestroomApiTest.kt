@@ -32,6 +32,7 @@ import yayauheny.by.helpers.testPost
 import yayauheny.by.helpers.parseErrorResponse
 import yayauheny.by.helpers.assertHasFieldError
 import yayauheny.by.helpers.assertHasValidationErrors
+import yayauheny.by.helpers.createRestroomJsonFromTestData
 import yayauheny.by.model.enums.RestroomStatus
 
 @Tag("integration")
@@ -108,31 +109,18 @@ class RestroomApiTest : BaseIntegrationTest() {
     fun given_valid_restroom_data_when_post_new_restroom_then_create_successfully() =
         runTest {
             val testEnv = DatabaseTestHelper.createTestEnvironment(dslContext)
-            val restroomData =
-                """
-                {
-                    "cityId": "${testEnv.cityId}",
-                    "status": "ACTIVE",
-                    "name": "New Restroom",
-                    "description": "Test restroom description",
-                    "address": "123 New Street",
-                    "feeType": "FREE",
-                    "accessibilityType": "UNISEX",
-                    "coordinates": {
-                        "lat": 55.7558,
-                        "lon": 37.6176
-                    },
-                    "dataSource": "MANUAL",
-                    "amenities": {}
-                }
-                """.trimIndent()
+            val testData =
+                DatabaseTestHelper.createTestRestroomData(
+                    name = "New Restroom",
+                    description = "Test restroom description",
+                    address = "123 New Street",
+                    phones = null, // Не добавляем phones
+                    workTime = null // Не добавляем workTime
+                )
+            val restroomData = createRestroomJsonFromTestData(testData, testEnv.cityId)
 
             KtorTestApplication.withApp(dslContext) { client ->
-                val response =
-                    client.post("/api/v1/restrooms") {
-                        contentType(ContentType.Application.Json)
-                        setBody(restroomData)
-                    }
+                val response = client.testPost("/api/v1/restrooms", restroomData)
 
                 response.assertStatusAndJsonContent(HttpStatusCode.Created)
                 val json = Json.parseToJsonElement(response.bodyAsText()).jsonObject
@@ -145,30 +133,18 @@ class RestroomApiTest : BaseIntegrationTest() {
     @DisplayName("GIVEN restroom with minimal valid data WHEN POST THEN create successfully")
     fun given_restroom_with_minimal_valid_data_when_post_then_create_successfully() =
         runTest {
-            val minimalData =
-                """
-                {
-                    "status": "ACTIVE",
-                    "name": "Minimal Restroom",
-                    "description": "Minimal description",
-                    "address": "Minimal Address",
-                    "feeType": "FREE",
-                    "accessibilityType": "UNISEX",
-                    "coordinates": {
-                        "lat": 55.7558,
-                        "lon": 37.6176
-                    },
-                    "dataSource": "MANUAL",
-                    "amenities": {}
-                }
-                """.trimIndent()
+            val testData =
+                DatabaseTestHelper.createTestRestroomData(
+                    name = "Minimal Restroom",
+                    description = "Minimal description",
+                    address = "Minimal Address",
+                    phones = null,
+                    workTime = null
+                )
+            val minimalData = createRestroomJsonFromTestData(testData)
 
             KtorTestApplication.withApp(dslContext) { client ->
-                val response =
-                    client.post("/api/v1/restrooms") {
-                        contentType(ContentType.Application.Json)
-                        setBody(minimalData)
-                    }
+                val response = client.testPost("/api/v1/restrooms", minimalData)
 
                 response.assertStatusAndJsonContent(HttpStatusCode.Created)
                 val json = Json.parseToJsonElement(response.bodyAsText()).jsonObject

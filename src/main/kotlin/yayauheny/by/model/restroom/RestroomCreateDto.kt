@@ -19,16 +19,16 @@ data class RestroomCreateDto(
         example = "123e4567-e89b-12d3-a456-426614174000"
     )
     @Contextual
-    val cityId: UUID?,
+    val cityId: UUID? = null,
     @field:Schema(description = "Restroom status", example = "ACTIVE", required = true)
     val status: RestroomStatus,
     @field:Schema(description = "Restroom name", example = "Public Restroom at Central Park")
-    val name: String?,
+    val name: String? = null,
     @field:Schema(
         description = "Detailed description of the restroom",
         example = "Clean public restroom with baby changing facilities"
     )
-    val description: String?,
+    val description: String? = null,
     @field:Schema(
         description = "Street address",
         example = "123 Main Street, Downtown",
@@ -39,12 +39,12 @@ data class RestroomCreateDto(
         description = "Contact phone numbers in JSON format",
         example = """{"main": "+1-234-567-8900", "emergency": "+1-234-567-8901"}"""
     )
-    val phones: JsonObject?,
+    val phones: JsonObject? = null,
     @field:Schema(
         description = "Working hours in JSON format",
         example = """{"monday": "08:0-22:00", "tuesday": "08:00-22:00", "weekend": "09:00-21:00"}"""
     )
-    val workTime: JsonObject?,
+    val workTime: JsonObject? = null,
     @field:Schema(description = "Fee type", example = "FREE", required = true)
     val feeType: FeeType,
     @field:Schema(description = "Accessibility type", example = "UNISEX", required = true)
