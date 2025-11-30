@@ -33,6 +33,7 @@ import yayauheny.by.util.reqDouble
 import yayauheny.by.util.toJSONBOrEmpty
 import yayauheny.by.util.transactionSuspend
 import yayauheny.by.util.withinDistanceOf
+import yayauheny.by.config.ApiConstants
 
 class RestroomRepositoryImpl(
     private val ctx: DSLContext
@@ -254,7 +255,7 @@ class RestroomRepositoryImpl(
         distanceMeters: Int?
     ): List<NearestRestroomResponseDto> =
         withContext(Dispatchers.IO) {
-            val maxDistance = (distanceMeters ?: 1000).toDouble()
+            val maxDistance = (distanceMeters ?: ApiConstants.DEFAULT_MAX_DISTANCE_METERS).toDouble()
             val latField = RESTROOMS.COORDINATES.latAlias()
             val lonField = RESTROOMS.COORDINATES.lonAlias()
             val knnField = RESTROOMS.COORDINATES.knnOrderTo(latitude, longitude)
