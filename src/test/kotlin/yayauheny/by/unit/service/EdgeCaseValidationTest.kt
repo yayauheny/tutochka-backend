@@ -43,6 +43,7 @@ class EdgeCaseValidationTest {
             lat: Double,
             lon: Double
         ) {
+            // Given
             val dto =
                 CityCreateDto(
                     countryId = UUID.randomUUID(),
@@ -52,7 +53,10 @@ class EdgeCaseValidationTest {
                     coordinates = LatLon(lat = lat, lon = lon)
                 )
 
+            // When
             val result = dto.validateWith(validateCityOnCreate)
+
+            // Then
             assertTrue(result.isSuccess, "Coordinates ($lat, $lon) should be valid")
         }
 
@@ -74,6 +78,7 @@ class EdgeCaseValidationTest {
             lat: Double,
             lon: Double
         ) {
+            // Given
             val dto =
                 CityCreateDto(
                     countryId = UUID.randomUUID(),
@@ -83,7 +88,10 @@ class EdgeCaseValidationTest {
                     coordinates = LatLon(lat = lat, lon = lon)
                 )
 
+            // When
             val result = dto.validateWith(validateCityOnCreate)
+
+            // Then
             assertFalse(result.isSuccess, "Coordinates ($lat, $lon) should be invalid")
             val exception = result.exceptionOrNull() as? ValidationException
             assertNotNull(exception, "Should throw ValidationException")
@@ -92,6 +100,7 @@ class EdgeCaseValidationTest {
         @Test
         @DisplayName("NaN coordinates should fail validation")
         fun nan_coordinates_should_fail() {
+            // Given
             val dto =
                 CityCreateDto(
                     countryId = UUID.randomUUID(),
@@ -101,13 +110,17 @@ class EdgeCaseValidationTest {
                     coordinates = LatLon(lat = Double.NaN, lon = 0.0)
                 )
 
+            // When
             val result = dto.validateWith(validateCityOnCreate)
+
+            // Then
             assertFalse(result.isSuccess, "NaN latitude should be invalid")
         }
 
         @Test
         @DisplayName("Infinite coordinates should fail validation")
         fun infinite_coordinates_should_fail() {
+            // Given
             val dto =
                 CityCreateDto(
                     countryId = UUID.randomUUID(),
@@ -117,7 +130,10 @@ class EdgeCaseValidationTest {
                     coordinates = LatLon(lat = Double.POSITIVE_INFINITY, lon = 0.0)
                 )
 
+            // When
             val result = dto.validateWith(validateCityOnCreate)
+
+            // Then
             assertFalse(result.isSuccess, "Infinite latitude should be invalid")
         }
     }
@@ -128,6 +144,7 @@ class EdgeCaseValidationTest {
         @Test
         @DisplayName("Maximum length strings should pass validation")
         fun maximum_length_strings_should_pass() {
+            // Given
             val maxName = "A".repeat(255)
             val maxDescription = "B".repeat(10000)
 
@@ -150,13 +167,17 @@ class EdgeCaseValidationTest {
                     inheritParentSchedule = false
                 )
 
+            // When
             val result = dto.validateWith(validateRestroomOnCreate)
+
+            // Then
             assertTrue(result.isSuccess, "Maximum length strings should be valid")
         }
 
         @Test
         @DisplayName("Over maximum length strings should fail validation")
         fun over_maximum_length_strings_should_fail() {
+            // Given
             val tooLongName = "A".repeat(256)
             val tooLongDescription = "B".repeat(10001)
 
@@ -179,12 +200,16 @@ class EdgeCaseValidationTest {
                     inheritParentSchedule = false
                 )
 
+            // When
             // validateRestroomOnCreate не проверяет name (это nullable поле)
             // Проверяем через validateRestroomCreateFields
             val errors1 = validateRestroomCreateFields(dto1)
+
+            // Then
             assertTrue(errors1.isNotEmpty(), "Name over 255 characters should be invalid")
             assertTrue(errors1.any { it.field == "name" }, "Should have error for 'name' field")
 
+            // Given
             val dto2 =
                 RestroomCreateDto(
                     cityId = UUID.randomUUID(),
@@ -204,8 +229,11 @@ class EdgeCaseValidationTest {
                     inheritParentSchedule = false
                 )
 
+            // When
             // Проверяем через validateRestroomCreateFields
             val errors2 = validateRestroomCreateFields(dto2)
+
+            // Then
             assertTrue(errors2.isNotEmpty(), "Description over 10000 characters should be invalid")
             assertTrue(errors2.any { it.field == "description" }, "Should have error for 'description' field")
         }
@@ -213,6 +241,7 @@ class EdgeCaseValidationTest {
         @Test
         @DisplayName("Empty strings for required fields should fail validation")
         fun empty_strings_for_required_fields_should_fail() {
+            // Given
             val dto =
                 RestroomCreateDto(
                     cityId = UUID.randomUUID(),
@@ -232,13 +261,17 @@ class EdgeCaseValidationTest {
                     inheritParentSchedule = false
                 )
 
+            // When
             val result = dto.validateWith(validateRestroomOnCreate)
+
+            // Then
             assertFalse(result.isSuccess, "Empty address should be invalid")
         }
 
         @Test
         @DisplayName("Whitespace-only strings for required fields should pass validation (current limitation)")
         fun whitespace_only_strings_should_pass() {
+            // Given
             // minLength проверяет длину строки, но не проверяет, что строка не состоит только из пробелов
             // В реальной валидации whitespace-only строки могут проходить проверку minLength
             // Это известное ограничение текущей валидации
@@ -261,9 +294,12 @@ class EdgeCaseValidationTest {
                     inheritParentSchedule = false
                 )
 
+            // When
             // Текущая валидация не проверяет whitespace-only строки
             // Это может быть улучшено в будущем добавлением проверки trim().isBlank()
             val result = dto.validateWith(validateRestroomOnCreate)
+
+            // Then
             // Валидация может пройти, так как "   " имеет длину >= 1
             // Это ожидаемое поведение текущей реализации
             assertTrue(result.isSuccess, "Whitespace-only address passes validation (current limitation)")
@@ -277,6 +313,7 @@ class EdgeCaseValidationTest {
         @ValueSource(strings = ["AB", "ABC", "Test", "Минск"])
         @DisplayName("Valid minimum length strings should pass validation")
         fun valid_minimum_length_strings_should_pass(name: String) {
+            // Given
             val dto =
                 CityCreateDto(
                     countryId = UUID.randomUUID(),
@@ -286,7 +323,10 @@ class EdgeCaseValidationTest {
                     coordinates = LatLon(lat = 53.9, lon = 27.5)
                 )
 
+            // When
             val result = dto.validateWith(validateCityOnCreate)
+
+            // Then
             assertTrue(result.isSuccess, "Name '$name' with length ${name.length} should be valid")
         }
 
@@ -294,6 +334,7 @@ class EdgeCaseValidationTest {
         @ValueSource(strings = ["", "A", " "])
         @DisplayName("Below minimum length strings should fail validation")
         fun below_minimum_length_strings_should_fail(name: String) {
+            // Given
             val dto =
                 CityCreateDto(
                     countryId = UUID.randomUUID(),
@@ -303,7 +344,10 @@ class EdgeCaseValidationTest {
                     coordinates = LatLon(lat = 53.9, lon = 27.5)
                 )
 
+            // When
             val result = dto.validateWith(validateCityOnCreate)
+
+            // Then
             assertFalse(result.isSuccess, "Name '$name' with length ${name.length} should be invalid")
         }
     }
@@ -314,6 +358,7 @@ class EdgeCaseValidationTest {
         @Test
         @DisplayName("Null optional fields should pass validation")
         fun null_optional_fields_should_pass() {
+            // Given
             val dto =
                 CityCreateDto(
                     countryId = UUID.randomUUID(),
@@ -323,7 +368,10 @@ class EdgeCaseValidationTest {
                     coordinates = LatLon(lat = 53.9, lon = 27.5)
                 )
 
+            // When
             val result = dto.validateWith(validateCityOnCreate)
+
+            // Then
             assertTrue(result.isSuccess, "Null optional region should be valid")
         }
 
@@ -342,6 +390,7 @@ class EdgeCaseValidationTest {
         @Test
         @DisplayName("Valid JSON objects should pass validation")
         fun valid_json_objects_should_pass() {
+            // Given
             val validPhones =
                 buildJsonObject {
                     put("mobile", JsonPrimitive("+375291234567"))
@@ -370,7 +419,10 @@ class EdgeCaseValidationTest {
                     inheritParentSchedule = false
                 )
 
+            // When
             val result = dto.validateWith(validateRestroomOnCreate)
+
+            // Then
             assertTrue(result.isSuccess, "Valid JSON objects should pass validation")
         }
     }
