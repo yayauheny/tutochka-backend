@@ -31,7 +31,7 @@ java {
 sourceSets {
     main {
         java {
-            srcDir("build/generated-src/jooq")
+            srcDir("${project.buildDir}/generated-src/jooq")
         }
     }
 }
@@ -49,7 +49,7 @@ buildscript {
 dependencies {
     // Module dependencies
     implementation(project(":shared"))
-    
+
     jooqGenerator(libs.postgresql)
     jooqGenerator(libs.postgis)
 
@@ -161,7 +161,7 @@ jooq {
                     }
                     target.apply {
                         packageName = jooqTargetPackage
-                        directory = jooqTargetDirectory
+                        directory = "${project.buildDir}/generated-src/jooq"
                     }
                     strategy.name = "org.jooq.codegen.DefaultGeneratorStrategy"
                 }
