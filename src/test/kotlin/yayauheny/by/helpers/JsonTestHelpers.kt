@@ -9,6 +9,31 @@ import kotlin.test.assertEquals
 import kotlin.test.assertTrue
 import kotlinx.serialization.json.*
 
+/**
+ * JSON Test Helpers with DSL-style assertions.
+ *
+ * TODO: Keep for future use - Advanced JSON assertion utilities using DSL pattern.
+ * Currently not used in tests (HttpTestHelpers is used instead).
+ * This file provides:
+ * - DSL-style JSON assertions via `expect()` extension function
+ * - JSON path navigation (e.g., `$.a.b[0].c`)
+ * - Type-safe assertions for nested JSON structures
+ *
+ * Consider using this for complex JSON validation scenarios where
+ * HttpTestHelpers.assertBodyContains() is not sufficient.
+ *
+ * Example usage (when adopted):
+ * ```kotlin
+ * response.expect {
+ *     ok().contentTypeJson()
+ *     json {
+ *         pathEquals("$.id", expectedId)
+ *         pathExists("$.name")
+ *         arraySize("$.items", 3)
+ *     }
+ * }
+ * ```
+ */
 // Используем общий testJson из HttpTestHelpers.kt
 private val json = testJson
 
