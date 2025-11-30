@@ -169,37 +169,41 @@ class RestroomRepositoryImpl(
                 ?.map { RestroomMapper.mapFromRecord(it) }
         }
 
+    private fun buildInsertQuery(
+        txCtx: DSLContext,
+        createDto: RestroomCreateDto,
+        id: UUID,
+        now: Instant
+    ) = txCtx
+        .insertInto(RESTROOMS)
+        .set(RESTROOMS.ID, id)
+        .set(RESTROOMS.CITY_ID, createDto.cityId)
+        .set(RESTROOMS.NAME, createDto.name)
+        .set(RESTROOMS.DESCRIPTION, createDto.description)
+        .set(RESTROOMS.ADDRESS, createDto.address)
+        .set(RESTROOMS.PHONES, createDto.phones.toJSONBOrEmpty())
+        .set(RESTROOMS.WORK_TIME, createDto.workTime.toJSONBOrEmpty())
+        .set(RESTROOMS.FEE_TYPE, createDto.feeType.name)
+        .set(RESTROOMS.ACCESSIBILITY_TYPE, createDto.accessibilityType.name)
+        .set(
+            RESTROOMS.COORDINATES,
+            pointExpr(createDto.coordinates.lon, createDto.coordinates.lat, RESTROOMS.COORDINATES)
+        ).set(RESTROOMS.DATA_SOURCE, createDto.dataSource.name)
+        .set(RESTROOMS.STATUS, createDto.status.name)
+        .set(RESTROOMS.AMENITIES, createDto.amenities.toJSONBOrEmpty())
+        .set(RESTROOMS.PARENT_PLACE_NAME, createDto.parentPlaceName)
+        .set(RESTROOMS.PARENT_PLACE_TYPE, createDto.parentPlaceType)
+        .set(RESTROOMS.INHERIT_PARENT_SCHEDULE, createDto.inheritParentSchedule)
+        .set(RESTROOMS.CREATED_AT, now)
+        .set(RESTROOMS.UPDATED_AT, now)
+
     override suspend fun save(createDto: RestroomCreateDto): RestroomResponseDto =
         ctx.transactionSuspend { txCtx ->
-            val r = RESTROOMS
-            val latF = r.COORDINATES.latAlias()
-            val lonF = r.COORDINATES.lonAlias()
             val id = UUID.randomUUID()
             val now = Instant.now()
 
             val rec =
-                txCtx
-                    .insertInto(r)
-                    .set(r.ID, id)
-                    .set(r.CITY_ID, createDto.cityId)
-                    .set(r.NAME, createDto.name)
-                    .set(r.DESCRIPTION, createDto.description)
-                    .set(r.ADDRESS, createDto.address)
-                    .set(r.PHONES, createDto.phones.toJSONBOrEmpty())
-                    .set(r.WORK_TIME, createDto.workTime.toJSONBOrEmpty())
-                    .set(r.FEE_TYPE, createDto.feeType.name)
-                    .set(r.ACCESSIBILITY_TYPE, createDto.accessibilityType.name)
-                    .set(
-                        r.COORDINATES,
-                        pointExpr(createDto.coordinates.lon, createDto.coordinates.lat, r.COORDINATES)
-                    ).set(r.DATA_SOURCE, createDto.dataSource.name)
-                    .set(r.STATUS, createDto.status.name)
-                    .set(r.AMENITIES, createDto.amenities.toJSONBOrEmpty())
-                    .set(r.PARENT_PLACE_NAME, createDto.parentPlaceName)
-                    .set(r.PARENT_PLACE_TYPE, createDto.parentPlaceType)
-                    .set(r.INHERIT_PARENT_SCHEDULE, createDto.inheritParentSchedule)
-                    .set(r.CREATED_AT, now)
-                    .set(r.UPDATED_AT, now)
+                buildInsertQuery(txCtx, createDto, id, now)
                     .returningResult(getAllRestroomsFieldsWithCoordinates())
                     .fetchOne()
                     ?: throw EntityNotFoundException("Туалет", "не удалось сохранить")
@@ -207,24 +211,25 @@ class RestroomRepositoryImpl(
             RestroomMapper.mapFromRecord(rec)
         }
 
+    private fun buildUpdateQuery(
+        txCtx: DSLContext,
+        updateDto: RestroomUpdateDto,
+        id: UUID
+    ) = RestroomMapper
+        .applyUpdateDto(txCtx.update(RESTROOMS), updateDto)
+        .set(
+            RESTROOMS.COORDINATES,
+            pointExpr(updateDto.coordinates.lon, updateDto.coordinates.lat, RESTROOMS.COORDINATES)
+        ).set(RESTROOMS.UPDATED_AT, Instant.now())
+        .where(RESTROOMS.ID.eq(id))
+
     override suspend fun update(
         id: UUID,
         updateDto: RestroomUpdateDto
     ): RestroomResponseDto =
         ctx.transactionSuspend { txCtx ->
-            val r = RESTROOMS
-            val latF = r.COORDINATES.latAlias()
-            val lonF = r.COORDINATES.lonAlias()
-
-            val query = txCtx.update(r)
-            val updateStep = RestroomMapper.applyUpdateDto(query, updateDto)
             val rec =
-                updateStep
-                    .set(
-                        r.COORDINATES,
-                        pointExpr(updateDto.coordinates.lon, updateDto.coordinates.lat, r.COORDINATES)
-                    ).set(r.UPDATED_AT, Instant.now())
-                    .where(r.ID.eq(id))
+                buildUpdateQuery(txCtx, updateDto, id)
                     .returningResult(getAllRestroomsFieldsWithCoordinates())
                     .fetchOne()
                     ?: throw EntityNotFoundException("Туалет", id.toString())

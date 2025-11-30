@@ -70,8 +70,9 @@
         "testStrategy": "Code review for method length reduction. Unit tests to verify extracted methods produce correct queries and results.",
         "priority": "medium",
         "dependencies": [],
-        "status": "pending",
-        "subtasks": []
+        "status": "done",
+        "subtasks": [],
+        "updatedAt": "2025-11-30T10:27:00.713Z"
       },
       {
         "id": "7",
@@ -282,9 +283,9 @@
     ],
     "metadata": {
       "version": "1.0.0",
-      "lastModified": "2025-11-30T10:25:21.893Z",
+      "lastModified": "2025-11-30T10:27:00.714Z",
       "taskCount": 21,
-      "completedCount": 5,
+      "completedCount": 6,
       "tags": [
         "master"
       ]

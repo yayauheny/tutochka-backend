@@ -185,30 +185,34 @@ class CityRepositoryImpl(
             )
         }
 
+    private fun buildInsertQuery(
+        txCtx: DSLContext,
+        dto: CityCreateDto,
+        id: UUID,
+        now: Instant
+    ) = txCtx
+        .insertInto(CITIES)
+        .set(CITIES.ID, id)
+        .set(CITIES.COUNTRY_ID, dto.countryId)
+        .set(CITIES.NAME_RU, dto.nameRu)
+        .set(CITIES.NAME_EN, dto.nameEn)
+        .set(CITIES.REGION, dto.region)
+        .set(
+            CITIES.COORDINATES,
+            pointExpr(dto.coordinates.lon, dto.coordinates.lat, CITIES.COORDINATES)
+        ).set(CITIES.CREATED_AT, now)
+        .set(CITIES.UPDATED_AT, now)
+
     override suspend fun save(dto: CityCreateDto): CityResponseDto =
         ctx.transactionSuspend { txCtx ->
             val r = CITIES
             val id = UUID.randomUUID()
             val now = Instant.now()
 
-            val insert =
-                txCtx
-                    .insertInto(r)
-                    .set(r.ID, id)
-                    .set(r.COUNTRY_ID, dto.countryId)
-                    .set(r.NAME_RU, dto.nameRu)
-                    .set(r.NAME_EN, dto.nameEn)
-                    .set(r.REGION, dto.region)
-                    .set(
-                        r.COORDINATES,
-                        pointExpr(dto.coordinates.lon, dto.coordinates.lat, r.COORDINATES)
-                    ).set(r.CREATED_AT, now)
-                    .set(r.UPDATED_AT, now)
-
             // План Б: сначала возвращаем только ID, затем делаем отдельный SELECT
             // Это необходимо, потому что jOOQ не может вернуть вычисляемые поля (lat/lon через ST_X/ST_Y) в RETURNING
             val idRec =
-                insert
+                buildInsertQuery(txCtx, dto, id, now)
                     .returning(r.ID)
                     .fetchOne() ?: throw EntityNotFoundException("Город", "не удалось сохранить: ${dto.nameEn}")
             val insertedId = idRec[r.ID]!!
@@ -223,21 +227,25 @@ class CityRepositoryImpl(
             CityMapper.mapFromRecord(rec)
         }
 
+    private fun buildUpdateQuery(
+        txCtx: DSLContext,
+        updateDto: CityUpdateDto,
+        id: UUID
+    ) = CityMapper
+        .applyUpdateDto(txCtx.update(CITIES), updateDto)
+        .set(
+            CITIES.COORDINATES,
+            pointExpr(updateDto.coordinates.lon, updateDto.coordinates.lat, CITIES.COORDINATES)
+        ).set(CITIES.UPDATED_AT, Instant.now())
+        .where(CITIES.ID.eq(id))
+
     override suspend fun update(
         id: UUID,
         updateDto: CityUpdateDto
     ): CityResponseDto =
         ctx.transactionSuspend { txCtx ->
-            val r = CITIES
-            val query = txCtx.update(r)
-            val updateStep = CityMapper.applyUpdateDto(query, updateDto)
             val rec =
-                updateStep
-                    .set(
-                        r.COORDINATES,
-                        pointExpr(updateDto.coordinates.lon, updateDto.coordinates.lat, r.COORDINATES)
-                    ).set(r.UPDATED_AT, Instant.now())
-                    .where(r.ID.eq(id))
+                buildUpdateQuery(txCtx, updateDto, id)
                     .returning(*cityProjection())
                     .fetchOne()
                     ?: throw EntityNotFoundException("Город", id.toString())
