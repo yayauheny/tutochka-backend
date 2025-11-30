@@ -238,13 +238,39 @@
       {
         "id": "18",
         "title": "Add comprehensive unit tests for QueryBuilder and QueryExecutor",
-        "description": "Develop thorough unit tests covering all operators and scenarios in QueryBuilder and QueryExecutor to ensure correctness and prevent regressions.",
-        "status": "in-progress",
+        "description": "The task to add unit tests for QueryExecutor has been skipped per user request. Existing tests on services and controllers already cover QueryExecutor functionality. The task is marked as completed.",
+        "status": "done",
         "dependencies": [],
         "priority": "medium",
-        "details": "Implement tests for all filter operators (EQ, IN, LIKE, etc.) in QueryBuilderTest. Mock DSLContext in QueryExecutorTest to test executePaginated, executeSingle, and executeList methods. Use parameterized tests for edge cases. Fix compilation errors in QueryExecutorTest.kt by adding required imports for extension functions (applyFilters, applySorting), correcting mock chains for JOOQ types, mocking where() on SelectWhereStep for applyAdditionalConditions, and fixing map() call types. Address runtime failures by improving mock logic for extension functions and private methods.",
-        "testStrategy": "Run tests with coverage reports to ensure critical paths are tested. Use mocks to isolate components. Pay special attention to mocking extension functions and private methods to ensure tests pass at runtime.",
+        "details": "Tests for QueryExecutor were removed because service and controller tests sufficiently cover its functionality. Focus remains on QueryBuilder tests if needed separately. All previous fixes and improvements to QueryExecutorTest compilation and runtime issues are preserved in completed subtasks.",
+        "testStrategy": "No additional unit tests for QueryExecutor will be added. Existing service and controller tests provide coverage. The task is considered complete based on user direction.",
         "subtasks": [
+          {
+            "id": 3,
+            "title": "Implement parameterized tests for edge cases",
+            "description": "Create parameterized tests to cover edge cases for all filter operators and query execution scenarios.",
+            "dependencies": [
+              2
+            ],
+            "details": "This subtask is no longer applicable as tests for QueryExecutor have been removed per user request. Focus remains on existing service and controller tests for coverage.",
+            "status": "cancelled",
+            "testStrategy": "No tests implemented due to task skip.",
+            "updatedAt": "2025-11-30T11:53:49.388Z",
+            "parentId": "undefined"
+          },
+          {
+            "id": 4,
+            "title": "Generate coverage reports",
+            "description": "Run tests with coverage reports to ensure critical paths are tested.",
+            "dependencies": [
+              3
+            ],
+            "details": "This subtask is no longer applicable as the testing scope for QueryExecutor has been removed. Coverage reports should be reviewed on service and controller tests instead.",
+            "status": "cancelled",
+            "testStrategy": "No coverage reports generated for QueryExecutor tests due to task skip.",
+            "parentId": "undefined",
+            "updatedAt": "2025-11-30T11:53:49.391Z"
+          },
           {
             "id": 1,
             "title": "Fix compilation errors in QueryExecutorTest.kt",
@@ -267,33 +293,9 @@
             "testStrategy": "Run tests and verify that they pass without runtime errors.",
             "parentId": "undefined",
             "updatedAt": "2025-11-30T11:50:03.781Z"
-          },
-          {
-            "id": 3,
-            "title": "Implement parameterized tests for edge cases",
-            "description": "Create parameterized tests to cover edge cases for all filter operators and query execution scenarios.",
-            "dependencies": [
-              2
-            ],
-            "details": "Use parameterized test frameworks to cover edge cases for EQ, IN, LIKE, and other operators. Ensure all critical paths are tested.",
-            "status": "pending",
-            "testStrategy": "Run parameterized tests and verify coverage of edge cases.",
-            "parentId": "undefined"
-          },
-          {
-            "id": 4,
-            "title": "Generate coverage reports",
-            "description": "Run tests with coverage reports to ensure critical paths are tested.",
-            "dependencies": [
-              3
-            ],
-            "details": "Use coverage tools to generate reports and verify that all critical paths in QueryBuilder and QueryExecutor are covered by tests.",
-            "status": "pending",
-            "testStrategy": "Review coverage reports and ensure all critical paths are covered.",
-            "parentId": "undefined"
           }
         ],
-        "updatedAt": "2025-11-30T11:50:03.781Z"
+        "updatedAt": "2025-11-30T11:53:56.310Z"
       },
       {
         "id": "19",
@@ -326,12 +328,13 @@
         "description": "Create health check endpoints (/health, /health/ready, /health/live) that include database connectivity status, implemented in HealthController.kt with routing configured in RoutingConfig.kt, and provide comprehensive unit tests.",
         "details": "1. Create HealthController.kt to define three endpoints: /health, /health/ready, and /health/live. Each endpoint should return appropriate HTTP status and JSON indicating service health.\n\n2. Implement a database connectivity check within the health endpoints by executing a lightweight query or ping against the database using the existing database configuration (ensuring it uses explicit transactions as per Task 1).\n\n3. Integrate these endpoints into the application's routing by adding routes in RoutingConfig.kt, ensuring they are accessible and follow REST conventions.\n\n4. Structure the health responses to comply with common microservice health check standards, distinguishing readiness and liveness checks (e.g., readiness includes database connectivity, liveness confirms service is running).\n\n5. Write unit tests for HealthController to verify each endpoint returns correct status codes and payloads under normal and simulated failure conditions (e.g., database down).\n\n6. Follow Kotlin coroutine best practices for asynchronous database calls and HTTP handling.\n\n7. Ensure logging and error handling are consistent with existing project standards.",
         "testStrategy": "1. Unit test each health endpoint to assert HTTP 200 OK with expected JSON when the database is reachable.\n\n2. Simulate database connectivity failure and verify endpoints return appropriate failure status (e.g., HTTP 503 Service Unavailable) and error details.\n\n3. Test routing configuration to confirm endpoints are correctly registered and accessible.\n\n4. Perform integration tests to confirm health endpoints reflect real database connectivity status.\n\n5. Code review to ensure adherence to project coding standards and proper use of coroutines and transactions.",
-        "status": "pending",
+        "status": "done",
         "dependencies": [
           "1"
         ],
         "priority": "medium",
-        "subtasks": []
+        "subtasks": [],
+        "updatedAt": "2025-11-30T11:56:32.005Z"
       },
       {
         "id": "22",
@@ -729,9 +732,9 @@
     ],
     "metadata": {
       "version": "1.0.0",
-      "lastModified": "2025-11-30T11:53:09.521Z",
+      "lastModified": "2025-11-30T11:56:32.008Z",
       "taskCount": 40,
-      "completedCount": 16,
+      "completedCount": 18,
       "tags": [
         "master"
       ]
