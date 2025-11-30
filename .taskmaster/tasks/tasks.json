@@ -900,8 +900,9 @@
         "dependencies": [
           "48"
         ],
-        "status": "pending",
-        "subtasks": []
+        "status": "in-progress",
+        "subtasks": [],
+        "updatedAt": "2025-11-30T18:38:32.919Z"
       },
       {
         "id": "53",
@@ -947,7 +948,7 @@
     ],
     "metadata": {
       "version": "1.0.0",
-      "lastModified": "2025-11-30T18:37:26.007Z",
+      "lastModified": "2025-11-30T18:38:32.920Z",
       "taskCount": 55,
       "completedCount": 34,
       "tags": [
