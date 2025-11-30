@@ -12,7 +12,6 @@ import org.junit.jupiter.api.Tag
 import org.junit.jupiter.api.Test
 import org.postgresql.util.PSQLException
 import yayauheny.by.common.errors.EntityNotFoundException
-import yayauheny.by.helpers.DatabaseTestHelper
 import yayauheny.by.helpers.TestDataHelpers
 import yayauheny.by.repository.impl.CountryRepositoryImpl
 import yayauheny.by.tables.references.COUNTRIES
@@ -37,9 +36,10 @@ class CountryRepositoryErrorHandlingTest : BaseIntegrationTest() {
 
                 val duplicateCountryDto = TestDataHelpers.createCountryCreateDto(code = duplicateCode)
 
-                val exception = assertFailsWith<PSQLException> {
-                    repository.save(duplicateCountryDto)
-                }
+                val exception =
+                    assertFailsWith<PSQLException> {
+                        repository.save(duplicateCountryDto)
+                    }
 
                 assertTrue(
                     exception.sqlState == "23505",
@@ -47,11 +47,13 @@ class CountryRepositoryErrorHandlingTest : BaseIntegrationTest() {
                 )
                 assertNotNull(exception.message)
 
-                val countriesWithSameCode = dslContext
-                    .selectCount()
-                    .from(COUNTRIES)
-                    .where(COUNTRIES.CODE.eq(duplicateCode))
-                    .fetchOne()?.value1() ?: 0
+                val countriesWithSameCode =
+                    dslContext
+                        .selectCount()
+                        .from(COUNTRIES)
+                        .where(COUNTRIES.CODE.eq(duplicateCode))
+                        .fetchOne()
+                        ?.value1() ?: 0
 
                 assertTrue(countriesWithSameCode == 1, "Only one country with this code should exist")
             }
@@ -76,9 +78,10 @@ class CountryRepositoryErrorHandlingTest : BaseIntegrationTest() {
                 val nonExistentId = UUID.randomUUID()
                 val updateDto = TestDataHelpers.createCountryUpdateDto()
 
-                val exception = assertFailsWith<EntityNotFoundException> {
-                    repository.update(nonExistentId, updateDto)
-                }
+                val exception =
+                    assertFailsWith<EntityNotFoundException> {
+                        repository.update(nonExistentId, updateDto)
+                    }
 
                 assertNotNull(exception.message)
                 assertTrue(
@@ -86,11 +89,13 @@ class CountryRepositoryErrorHandlingTest : BaseIntegrationTest() {
                     "Exception message should mention entity type"
                 )
 
-                val countriesWithNonExistentId = dslContext
-                    .selectCount()
-                    .from(COUNTRIES)
-                    .where(COUNTRIES.ID.eq(nonExistentId))
-                    .fetchOne()?.value1() ?: 0
+                val countriesWithNonExistentId =
+                    dslContext
+                        .selectCount()
+                        .from(COUNTRIES)
+                        .where(COUNTRIES.ID.eq(nonExistentId))
+                        .fetchOne()
+                        ?.value1() ?: 0
 
                 assertTrue(countriesWithNonExistentId == 0, "No country should exist with non-existent ID")
             }
@@ -119,17 +124,20 @@ class CountryRepositoryErrorHandlingTest : BaseIntegrationTest() {
 
                 val duplicateCountryDto = TestDataHelpers.createCountryCreateDto(code = duplicateCode)
 
-                val exception = assertFailsWith<PSQLException> {
-                    repository.save(duplicateCountryDto)
-                }
+                val exception =
+                    assertFailsWith<PSQLException> {
+                        repository.save(duplicateCountryDto)
+                    }
 
                 assertTrue(exception.sqlState == "23505", "Expected unique constraint violation")
 
-                val totalCountriesCount = dslContext
-                    .selectCount()
-                    .from(COUNTRIES)
-                    .where(COUNTRIES.CODE.eq(duplicateCode))
-                    .fetchOne()?.value1() ?: 0
+                val totalCountriesCount =
+                    dslContext
+                        .selectCount()
+                        .from(COUNTRIES)
+                        .where(COUNTRIES.CODE.eq(duplicateCode))
+                        .fetchOne()
+                        ?.value1() ?: 0
 
                 assertTrue(totalCountriesCount == 1, "Only the first country should exist after rollback")
             }

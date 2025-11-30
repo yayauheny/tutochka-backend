@@ -34,23 +34,26 @@ class CityRepositoryErrorHandlingTest : BaseIntegrationTest() {
             runTest {
                 val testEnv = DatabaseTestHelper.createTestEnvironment(dslContext)
                 val duplicateCoordinates = yayauheny.by.model.LatLon(lat = 55.7558, lon = 37.6176)
-                val firstCityDto = TestDataHelpers.createCityCreateDto(
-                    countryId = testEnv.countryId,
-                    lat = duplicateCoordinates.lat,
-                    lon = duplicateCoordinates.lon
-                )
+                val firstCityDto =
+                    TestDataHelpers.createCityCreateDto(
+                        countryId = testEnv.countryId,
+                        lat = duplicateCoordinates.lat,
+                        lon = duplicateCoordinates.lon
+                    )
 
                 repository.save(firstCityDto)
 
-                val duplicateCityDto = TestDataHelpers.createCityCreateDto(
-                    countryId = testEnv.countryId,
-                    lat = duplicateCoordinates.lat,
-                    lon = duplicateCoordinates.lon
-                )
+                val duplicateCityDto =
+                    TestDataHelpers.createCityCreateDto(
+                        countryId = testEnv.countryId,
+                        lat = duplicateCoordinates.lat,
+                        lon = duplicateCoordinates.lon
+                    )
 
-                val exception = assertFailsWith<PSQLException> {
-                    repository.save(duplicateCityDto)
-                }
+                val exception =
+                    assertFailsWith<PSQLException> {
+                        repository.save(duplicateCityDto)
+                    }
 
                 assertTrue(
                     exception.sqlState == "23505",
@@ -58,17 +61,18 @@ class CityRepositoryErrorHandlingTest : BaseIntegrationTest() {
                 )
                 assertNotNull(exception.message)
 
-                val citiesWithSameCoordinates = dslContext
-                    .selectCount()
-                    .from(CITIES)
-                    .where(
-                        DSL.condition(
-                            "ST_Equals({0}, {1})",
-                            CITIES.COORDINATES,
-                            pointExpr(duplicateCoordinates.lon, duplicateCoordinates.lat, CITIES.COORDINATES)
-                        )
-                    )
-                    .fetchOne()?.value1() ?: 0
+                val citiesWithSameCoordinates =
+                    dslContext
+                        .selectCount()
+                        .from(CITIES)
+                        .where(
+                            DSL.condition(
+                                "ST_Equals({0}, {1})",
+                                CITIES.COORDINATES,
+                                pointExpr(duplicateCoordinates.lon, duplicateCoordinates.lat, CITIES.COORDINATES)
+                            )
+                        ).fetchOne()
+                        ?.value1() ?: 0
 
                 assertTrue(citiesWithSameCoordinates == 1, "Only one city with these coordinates should exist")
             }
@@ -79,21 +83,24 @@ class CityRepositoryErrorHandlingTest : BaseIntegrationTest() {
             runTest {
                 val testEnv = DatabaseTestHelper.createTestEnvironment(dslContext)
                 val duplicateNameRu = "Дубликат"
-                val firstCityDto = TestDataHelpers.createCityCreateDto(
-                    countryId = testEnv.countryId,
-                    nameRu = duplicateNameRu
-                )
+                val firstCityDto =
+                    TestDataHelpers.createCityCreateDto(
+                        countryId = testEnv.countryId,
+                        nameRu = duplicateNameRu
+                    )
 
                 repository.save(firstCityDto)
 
-                val duplicateCityDto = TestDataHelpers.createCityCreateDto(
-                    countryId = testEnv.countryId,
-                    nameRu = duplicateNameRu
-                )
+                val duplicateCityDto =
+                    TestDataHelpers.createCityCreateDto(
+                        countryId = testEnv.countryId,
+                        nameRu = duplicateNameRu
+                    )
 
-                val exception = assertFailsWith<PSQLException> {
-                    repository.save(duplicateCityDto)
-                }
+                val exception =
+                    assertFailsWith<PSQLException> {
+                        repository.save(duplicateCityDto)
+                    }
 
                 assertTrue(
                     exception.sqlState == "23505",
@@ -101,14 +108,16 @@ class CityRepositoryErrorHandlingTest : BaseIntegrationTest() {
                 )
                 assertNotNull(exception.message)
 
-                val citiesWithSameNameRu = dslContext
-                    .selectCount()
-                    .from(CITIES)
-                    .where(
-                        CITIES.COUNTRY_ID.eq(testEnv.countryId)
-                            .and(CITIES.NAME_RU.eq(duplicateNameRu))
-                    )
-                    .fetchOne()?.value1() ?: 0
+                val citiesWithSameNameRu =
+                    dslContext
+                        .selectCount()
+                        .from(CITIES)
+                        .where(
+                            CITIES.COUNTRY_ID
+                                .eq(testEnv.countryId)
+                                .and(CITIES.NAME_RU.eq(duplicateNameRu))
+                        ).fetchOne()
+                        ?.value1() ?: 0
 
                 assertTrue(citiesWithSameNameRu == 1, "Only one city with this nameRu for this country should exist")
             }
@@ -119,21 +128,24 @@ class CityRepositoryErrorHandlingTest : BaseIntegrationTest() {
             runTest {
                 val testEnv = DatabaseTestHelper.createTestEnvironment(dslContext)
                 val duplicateNameEn = "Duplicate"
-                val firstCityDto = TestDataHelpers.createCityCreateDto(
-                    countryId = testEnv.countryId,
-                    nameEn = duplicateNameEn
-                )
+                val firstCityDto =
+                    TestDataHelpers.createCityCreateDto(
+                        countryId = testEnv.countryId,
+                        nameEn = duplicateNameEn
+                    )
 
                 repository.save(firstCityDto)
 
-                val duplicateCityDto = TestDataHelpers.createCityCreateDto(
-                    countryId = testEnv.countryId,
-                    nameEn = duplicateNameEn
-                )
+                val duplicateCityDto =
+                    TestDataHelpers.createCityCreateDto(
+                        countryId = testEnv.countryId,
+                        nameEn = duplicateNameEn
+                    )
 
-                val exception = assertFailsWith<PSQLException> {
-                    repository.save(duplicateCityDto)
-                }
+                val exception =
+                    assertFailsWith<PSQLException> {
+                        repository.save(duplicateCityDto)
+                    }
 
                 assertTrue(
                     exception.sqlState == "23505",
@@ -141,14 +153,16 @@ class CityRepositoryErrorHandlingTest : BaseIntegrationTest() {
                 )
                 assertNotNull(exception.message)
 
-                val citiesWithSameNameEn = dslContext
-                    .selectCount()
-                    .from(CITIES)
-                    .where(
-                        CITIES.COUNTRY_ID.eq(testEnv.countryId)
-                            .and(CITIES.NAME_EN.eq(duplicateNameEn))
-                    )
-                    .fetchOne()?.value1() ?: 0
+                val citiesWithSameNameEn =
+                    dslContext
+                        .selectCount()
+                        .from(CITIES)
+                        .where(
+                            CITIES.COUNTRY_ID
+                                .eq(testEnv.countryId)
+                                .and(CITIES.NAME_EN.eq(duplicateNameEn))
+                        ).fetchOne()
+                        ?.value1() ?: 0
 
                 assertTrue(citiesWithSameNameEn == 1, "Only one city with this nameEn for this country should exist")
             }
@@ -160,9 +174,10 @@ class CityRepositoryErrorHandlingTest : BaseIntegrationTest() {
                 val nonExistentCountryId = UUID.randomUUID()
                 val cityDto = TestDataHelpers.createCityCreateDto(countryId = nonExistentCountryId)
 
-                val exception = assertFailsWith<PSQLException> {
-                    repository.save(cityDto)
-                }
+                val exception =
+                    assertFailsWith<PSQLException> {
+                        repository.save(cityDto)
+                    }
 
                 assertTrue(
                     exception.sqlState == "23503",
@@ -170,11 +185,13 @@ class CityRepositoryErrorHandlingTest : BaseIntegrationTest() {
                 )
                 assertNotNull(exception.message)
 
-                val savedCitiesCount = dslContext
-                    .selectCount()
-                    .from(CITIES)
-                    .where(CITIES.COUNTRY_ID.eq(nonExistentCountryId))
-                    .fetchOne()?.value1() ?: 0
+                val savedCitiesCount =
+                    dslContext
+                        .selectCount()
+                        .from(CITIES)
+                        .where(CITIES.COUNTRY_ID.eq(nonExistentCountryId))
+                        .fetchOne()
+                        ?.value1() ?: 0
 
                 assertTrue(savedCitiesCount == 0, "No city should be saved with non-existent countryId")
             }
@@ -200,9 +217,10 @@ class CityRepositoryErrorHandlingTest : BaseIntegrationTest() {
                 val nonExistentId = UUID.randomUUID()
                 val updateDto = TestDataHelpers.createCityUpdateDto(countryId = testEnv.countryId)
 
-                val exception = assertFailsWith<EntityNotFoundException> {
-                    repository.update(nonExistentId, updateDto)
-                }
+                val exception =
+                    assertFailsWith<EntityNotFoundException> {
+                        repository.update(nonExistentId, updateDto)
+                    }
 
                 assertNotNull(exception.message)
                 assertTrue(
@@ -210,11 +228,13 @@ class CityRepositoryErrorHandlingTest : BaseIntegrationTest() {
                     "Exception message should mention entity type"
                 )
 
-                val citiesWithNonExistentId = dslContext
-                    .selectCount()
-                    .from(CITIES)
-                    .where(CITIES.ID.eq(nonExistentId))
-                    .fetchOne()?.value1() ?: 0
+                val citiesWithNonExistentId =
+                    dslContext
+                        .selectCount()
+                        .from(CITIES)
+                        .where(CITIES.ID.eq(nonExistentId))
+                        .fetchOne()
+                        ?.value1() ?: 0
 
                 assertTrue(citiesWithNonExistentId == 0, "No city should exist with non-existent ID")
             }
@@ -238,31 +258,36 @@ class CityRepositoryErrorHandlingTest : BaseIntegrationTest() {
             runTest {
                 val testEnv = DatabaseTestHelper.createTestEnvironment(dslContext)
                 val duplicateCoordinates = yayauheny.by.model.LatLon(lat = 55.7558, lon = 37.6176)
-                val firstCityDto = TestDataHelpers.createCityCreateDto(
-                    countryId = testEnv.countryId,
-                    lat = duplicateCoordinates.lat,
-                    lon = duplicateCoordinates.lon
-                )
+                val firstCityDto =
+                    TestDataHelpers.createCityCreateDto(
+                        countryId = testEnv.countryId,
+                        lat = duplicateCoordinates.lat,
+                        lon = duplicateCoordinates.lon
+                    )
 
                 repository.save(firstCityDto)
 
-                val duplicateCityDto = TestDataHelpers.createCityCreateDto(
-                    countryId = testEnv.countryId,
-                    lat = duplicateCoordinates.lat,
-                    lon = duplicateCoordinates.lon
-                )
+                val duplicateCityDto =
+                    TestDataHelpers.createCityCreateDto(
+                        countryId = testEnv.countryId,
+                        lat = duplicateCoordinates.lat,
+                        lon = duplicateCoordinates.lon
+                    )
 
-                val exception = assertFailsWith<PSQLException> {
-                    repository.save(duplicateCityDto)
-                }
+                val exception =
+                    assertFailsWith<PSQLException> {
+                        repository.save(duplicateCityDto)
+                    }
 
                 assertTrue(exception.sqlState == "23505", "Expected unique constraint violation")
 
-                val totalCitiesCount = dslContext
-                    .selectCount()
-                    .from(CITIES)
-                    .where(CITIES.COUNTRY_ID.eq(testEnv.countryId))
-                    .fetchOne()?.value1() ?: 0
+                val totalCitiesCount =
+                    dslContext
+                        .selectCount()
+                        .from(CITIES)
+                        .where(CITIES.COUNTRY_ID.eq(testEnv.countryId))
+                        .fetchOne()
+                        ?.value1() ?: 0
 
                 assertTrue(totalCitiesCount == 1, "Only the first city should exist after rollback")
             }
