@@ -63,7 +63,7 @@ abstract class BaseIntegrationTest {
     }
 
     @BeforeEach
-    fun openConnectionAndResetData() {
+    open fun openConnectionAndResetData() {
         connection = DriverManager.getConnection(postgres.jdbcUrl, postgres.username, postgres.password)
         dslContext = DSL.using(connection, SQLDialect.POSTGRES)
 

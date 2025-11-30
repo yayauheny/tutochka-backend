@@ -7,6 +7,7 @@ import kotlin.test.assertNull
 import kotlin.test.assertTrue
 import kotlinx.coroutines.test.runTest
 import org.jooq.impl.DSL
+import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.DisplayName
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Tag
@@ -23,7 +24,13 @@ import java.util.UUID
 @Tag("integration")
 @DisplayName("CityRepository Error Handling Tests")
 class CityRepositoryErrorHandlingTest : BaseIntegrationTest() {
-    private val repository = CityRepositoryImpl(dslContext)
+    private lateinit var repository: CityRepositoryImpl
+
+    @BeforeEach
+    override fun openConnectionAndResetData() {
+        super.openConnectionAndResetData()
+        repository = CityRepositoryImpl(dslContext)
+    }
 
     @Nested
     @DisplayName("Database Constraint Violation Tests")
@@ -281,15 +288,22 @@ class CityRepositoryErrorHandlingTest : BaseIntegrationTest() {
 
                 assertTrue(exception.sqlState == "23505", "Expected unique constraint violation")
 
-                val totalCitiesCount =
+                // Проверяем, что город с дублирующимися координатами не был сохранен
+                // createTestEnvironment создает один город, и мы создали еще один - должно быть 2 города
+                val citiesWithDuplicateCoordinates =
                     dslContext
                         .selectCount()
                         .from(CITIES)
-                        .where(CITIES.COUNTRY_ID.eq(testEnv.countryId))
-                        .fetchOne()
+                        .where(
+                            DSL.condition(
+                                "ST_Equals({0}, {1})",
+                                CITIES.COORDINATES,
+                                pointExpr(duplicateCoordinates.lon, duplicateCoordinates.lat, CITIES.COORDINATES)
+                            )
+                        ).fetchOne()
                         ?.value1() ?: 0
 
-                assertTrue(totalCitiesCount == 1, "Only the first city should exist after rollback")
+                assertTrue(citiesWithDuplicateCoordinates == 1, "Only one city with duplicate coordinates should exist after rollback")
             }
 
         @Test

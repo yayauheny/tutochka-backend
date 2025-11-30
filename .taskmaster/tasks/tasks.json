@@ -1242,13 +1242,78 @@
         ],
         "status": "pending",
         "subtasks": []
+      },
+      {
+        "id": "77",
+        "title": "Анализ текущей реализации transactionSuspend",
+        "description": "Изучить текущую реализацию метода transactionSuspend в TransactionExtensions.kt для понимания, как обрабатываются и оборачиваются исключения.",
+        "details": "Просмотреть код transactionSuspend, выявить места, где происходит перехват и оборачивание исключений в DataAccessException. Определить, какие исключения (PSQLException, EntityNotFoundException) оборачиваются и где теряется оригинальное исключение.",
+        "testStrategy": "Проверить, какие исключения возвращаются при различных ошибках в интеграционных тестах до изменений.",
+        "priority": "medium",
+        "dependencies": [],
+        "status": "done",
+        "subtasks": [],
+        "updatedAt": "2025-11-30T19:32:42.340Z"
+      },
+      {
+        "id": "78",
+        "title": "Изменение transactionSuspend для проброса оригинальных исключений",
+        "description": "Обновить реализацию transactionSuspend для извлечения и проброса оригинальных исключений (PSQLException, EntityNotFoundException) вместо обертки в DataAccessException.",
+        "details": "В блоке catch добавить логику для проверки причины DataAccessException. Если причина — PSQLException или EntityNotFoundException, пробрасывать её напрямую. В остальных случаях оставить текущее поведение.",
+        "testStrategy": "Запустить интеграционные тесты, проверить, что PSQLException и EntityNotFoundException пробрасываются напрямую.",
+        "priority": "high",
+        "dependencies": [
+          "77"
+        ],
+        "status": "in-progress",
+        "subtasks": [],
+        "updatedAt": "2025-11-30T19:32:42.467Z"
+      },
+      {
+        "id": "79",
+        "title": "Обеспечение корректного отката транзакций",
+        "description": "Убедиться, что при пробросе оригинальных исключений транзакции по-прежнему корректно откатываются.",
+        "details": "Проверить, что логика отката транзакций не нарушена после изменений в transactionSuspend. Убедиться, что все исключения, включая оригинальные, приводят к откату транзакции.",
+        "testStrategy": "Запустить интеграционные тесты, проверить, что транзакции откатываются при ошибках.",
+        "priority": "high",
+        "dependencies": [
+          "78"
+        ],
+        "status": "pending",
+        "subtasks": []
+      },
+      {
+        "id": "80",
+        "title": "Обновление интеграционных тестов",
+        "description": "Обновить интеграционные тесты для ожидания оригинальных исключений вместо DataAccessException.",
+        "details": "Изменить ожидания в тестах, чтобы они проверяли выброс PSQLException и EntityNotFoundException напрямую, а не через DataAccessException.",
+        "testStrategy": "Запустить все интеграционные тесты, убедиться, что они проходят успешно.",
+        "priority": "medium",
+        "dependencies": [
+          "79"
+        ],
+        "status": "pending",
+        "subtasks": []
+      },
+      {
+        "id": "81",
+        "title": "Проверка и финализация изменений",
+        "description": "Провести финальную проверку всех изменений и убедиться, что все требования выполнены.",
+        "details": "Проверить, что все 26 интеграционных тестов проходят успешно, PSQLException и EntityNotFoundException пробрасываются напрямую, транзакции корректно откатываются при ошибках.",
+        "testStrategy": "Запустить полный набор интеграционных тестов, проверить логи и поведение системы.",
+        "priority": "medium",
+        "dependencies": [
+          "80"
+        ],
+        "status": "pending",
+        "subtasks": []
       }
     ],
     "metadata": {
       "version": "1.0.0",
-      "lastModified": "2025-11-30T19:09:13.468Z",
-      "taskCount": 76,
-      "completedCount": 53,
+      "lastModified": "2025-11-30T19:32:42.467Z",
+      "taskCount": 81,
+      "completedCount": 54,
       "tags": [
         "master"
       ]
