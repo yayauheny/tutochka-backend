@@ -346,3 +346,35 @@ gradle-app.setting
 *.hprof
 
 # End of https://www.toptal.com/developers/gitignore/api/kotlin,java,maven,gradle,intellij,git,groovy,intellij+all,intellij+iml
+
+# Ignore kilocode rules directory
+.kilocode/
+
+# Environment variables
+.env
+
+# Logs
+logs
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+dev-debug.log
+# Dependency directories
+node_modules/
+# Editor directories and files
+.vscode
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
+# OS specific
+.DS_Store
+
+# Task Master files
+# tasks.json - keep for context, but PRD files should not be committed
+.taskmaster/docs/*.txt
+.taskmaster/docs/*.md
+# Keep only README.md and templates
+!.taskmaster/README.md
+!.taskmaster/templates/ 

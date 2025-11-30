@@ -1,0 +1,15 @@
+databaseChangeLog:
+  - changeSet:
+      id: create-initial-tables
+      author: yayauheny
+      changes:
+        - sqlFile:
+            path: migration/1757246414_init_tables.sql
+            relativeToChangelogFile: true
+#  - changeSet:
+#      id: import-2gis-20250928
+#      author: yayauheny
+#      changes:
+#        - sqlFile:
+#            path: migration/20250928_import_2gis_toilets.sql
+#            relativeToChangelogFile: true

@@ -5,12 +5,27 @@ exposed = "0.61.0"
 koin = "3.5.6"
 logback = "1.4.14"
 postgresql = "42.7.7"
-testcontainers = "1.19.1"
+hikaricp = "5.1.0"
+testcontainers = "1.20.1"
+liquibase = "2.2.2"
+mockk = "1.13.8"
+kotlinxCoroutinesTest = "1.7.3"
+junitJupiter = "5.10.1"
+junitPlatform = "1.10.1"
+swagger = "2.2.15"
+ktlint = "12.1.1"
+konform = "0.11.0"
+jooqPlugin = "10.1.1"
+jooq = "3.20.8"
+jtsCore = "1.20.0"
 
 [plugins]
 kotlinJvm = { id = "org.jetbrains.kotlin.jvm", version.ref = "kotlin" }
 ktorPlugin = { id = "io.ktor.plugin", version.ref = "ktor" }
 serializationPlugin = { id = "org.jetbrains.kotlin.plugin.serialization", version.ref = "kotlin" }
+liquibasePlugin = { id = "org.liquibase.gradle", version.ref = "liquibase" }
+ktlintPlugin = { id = "org.jlleitschuh.gradle.ktlint", version.ref = "ktlint" }
+jooqPlugin = { id = "nu.studer.jooq", version.ref = "jooqPlugin" }
 
 [libraries]
 # Ktor server
@@ -21,24 +36,49 @@ ktorServerConfigYaml = { module = "io.ktor:ktor-server-config-yaml", version.ref
 ktorSerialization = { module = "io.ktor:ktor-serialization-kotlinx-json", version.ref = "ktor" }
 ktorServerContentNegotiation = { module = "io.ktor:ktor-server-content-negotiation", version.ref = "ktor" }
 ktorServerDefaultHeaders = { module = "io.ktor:ktor-server-default-headers", version.ref = "ktor" }
+ktorServerStatusPages = { module = "io.ktor:ktor-server-status-pages", version.ref = "ktor" }
+ktorServerCallLogging = { module = "io.ktor:ktor-server-call-logging", version.ref = "ktor" }
+
+# Ktor test
 ktorServerTestHost = { module = "io.ktor:ktor-server-test-host", version.ref = "ktor" }
 
 # Database
 exposedCore = { module = "org.jetbrains.exposed:exposed-core", version.ref = "exposed" }
+exposedDao = { module = "org.jetbrains.exposed:exposed-dao", version.ref = "exposed" }
 exposedJdbc = { module = "org.jetbrains.exposed:exposed-jdbc", version.ref = "exposed" }
+exposedJavaDateTime = { module = "org.jetbrains.exposed:exposed-java-time", version.ref = "exposed" }
+exposedJson = { module = "org.jetbrains.exposed:exposed-json", version.ref = "exposed" }
 postgresql = { module = "org.postgresql:postgresql", version.ref = "postgresql" }
+jooqKotlin = { module = "org.jooq:jooq-kotlin", version.ref = "jooq" }
+postgis = { module = "net.postgis:postgis-jdbc", version = "2025.1.1" }
+hikaricp = { module = "com.zaxxer:HikariCP", version.ref = "hikaricp" }
+liquibaseCore = { module = "org.liquibase:liquibase-core", version = "4.24.0" }
+picocli = { module = "info.picocli:picocli", version = "4.6.3" }
+jtsCore = { module = "org.locationtech.jts:jts-core", version.ref = "jtsCore" }
+
+konform = { module = "io.konform:konform-jvm", version.ref = "konform" }
 
 # DI
 koinKtor = { module = "io.insert-koin:koin-ktor", version.ref = "koin" }
 koinLogger = { module = "io.insert-koin:koin-logger-slf4j", version.ref = "koin" }
+
+# Swagger/OpenAPI
+swaggerCore = { module = "io.swagger.core.v3:swagger-core", version.ref = "swagger" }
+swaggerAnnotations = { module = "io.swagger.core.v3:swagger-annotations", version.ref = "swagger" }
+swaggerModels = { module = "io.swagger.core.v3:swagger-models", version.ref = "swagger" }
+swaggerJaxrs2 = { module = "io.swagger.core.v3:swagger-jaxrs2", version.ref = "swagger" }
 
 # Logging
 logbackClassic = { module = "ch.qos.logback:logback-classic", version.ref = "logback" }
 
 # Testing
 testcontainersPostgres = { module = "org.testcontainers:postgresql", version.ref = "testcontainers" }
-testcontainersKotlin = { module = "org.testcontainers:testcontainers", version.ref = "testcontainers" }
-junitKotlin = { module = "org.jetbrains.kotlin:kotlin-test-junit", version.ref = "kotlin" }
+testcontainersCore = { module = "org.testcontainers:testcontainers", version.ref = "testcontainers" }
+testcontainersJunit = { module = "org.testcontainers:junit-jupiter", version.ref = "testcontainers" }
+mockk = { module = "io.mockk:mockk", version.ref = "mockk" }
+kotlinxCoroutinesTest = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-test", version.ref = "kotlinxCoroutinesTest" }
+junitJupiter = { module = "org.junit.jupiter:junit-jupiter", version.ref = "junitJupiter" }
+junitPlatformLauncher = { module = "org.junit.platform:junit-platform-launcher", version.ref = "junitPlatform" }
 
 [bundles]
 ktorServerBundle = [
@@ -49,8 +89,15 @@ ktorServerBundle = [
     "ktorSerialization",
     "ktorServerContentNegotiation",
     "ktorServerDefaultHeaders",
-    "ktorServerTestHost"
+    "ktorServerStatusPages",
+    "ktorServerCallLogging"
 ]
-exposedBundle = ["exposedCore", "exposedJdbc"]
 koinBundle = ["koinKtor", "koinLogger"]
-testcontainersBundle = ["testcontainersPostgres", "testcontainersKotlin"]
+jooqBundle = ["jooqKotlin"]
+exposedBundle = ["exposedCore", "exposedDao", "exposedJdbc", "exposedJavaDateTime", "exposedJson"]
+liquibaseBundle = ["liquibaseCore", "postgresql", "picocli"]
+validationBundle = ["konform"]
+swaggerBundle = ["swaggerCore", "swaggerAnnotations", "swaggerModels", "swaggerJaxrs2"]
+
+testcontainersBundle = ["testcontainersPostgres", "testcontainersCore", "testcontainersJunit"]
+testingBundle = ["junitJupiter", "junitPlatformLauncher", "mockk", "kotlinxCoroutinesTest"]
