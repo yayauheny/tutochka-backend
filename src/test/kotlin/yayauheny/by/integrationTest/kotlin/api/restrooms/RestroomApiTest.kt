@@ -28,7 +28,6 @@ import yayauheny.by.model.enums.RestroomStatus
 
 @Tag("integration")
 class RestroomApiTest : BaseIntegrationTest() {
-
     @Test
     @DisplayName("GIVEN existing restrooms WHEN GET nearest with valid coordinates THEN return nearest restrooms with distance")
     fun given_existing_restrooms_when_get_nearest_with_valid_coordinates_then_return_nearest_restrooms() =
@@ -326,7 +325,6 @@ class RestroomApiTest : BaseIntegrationTest() {
     @Nested
     @DisplayName("E2E Negative Test Cases for /nearest endpoint")
     inner class NearestNegativeTestCases {
-
         @Test
         @DisplayName("GET /api/v1/restrooms/nearest with invalid lat type returns 400")
         fun nearest_invalid_lat_type() =
