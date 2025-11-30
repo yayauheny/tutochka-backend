@@ -6,6 +6,7 @@ import kotlin.test.assertNotNull
 import kotlin.test.assertNull
 import kotlin.test.assertTrue
 import kotlinx.coroutines.test.runTest
+import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.DisplayName
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Tag
@@ -20,7 +21,13 @@ import java.util.UUID
 @Tag("integration")
 @DisplayName("CountryRepository Error Handling Tests")
 class CountryRepositoryErrorHandlingTest : BaseIntegrationTest() {
-    private val repository = CountryRepositoryImpl(dslContext)
+    private lateinit var repository: CountryRepositoryImpl
+
+    @BeforeEach
+    override fun openConnectionAndResetData() {
+        super.openConnectionAndResetData()
+        repository = CountryRepositoryImpl(dslContext)
+    }
 
     @Nested
     @DisplayName("Database Constraint Violation Tests")
