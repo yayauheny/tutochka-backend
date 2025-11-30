@@ -18,7 +18,7 @@ import org.junit.jupiter.params.provider.MethodSource
 import yayauheny.by.service.validation.validateOrThrow
 import yayauheny.by.service.validation.validateWith
 import yayauheny.by.common.errors.ValidationException
-import yayauheny.by.model.LatLon
+import by.yayauheny.shared.dto.LatLon
 import yayauheny.by.model.city.CityCreateDto
 import yayauheny.by.model.country.CountryCreateDto
 import yayauheny.by.model.restroom.RestroomCreateDto

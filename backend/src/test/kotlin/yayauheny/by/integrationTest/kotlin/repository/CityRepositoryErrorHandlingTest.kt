@@ -40,7 +40,7 @@ class CityRepositoryErrorHandlingTest : BaseIntegrationTest() {
         fun given_duplicate_coordinates_when_save_city_then_throw_unique_violation() =
             runTest {
                 val testEnv = DatabaseTestHelper.createTestEnvironment(dslContext)
-                val duplicateCoordinates = yayauheny.by.model.LatLon(lat = 55.7558, lon = 37.6176)
+                val duplicateCoordinates = by.yayauheny.shared.dto.LatLon(lat = 55.7558, lon = 37.6176)
                 val firstCityDto =
                     TestDataHelpers.createCityCreateDto(
                         countryId = testEnv.countryId,
@@ -264,7 +264,7 @@ class CityRepositoryErrorHandlingTest : BaseIntegrationTest() {
         fun given_save_throws_exception_when_transaction_rollback_then_no_data_persisted() =
             runTest {
                 val testEnv = DatabaseTestHelper.createTestEnvironment(dslContext)
-                val duplicateCoordinates = yayauheny.by.model.LatLon(lat = 55.7558, lon = 37.6176)
+                val duplicateCoordinates = by.yayauheny.shared.dto.LatLon(lat = 55.7558, lon = 37.6176)
                 val firstCityDto =
                     TestDataHelpers.createCityCreateDto(
                         countryId = testEnv.countryId,

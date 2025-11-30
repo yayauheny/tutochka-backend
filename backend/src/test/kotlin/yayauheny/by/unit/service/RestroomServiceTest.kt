@@ -22,7 +22,7 @@ import org.junit.jupiter.params.provider.CsvSource
 import org.junit.jupiter.params.provider.EnumSource
 import org.junit.jupiter.params.provider.ValueSource
 import yayauheny.by.helpers.TestDataHelpers
-import yayauheny.by.model.LatLon
+import by.yayauheny.shared.dto.LatLon
 import yayauheny.by.model.restroom.NearestRestroomResponseDto
 import yayauheny.by.common.query.PaginationRequest
 import yayauheny.by.common.query.PageResponse

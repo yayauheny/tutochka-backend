@@ -3,7 +3,7 @@ package yayauheny.by.common.mapper
 import org.jooq.Record
 import org.jooq.UpdateSetFirstStep
 import org.jooq.UpdateSetMoreStep
-import yayauheny.by.model.LatLon
+import by.yayauheny.shared.dto.LatLon
 import yayauheny.by.model.city.CityResponseDto
 import yayauheny.by.model.city.CityUpdateDto
 import yayauheny.by.tables.references.CITIES

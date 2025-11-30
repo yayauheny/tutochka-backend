@@ -4,7 +4,7 @@ import io.swagger.v3.oas.annotations.media.Schema
 import java.util.UUID
 import kotlinx.serialization.Contextual
 import kotlinx.serialization.Serializable
-import yayauheny.by.model.LatLon
+import by.yayauheny.shared.dto.LatLon
 import by.yayauheny.shared.enums.FeeType
 
 @Serializable

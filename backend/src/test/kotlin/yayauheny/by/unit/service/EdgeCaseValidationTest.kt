@@ -13,7 +13,7 @@ import by.yayauheny.shared.enums.AccessibilityType
 import by.yayauheny.shared.enums.DataSourceType
 import by.yayauheny.shared.enums.FeeType
 import by.yayauheny.shared.enums.RestroomStatus
-import yayauheny.by.model.LatLon
+import by.yayauheny.shared.dto.LatLon
 import yayauheny.by.model.restroom.RestroomCreateDto
 import yayauheny.by.common.errors.ValidationException
 import yayauheny.by.service.validation.validateCityOnCreate
