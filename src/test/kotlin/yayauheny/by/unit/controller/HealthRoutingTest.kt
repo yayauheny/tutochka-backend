@@ -19,9 +19,14 @@ class HealthRoutingTest : RoutingTestBase() {
         @DisplayName("GIVEN health endpoint WHEN GET /health THEN return 200 with JSON content type")
         fun health_endpoint_returns_200_with_json_content_type() =
             runTest {
+                // Given
+                // (no setup needed)
+
+                // When
                 withRoutingApp { client ->
                     val response = client.testGet("/health")
 
+                    // Then
                     assertEquals(HttpStatusCode.OK, response.status, "Should return 200 OK")
                     response.assertJsonContentType()
                 }
@@ -31,10 +36,15 @@ class HealthRoutingTest : RoutingTestBase() {
         @DisplayName("GIVEN health endpoint WHEN GET /health THEN response contains healthy status")
         fun health_endpoint_contains_healthy_status() =
             runTest {
+                // Given
+                // (no setup needed)
+
+                // When
                 withRoutingApp { client ->
                     val response = client.testGet("/health")
                     val body = response.bodyAsText()
 
+                    // Then
                     assertEquals(HttpStatusCode.OK, response.status, "Should return 200 OK")
                     assertTrue(body.contains("\"status\":\"healthy\""), "Response should contain healthy status")
                 }
@@ -44,6 +54,10 @@ class HealthRoutingTest : RoutingTestBase() {
         @DisplayName("GIVEN health endpoint WHEN GET /health multiple times THEN consistently return 200")
         fun health_endpoint_consistently_returns_200() =
             runTest {
+                // Given
+                // (no setup needed)
+
+                // When & Then
                 withRoutingApp { client ->
                     repeat(3) { iteration ->
                         val response = client.testGet("/health")

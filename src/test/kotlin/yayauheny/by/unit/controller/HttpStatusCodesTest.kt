@@ -34,11 +34,14 @@ class HttpStatusCodesTest : RoutingTestBase() {
         @DisplayName("GIVEN valid request WHEN GET city THEN return 200 OK")
         fun get_city_returns_200() =
             runTest {
+                // Given
                 coEvery { cityService.getCityById(any()) } returns TestDataHelpers.createCityResponseDto()
 
+                // When
                 withRoutingApp { client ->
                     val response = client.testGet("/api/v1/cities/${java.util.UUID.randomUUID()}")
 
+                    // Then
                     assertEquals(HttpStatusCode.OK, response.status)
                 }
             }
@@ -47,11 +50,14 @@ class HttpStatusCodesTest : RoutingTestBase() {
         @DisplayName("GIVEN non-existent city WHEN GET city THEN return 404 Not Found")
         fun get_non_existent_city_returns_404() =
             runTest {
+                // Given
                 coEvery { cityService.getCityById(any()) } returns null
 
+                // When
                 withRoutingApp { client ->
                     val response = client.testGet("/api/v1/cities/${java.util.UUID.randomUUID()}")
 
+                    // Then
                     assertEquals(HttpStatusCode.NotFound, response.status)
                 }
             }
@@ -60,9 +66,14 @@ class HttpStatusCodesTest : RoutingTestBase() {
         @DisplayName("GIVEN invalid UUID WHEN GET city THEN return 400 Bad Request")
         fun get_city_with_invalid_uuid_returns_400() =
             runTest {
+                // Given
+                // (invalid UUID format)
+
+                // When
                 withRoutingApp { client ->
                     val response = client.testGet("/api/v1/cities/invalid-uuid")
 
+                    // Then
                     assertEquals(HttpStatusCode.BadRequest, response.status)
                 }
             }
@@ -71,12 +82,15 @@ class HttpStatusCodesTest : RoutingTestBase() {
         @DisplayName("GIVEN valid city data WHEN POST city THEN return 201 Created")
         fun post_city_returns_201() =
             runTest {
+                // Given
                 val createDto = TestDataHelpers.createCityCreateDto()
                 coEvery { cityService.createCity(any()) } returns TestDataHelpers.createCityResponseDto()
 
+                // When
                 withRoutingApp { client ->
                     val response = client.testPost("/api/v1/cities", createCityJson(createDto))
 
+                    // Then
                     assertEquals(HttpStatusCode.Created, response.status)
                 }
             }
@@ -85,14 +99,17 @@ class HttpStatusCodesTest : RoutingTestBase() {
         @DisplayName("GIVEN invalid city data WHEN POST city THEN return 400 Bad Request")
         fun post_invalid_city_returns_400() =
             runTest {
+                // Given
                 coEvery { cityService.createCity(any()) } throws
                     ValidationException(
                         listOf(FieldError("nameRu", "Название обязательно"))
                     )
 
+                // When
                 withRoutingApp { client ->
                     val response = client.testPost("/api/v1/cities", """{"invalid": "data"}""")
 
+                    // Then
                     assertEquals(HttpStatusCode.BadRequest, response.status)
                 }
             }
@@ -101,12 +118,15 @@ class HttpStatusCodesTest : RoutingTestBase() {
         @DisplayName("GIVEN duplicate city WHEN POST city THEN return 409 Conflict")
         fun post_duplicate_city_returns_409() =
             runTest {
+                // Given
                 coEvery { cityService.createCity(any()) } throws ConflictException("City already exists")
 
+                // When
                 withRoutingApp { client ->
                     val createDto = TestDataHelpers.createCityCreateDto()
                     val response = client.testPost("/api/v1/cities", createCityJson(createDto))
 
+                    // Then
                     assertEquals(HttpStatusCode.Conflict, response.status)
                 }
             }
@@ -115,12 +135,15 @@ class HttpStatusCodesTest : RoutingTestBase() {
         @DisplayName("GIVEN non-existent country WHEN POST city THEN return 400 Bad Request")
         fun post_city_with_non_existent_country_returns_400() =
             runTest {
+                // Given
                 coEvery { cityService.createCity(any()) } throws BadRequestException("Country not found")
 
+                // When
                 withRoutingApp { client ->
                     val createDto = TestDataHelpers.createCityCreateDto()
                     val response = client.testPost("/api/v1/cities", createCityJson(createDto))
 
+                    // Then
                     assertEquals(HttpStatusCode.BadRequest, response.status)
                 }
             }
@@ -129,13 +152,16 @@ class HttpStatusCodesTest : RoutingTestBase() {
         @DisplayName("GIVEN valid update data WHEN PUT city THEN return 200 OK")
         fun put_city_returns_200() =
             runTest {
+                // Given
                 val id = java.util.UUID.randomUUID()
                 coEvery { cityService.updateCity(any(), any()) } returns TestDataHelpers.createCityResponseDto()
 
+                // When
                 withRoutingApp { client ->
                     val updateDto = TestDataHelpers.createCityUpdateDto()
                     val response = client.testPut("/api/v1/cities/$id", createCityUpdateJson(updateDto))
 
+                    // Then
                     assertEquals(HttpStatusCode.OK, response.status)
                 }
             }
@@ -144,12 +170,15 @@ class HttpStatusCodesTest : RoutingTestBase() {
         @DisplayName("GIVEN existing city WHEN DELETE city THEN return 200 OK")
         fun delete_existing_city_returns_200() =
             runTest {
+                // Given
                 val id = java.util.UUID.randomUUID()
                 coEvery { cityService.deleteCity(id) } returns true
 
+                // When
                 withRoutingApp { client ->
                     val response = client.testDelete("/api/v1/cities/$id")
 
+                    // Then
                     assertEquals(HttpStatusCode.OK, response.status)
                 }
             }
@@ -158,12 +187,15 @@ class HttpStatusCodesTest : RoutingTestBase() {
         @DisplayName("GIVEN non-existent city WHEN DELETE city THEN return 404 Not Found")
         fun delete_non_existent_city_returns_404() =
             runTest {
+                // Given
                 val id = java.util.UUID.randomUUID()
                 coEvery { cityService.deleteCity(id) } returns false
 
+                // When
                 withRoutingApp { client ->
                     val response = client.testDelete("/api/v1/cities/$id")
 
+                    // Then
                     assertEquals(HttpStatusCode.NotFound, response.status)
                 }
             }
@@ -176,6 +208,7 @@ class HttpStatusCodesTest : RoutingTestBase() {
         @DisplayName("GIVEN validation error WHEN request fails THEN response contains errors array")
         fun validation_error_contains_errors_array() =
             runTest {
+                // Given
                 coEvery { cityService.createCity(any()) } throws
                     ValidationException(
                         listOf(
@@ -184,9 +217,11 @@ class HttpStatusCodesTest : RoutingTestBase() {
                         )
                     )
 
+                // When
                 withRoutingApp { client ->
                     val response = client.testPost("/api/v1/cities", """{"invalid": "data"}""")
 
+                    // Then
                     assertEquals(HttpStatusCode.BadRequest, response.status)
                     // Проверка структуры ответа будет в интеграционных тестах
                 }
@@ -196,12 +231,15 @@ class HttpStatusCodesTest : RoutingTestBase() {
         @DisplayName("GIVEN service unavailable WHEN request fails THEN return 503")
         fun service_unavailable_returns_503() =
             runTest {
+                // Given
                 coEvery { cityService.getAllCities(any()) } throws
                     ServiceUnavailableException("Service temporarily unavailable", retryAfter = 60)
 
+                // When
                 withRoutingApp { client ->
                     val response = client.testGet("/api/v1/cities")
 
+                    // Then
                     assertEquals(HttpStatusCode.ServiceUnavailable, response.status)
                 }
             }
