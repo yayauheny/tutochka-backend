@@ -12,7 +12,6 @@ import kotlinx.serialization.json.*
 /**
  * JSON Test Helpers with DSL-style assertions.
  *
- * TODO: Keep for future use - Advanced JSON assertion utilities using DSL pattern.
  * Currently not used in tests (HttpTestHelpers is used instead).
  * This file provides:
  * - DSL-style JSON assertions via `expect()` extension function

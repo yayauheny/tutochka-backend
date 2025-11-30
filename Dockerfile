@@ -72,7 +72,7 @@ ENV TZ=UTC
 
 # Add labels for better container management
 LABEL maintainer="TuTochka Team" \
-      version="1.0" \
+      version="0.1.0" \
       description="TuTochka Backend API - Public Restroom Finder"
 
 # Run the application

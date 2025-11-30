@@ -28,9 +28,6 @@ import yayauheny.by.model.enums.RestroomStatus
 
 @Tag("integration")
 class RestroomApiTest : BaseIntegrationTest() {
-    // NOTE: Basic CRUD operations (GET /restrooms, GET /restrooms/{id}, POST /restrooms)
-    // are covered by unit tests (RestroomControllerTest, RestroomServiceTest).
-    // Integration tests focus on E2E scenarios with real database queries.
 
     @Test
     @DisplayName("GIVEN existing restrooms WHEN GET nearest with valid coordinates THEN return nearest restrooms with distance")
@@ -329,9 +326,6 @@ class RestroomApiTest : BaseIntegrationTest() {
     @Nested
     @DisplayName("E2E Negative Test Cases for /nearest endpoint")
     inner class NearestNegativeTestCases {
-        // NOTE: Basic validation errors (invalid UUID, invalid JSON, invalid enum) are covered
-        // by unit tests (RestroomControllerTest). Integration tests focus on E2E scenarios
-        // with real database queries, particularly for the /nearest endpoint.
 
         @Test
         @DisplayName("GET /api/v1/restrooms/nearest with invalid lat type returns 400")

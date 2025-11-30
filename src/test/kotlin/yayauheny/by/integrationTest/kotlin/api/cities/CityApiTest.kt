@@ -25,9 +25,6 @@ import yayauheny.by.helpers.testPost
 
 @Tag("integration")
 class CityApiTest : BaseIntegrationTest() {
-    // NOTE: Basic CRUD operations (GET /cities, GET /cities/{id}, POST /cities)
-    // are covered by unit tests (CityControllerTest, CityServiceTest).
-    // Integration tests focus on E2E scenarios with real database queries.
 
     @Nested
     @DisplayName("GET /api/v1/cities/country/{countryId}")
@@ -104,9 +101,6 @@ class CityApiTest : BaseIntegrationTest() {
                 }
             }
     }
-
-    // NOTE: POST /cities and basic validation tests are covered by unit tests (CityControllerTest).
-    // Integration tests focus on E2E scenarios like search and country relationships.
 
     @Nested
     @DisplayName("E2E Test Cases")
