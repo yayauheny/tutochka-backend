@@ -6,14 +6,15 @@ import yayauheny.by.common.query.FilterCriteria
 import yayauheny.by.common.query.FilterOperator
 import yayauheny.by.common.query.PaginationRequest
 import yayauheny.by.common.query.SortDirection
+import yayauheny.by.config.ApiConstants
 
 fun ApplicationCall.toPaginationRequest(
-    defaultSize: Int = 10,
-    maxSize: Int = 100
+    defaultSize: Int = ApiConstants.DEFAULT_PAGE_SIZE,
+    maxSize: Int = ApiConstants.MAX_PAGE_SIZE
 ): PaginationRequest {
     val params = request.queryParameters
 
-    val page = params["page"]?.toIntOrNull()?.coerceAtLeast(0) ?: 0
+    val page = params["page"]?.toIntOrNull()?.coerceAtLeast(0) ?: ApiConstants.DEFAULT_PAGE
     val size = params["size"]?.toIntOrNull()?.coerceIn(1, maxSize) ?: defaultSize
     val sort = params["sort"]
 
@@ -24,10 +25,10 @@ fun ApplicationCall.toPaginationRequest(
 
     val filters =
         params["filters"]
-            ?.split(",")
+            ?.split(ApiConstants.FILTER_DELIMITER)
             ?.mapNotNull { raw ->
-                val parts = raw.split(":")
-                if (parts.size == 3) {
+                val parts = raw.split(ApiConstants.FILTER_VALUE_DELIMITER)
+                if (parts.size == ApiConstants.FILTER_PARTS_COUNT) {
                     val field = parts[0]
                     val operator = runCatching { FilterOperator.valueOf(parts[1].uppercase()) }.getOrNull()
                     val value = parts[2]
@@ -81,6 +82,6 @@ fun ApplicationCall.getIntFromQuery(
 }
 
 fun ApplicationCall.createPaginationFromQuery(
-    defaultSize: Int = 10,
-    maxSize: Int = 100
+    defaultSize: Int = ApiConstants.DEFAULT_PAGE_SIZE,
+    maxSize: Int = ApiConstants.MAX_PAGE_SIZE
 ): PaginationRequest = toPaginationRequest(defaultSize, maxSize)

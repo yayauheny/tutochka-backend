@@ -4,6 +4,7 @@ import io.konform.validation.Validation
 import io.konform.validation.constraints.maxLength
 import io.konform.validation.constraints.minLength
 import yayauheny.by.common.errors.FieldError
+import yayauheny.by.config.ApiConstants
 import yayauheny.by.model.city.CityCreateDto
 import yayauheny.by.model.city.CityUpdateDto
 
@@ -20,12 +21,16 @@ data class CitySearchParams(
 val validateCityOnCreate =
     Validation<CityCreateDto> {
         CityCreateDto::nameRu {
-            minLength(2) hint "Название города на русском языке должно содержать минимум 2 символа"
-            maxLength(255) hint "Название города на русском языке слишком длинное (максимум 255 символов)"
+            minLength(ApiConstants.MIN_NAME_LENGTH) hint
+                "Название города на русском языке должно содержать минимум ${ApiConstants.MIN_NAME_LENGTH} символа"
+            maxLength(ApiConstants.MAX_NAME_LENGTH) hint
+                "Название города на русском языке слишком длинное (максимум ${ApiConstants.MAX_NAME_LENGTH} символов)"
         }
         CityCreateDto::nameEn {
-            minLength(2) hint "Название города на английском языке должно содержать минимум 2 символа"
-            maxLength(255) hint "Название города на английском языке слишком длинное (максимум 255 символов)"
+            minLength(ApiConstants.MIN_NAME_LENGTH) hint
+                "Название города на английском языке должно содержать минимум ${ApiConstants.MIN_NAME_LENGTH} символа"
+            maxLength(ApiConstants.MAX_NAME_LENGTH) hint
+                "Название города на английском языке слишком длинное (максимум ${ApiConstants.MAX_NAME_LENGTH} символов)"
         }
         // region - nullable поле, валидация выполняется через validateRegion()
         CityCreateDto::coordinates {
@@ -39,12 +44,14 @@ val validateCityOnCreate =
 val validateCityOnUpdate =
     Validation<CityUpdateDto> {
         CityUpdateDto::nameRu {
-            minLength(1) hint "Название города на русском языке обязательно"
-            maxLength(255) hint "Название города на русском языке слишком длинное (максимум 255 символов)"
+            minLength(ApiConstants.MIN_NAME_LENGTH_REQUIRED) hint "Название города на русском языке обязательно"
+            maxLength(ApiConstants.MAX_NAME_LENGTH) hint
+                "Название города на русском языке слишком длинное (максимум ${ApiConstants.MAX_NAME_LENGTH} символов)"
         }
         CityUpdateDto::nameEn {
-            minLength(1) hint "Название города на английском языке обязательно"
-            maxLength(255) hint "Название города на английском языке слишком длинное (максимум 255 символов)"
+            minLength(ApiConstants.MIN_NAME_LENGTH_REQUIRED) hint "Название города на английском языке обязательно"
+            maxLength(ApiConstants.MAX_NAME_LENGTH) hint
+                "Название города на английском языке слишком длинное (максимум ${ApiConstants.MAX_NAME_LENGTH} символов)"
         }
         // region - nullable поле, валидация выполняется через validateRegion()
         CityUpdateDto::coordinates {
@@ -58,8 +65,8 @@ val validateCityOnUpdate =
 val validateCitySearchParams =
     Validation<CitySearchParams> {
         CitySearchParams::name {
-            minLength(2) hint "Минимальная длина параметра name — 2 символа"
-            maxLength(255) hint "Параметр name слишком длинный (максимум 255 символов)"
+            minLength(ApiConstants.MIN_NAME_LENGTH) hint "Минимальная длина параметра name — ${ApiConstants.MIN_NAME_LENGTH} символа"
+            maxLength(ApiConstants.MAX_NAME_LENGTH) hint "Параметр name слишком длинный (максимум ${ApiConstants.MAX_NAME_LENGTH} символов)"
         }
     }
 
@@ -74,13 +81,13 @@ fun validateRegion(region: String?): List<FieldError> {
     val errors = mutableListOf<FieldError>()
     region?.let {
         when {
-            it.length < 2 ->
+            it.length < ApiConstants.MIN_NAME_LENGTH ->
                 errors.add(
-                    FieldError("region", "Регион должен содержать минимум 2 символа")
+                    FieldError("region", "Регион должен содержать минимум ${ApiConstants.MIN_NAME_LENGTH} символа")
                 )
-            it.length > 255 ->
+            it.length > ApiConstants.MAX_REGION_LENGTH ->
                 errors.add(
-                    FieldError("region", "Регион слишком длинный (максимум 255 символов)")
+                    FieldError("region", "Регион слишком длинный (максимум ${ApiConstants.MAX_REGION_LENGTH} символов)")
                 )
         }
     }

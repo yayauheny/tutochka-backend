@@ -10,6 +10,7 @@ import io.ktor.server.routing.post
 import io.ktor.server.routing.put
 import io.ktor.server.routing.route
 import yayauheny.by.common.errors.NotFoundException
+import yayauheny.by.config.ApiConstants
 import yayauheny.by.model.restroom.RestroomCreateDto
 import yayauheny.by.service.RestroomService
 import yayauheny.by.service.validation.NearestRestroomsParams
@@ -53,7 +54,7 @@ class RestroomController(
                 val lat = call.getDoubleFromQuery("lat")
                 val lon = call.getDoubleFromQuery("lon")
                 val limit = call.getIntFromQuery("limit") ?: 5
-                val distanceMeters = call.getIntFromQuery("distanceMeters") ?: 1000
+                val distanceMeters = call.getIntFromQuery("distanceMeters") ?: ApiConstants.DEFAULT_MAX_DISTANCE_METERS
 
                 val params = NearestRestroomsParams(yayauheny.by.model.LatLon(lat, lon), limit, distanceMeters)
                 val restrooms =
