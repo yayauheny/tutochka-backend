@@ -39,11 +39,9 @@ public class LongPollingIngress extends TelegramLongPollingBot implements Update
     
     @Override
     public void start() {
-        // Long polling starts automatically when bot is registered
     }
     
     @Override
     public void stop() {
-        // Long polling stops when bot is unregistered
     }
 }

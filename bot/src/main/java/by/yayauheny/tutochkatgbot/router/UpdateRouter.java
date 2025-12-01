@@ -54,19 +54,16 @@ public class UpdateRouter {
             ctx.chatId(), ctx.userId(), update.hasMessage(), update.hasCallbackQuery(), 
             ctx.hasLocation(), ctx.hasLocation() ? (update.hasMessage() && update.getMessage().hasLocation() ? "location" : "venue") : "none");
         
-        // Handle callback queries first
         if (update.hasCallbackQuery()) {
             handleCallback(update, botContext);
             return;
         }
         
-        // Handle commands
         if (ctx.text() != null && ctx.text().startsWith("/")) {
             handleCommand(update, botContext);
             return;
         }
         
-        // Handle other messages
         handleMessage(update, botContext);
     }
     

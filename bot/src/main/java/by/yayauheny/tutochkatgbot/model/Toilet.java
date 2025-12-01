@@ -21,7 +21,6 @@ public class Toilet {
         this.description = description;
     }
 
-    // Getters and setters
     public String getId() {
         return id;
     }

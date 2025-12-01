@@ -13,8 +13,7 @@ import org.telegram.telegrambots.meta.exceptions.TelegramApiException;
 public interface MessageSender {
     void sendMessage(SendMessage message) throws TelegramApiException;
     void editMessage(EditMessageText message) throws TelegramApiException;
-    
-    // Convenience methods
+
     void sendText(long chatId, String text);
     void sendText(long chatId, String text, ReplyKeyboardMarkup replyKeyboard);
     void sendText(long chatId, String text, InlineKeyboardMarkup inlineKeyboard);

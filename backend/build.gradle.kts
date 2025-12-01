@@ -12,8 +12,6 @@ plugins {
     jacoco
 }
 
-// Group and version inherited from root project
-
 application {
     mainClass = "io.ktor.server.netty.EngineMain"
 }
@@ -28,16 +26,6 @@ java {
     }
 }
 
-// jOOQ generated files are now committed in src/main/kotlin/yayauheny/by/tables
-// No need to generate them on each build
-// sourceSets {
-//     main {
-//         java {
-//             srcDir("${project.buildDir}/generated-src/jooq")
-//         }
-//     }
-// }
-
 buildscript {
     repositories {
         mavenCentral()
@@ -49,7 +37,6 @@ buildscript {
 }
 
 dependencies {
-    // Module dependencies
     implementation(project(":shared"))
 
     jooqGenerator(libs.postgresql)
@@ -84,7 +71,6 @@ val containerInstance: PostgreSQLContainer<Nothing>? =
         "update" in project.gradle.startParameter.taskNames ||
         "updateMain" in project.gradle.startParameter.taskNames
     ) {
-        println("Starting PostgreSQL container for jOOQ generation...")
         val container =
             PostgreSQLContainer<Nothing>(
                 DockerImageName
@@ -93,12 +79,10 @@ val containerInstance: PostgreSQLContainer<Nothing>? =
             ).apply {
                 withDatabaseName(tcDbName)
                 start()
-                // Wait for container to be ready
                 while (!isRunning) {
                     Thread.sleep(100)
                 }
             }
-        println("Container started: ${container.isRunning}, JDBC URL: ${container.jdbcUrl}")
         container
     } else {
         null
@@ -119,7 +103,6 @@ liquibase {
                 "driver" to liquibaseDriver
             )
 
-        // Add container properties if available
         val container = containerInstance
         if (container != null && container.isRunning) {
             args["url"] = container.jdbcUrl
@@ -223,7 +206,6 @@ tasks.register<Test>("integrationTest") {
             .get()
             .output.classesDirs
     classpath = sourceSets.test.get().runtimeClasspath
-    // Отключаем параллельное выполнение для интеграционных тестов
     systemProperty("junit.jupiter.execution.parallel.enabled", "false")
     shouldRunAfter("test")
     finalizedBy("jacocoTestReport")
@@ -239,6 +221,22 @@ tasks.check {
 }
 
 val ktlintVersion = providers.gradleProperty("ktlint.version").get()
+
+val jooqExcludePatterns =
+    listOf(
+        "**/build/**",
+        "**/tables/**",
+        "**/keys/**",
+        "**/routines/**",
+        "**/udts/**",
+        "**/udt/**",
+        "**/indexes/**",
+        "**/jooq/**",
+        "**/Public.kt",
+        "**/DefaultCatalog.kt",
+        "**/yayauheny/by/Public.kt",
+        "**/yayauheny/by/DefaultCatalog.kt"
+    )
 
 tasks.withType<org.jlleitschuh.gradle.ktlint.tasks.BaseKtLintCheckTask>().configureEach {
     exclude { projectFileTree ->
@@ -272,37 +270,11 @@ tasks.withType<org.jlleitschuh.gradle.ktlint.tasks.BaseKtLintCheckTask>().config
 }
 
 tasks.withType<org.jlleitschuh.gradle.ktlint.tasks.KtLintCheckTask>().configureEach {
-    exclude(
-        "**/build/**",
-        "**/tables/**",
-        "**/keys/**",
-        "**/routines/**",
-        "**/udts/**",
-        "**/udt/**",
-        "**/indexes/**",
-        "**/jooq/**",
-        "**/Public.kt",
-        "**/DefaultCatalog.kt",
-        "**/yayauheny/by/Public.kt",
-        "**/yayauheny/by/DefaultCatalog.kt"
-    )
+    exclude(*jooqExcludePatterns.toTypedArray())
 }
 
 tasks.withType<org.jlleitschuh.gradle.ktlint.tasks.KtLintFormatTask>().configureEach {
-    exclude(
-        "**/build/**",
-        "**/tables/**",
-        "**/keys/**",
-        "**/routines/**",
-        "**/udts/**",
-        "**/udt/**",
-        "**/indexes/**",
-        "**/jooq/**",
-        "**/Public.kt",
-        "**/DefaultCatalog.kt",
-        "**/yayauheny/by/Public.kt",
-        "**/yayauheny/by/DefaultCatalog.kt"
-    )
+    exclude(*jooqExcludePatterns.toTypedArray())
 }
 
 ktlint {
@@ -311,9 +283,6 @@ ktlint {
     verbose.set(true)
     android.set(false)
     outputToConsole.set(true)
-    // Temporarily ignore failures for jOOQ generated files Public.kt and DefaultCatalog.kt
-    // These files are auto-generated and don't follow Kotlin naming conventions
-    // TODO: Find a way to properly exclude these files from ktlint checks
     ignoreFailures.set(true)
     enableExperimentalRules.set(false)
 
@@ -321,15 +290,12 @@ ktlint {
         exclude { element ->
             val file = element.file
             val path = file.path
-            val name = file.name
-            val absolutePath = file.absolutePath
             val relativePath = file.relativeTo(project.projectDir).path.replace("\\", "/")
+            val name = file.name
 
-            // Exclude build directories
             path.contains(File.separator + "build" + File.separator) ||
                 path.startsWith("build/") ||
                 path.contains("generated-src") ||
-                // Exclude jOOQ generated files (now committed in src)
                 path.contains("/tables/") ||
                 path.contains("/keys/") ||
                 path.contains("/routines/") ||
@@ -337,33 +303,24 @@ ktlint {
                 path.contains("/udt/") ||
                 path.contains("/indexes/") ||
                 path.contains("/jooq/") ||
-                absolutePath.contains("/jooq/") ||
                 relativePath.contains("/jooq/") ||
-                // Exclude Public.kt and DefaultCatalog.kt by name or path
                 name == "Public.kt" ||
                 name == "DefaultCatalog.kt" ||
                 path.contains("/Public.kt") ||
                 path.contains("/DefaultCatalog.kt") ||
-                absolutePath.contains("/Public.kt") ||
-                absolutePath.contains("/DefaultCatalog.kt") ||
                 relativePath.contains("/Public.kt") ||
                 relativePath.contains("/DefaultCatalog.kt") ||
-                // More specific patterns for the exact files
-                absolutePath.endsWith("yayauheny/by/Public.kt") ||
-                absolutePath.endsWith("yayauheny/by/DefaultCatalog.kt") ||
+                path.endsWith("yayauheny/by/Public.kt") ||
+                path.endsWith("yayauheny/by/DefaultCatalog.kt") ||
                 relativePath == "src/main/kotlin/yayauheny/by/Public.kt" ||
                 relativePath == "src/main/kotlin/yayauheny/by/DefaultCatalog.kt" ||
                 relativePath == "backend/src/main/kotlin/yayauheny/by/Public.kt" ||
                 relativePath == "backend/src/main/kotlin/yayauheny/by/DefaultCatalog.kt"
         }
-
         include("src/main/kotlin/**/*.kt", "src/test/kotlin/**/*.kt")
-        // Exclude Public.kt and DefaultCatalog.kt explicitly
-        exclude("**/Public.kt", "**/DefaultCatalog.kt", "**/yayauheny/by/Public.kt", "**/yayauheny/by/DefaultCatalog.kt")
     }
 }
 
-// Disable ktlint tasks if SKIP_KTLINT is set
 if (System.getenv("SKIP_KTLINT") == "true") {
     tasks.named("ktlintCheck").configure { enabled = false }
     tasks.named("ktlintMainSourceSetCheck").configure { enabled = false }
@@ -423,17 +380,13 @@ tasks.jacocoTestReport {
         csv.outputLocation.set(layout.buildDirectory.file("reports/jacoco/jacocoTestReport.csv"))
     }
 
-    // Collect execution data from both unit and integration tests
     executionData.setFrom(
         fileTree(layout.buildDirectory.dir("jacoco")).include("**/*.exec")
     )
 
-    // Configure class directories with exclusions
     classDirectories.setFrom(
         files(classDirectories.files.map { fileTree(it).excludeJacocoPatterns() })
     )
-
-    // Enable detailed reporting by package and class
     doLast {
         logger.lifecycle("JaCoCo HTML report: ${reports.html.outputLocation.get().asFile.absolutePath}/index.html")
         logger.lifecycle("JaCoCo XML report: ${reports.xml.outputLocation.get().asFile.absolutePath}")
@@ -456,7 +409,4 @@ tasks.jacocoTestCoverageVerification {
             }
         }
     }
-}
-repositories {
-    mavenCentral()
 }

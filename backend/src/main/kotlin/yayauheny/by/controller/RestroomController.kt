@@ -83,9 +83,7 @@ class RestroomController(
 
             post {
                 val createDto = call.receive<RestroomCreateDto>()
-                // Валидация через konform
                 createDto.validateOrThrow(validateRestroomOnCreate)
-                // Дополнительная валидация nullable полей
                 val additionalErrors = validateRestroomCreateFields(createDto)
                 if (additionalErrors.isNotEmpty()) {
                     throw ValidationException(additionalErrors)
@@ -97,9 +95,7 @@ class RestroomController(
             put("/{id}") {
                 val id = call.getUuidFromPath("id")
                 val updateDto = call.receive<RestroomUpdateDto>()
-                // Валидация через konform
                 updateDto.validateOrThrow(validateRestroomOnUpdate)
-                // Дополнительная валидация nullable полей
                 val additionalErrors = validateRestroomUpdateFields(updateDto)
                 if (additionalErrors.isNotEmpty()) {
                     throw ValidationException(additionalErrors)

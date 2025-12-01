@@ -32,7 +32,6 @@ val validateCityOnCreate =
             maxLength(ApiConstants.MAX_NAME_LENGTH) hint
                 "Название города на английском языке слишком длинное (максимум ${ApiConstants.MAX_NAME_LENGTH} символов)"
         }
-        // region - nullable поле, валидация выполняется через validateRegion()
         CityCreateDto::coordinates {
             run(validateLatLon)
         }
@@ -53,7 +52,6 @@ val validateCityOnUpdate =
             maxLength(ApiConstants.MAX_NAME_LENGTH) hint
                 "Название города на английском языке слишком длинное (максимум ${ApiConstants.MAX_NAME_LENGTH} символов)"
         }
-        // region - nullable поле, валидация выполняется через validateRegion()
         CityUpdateDto::coordinates {
             run(validateLatLon)
         }

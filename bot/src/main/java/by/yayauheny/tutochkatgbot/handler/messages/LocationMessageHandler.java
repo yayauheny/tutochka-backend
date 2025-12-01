@@ -41,17 +41,13 @@ public class LocationMessageHandler implements MessageHandler {
 
     @Override
     public void handle(Update update, UpdateContext ctx) throws Exception {
-        // Save user location
         userService.saveLocation(ctx.userId(), ctx.latitude(), ctx.longitude());
         
-        // Get user radius preference
         int radius = userService.getRadius(ctx.userId()).orElse(UserService.DEFAULT_RADIUS);
         
-        // Search for nearby toilets
         var results = searchService.findNearby(ctx.latitude(), ctx.longitude(), radius, 10);
         
         if (results.isEmpty()) {
-            // Send both inline keyboard for radius selection and reply keyboard for location sharing
             sender.sendText(ctx.chatId(), Messages.NO_TOILETS_FOUND, inlineKeyboard.radiusSelection());
             sender.sendText(ctx.chatId(), "Или попробуйте другую точку:", replyKeyboard.shareLocation());
             return;

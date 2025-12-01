@@ -21,7 +21,6 @@ public class InMemorySessionStore implements SessionStore {
     private final ScheduledExecutorService cleanupExecutor = Executors.newSingleThreadScheduledExecutor();
     
     public InMemorySessionStore() {
-        // Cleanup expired sessions every 5 minutes
         cleanupExecutor.scheduleAtFixedRate(this::cleanupExpiredSessions, 5, 5, TimeUnit.MINUTES);
     }
     
@@ -32,7 +31,6 @@ public class InMemorySessionStore implements SessionStore {
             return Optional.empty();
         }
         
-        // Check if session is expired
         if (isExpired(session)) {
             sessions.remove(userId);
             return Optional.empty();

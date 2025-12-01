@@ -21,11 +21,7 @@ public class FormatterService {
         
         String description = Optional.ofNullable(toilet.getDescription())
             .filter(desc -> !desc.trim().isEmpty())
-            .orElseGet(() -> {
-                // Note: Shared DTOs use JsonObject for workTime, need to convert for formatter
-                // For now, return default description
-                return "Описание не указано";
-            });
+            .orElseGet(() -> "Описание не указано");
         
         return Text.substitute(Messages.TOILET_DETAILS, Map.of(
             "name", name,

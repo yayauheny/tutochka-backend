@@ -47,7 +47,6 @@ public class BackToListCallback implements CallbackHandler {
 
     @Override
     public void handle(Update update, UpdateContext ctx) throws Exception {
-        // Get user session to retrieve last location
         var session = userService.getSession(ctx.userId());
         
         if (session.isEmpty() || session.get().location() == null) {
@@ -58,7 +57,6 @@ public class BackToListCallback implements CallbackHandler {
         var location = session.get().location();
         int radius = userService.getRadius(ctx.userId()).orElse(500);
         
-        // Search for nearby toilets again
         var results = searchService.findNearby(location.latitude(), location.longitude(), radius, 10);
         
         if (results.isEmpty()) {

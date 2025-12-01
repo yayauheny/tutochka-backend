@@ -22,7 +22,6 @@ public class PlainTextFallbackMessageHandler implements MessageHandler {
 
     @Override
     public boolean canHandle(Update update, UpdateContext ctx) {
-        // Handle text messages that don't match any commands
         return ctx.text() != null && !ctx.text().startsWith("/");
     }
 

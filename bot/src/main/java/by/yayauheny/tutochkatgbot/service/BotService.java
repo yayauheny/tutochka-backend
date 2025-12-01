@@ -26,7 +26,6 @@ public class BotService {
      * @return response message
      */
     public String processLocation(double latitude, double longitude, long chatId) {
-        // TODO: Implement toilet search logic
         return "Геолокация получена: " + latitude + ", " + longitude;
     }
 
@@ -52,7 +51,6 @@ public class BotService {
      * @return toilet details
      */
     private String getToiletDetails(String toiletId) {
-        // TODO: Implement toilet details retrieval
         return Messages.TOILET_DETAILS
                 .replace("{name}", "Туалет #" + toiletId)
                 .replace("{coordinates}", "55.7558, 37.6176")

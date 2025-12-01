@@ -15,5 +15,7 @@ allprojects {
 }
 
 subprojects {
-    // Common configuration for all subprojects
+    repositories {
+        mavenCentral()
+    }
 }

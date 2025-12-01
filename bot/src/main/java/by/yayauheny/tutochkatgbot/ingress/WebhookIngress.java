@@ -28,11 +28,9 @@ public class WebhookIngress implements UpdateIngress {
     
     @Override
     public void start() {
-        // Webhook is started by external web server
     }
     
     @Override
     public void stop() {
-        // Webhook is stopped by external web server
     }
 }

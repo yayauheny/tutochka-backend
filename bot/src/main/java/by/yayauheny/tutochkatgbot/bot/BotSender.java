@@ -102,17 +102,16 @@ public class BotSender implements MessageSender {
      */
     public void editMessage(UpdateContext ctx, String text, InlineKeyboardMarkup inlineKeyboard) {
         if (ctx.messageId() == null) {
-            // Fallback to sending new message if no messageId
             sendText(ctx.chatId(), text, inlineKeyboard);
             return;
         }
         
         try {
             EditMessageText editMessage = EditMessageText.builder()
-                    .chatId(String.valueOf(ctx.chatId()))
-                    .messageId(ctx.messageId())
-                    .text(text)
-                    .build();
+                .chatId(String.valueOf(ctx.chatId()))
+                .messageId(ctx.messageId())
+                .text(text)
+                .build();
             
             if (inlineKeyboard != null) {
                 editMessage.setReplyMarkup(inlineKeyboard);
@@ -122,7 +121,6 @@ public class BotSender implements MessageSender {
             logger.debug("Edited message in chat {}: {}", ctx.chatId(), text);
         } catch (TelegramApiException e) {
             logger.error("Failed to edit message in chat {}: {}", ctx.chatId(), e.getMessage(), e);
-            // Fallback to sending new message
             sendText(ctx.chatId(), text, inlineKeyboard);
         }
     }
