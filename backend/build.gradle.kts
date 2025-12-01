@@ -321,23 +321,12 @@ ktlint {
     }
 }
 
-if (System.getenv("SKIP_KTLINT") == "true") {
-    tasks.named("ktlintCheck").configure { enabled = false }
-    tasks.named("ktlintMainSourceSetCheck").configure { enabled = false }
-    tasks.named("ktlintTestSourceSetCheck").configure { enabled = false }
-    tasks.named("ktlintKotlinScriptCheck").configure { enabled = false }
-}
-
 tasks.named("build") {
-    if (System.getenv("SKIP_KTLINT") != "true") {
-        dependsOn("ktlintCheck")
-    }
+    dependsOn("ktlintCheck")
 }
 
 tasks.named("compileKotlin") {
-    if (System.getenv("SKIP_KTLINT") != "true") {
-        dependsOn("ktlintFormat")
-    }
+    dependsOn("ktlintFormat")
 }
 
 val jacocoExcludes =
