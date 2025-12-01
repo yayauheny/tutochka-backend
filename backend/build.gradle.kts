@@ -241,32 +241,49 @@ val jooqExcludePatterns =
 tasks.withType<org.jlleitschuh.gradle.ktlint.tasks.BaseKtLintCheckTask>().configureEach {
     exclude { projectFileTree ->
         val file = projectFileTree.file
-        val path = file.absolutePath
-        val relativePath = file.relativeTo(project.projectDir).path.replace("\\", "/")
+        val absolutePath = file.absolutePath
         val name = file.name
 
-        path.contains("/build/") ||
-            path.contains("/tables/") ||
-            path.contains("/keys/") ||
-            path.contains("/routines/") ||
-            path.contains("/udts/") ||
-            path.contains("/udt/") ||
-            path.contains("/indexes/") ||
-            path.contains("/jooq/") ||
-            relativePath.contains("/jooq/") ||
+        absolutePath.contains("/build/") ||
+            absolutePath.contains("/tables/") ||
+            absolutePath.contains("/keys/") ||
+            absolutePath.contains("/routines/") ||
+            absolutePath.contains("/udts/") ||
+            absolutePath.contains("/udt/") ||
+            absolutePath.contains("/indexes/") ||
+            absolutePath.contains("/jooq/") ||
             name == "Public.kt" ||
             name == "DefaultCatalog.kt" ||
-            path.contains("/Public.kt") ||
-            path.contains("/DefaultCatalog.kt") ||
-            relativePath.contains("/Public.kt") ||
-            relativePath.contains("/DefaultCatalog.kt") ||
-            path.endsWith("yayauheny/by/Public.kt") ||
-            path.endsWith("yayauheny/by/DefaultCatalog.kt") ||
-            relativePath == "src/main/kotlin/yayauheny/by/Public.kt" ||
-            relativePath == "src/main/kotlin/yayauheny/by/DefaultCatalog.kt" ||
-            relativePath == "backend/src/main/kotlin/yayauheny/by/Public.kt" ||
-            relativePath == "backend/src/main/kotlin/yayauheny/by/DefaultCatalog.kt"
+            absolutePath.contains("/Public.kt") ||
+            absolutePath.contains("/DefaultCatalog.kt") ||
+            absolutePath.endsWith("yayauheny/by/Public.kt") ||
+            absolutePath.endsWith("yayauheny/by/DefaultCatalog.kt")
     }
+}
+
+tasks.named("runKtlintCheckOverMainSourceSet", org.jlleitschuh.gradle.ktlint.tasks.KtLintCheckTask::class.java).configure {
+    setSource(
+        sourceSets.main.get().allSource.asFileTree.filter { file ->
+            val absolutePath = file.absolutePath
+            val name = file.name
+            !(
+                absolutePath.contains("/build/") ||
+                    absolutePath.contains("/tables/") ||
+                    absolutePath.contains("/keys/") ||
+                    absolutePath.contains("/routines/") ||
+                    absolutePath.contains("/udts/") ||
+                    absolutePath.contains("/udt/") ||
+                    absolutePath.contains("/indexes/") ||
+                    absolutePath.contains("/jooq/") ||
+                    name == "Public.kt" ||
+                    name == "DefaultCatalog.kt" ||
+                    absolutePath.contains("/Public.kt") ||
+                    absolutePath.contains("/DefaultCatalog.kt") ||
+                    absolutePath.endsWith("yayauheny/by/Public.kt") ||
+                    absolutePath.endsWith("yayauheny/by/DefaultCatalog.kt")
+            )
+        }
+    )
 }
 
 tasks.withType<org.jlleitschuh.gradle.ktlint.tasks.KtLintCheckTask>().configureEach {
@@ -283,39 +300,28 @@ ktlint {
     verbose.set(true)
     android.set(false)
     outputToConsole.set(true)
-    ignoreFailures.set(true)
     enableExperimentalRules.set(false)
 
     filter {
         exclude { element ->
             val file = element.file
-            val path = file.path
-            val relativePath = file.relativeTo(project.projectDir).path.replace("\\", "/")
+            val absolutePath = file.absolutePath
             val name = file.name
 
-            path.contains(File.separator + "build" + File.separator) ||
-                path.startsWith("build/") ||
-                path.contains("generated-src") ||
-                path.contains("/tables/") ||
-                path.contains("/keys/") ||
-                path.contains("/routines/") ||
-                path.contains("/udts/") ||
-                path.contains("/udt/") ||
-                path.contains("/indexes/") ||
-                path.contains("/jooq/") ||
-                relativePath.contains("/jooq/") ||
+            absolutePath.contains("/build/") ||
+                absolutePath.contains("/tables/") ||
+                absolutePath.contains("/keys/") ||
+                absolutePath.contains("/routines/") ||
+                absolutePath.contains("/udts/") ||
+                absolutePath.contains("/udt/") ||
+                absolutePath.contains("/indexes/") ||
+                absolutePath.contains("/jooq/") ||
                 name == "Public.kt" ||
                 name == "DefaultCatalog.kt" ||
-                path.contains("/Public.kt") ||
-                path.contains("/DefaultCatalog.kt") ||
-                relativePath.contains("/Public.kt") ||
-                relativePath.contains("/DefaultCatalog.kt") ||
-                path.endsWith("yayauheny/by/Public.kt") ||
-                path.endsWith("yayauheny/by/DefaultCatalog.kt") ||
-                relativePath == "src/main/kotlin/yayauheny/by/Public.kt" ||
-                relativePath == "src/main/kotlin/yayauheny/by/DefaultCatalog.kt" ||
-                relativePath == "backend/src/main/kotlin/yayauheny/by/Public.kt" ||
-                relativePath == "backend/src/main/kotlin/yayauheny/by/DefaultCatalog.kt"
+                absolutePath.contains("/Public.kt") ||
+                absolutePath.contains("/DefaultCatalog.kt") ||
+                absolutePath.endsWith("yayauheny/by/Public.kt") ||
+                absolutePath.endsWith("yayauheny/by/DefaultCatalog.kt")
         }
         include("src/main/kotlin/**/*.kt", "src/test/kotlin/**/*.kt")
     }
