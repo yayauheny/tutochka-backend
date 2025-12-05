@@ -129,7 +129,7 @@ class PSQLExceptionHandlingTest : BaseIntegrationTest() {
                 {
                     "cityId": "$nonExistentCityId",
                     "name": "Test Restroom",
-                    "description": "Test Description",
+                    "accessNote": "Test Description",
                     "address": "Test Address",
                     "coordinates": {"lat": 55.7558, "lon": 37.6176},
                     "feeType": "FREE",

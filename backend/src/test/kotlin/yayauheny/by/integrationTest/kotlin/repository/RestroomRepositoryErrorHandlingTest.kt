@@ -36,39 +36,33 @@ class RestroomRepositoryErrorHandlingTest : BaseIntegrationTest() {
     @DisplayName("Database Constraint Violation Tests")
     inner class ConstraintViolationTests {
         @Test
-        @DisplayName("GIVEN duplicate coordinates WHEN save restroom THEN throw PSQLException with unique violation (23505)")
-        fun given_duplicate_coordinates_when_save_restroom_then_throw_unique_violation() =
+        @DisplayName("GIVEN duplicate coordinates WHEN save restroom THEN allow multiple restrooms at same location")
+        fun given_duplicate_coordinates_when_save_restroom_then_allow_multiple_restrooms() =
             runTest {
                 val testEnv = DatabaseTestHelper.createTestEnvironment(dslContext)
-                val duplicateCoordinates =
+                val sameCoordinates =
                     by.yayauheny.shared.dto
                         .LatLon(lat = 55.7558, lon = 37.6176)
                 val firstRestroomDto =
                     TestDataHelpers.createRestroomCreateDto(
                         cityId = testEnv.cityId,
-                        lat = duplicateCoordinates.lat,
-                        lon = duplicateCoordinates.lon
+                        lat = sameCoordinates.lat,
+                        lon = sameCoordinates.lon
                     )
 
-                repository.save(firstRestroomDto)
+                val firstRestroom = repository.save(firstRestroomDto)
+                assertNotNull(firstRestroom)
 
-                val duplicateRestroomDto =
+                val secondRestroomDto =
                     TestDataHelpers.createRestroomCreateDto(
                         cityId = testEnv.cityId,
-                        lat = duplicateCoordinates.lat,
-                        lon = duplicateCoordinates.lon
+                        lat = sameCoordinates.lat,
+                        lon = sameCoordinates.lon
                     )
 
-                val exception =
-                    assertFailsWith<PSQLException> {
-                        repository.save(duplicateRestroomDto)
-                    }
-
-                assertTrue(
-                    exception.sqlState == "23505",
-                    "Expected unique constraint violation (23505), got ${exception.sqlState}"
-                )
-                assertNotNull(exception.message)
+                val secondRestroom = repository.save(secondRestroomDto)
+                assertNotNull(secondRestroom)
+                assertTrue(firstRestroom.id != secondRestroom.id, "Restrooms should have different IDs")
 
                 val restroomsWithSameCoordinates =
                     dslContext
@@ -78,12 +72,12 @@ class RestroomRepositoryErrorHandlingTest : BaseIntegrationTest() {
                             DSL.condition(
                                 "ST_Equals({0}, {1})",
                                 RESTROOMS.COORDINATES,
-                                pointExpr(duplicateCoordinates.lon, duplicateCoordinates.lat, RESTROOMS.COORDINATES)
+                                pointExpr(sameCoordinates.lon, sameCoordinates.lat, RESTROOMS.COORDINATES)
                             )
                         ).fetchOne()
                         ?.value1() ?: 0
 
-                assertTrue(restroomsWithSameCoordinates == 1, "Only one restroom with these coordinates should exist")
+                assertTrue(restroomsWithSameCoordinates == 2, "Both restrooms with same coordinates should exist")
             }
 
         @Test
@@ -216,31 +210,17 @@ class RestroomRepositoryErrorHandlingTest : BaseIntegrationTest() {
         fun given_save_throws_exception_when_transaction_rollback_then_no_data_persisted() =
             runTest {
                 val testEnv = DatabaseTestHelper.createTestEnvironment(dslContext)
-                val duplicateCoordinates =
-                    by.yayauheny.shared.dto
-                        .LatLon(lat = 55.7558, lon = 37.6176)
-                val firstRestroomDto =
+                val restroomDtoWithInvalidCityId =
                     TestDataHelpers.createRestroomCreateDto(
-                        cityId = testEnv.cityId,
-                        lat = duplicateCoordinates.lat,
-                        lon = duplicateCoordinates.lon
-                    )
-
-                repository.save(firstRestroomDto)
-
-                val duplicateRestroomDto =
-                    TestDataHelpers.createRestroomCreateDto(
-                        cityId = testEnv.cityId,
-                        lat = duplicateCoordinates.lat,
-                        lon = duplicateCoordinates.lon
+                        cityId = UUID.randomUUID()
                     )
 
                 val exception =
                     assertFailsWith<PSQLException> {
-                        repository.save(duplicateRestroomDto)
+                        repository.save(restroomDtoWithInvalidCityId)
                     }
 
-                assertTrue(exception.sqlState == "23505", "Expected unique constraint violation")
+                assertTrue(exception.sqlState == "23503", "Expected foreign key violation (23503)")
 
                 val totalRestroomsCount =
                     dslContext
@@ -249,7 +229,7 @@ class RestroomRepositoryErrorHandlingTest : BaseIntegrationTest() {
                         .fetchOne()
                         ?.value1() ?: 0
 
-                assertTrue(totalRestroomsCount == 1, "Only the first restroom should exist after rollback")
+                assertTrue(totalRestroomsCount == 0, "No restroom should exist after rollback")
             }
 
         @Test

@@ -15,9 +15,18 @@ import yayauheny.by.model.city.CityUpdateDto
 import yayauheny.by.model.country.CountryCreateDto
 import yayauheny.by.model.country.CountryResponseDto
 import yayauheny.by.model.country.CountryUpdateDto
+import yayauheny.by.model.building.BuildingCreateDto
+import yayauheny.by.model.building.BuildingResponseDto
+import yayauheny.by.model.building.BuildingUpdateDto
+import yayauheny.by.model.subway.SubwayLineCreateDto
+import yayauheny.by.model.subway.SubwayLineResponseDto
+import yayauheny.by.model.subway.SubwayStationCreateDto
+import yayauheny.by.model.subway.SubwayStationResponseDto
+import by.yayauheny.shared.dto.LatLon
 import by.yayauheny.shared.enums.AccessibilityType
 import by.yayauheny.shared.enums.DataSourceType
 import by.yayauheny.shared.enums.FeeType
+import by.yayauheny.shared.enums.PlaceType
 import by.yayauheny.shared.enums.RestroomStatus
 
 object TestDataHelpers {
@@ -129,114 +138,150 @@ object TestDataHelpers {
 
     fun createRestroomCreateDto(
         cityId: UUID = UUID.randomUUID(),
+        buildingId: UUID? = null,
+        subwayStationId: UUID? = null,
         name: String = "Minsk Central Restroom",
-        description: String = "Public restroom in Minsk center",
         address: String = "123 Independence Avenue, Minsk, Belarus",
         phones: JsonObject? = createBasicPhones(),
         workTime: JsonObject? = createBasicWorkTime(),
         feeType: FeeType = FeeType.FREE,
         accessibilityType: AccessibilityType = AccessibilityType.DISABLED,
+        placeType: PlaceType = PlaceType.OTHER,
         lat: Double = 40.7829,
         lon: Double = -73.9654,
         dataSource: DataSourceType = DataSourceType.MANUAL,
         status: RestroomStatus = RestroomStatus.ACTIVE,
         amenities: JsonObject = createBasicAmenities(),
-        parentPlaceName: String? = null,
-        parentPlaceType: String? = null,
-        inheritParentSchedule: Boolean = false
+        externalMaps: JsonObject? =
+            buildJsonObject {
+                put("yandex", JsonPrimitive("https://yandex.ru/maps/-/CCUqM0VhXD"))
+                put("google", JsonPrimitive("https://maps.google.com/?q=53.9006,27.5590"))
+            },
+        accessNote: String? = "Доступен для людей с ограниченными возможностями",
+        directionGuide: String? = "Находится на первом этаже, рядом с главным входом",
+        inheritBuildingSchedule: Boolean = false,
+        hasPhotos: Boolean = true
     ) = RestroomCreateDto(
         cityId = cityId,
+        buildingId = buildingId,
+        subwayStationId = subwayStationId,
         status = status,
         name = name,
-        description = description,
         address = address,
         phones = phones,
         workTime = workTime,
         feeType = feeType,
         accessibilityType = accessibilityType,
+        placeType = placeType,
         coordinates =
             by.yayauheny.shared.dto
                 .LatLon(lat = lat, lon = lon),
         dataSource = dataSource,
         amenities = amenities,
-        parentPlaceName = parentPlaceName,
-        parentPlaceType = parentPlaceType,
-        inheritParentSchedule = inheritParentSchedule
+        externalMaps = externalMaps,
+        accessNote = accessNote,
+        directionGuide = directionGuide,
+        inheritBuildingSchedule = inheritBuildingSchedule,
+        hasPhotos = hasPhotos
     )
 
     fun createRestroomUpdateDto(
         cityId: UUID? = UUID.randomUUID(),
+        buildingId: UUID? = null,
+        subwayStationId: UUID? = null,
         name: String? = "Updated Restroom",
-        description: String? = "Updated description",
         address: String = "Updated Address",
         phones: JsonObject? = createBasicPhones(),
         workTime: JsonObject? = createBasicWorkTime(),
         feeType: FeeType = FeeType.FREE,
         accessibilityType: AccessibilityType = AccessibilityType.DISABLED,
+        placeType: PlaceType = PlaceType.OTHER,
         coordinates: by.yayauheny.shared.dto.LatLon =
             by.yayauheny.shared.dto
                 .LatLon(lat = 40.7829, lon = -73.9654),
         status: RestroomStatus = RestroomStatus.ACTIVE,
         amenities: JsonObject? = createBasicAmenities(),
-        parentPlaceName: String? = null,
-        parentPlaceType: String? = null,
-        inheritParentSchedule: Boolean = false
+        externalMaps: JsonObject? =
+            buildJsonObject {
+                put("yandex", JsonPrimitive("https://yandex.ru/maps/-/CCUqM0VhXD"))
+                put("google", JsonPrimitive("https://maps.google.com/?q=53.9006,27.5590"))
+            },
+        accessNote: String? = "Доступен для людей с ограниченными возможностями",
+        directionGuide: String? = "Находится на первом этаже, рядом с главным входом",
+        inheritBuildingSchedule: Boolean = false,
+        hasPhotos: Boolean = true
     ) = RestroomUpdateDto(
         cityId = cityId,
+        buildingId = buildingId,
+        subwayStationId = subwayStationId,
         name = name,
-        description = description,
         address = address,
         phones = phones,
         workTime = workTime,
         feeType = feeType,
         accessibilityType = accessibilityType,
+        placeType = placeType,
         coordinates = coordinates,
         status = status,
         amenities = amenities,
-        parentPlaceName = parentPlaceName,
-        parentPlaceType = parentPlaceType,
-        inheritParentSchedule = inheritParentSchedule
+        externalMaps = externalMaps,
+        accessNote = accessNote,
+        directionGuide = directionGuide,
+        inheritBuildingSchedule = inheritBuildingSchedule,
+        hasPhotos = hasPhotos
     )
 
     fun createRestroomResponseDto(
         id: UUID = UUID.randomUUID(),
-        cityId: UUID = UUID.randomUUID(),
-        name: String = "Minsk Central Restroom",
-        description: String = "Public restroom in Minsk center",
+        cityId: UUID? = UUID.randomUUID(),
+        buildingId: UUID? = null,
+        subwayStationId: UUID? = null,
+        name: String? = "Minsk Central Restroom",
         address: String = "123 Independence Avenue, Minsk, Belarus",
         phones: JsonObject? = createBasicPhones(),
         workTime: JsonObject? = createBasicWorkTime(),
         feeType: FeeType = FeeType.FREE,
         accessibilityType: AccessibilityType = AccessibilityType.DISABLED,
+        placeType: PlaceType = PlaceType.OTHER,
         lat: Double = 40.7829,
         lon: Double = -73.9654,
         dataSource: DataSourceType = DataSourceType.MANUAL,
         status: RestroomStatus = RestroomStatus.ACTIVE,
-        amenities: JsonObject = createBasicAmenities(),
-        parentPlaceName: String? = null,
-        parentPlaceType: String? = null,
-        inheritParentSchedule: Boolean = false,
+        amenities: JsonObject? = createBasicAmenities(),
+        externalMaps: JsonObject? =
+            buildJsonObject {
+                put("yandex", JsonPrimitive("https://yandex.ru/maps/-/CCUqM0VhXD"))
+                put("google", JsonPrimitive("https://maps.google.com/?q=53.9006,27.5590"))
+            },
+        accessNote: String? = "Доступен для людей с ограниченными возможностями",
+        directionGuide: String? = "Находится на первом этаже, рядом с главным входом",
+        inheritBuildingSchedule: Boolean = false,
+        hasPhotos: Boolean = true,
         createdAt: Instant = Instant.now(),
         updatedAt: Instant = Instant.now()
     ) = RestroomResponseDto(
         id = id,
         cityId = cityId,
+        buildingId = buildingId,
+        subwayStationId = subwayStationId,
         name = name,
-        description = description,
         address = address,
         phones = phones,
         workTime = workTime,
         feeType = feeType,
         accessibilityType = accessibilityType,
+        placeType = placeType,
         coordinates =
             by.yayauheny.shared.dto
                 .LatLon(lat = lat, lon = lon),
         dataSource = dataSource,
         status = status,
         amenities = amenities,
-        parentPlaceName = parentPlaceName,
-        parentPlaceType = parentPlaceType,
-        inheritParentSchedule = inheritParentSchedule,
+        externalMaps = externalMaps,
+        accessNote = accessNote,
+        directionGuide = directionGuide,
+        inheritBuildingSchedule = inheritBuildingSchedule,
+        hasPhotos = hasPhotos,
         createdAt = createdAt,
         updatedAt = updatedAt
     )
@@ -249,7 +294,6 @@ object TestDataHelpers {
             createRestroomResponseDto(
                 cityId = cityId,
                 name = "Restroom $i",
-                description = "Description for restroom $i",
                 address = "Address $i",
                 lat = 40.0 + i * 0.01,
                 lon = -74.0 - i * 0.01
@@ -355,4 +399,141 @@ object TestDataHelpers {
             "lat" to 200.0, // Invalid latitude
             "lon" to 200.0 // Invalid longitude
         )
+
+    fun createBuildingCreateDto(
+        cityId: UUID = UUID.randomUUID(),
+        name: String? = "Test Building",
+        address: String = "123 Test Street",
+        buildingType: PlaceType? = PlaceType.MALL,
+        lat: Double = 53.9006,
+        lon: Double = 27.5590,
+        workTime: JsonObject? = createBasicWorkTime(),
+        externalIds: JsonObject? =
+            buildJsonObject {
+                put("yandex", JsonPrimitive("12345"))
+                put("google", JsonPrimitive("67890"))
+            }
+    ) = BuildingCreateDto(
+        cityId = cityId,
+        name = name,
+        address = address,
+        buildingType = buildingType,
+        coordinates = LatLon(lat = lat, lon = lon),
+        workTime = workTime,
+        externalIds = externalIds
+    )
+
+    fun createBuildingResponseDto(
+        id: UUID = UUID.randomUUID(),
+        cityId: UUID = UUID.randomUUID(),
+        name: String? = "Test Building",
+        address: String = "123 Test Street",
+        buildingType: PlaceType? = PlaceType.MALL,
+        lat: Double = 53.9006,
+        lon: Double = 27.5590,
+        workTime: JsonObject? = createBasicWorkTime(),
+        externalIds: JsonObject? =
+            buildJsonObject {
+                put("yandex", JsonPrimitive("12345"))
+                put("google", JsonPrimitive("67890"))
+            },
+        isDeleted: Boolean = false,
+        createdAt: Instant = Instant.now(),
+        updatedAt: Instant = Instant.now()
+    ) = BuildingResponseDto(
+        id = id,
+        cityId = cityId,
+        name = name,
+        address = address,
+        buildingType = buildingType,
+        coordinates = LatLon(lat = lat, lon = lon),
+        workTime = workTime,
+        externalIds = externalIds,
+        isDeleted = isDeleted,
+        createdAt = createdAt,
+        updatedAt = updatedAt
+    )
+
+    fun createBuildingUpdateDto(
+        cityId: UUID? = UUID.randomUUID(),
+        name: String? = "Updated Building",
+        address: String? = "Updated Address",
+        buildingType: PlaceType? = PlaceType.OFFICE,
+        coordinates: LatLon? = LatLon(lat = 53.9006, lon = 27.5590),
+        workTime: JsonObject? = createBasicWorkTime(),
+        externalIds: JsonObject? =
+            buildJsonObject {
+                put("yandex", JsonPrimitive("99999"))
+            }
+    ) = BuildingUpdateDto(
+        cityId = cityId,
+        name = name,
+        address = address,
+        buildingType = buildingType,
+        coordinates = coordinates,
+        workTime = workTime,
+        externalIds = externalIds
+    )
+
+    fun createSubwayLineCreateDto(
+        cityId: UUID = UUID.randomUUID(),
+        nameRu: String = "Автозаводская линия",
+        nameEn: String = "Avtozavodskaya Line",
+        hexColor: String = "#EF161E"
+    ) = SubwayLineCreateDto(
+        cityId = cityId,
+        nameRu = nameRu,
+        nameEn = nameEn,
+        hexColor = hexColor
+    )
+
+    fun createSubwayLineResponseDto(
+        id: UUID = UUID.randomUUID(),
+        cityId: UUID = UUID.randomUUID(),
+        nameRu: String = "Автозаводская линия",
+        nameEn: String = "Avtozavodskaya Line",
+        hexColor: String = "#EF161E",
+        isDeleted: Boolean = false,
+        createdAt: Instant = Instant.now()
+    ) = SubwayLineResponseDto(
+        id = id,
+        cityId = cityId,
+        nameRu = nameRu,
+        nameEn = nameEn,
+        hexColor = hexColor,
+        isDeleted = isDeleted,
+        createdAt = createdAt
+    )
+
+    fun createSubwayStationCreateDto(
+        subwayLineId: UUID = UUID.randomUUID(),
+        nameRu: String = "Площадь Победы",
+        nameEn: String = "Victory Square",
+        lat: Double = 53.9006,
+        lon: Double = 27.5590
+    ) = SubwayStationCreateDto(
+        subwayLineId = subwayLineId,
+        nameRu = nameRu,
+        nameEn = nameEn,
+        coordinates = LatLon(lat = lat, lon = lon)
+    )
+
+    fun createSubwayStationResponseDto(
+        id: UUID = UUID.randomUUID(),
+        subwayLineId: UUID = UUID.randomUUID(),
+        nameRu: String = "Площадь Победы",
+        nameEn: String = "Victory Square",
+        lat: Double = 53.9006,
+        lon: Double = 27.5590,
+        isDeleted: Boolean = false,
+        createdAt: Instant = Instant.now()
+    ) = SubwayStationResponseDto(
+        id = id,
+        subwayLineId = subwayLineId,
+        nameRu = nameRu,
+        nameEn = nameEn,
+        coordinates = LatLon(lat = lat, lon = lon),
+        isDeleted = isDeleted,
+        createdAt = createdAt
+    )
 }

@@ -32,7 +32,6 @@ class RestroomMapperTest {
             val testId = UUID.randomUUID()
             val testCityId = UUID.randomUUID()
             val testName = "Test Restroom"
-            val testDescription = "Test Description"
             val testAddress = "Test Address"
             val testLat = 55.7558
             val testLon = 37.6176
@@ -50,19 +49,27 @@ class RestroomMapperTest {
             // Mock field access
             every { mockRecord[RESTROOMS.ID] } returns testId
             every { mockRecord[RESTROOMS.CITY_ID] } returns testCityId
+            every { mockRecord[RESTROOMS.BUILDING_ID] } returns null
+            every { mockRecord[RESTROOMS.SUBWAY_STATION_ID] } returns null
             every { mockRecord[RESTROOMS.NAME] } returns testName
-            every { mockRecord[RESTROOMS.DESCRIPTION] } returns testDescription
             every { mockRecord[RESTROOMS.ADDRESS] } returns testAddress
             every { mockRecord[RESTROOMS.PHONES] } returns null
             every { mockRecord[RESTROOMS.WORK_TIME] } returns null
             every { mockRecord[RESTROOMS.FEE_TYPE] } returns testFeeType.name
             every { mockRecord[RESTROOMS.ACCESSIBILITY_TYPE] } returns testAccessibilityType.name
+            every { mockRecord[RESTROOMS.PLACE_TYPE] } returns null
             every { mockRecord[RESTROOMS.DATA_SOURCE] } returns testDataSource.name
             every { mockRecord[RESTROOMS.STATUS] } returns testStatus.name
             every { mockRecord[RESTROOMS.AMENITIES] } returns null
-            every { mockRecord[RESTROOMS.PARENT_PLACE_NAME] } returns null
-            every { mockRecord[RESTROOMS.PARENT_PLACE_TYPE] } returns null
-            every { mockRecord[RESTROOMS.INHERIT_PARENT_SCHEDULE] } returns null
+            val testExternalMapsJson =
+                JSONB.jsonb(
+                    """{"yandex":"https://yandex.ru/maps/-/CCUqM0VhXD","google":"https://maps.google.com/?q=53.9006,27.5590"}"""
+                )
+            every { mockRecord[RESTROOMS.EXTERNAL_MAPS] } returns testExternalMapsJson
+            every { mockRecord[RESTROOMS.ACCESS_NOTE] } returns "Доступен для людей с ограниченными возможностями"
+            every { mockRecord[RESTROOMS.DIRECTION_GUIDE] } returns "Находится на первом этаже, рядом с главным входом"
+            every { mockRecord[RESTROOMS.INHERIT_BUILDING_SCHEDULE] } returns false
+            every { mockRecord[RESTROOMS.HAS_PHOTOS] } returns true
             every { mockRecord[RESTROOMS.CREATED_AT] } returns testCreatedAt
             every { mockRecord[RESTROOMS.UPDATED_AT] } returns testUpdatedAt
 
@@ -74,7 +81,6 @@ class RestroomMapperTest {
             assertEquals(testId, result.id)
             assertEquals(testCityId, result.cityId)
             assertEquals(testName, result.name)
-            assertEquals(testDescription, result.description)
             assertEquals(testAddress, result.address)
             assertEquals(LatLon(lat = testLat, lon = testLon), result.coordinates)
             assertEquals(testFeeType, result.feeType)
@@ -83,9 +89,13 @@ class RestroomMapperTest {
             assertEquals(testStatus, result.status)
             assertEquals(testCreatedAt, result.createdAt)
             assertEquals(testUpdatedAt, result.updatedAt)
-            assertNull(result.parentPlaceName)
-            assertNull(result.parentPlaceType)
-            assertEquals(false, result.inheritParentSchedule)
+            assertNull(result.buildingId)
+            assertNull(result.subwayStationId)
+            assertEquals(false, result.inheritBuildingSchedule)
+            assertNotNull(result.externalMaps)
+            assertEquals("Доступен для людей с ограниченными возможностями", result.accessNote)
+            assertEquals("Находится на первом этаже, рядом с главным входом", result.directionGuide)
+            assertEquals(true, result.hasPhotos)
         }
 
         @Test
@@ -108,19 +118,23 @@ class RestroomMapperTest {
             every { mockRecord.get("lon", Double::class.java) } returns testLon
             every { mockRecord[RESTROOMS.ID] } returns testId
             every { mockRecord[RESTROOMS.CITY_ID] } returns null
+            every { mockRecord[RESTROOMS.BUILDING_ID] } returns null
+            every { mockRecord[RESTROOMS.SUBWAY_STATION_ID] } returns null
             every { mockRecord[RESTROOMS.NAME] } returns null
-            every { mockRecord[RESTROOMS.DESCRIPTION] } returns null
             every { mockRecord[RESTROOMS.ADDRESS] } returns testAddress
             every { mockRecord[RESTROOMS.PHONES] } returns null
             every { mockRecord[RESTROOMS.WORK_TIME] } returns null
             every { mockRecord[RESTROOMS.FEE_TYPE] } returns testFeeType.name
             every { mockRecord[RESTROOMS.ACCESSIBILITY_TYPE] } returns testAccessibilityType.name
+            every { mockRecord[RESTROOMS.PLACE_TYPE] } returns null
             every { mockRecord[RESTROOMS.DATA_SOURCE] } returns testDataSource.name
             every { mockRecord[RESTROOMS.STATUS] } returns testStatus.name
             every { mockRecord[RESTROOMS.AMENITIES] } returns null
-            every { mockRecord[RESTROOMS.PARENT_PLACE_NAME] } returns null
-            every { mockRecord[RESTROOMS.PARENT_PLACE_TYPE] } returns null
-            every { mockRecord[RESTROOMS.INHERIT_PARENT_SCHEDULE] } returns null
+            every { mockRecord[RESTROOMS.EXTERNAL_MAPS] } returns null
+            every { mockRecord[RESTROOMS.ACCESS_NOTE] } returns null
+            every { mockRecord[RESTROOMS.DIRECTION_GUIDE] } returns null
+            every { mockRecord[RESTROOMS.INHERIT_BUILDING_SCHEDULE] } returns false
+            every { mockRecord[RESTROOMS.HAS_PHOTOS] } returns false
             every { mockRecord[RESTROOMS.CREATED_AT] } returns testCreatedAt
             every { mockRecord[RESTROOMS.UPDATED_AT] } returns testUpdatedAt
 
@@ -131,7 +145,7 @@ class RestroomMapperTest {
             assertNotNull(result)
             assertNull(result.cityId)
             assertNull(result.name)
-            assertNull(result.description)
+            assertNull(result.accessNote)
         }
 
         @Test
@@ -158,18 +172,26 @@ class RestroomMapperTest {
             every { mockRecord[RESTROOMS.ID] } returns testId
             every { mockRecord[RESTROOMS.CITY_ID] } returns null
             every { mockRecord[RESTROOMS.NAME] } returns null
-            every { mockRecord[RESTROOMS.DESCRIPTION] } returns null
+            every { mockRecord[RESTROOMS.BUILDING_ID] } returns null
+            every { mockRecord[RESTROOMS.SUBWAY_STATION_ID] } returns null
             every { mockRecord[RESTROOMS.ADDRESS] } returns testAddress
             every { mockRecord[RESTROOMS.PHONES] } returns testPhonesJson
             every { mockRecord[RESTROOMS.WORK_TIME] } returns testWorkTimeJson
             every { mockRecord[RESTROOMS.FEE_TYPE] } returns testFeeType.name
             every { mockRecord[RESTROOMS.ACCESSIBILITY_TYPE] } returns testAccessibilityType.name
+            every { mockRecord[RESTROOMS.PLACE_TYPE] } returns null
             every { mockRecord[RESTROOMS.DATA_SOURCE] } returns testDataSource.name
             every { mockRecord[RESTROOMS.STATUS] } returns testStatus.name
             every { mockRecord[RESTROOMS.AMENITIES] } returns testAmenitiesJson
-            every { mockRecord[RESTROOMS.PARENT_PLACE_NAME] } returns null
-            every { mockRecord[RESTROOMS.PARENT_PLACE_TYPE] } returns null
-            every { mockRecord[RESTROOMS.INHERIT_PARENT_SCHEDULE] } returns true
+            val testExternalMapsJson =
+                JSONB.jsonb(
+                    """{"yandex":"https://yandex.ru/maps/-/CCUqM0VhXD","google":"https://maps.google.com/?q=53.9006,27.5590"}"""
+                )
+            every { mockRecord[RESTROOMS.EXTERNAL_MAPS] } returns testExternalMapsJson
+            every { mockRecord[RESTROOMS.ACCESS_NOTE] } returns "Доступен для людей с ограниченными возможностями"
+            every { mockRecord[RESTROOMS.DIRECTION_GUIDE] } returns "Находится на первом этаже, рядом с главным входом"
+            every { mockRecord[RESTROOMS.INHERIT_BUILDING_SCHEDULE] } returns true
+            every { mockRecord[RESTROOMS.HAS_PHOTOS] } returns true
             every { mockRecord[RESTROOMS.CREATED_AT] } returns testCreatedAt
             every { mockRecord[RESTROOMS.UPDATED_AT] } returns testUpdatedAt
 
@@ -181,7 +203,11 @@ class RestroomMapperTest {
             assertNotNull(result.phones)
             assertNotNull(result.workTime)
             assertNotNull(result.amenities)
-            assertEquals(true, result.inheritParentSchedule)
+            assertNotNull(result.externalMaps)
+            assertEquals("Доступен для людей с ограниченными возможностями", result.accessNote)
+            assertEquals("Находится на первом этаже, рядом с главным входом", result.directionGuide)
+            assertEquals(true, result.inheritBuildingSchedule)
+            assertEquals(true, result.hasPhotos)
         }
     }
 

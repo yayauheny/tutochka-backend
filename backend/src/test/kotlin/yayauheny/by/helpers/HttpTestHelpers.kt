@@ -306,8 +306,8 @@ fun createRestroomJsonFromTestData(
             if (testData.name != null) {
                 put("name", testData.name)
             }
-            if (testData.description != null) {
-                put("description", testData.description)
+            if (testData.accessNote != null) {
+                put("accessNote", testData.accessNote)
             }
             put("address", testData.address)
             put("status", testData.status.name)

@@ -19,14 +19,14 @@ public class FormatterService {
         String name = Optional.ofNullable(toilet.getName()).orElse("Туалет");
         String address = Optional.ofNullable(toilet.getAddress()).orElse("Адрес не указан");
         
-        String description = Optional.ofNullable(toilet.getDescription())
-            .filter(desc -> !desc.trim().isEmpty())
-            .orElseGet(() -> "Описание не указано");
+        String accessNote = Optional.ofNullable(toilet.getAccessNote())
+            .filter(note -> !note.trim().isEmpty())
+            .orElseGet(() -> "Дополнительная информация не указана");
         
         return Text.substitute(Messages.TOILET_DETAILS, Map.of(
             "name", name,
             "address", address,
-            "description", description
+            "description", accessNote
         ));
     }
 

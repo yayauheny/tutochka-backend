@@ -256,7 +256,7 @@ class RestroomRepositoryImpl(
         .set(RESTROOMS.WORK_TIME, createDto.workTime.toJSONBOrEmpty())
         .set(RESTROOMS.FEE_TYPE, createDto.feeType.name)
         .set(RESTROOMS.ACCESSIBILITY_TYPE, createDto.accessibilityType.name)
-        .set(RESTROOMS.PLACE_TYPE, createDto.placeType?.id)
+        .set(RESTROOMS.PLACE_TYPE, createDto.placeType.id)
         .set(
             RESTROOMS.COORDINATES,
             pointExpr(createDto.coordinates.lon, createDto.coordinates.lat, RESTROOMS.COORDINATES)

@@ -52,6 +52,17 @@ class SubwayRepositoryImpl(
 
     private fun notDeletedStationCondition() = SUBWAY_STATIONS.IS_DELETED.eq(false).or(SUBWAY_STATIONS.IS_DELETED.isNull)
 
+    private fun fetchStationById(
+        ctx: DSLContext,
+        id: UUID
+    ): SubwayStationResponseDto? =
+        ctx
+            .select(*stationProjection())
+            .from(SUBWAY_STATIONS)
+            .where(SUBWAY_STATIONS.ID.eq(id).and(notDeletedStationCondition()))
+            .fetchOne()
+            ?.let { SubwayMapper.mapStationFromRecord(it) }
+
     override suspend fun createLine(createDto: SubwayLineCreateDto): SubwayLineResponseDto =
         ctx.transactionSuspend { txCtx ->
             val id = UUID.randomUUID()
@@ -89,13 +100,10 @@ class SubwayRepositoryImpl(
         ctx.transactionSuspend { txCtx ->
             val id = UUID.randomUUID()
             val now = Instant.now()
-            val rec =
-                SubwayMapper
-                    .mapStationToSaveRecord(txCtx, createDto, id, now)
-                    .returning(*stationProjection())
-                    .fetchOne()
-                    ?: throw EntityNotFoundException("Станция метро", "не удалось сохранить")
-            SubwayMapper.mapStationFromRecord(rec)
+            SubwayMapper
+                .mapStationToSaveRecord(txCtx, createDto, id, now)
+                .execute()
+            fetchStationById(txCtx, id) ?: throw EntityNotFoundException("Станция метро", "не удалось сохранить")
         }
 
     override suspend fun findStationById(id: UUID): SubwayStationResponseDto? =
@@ -141,7 +149,7 @@ class SubwayRepositoryImpl(
         lon: Double
     ): Boolean =
         withContext(Dispatchers.IO) {
-            val nearestStationField =
+            val nearestStationSelect =
                 ctx
                     .select(SUBWAY_STATIONS.ID)
                     .from(SUBWAY_STATIONS)
@@ -154,7 +162,8 @@ class SubwayRepositoryImpl(
                             .and(SUBWAY_LINES.IS_DELETED.eq(false))
                     ).orderBy(SUBWAY_STATIONS.COORDINATES.knnOrderTo(lat, lon))
                     .limit(1)
-                    .asField<UUID>("nearest_station_id")
+
+            val nearestStationField = DSL.field(nearestStationSelect)
 
             val rowsUpdated =
                 ctx

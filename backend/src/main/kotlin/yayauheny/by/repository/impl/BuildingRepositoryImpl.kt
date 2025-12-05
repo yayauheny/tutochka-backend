@@ -128,6 +128,17 @@ class BuildingRepositoryImpl(
 
     private fun notDeletedCondition() = BUILDINGS.IS_DELETED.eq(false).or(BUILDINGS.IS_DELETED.isNull)
 
+    private fun fetchById(
+        ctx: DSLContext,
+        id: UUID
+    ): BuildingResponseDto? =
+        ctx
+            .select(*projection())
+            .from(BUILDINGS)
+            .where(BUILDINGS.ID.eq(id).and(notDeletedCondition()))
+            .fetchOne()
+            ?.let { BuildingMapper.mapFromRecord(it) }
+
     override suspend fun findAll(pagination: PaginationRequest): PageResponse<BuildingResponseDto> =
         withContext(Dispatchers.IO) {
             val base =
@@ -189,13 +200,10 @@ class BuildingRepositoryImpl(
         ctx.transactionSuspend { txCtx ->
             val id = UUID.randomUUID()
             val now = Instant.now()
-            val rec =
-                BuildingMapper
-                    .mapToSaveRecord(txCtx, createDto, id, now)
-                    .returning(*projection())
-                    .fetchOne()
-                    ?: throw EntityNotFoundException("Здание", "не удалось сохранить")
-            BuildingMapper.mapFromRecord(rec)
+            BuildingMapper
+                .mapToSaveRecord(txCtx, createDto, id, now)
+                .execute()
+            fetchById(txCtx, id) ?: throw EntityNotFoundException("Здание", "не удалось сохранить")
         }
 
     override suspend fun update(
@@ -203,14 +211,15 @@ class BuildingRepositoryImpl(
         updateDto: BuildingUpdateDto
     ): BuildingResponseDto =
         ctx.transactionSuspend { txCtx ->
-            val rec =
+            val updated =
                 BuildingMapper
                     .applyUpdateDto(txCtx.update(BUILDINGS), updateDto)
                     .where(BUILDINGS.ID.eq(id).and(notDeletedCondition()))
-                    .returning(*projection())
-                    .fetchOne()
-                    ?: throw EntityNotFoundException("Здание", id.toString())
-            BuildingMapper.mapFromRecord(rec)
+                    .execute()
+            if (updated == 0) {
+                throw EntityNotFoundException("Здание", id.toString())
+            }
+            fetchById(txCtx, id) ?: throw EntityNotFoundException("Здание", id.toString())
         }
 
     override suspend fun deleteById(id: UUID): Boolean =

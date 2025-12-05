@@ -51,8 +51,8 @@ data class RestroomCreateDto(
     val feeType: FeeType,
     @field:Schema(description = "Accessibility type", example = "UNISEX", required = true)
     val accessibilityType: AccessibilityType,
-    @field:Schema(description = "Place type", example = "public_toilet")
-    val placeType: PlaceType? = null,
+    @field:Schema(description = "Place type", example = "other")
+    val placeType: PlaceType = PlaceType.OTHER,
     @field:Schema(description = "Coordinates", example = "55.7558, 37.6176", required = true)
     val coordinates: LatLon,
     @field:Schema(description = "Data source type", example = "MANUAL", required = true)

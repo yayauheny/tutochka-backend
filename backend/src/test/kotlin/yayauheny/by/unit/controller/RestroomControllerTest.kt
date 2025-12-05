@@ -319,9 +319,8 @@ class RestroomControllerTest : RoutingTestBase() {
                         },
                         "dataSource": "MANUAL",
                         "amenities": {},
-                        "parentPlaceName": "Test Mall",
-                        "parentPlaceType": "SHOPPING_MALL",
-                        "inheritParentSchedule": true
+                        "buildingId": "${UUID.randomUUID()}",
+                        "inheritBuildingSchedule": true
                     }
                     """.trimIndent()
 

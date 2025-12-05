@@ -37,7 +37,6 @@ abstract class BaseIntegrationTest {
             ).withDatabaseName("testdb")
                 .withUsername("postgres")
                 .withPassword("postgres")
-                .withReuse(true)
     }
 
     protected lateinit var dslContext: DSLContext

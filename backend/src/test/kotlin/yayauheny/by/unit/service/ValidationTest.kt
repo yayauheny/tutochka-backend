@@ -25,12 +25,20 @@ import yayauheny.by.model.restroom.RestroomCreateDto
 import by.yayauheny.shared.enums.AccessibilityType
 import by.yayauheny.shared.enums.DataSourceType
 import by.yayauheny.shared.enums.FeeType
+import by.yayauheny.shared.enums.PlaceType
 import by.yayauheny.shared.enums.RestroomStatus
 import yayauheny.by.service.validation.NearestRestroomsParams
 import yayauheny.by.service.validation.validateCityOnCreate
 import yayauheny.by.service.validation.validateCountryOnCreate
 import yayauheny.by.service.validation.validateNearestRestroomsParams
 import yayauheny.by.service.validation.validateRestroomOnCreate
+import yayauheny.by.service.validation.validateSubwayLineOnCreate
+import yayauheny.by.service.validation.validateSubwayStationOnCreate
+import yayauheny.by.service.validation.validateRestroomCreateFields
+import yayauheny.by.service.validation.validateRestroomUpdateFields
+import yayauheny.by.model.subway.SubwayLineCreateDto
+import yayauheny.by.model.subway.SubwayStationCreateDto
+import yayauheny.by.helpers.TestDataHelpers
 
 class ValidationTest {
     companion object {
@@ -84,18 +92,16 @@ class ValidationTest {
                         cityId = UUID.randomUUID(),
                         status = RestroomStatus.ACTIVE,
                         name = null,
-                        description = null,
                         address = "",
                         phones = null,
                         workTime = null,
                         feeType = FeeType.FREE,
                         accessibilityType = AccessibilityType.UNISEX,
+                        placeType = PlaceType.OTHER,
                         coordinates = LatLon(lat = 55.7558, lon = 37.6176),
                         dataSource = DataSourceType.MANUAL,
                         amenities = buildJsonObject {},
-                        parentPlaceName = null,
-                        parentPlaceType = null,
-                        inheritParentSchedule = false
+                        inheritBuildingSchedule = false
                     ),
                     1
                 ),
@@ -242,7 +248,6 @@ class ValidationTest {
                 RestroomCreateDto(
                     cityId = UUID.randomUUID(),
                     name = "Public Restroom",
-                    description = "Clean public restroom",
                     address = "123 Main Street",
                     phones = buildJsonObject { put("main", "+1234567890") },
                     workTime = buildJsonObject { put("monday", "08:00-22:00") },
@@ -252,9 +257,8 @@ class ValidationTest {
                     dataSource = DataSourceType.MANUAL,
                     status = RestroomStatus.ACTIVE,
                     amenities = buildJsonObject { put("wifi", true) },
-                    parentPlaceName = null,
-                    parentPlaceType = null,
-                    inheritParentSchedule = false
+                    inheritBuildingSchedule = false,
+                    hasPhotos = false
                 )
 
             // When
@@ -391,7 +395,6 @@ class ValidationTest {
                     cityId = UUID.randomUUID(),
                     status = RestroomStatus.ACTIVE,
                     name = "Test",
-                    description = "Test",
                     address = "", // Empty address
                     phones = buildJsonObject {},
                     workTime = buildJsonObject {},
@@ -400,9 +403,13 @@ class ValidationTest {
                     coordinates = LatLon(lat = 91.0, lon = 181.0), // Invalid lat/lon
                     dataSource = DataSourceType.MANUAL,
                     amenities = buildJsonObject {},
-                    parentPlaceName = null,
-                    parentPlaceType = null,
-                    inheritParentSchedule = false
+                    buildingId = null,
+                    subwayStationId = null,
+                    externalMaps = null,
+                    accessNote = "Test",
+                    directionGuide = null,
+                    inheritBuildingSchedule = false,
+                    hasPhotos = false
                 ) // Multiple issues
 
             // When
@@ -491,5 +498,201 @@ class ValidationTest {
                 params.validateOrThrow(validateNearestRestroomsParams)
             }
         }
+    }
+
+    @Nested
+    @DisplayName("Subway Line Validation Tests")
+    inner class SubwayLineValidationTests {
+        @Test
+        @DisplayName("GIVEN valid subway line data WHEN validate THEN pass")
+        fun given_valid_subway_line_data_when_validate_then_pass() =
+            runTest {
+                val dto =
+                    SubwayLineCreateDto(
+                        cityId = UUID.randomUUID(),
+                        nameRu = "Автозаводская линия",
+                        nameEn = "Avtozavodskaya Line",
+                        hexColor = "#EF161E"
+                    )
+
+                val result = dto.validateWith(validateSubwayLineOnCreate)
+
+                assertTrue(result.isSuccess, "Valid subway line should pass validation")
+            }
+
+        @Test
+        @DisplayName("GIVEN empty nameRu WHEN validate THEN fail")
+        fun given_empty_name_ru_when_validate_then_fail() =
+            runTest {
+                val dto =
+                    SubwayLineCreateDto(
+                        cityId = UUID.randomUUID(),
+                        nameRu = "",
+                        nameEn = "Avtozavodskaya Line",
+                        hexColor = "#EF161E"
+                    )
+
+                val result = dto.validateWith(validateSubwayLineOnCreate)
+
+                assertTrue(result.isFailure, "Empty nameRu should fail validation")
+            }
+
+        @Test
+        @DisplayName("GIVEN invalid hex color WHEN validate THEN fail")
+        fun given_invalid_hex_color_when_validate_then_fail() =
+            runTest {
+                val dto =
+                    SubwayLineCreateDto(
+                        cityId = UUID.randomUUID(),
+                        nameRu = "Автозаводская линия",
+                        nameEn = "Avtozavodskaya Line",
+                        hexColor = "INVALID"
+                    )
+
+                val result = dto.validateWith(validateSubwayLineOnCreate)
+
+                assertTrue(result.isFailure, "Invalid hex color should fail validation")
+            }
+
+        @Test
+        @DisplayName("GIVEN hex color without # WHEN validate THEN fail")
+        fun given_hex_color_without_hash_when_validate_then_fail() =
+            runTest {
+                val dto =
+                    SubwayLineCreateDto(
+                        cityId = UUID.randomUUID(),
+                        nameRu = "Автозаводская линия",
+                        nameEn = "Avtozavodskaya Line",
+                        hexColor = "EF161E"
+                    )
+
+                val result = dto.validateWith(validateSubwayLineOnCreate)
+
+                assertTrue(result.isFailure, "Hex color without # should fail validation")
+            }
+
+        @Test
+        @DisplayName("GIVEN hex color with lowercase WHEN validate THEN pass")
+        fun given_hex_color_with_lowercase_when_validate_then_pass() =
+            runTest {
+                val dto =
+                    SubwayLineCreateDto(
+                        cityId = UUID.randomUUID(),
+                        nameRu = "Автозаводская линия",
+                        nameEn = "Avtozavodskaya Line",
+                        hexColor = "#ef161e"
+                    )
+
+                val result = dto.validateWith(validateSubwayLineOnCreate)
+
+                assertTrue(result.isSuccess, "Lowercase hex color should pass validation")
+            }
+    }
+
+    @Nested
+    @DisplayName("Subway Station Validation Tests")
+    inner class SubwayStationValidationTests {
+        @Test
+        @DisplayName("GIVEN valid subway station data WHEN validate THEN pass")
+        fun given_valid_subway_station_data_when_validate_then_pass() =
+            runTest {
+                val dto =
+                    SubwayStationCreateDto(
+                        subwayLineId = UUID.randomUUID(),
+                        nameRu = "Площадь Победы",
+                        nameEn = "Victory Square",
+                        coordinates = LatLon(lat = 53.9006, lon = 27.5590)
+                    )
+
+                val result = dto.validateWith(validateSubwayStationOnCreate)
+
+                assertTrue(result.isSuccess, "Valid subway station should pass validation")
+            }
+
+        @Test
+        @DisplayName("GIVEN empty nameRu WHEN validate THEN fail")
+        fun given_empty_name_ru_when_validate_then_fail() =
+            runTest {
+                val dto =
+                    SubwayStationCreateDto(
+                        subwayLineId = UUID.randomUUID(),
+                        nameRu = "",
+                        nameEn = "Victory Square",
+                        coordinates = LatLon(lat = 53.9006, lon = 27.5590)
+                    )
+
+                val result = dto.validateWith(validateSubwayStationOnCreate)
+
+                assertTrue(result.isFailure, "Empty nameRu should fail validation")
+            }
+
+        @Test
+        @DisplayName("GIVEN invalid coordinates WHEN validate THEN fail")
+        fun given_invalid_coordinates_when_validate_then_fail() =
+            runTest {
+                val dto =
+                    SubwayStationCreateDto(
+                        subwayLineId = UUID.randomUUID(),
+                        nameRu = "Площадь Победы",
+                        nameEn = "Victory Square",
+                        coordinates = LatLon(lat = 200.0, lon = 200.0)
+                    )
+
+                val result = dto.validateWith(validateSubwayStationOnCreate)
+
+                assertTrue(result.isFailure, "Invalid coordinates should fail validation")
+            }
+    }
+
+    @Nested
+    @DisplayName("Restroom Fields Validation Tests")
+    inner class RestroomFieldsValidationTests {
+        @Test
+        @DisplayName("GIVEN valid restroom create fields WHEN validateRestroomCreateFields THEN return empty list")
+        fun given_valid_restroom_create_fields_when_validate_then_return_empty_list() =
+            runTest {
+                val dto = TestDataHelpers.createRestroomCreateDto()
+
+                val errors = validateRestroomCreateFields(dto)
+
+                assertTrue(errors.isEmpty(), "Valid fields should return no errors")
+            }
+
+        @Test
+        @DisplayName("GIVEN too long name WHEN validateRestroomCreateFields THEN return error")
+        fun given_too_long_name_when_validate_then_return_error() =
+            runTest {
+                val longName = "a".repeat(300)
+                val dto = TestDataHelpers.createRestroomCreateDto(name = longName)
+
+                val errors = validateRestroomCreateFields(dto)
+
+                assertTrue(errors.isNotEmpty(), "Too long name should return error")
+                assertTrue(errors.any { it.field == "name" }, "Error should be for name field")
+            }
+
+        @Test
+        @DisplayName("GIVEN valid restroom update fields WHEN validateRestroomUpdateFields THEN return empty list")
+        fun given_valid_restroom_update_fields_when_validate_then_return_empty_list() =
+            runTest {
+                val dto = TestDataHelpers.createRestroomUpdateDto()
+
+                val errors = validateRestroomUpdateFields(dto)
+
+                assertTrue(errors.isEmpty(), "Valid fields should return no errors")
+            }
+
+        @Test
+        @DisplayName("GIVEN too long accessNote WHEN validateRestroomUpdateFields THEN return error")
+        fun given_too_long_access_note_when_validate_then_return_error() =
+            runTest {
+                val longNote = "a".repeat(300)
+                val dto = TestDataHelpers.createRestroomUpdateDto(accessNote = longNote)
+
+                val errors = validateRestroomUpdateFields(dto)
+
+                assertTrue(errors.isNotEmpty(), "Too long accessNote should return error")
+                assertTrue(errors.any { it.field == "accessNote" }, "Error should be for accessNote field")
+            }
     }
 }

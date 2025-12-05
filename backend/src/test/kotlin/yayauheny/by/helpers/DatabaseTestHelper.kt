@@ -10,6 +10,7 @@ import org.jooq.impl.DSL
 import by.yayauheny.shared.enums.AccessibilityType
 import by.yayauheny.shared.enums.DataSourceType
 import by.yayauheny.shared.enums.FeeType
+import by.yayauheny.shared.enums.PlaceType
 import by.yayauheny.shared.enums.RestroomStatus
 import yayauheny.by.tables.references.CITIES
 import yayauheny.by.tables.references.COUNTRIES
@@ -32,17 +33,28 @@ data class TestCityData(
 
 data class TestRestroomData(
     val name: String? = "Test Restroom",
-    val description: String? = "Test Description",
     val address: String = "Test Address 123",
     val phones: JsonObject? = buildJsonObject { put("main", JsonPrimitive("+1234567890")) },
     val workTime: JsonObject? = buildJsonObject { put("monday", JsonPrimitive("09:00-18:00")) },
     val feeType: FeeType = FeeType.FREE,
     val accessibilityType: AccessibilityType = AccessibilityType.UNISEX,
+    val placeType: PlaceType = PlaceType.OTHER,
     val lat: Double = 55.7558 + (Math.random() * 0.1 - 0.05), // Случайное смещение для уникальности координат
     val lon: Double = 37.6176 + (Math.random() * 0.1 - 0.05),
     val dataSource: DataSourceType = DataSourceType.MANUAL,
     val status: RestroomStatus = RestroomStatus.ACTIVE,
-    val amenities: JsonObject = buildJsonObject { put("wifi", JsonPrimitive("true")) }
+    val amenities: JsonObject = buildJsonObject { put("wifi", JsonPrimitive("true")) },
+    val buildingId: UUID? = null,
+    val subwayStationId: UUID? = null,
+    val externalMaps: JsonObject? =
+        buildJsonObject {
+            put("yandex", JsonPrimitive("https://yandex.ru/maps/-/CCUqM0VhXD"))
+            put("google", JsonPrimitive("https://maps.google.com/?q=53.9006,27.5590"))
+        },
+    val accessNote: String? = "Доступен для людей с ограниченными возможностями",
+    val directionGuide: String? = "Находится на первом этаже, рядом с главным входом",
+    val inheritBuildingSchedule: Boolean = false,
+    val hasPhotos: Boolean = true
 )
 
 object DatabaseTestHelper {
@@ -61,18 +73,49 @@ object DatabaseTestHelper {
 
     fun createTestRestroomData(
         name: String? = "Test Restroom",
-        description: String? = "Test Description",
         address: String = "Test Address 123",
         phones: JsonObject? = buildJsonObject { put("main", JsonPrimitive("+1234567890")) },
         workTime: JsonObject? = buildJsonObject { put("monday", JsonPrimitive("09:00-18:00")) },
         feeType: FeeType = FeeType.FREE,
         accessibilityType: AccessibilityType = AccessibilityType.UNISEX,
+        placeType: PlaceType = PlaceType.OTHER,
         lat: Double = 55.7558 + (Math.random() * 0.1 - 0.05), // Случайное смещение для уникальности координат
         lon: Double = 37.6176 + (Math.random() * 0.1 - 0.05),
         dataSource: DataSourceType = DataSourceType.MANUAL,
         status: RestroomStatus = RestroomStatus.ACTIVE,
-        amenities: JsonObject = buildJsonObject { put("wifi", JsonPrimitive("true")) }
-    ) = TestRestroomData(name, description, address, phones, workTime, feeType, accessibilityType, lat, lon, dataSource, status, amenities)
+        amenities: JsonObject = buildJsonObject { put("wifi", JsonPrimitive("true")) },
+        buildingId: UUID? = null,
+        subwayStationId: UUID? = null,
+        externalMaps: JsonObject? =
+            buildJsonObject {
+                put("yandex", JsonPrimitive("https://yandex.ru/maps/-/CCUqM0VhXD"))
+                put("google", JsonPrimitive("https://maps.google.com/?q=53.9006,27.5590"))
+            },
+        accessNote: String? = "Доступен для людей с ограниченными возможностями",
+        directionGuide: String? = "Находится на первом этаже, рядом с главным входом",
+        inheritBuildingSchedule: Boolean = false,
+        hasPhotos: Boolean = true
+    ) = TestRestroomData(
+        name,
+        address,
+        phones,
+        workTime,
+        feeType,
+        accessibilityType,
+        placeType,
+        lat,
+        lon,
+        dataSource,
+        status,
+        amenities,
+        buildingId,
+        subwayStationId,
+        externalMaps,
+        accessNote,
+        directionGuide,
+        inheritBuildingSchedule,
+        hasPhotos
+    )
 
     fun insertTestCountry(
         dslContext: DSLContext,
@@ -138,19 +181,26 @@ object DatabaseTestHelper {
                 .insertInto(RESTROOMS)
                 .set(RESTROOMS.ID, id)
                 .set(RESTROOMS.CITY_ID, cityId)
+                .set(RESTROOMS.BUILDING_ID, data.buildingId)
+                .set(RESTROOMS.SUBWAY_STATION_ID, data.subwayStationId)
                 .set(RESTROOMS.NAME, data.name)
-                .set(RESTROOMS.DESCRIPTION, data.description)
                 .set(RESTROOMS.ADDRESS, data.address)
                 .set(RESTROOMS.PHONES, data.phones.toJSONBOrEmpty())
                 .set(RESTROOMS.WORK_TIME, data.workTime.toJSONBOrEmpty())
                 .set(RESTROOMS.FEE_TYPE, data.feeType.name)
                 .set(RESTROOMS.ACCESSIBILITY_TYPE, data.accessibilityType.name)
+                .set(RESTROOMS.PLACE_TYPE, data.placeType?.id)
                 .set(
                     RESTROOMS.COORDINATES,
                     pointExpr(data.lon, data.lat, RESTROOMS.COORDINATES)
                 ).set(RESTROOMS.DATA_SOURCE, data.dataSource.name)
                 .set(RESTROOMS.STATUS, data.status.name)
                 .set(RESTROOMS.AMENITIES, data.amenities.toJSONBOrEmpty())
+                .set(RESTROOMS.EXTERNAL_MAPS, data.externalMaps.toJSONBOrEmpty())
+                .set(RESTROOMS.ACCESS_NOTE, data.accessNote)
+                .set(RESTROOMS.DIRECTION_GUIDE, data.directionGuide)
+                .set(RESTROOMS.INHERIT_BUILDING_SCHEDULE, data.inheritBuildingSchedule)
+                .set(RESTROOMS.HAS_PHOTOS, data.hasPhotos)
                 .set(RESTROOMS.CREATED_AT, now)
                 .set(RESTROOMS.UPDATED_AT, now)
                 .returning(RESTROOMS.ID)

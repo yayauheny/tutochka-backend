@@ -22,7 +22,6 @@ import org.junit.jupiter.params.provider.CsvSource
 import org.junit.jupiter.params.provider.EnumSource
 import org.junit.jupiter.params.provider.ValueSource
 import yayauheny.by.helpers.TestDataHelpers
-import by.yayauheny.shared.dto.LatLon
 import yayauheny.by.model.restroom.NearestRestroomResponseDto
 import yayauheny.by.common.query.PaginationRequest
 import yayauheny.by.common.query.PageResponse
@@ -281,17 +280,16 @@ class RestroomServiceTest {
         fun given_restroom_with_parent_place_data_when_creating_restroom_then_save_parent_place_fields_correctly() =
             runTest {
                 // Given
+                val buildingId = UUID.randomUUID()
                 val createDto =
                     TestDataHelpers.createRestroomCreateDto(
-                        parentPlaceName = "Central Park Mall",
-                        parentPlaceType = "SHOPPING_MALL",
-                        inheritParentSchedule = true
+                        buildingId = buildingId,
+                        inheritBuildingSchedule = true
                     )
                 val expectedResponse =
                     TestDataHelpers.createRestroomResponseDto(
-                        parentPlaceName = "Central Park Mall",
-                        parentPlaceType = "SHOPPING_MALL",
-                        inheritParentSchedule = true
+                        buildingId = buildingId,
+                        inheritBuildingSchedule = true
                     )
                 coEvery { restroomRepository.save(any()) } returns expectedResponse
 
@@ -300,9 +298,8 @@ class RestroomServiceTest {
 
                 // Then
                 assertEquals(expectedResponse, actualResponse)
-                assertEquals("Central Park Mall", actualResponse.parentPlaceName)
-                assertEquals("SHOPPING_MALL", actualResponse.parentPlaceType)
-                assertTrue(actualResponse.inheritParentSchedule)
+                assertNotNull(actualResponse.buildingId)
+                assertEquals(true, actualResponse.inheritBuildingSchedule)
                 coVerify(exactly = 1) { restroomRepository.save(any()) }
             }
 
@@ -331,44 +328,28 @@ class RestroomServiceTest {
             runTest {
                 // Given
                 val createDto =
-                    RestroomCreateDto(
-                        cityId = null,
-                        status = RestroomStatus.ACTIVE,
-                        name = "Test Restroom",
-                        description = "Test Description",
-                        address = "Test Address",
-                        phones = null,
-                        workTime = null,
-                        feeType = FeeType.FREE,
-                        accessibilityType = AccessibilityType.UNISEX,
-                        coordinates = LatLon(lat = 40.7829, lon = -73.9654),
-                        dataSource = DataSourceType.MANUAL,
-                        amenities = createBasicAmenities(),
-                        parentPlaceName = null,
-                        parentPlaceType = null,
-                        inheritParentSchedule = false
-                    )
+                    TestDataHelpers
+                        .createRestroomCreateDto(
+                            name = "Test Restroom",
+                            address = "Test Address",
+                            phones = null,
+                            workTime = null,
+                            lat = 40.7829,
+                            lon = -73.9654
+                        ).copy(cityId = null)
                 val expectedResponse =
-                    RestroomResponseDto(
-                        id = UUID.randomUUID(),
-                        cityId = null,
-                        name = "Test Restroom",
-                        description = "Test Description",
-                        address = "Test Address",
-                        phones = null,
-                        workTime = null,
-                        feeType = FeeType.FREE,
-                        accessibilityType = AccessibilityType.UNISEX,
-                        coordinates = LatLon(lat = 40.7829, lon = -73.9654),
-                        dataSource = DataSourceType.MANUAL,
-                        status = RestroomStatus.ACTIVE,
-                        amenities = createBasicAmenities(),
-                        parentPlaceName = null,
-                        parentPlaceType = null,
-                        inheritParentSchedule = false,
-                        createdAt = Instant.now(),
-                        updatedAt = Instant.now()
-                    )
+                    TestDataHelpers
+                        .createRestroomResponseDto(
+                            id = UUID.randomUUID(),
+                            name = "Test Restroom",
+                            address = "Test Address",
+                            phones = null,
+                            workTime = null,
+                            lat = 40.7829,
+                            lon = -73.9654,
+                            createdAt = Instant.now(),
+                            updatedAt = Instant.now()
+                        ).copy(cityId = null)
                 coEvery { restroomRepository.save(any()) } returns expectedResponse
 
                 // When
@@ -394,7 +375,7 @@ class RestroomServiceTest {
                 val updatedRestroom =
                     existingRestroom.copy(
                         name = updateDto.name ?: existingRestroom.name,
-                        description = updateDto.description ?: existingRestroom.description,
+                        accessNote = updateDto.accessNote ?: existingRestroom.accessNote,
                         address = updateDto.address,
                         updatedAt = Instant.now()
                     )
@@ -444,7 +425,7 @@ class RestroomServiceTest {
                 val updateDto =
                     TestDataHelpers.createRestroomUpdateDto(
                         name = existingRestroom.name,
-                        description = existingRestroom.description,
+                        accessNote = existingRestroom.accessNote,
                         address = existingRestroom.address
                     )
                 // Repository update will set updatedAt to current time, but createdAt should be preserved

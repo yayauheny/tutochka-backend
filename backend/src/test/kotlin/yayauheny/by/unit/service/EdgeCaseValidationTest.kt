@@ -9,17 +9,13 @@ import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.CsvSource
 import org.junit.jupiter.params.provider.ValueSource
 import yayauheny.by.model.city.CityCreateDto
-import by.yayauheny.shared.enums.AccessibilityType
-import by.yayauheny.shared.enums.DataSourceType
-import by.yayauheny.shared.enums.FeeType
-import by.yayauheny.shared.enums.RestroomStatus
 import by.yayauheny.shared.dto.LatLon
-import yayauheny.by.model.restroom.RestroomCreateDto
 import yayauheny.by.common.errors.ValidationException
 import yayauheny.by.service.validation.validateCityOnCreate
 import yayauheny.by.service.validation.validateRestroomCreateFields
 import yayauheny.by.service.validation.validateRestroomOnCreate
 import yayauheny.by.service.validation.validateWith
+import yayauheny.by.helpers.TestDataHelpers
 import java.util.UUID
 import kotlin.test.assertFalse
 import kotlin.test.assertNotNull
@@ -146,25 +142,19 @@ class EdgeCaseValidationTest {
         fun maximum_length_strings_should_pass() {
             // Given
             val maxName = "A".repeat(255)
-            val maxDescription = "B".repeat(10000)
+            val maxAccessNote = "B".repeat(10000)
 
             val dto =
-                RestroomCreateDto(
+                TestDataHelpers.createRestroomCreateDto(
                     cityId = UUID.randomUUID(),
-                    status = RestroomStatus.ACTIVE,
                     name = maxName,
-                    description = maxDescription,
                     address = "Test Address",
                     phones = buildJsonObject {},
                     workTime = buildJsonObject {},
-                    feeType = FeeType.FREE,
-                    accessibilityType = AccessibilityType.UNISEX,
-                    coordinates = LatLon(lat = 53.9, lon = 27.5),
-                    dataSource = DataSourceType.MANUAL,
+                    lat = 53.9,
+                    lon = 27.5,
                     amenities = buildJsonObject {},
-                    parentPlaceName = null,
-                    parentPlaceType = null,
-                    inheritParentSchedule = false
+                    accessNote = maxAccessNote
                 )
 
             // When
@@ -182,22 +172,16 @@ class EdgeCaseValidationTest {
             val tooLongDescription = "B".repeat(10001)
 
             val dto1 =
-                RestroomCreateDto(
+                TestDataHelpers.createRestroomCreateDto(
                     cityId = UUID.randomUUID(),
-                    status = RestroomStatus.ACTIVE,
                     name = tooLongName,
-                    description = "Test",
                     address = "Test Address",
                     phones = buildJsonObject {},
                     workTime = buildJsonObject {},
-                    feeType = FeeType.FREE,
-                    accessibilityType = AccessibilityType.UNISEX,
-                    coordinates = LatLon(lat = 53.9, lon = 27.5),
-                    dataSource = DataSourceType.MANUAL,
+                    lat = 53.9,
+                    lon = 27.5,
                     amenities = buildJsonObject {},
-                    parentPlaceName = null,
-                    parentPlaceType = null,
-                    inheritParentSchedule = false
+                    accessNote = "Test"
                 )
 
             // When
@@ -211,22 +195,16 @@ class EdgeCaseValidationTest {
 
             // Given
             val dto2 =
-                RestroomCreateDto(
+                TestDataHelpers.createRestroomCreateDto(
                     cityId = UUID.randomUUID(),
-                    status = RestroomStatus.ACTIVE,
                     name = "Test",
-                    description = tooLongDescription,
                     address = "Test Address",
                     phones = buildJsonObject {},
                     workTime = buildJsonObject {},
-                    feeType = FeeType.FREE,
-                    accessibilityType = AccessibilityType.UNISEX,
-                    coordinates = LatLon(lat = 53.9, lon = 27.5),
-                    dataSource = DataSourceType.MANUAL,
+                    lat = 53.9,
+                    lon = 27.5,
                     amenities = buildJsonObject {},
-                    parentPlaceName = null,
-                    parentPlaceType = null,
-                    inheritParentSchedule = false
+                    accessNote = tooLongDescription
                 )
 
             // When
@@ -234,8 +212,8 @@ class EdgeCaseValidationTest {
             val errors2 = validateRestroomCreateFields(dto2)
 
             // Then
-            assertTrue(errors2.isNotEmpty(), "Description over 10000 characters should be invalid")
-            assertTrue(errors2.any { it.field == "description" }, "Should have error for 'description' field")
+            assertTrue(errors2.isNotEmpty(), "AccessNote over 10000 characters should be invalid")
+            assertTrue(errors2.any { it.field == "accessNote" }, "Should have error for 'accessNote' field")
         }
 
         @Test
@@ -243,22 +221,17 @@ class EdgeCaseValidationTest {
         fun empty_strings_for_required_fields_should_fail() {
             // Given
             val dto =
-                RestroomCreateDto(
+                TestDataHelpers.createRestroomCreateDto(
                     cityId = UUID.randomUUID(),
-                    status = RestroomStatus.ACTIVE,
                     name = "",
-                    description = "",
                     address = "",
                     phones = buildJsonObject {},
                     workTime = buildJsonObject {},
-                    feeType = FeeType.FREE,
-                    accessibilityType = AccessibilityType.UNISEX,
-                    coordinates = LatLon(lat = 53.9, lon = 27.5),
-                    dataSource = DataSourceType.MANUAL,
+                    lat = 53.9,
+                    lon = 27.5,
                     amenities = buildJsonObject {},
-                    parentPlaceName = null,
-                    parentPlaceType = null,
-                    inheritParentSchedule = false
+                    accessNote = "",
+                    directionGuide = null
                 )
 
             // When
@@ -276,22 +249,17 @@ class EdgeCaseValidationTest {
             // В реальной валидации whitespace-only строки могут проходить проверку minLength
             // Это известное ограничение текущей валидации
             val dto =
-                RestroomCreateDto(
+                TestDataHelpers.createRestroomCreateDto(
                     cityId = UUID.randomUUID(),
-                    status = RestroomStatus.ACTIVE,
                     name = "   ",
-                    description = "   ",
-                    address = "   ", // address имеет minLength(1), поэтому "   " пройдет проверку по длине
+                    address = "   ",
                     phones = buildJsonObject {},
                     workTime = buildJsonObject {},
-                    feeType = FeeType.FREE,
-                    accessibilityType = AccessibilityType.UNISEX,
-                    coordinates = LatLon(lat = 53.9, lon = 27.5),
-                    dataSource = DataSourceType.MANUAL,
+                    lat = 53.9,
+                    lon = 27.5,
                     amenities = buildJsonObject {},
-                    parentPlaceName = null,
-                    parentPlaceType = null,
-                    inheritParentSchedule = false
+                    accessNote = "   ",
+                    directionGuide = null
                 )
 
             // When
@@ -399,22 +367,16 @@ class EdgeCaseValidationTest {
                 }
 
             val dto =
-                RestroomCreateDto(
+                TestDataHelpers.createRestroomCreateDto(
                     cityId = UUID.randomUUID(),
-                    status = RestroomStatus.ACTIVE,
                     name = "Test",
-                    description = "Test",
                     address = "Test Address",
                     phones = validPhones,
                     workTime = validWorkTime,
-                    feeType = FeeType.FREE,
-                    accessibilityType = AccessibilityType.UNISEX,
-                    coordinates = LatLon(lat = 53.9, lon = 27.5),
-                    dataSource = DataSourceType.MANUAL,
+                    lat = 53.9,
+                    lon = 27.5,
                     amenities = buildJsonObject {},
-                    parentPlaceName = null,
-                    parentPlaceType = null,
-                    inheritParentSchedule = false
+                    accessNote = "Test"
                 )
 
             // When

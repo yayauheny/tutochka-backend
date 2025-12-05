@@ -45,7 +45,7 @@ object BuildingMapper {
             .set(BUILDINGS.ID, id)
             .set(BUILDINGS.CITY_ID, dto.cityId)
             .set(BUILDINGS.NAME, dto.name)
-            .set(BUILDINGS.ADDRESS, dto.address)
+            .set(BUILDINGS.ADDRESS, dto.address.takeIf { it.isNotBlank() })
             .set(BUILDINGS.BUILDING_TYPE, dto.buildingType?.id)
             .set(BUILDINGS.WORK_TIME, dto.workTime.toJSONBOrEmpty())
             .set(

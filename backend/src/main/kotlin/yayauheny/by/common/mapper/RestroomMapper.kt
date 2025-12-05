@@ -44,8 +44,7 @@ object RestroomMapper {
             inheritBuildingSchedule = record[RESTROOMS.INHERIT_BUILDING_SCHEDULE] ?: false,
             hasPhotos = record[RESTROOMS.HAS_PHOTOS] ?: false,
             createdAt = record[RESTROOMS.CREATED_AT]!!,
-            updatedAt = record[RESTROOMS.UPDATED_AT]!!,
-            distanceMeters = record["distance_meters"] as? Int
+            updatedAt = record[RESTROOMS.UPDATED_AT]!!
         )
     }
 
