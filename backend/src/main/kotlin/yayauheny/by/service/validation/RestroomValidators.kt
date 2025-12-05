@@ -70,7 +70,7 @@ val validateRestroomOnCreate =
         RestroomCreateDto::coordinates {
             run(validateLatLon)
         }
-        // name, description, phones, workTime, amenities, parentPlaceName, parentPlaceType - nullable поля
+        // name, phones, workTime, amenities, externalMaps, accessNote, directionGuide - nullable поля
         // Валидация выполняется через validateRestroomFields() функцию
     }
 
@@ -86,7 +86,7 @@ val validateRestroomOnUpdate =
         RestroomUpdateDto::coordinates {
             run(validateLatLon)
         }
-        // name, description, phones, workTime, amenities, parentPlaceName, parentPlaceType - nullable поля
+        // name, phones, workTime, amenities, externalMaps, accessNote, directionGuide - nullable поля
         // Валидация выполняется через validateRestroomFields() функцию
     }
 
@@ -97,12 +97,12 @@ val validateRestroomOnUpdate =
 fun validateRestroomCreateFields(dto: RestroomCreateDto): List<FieldError> {
     val errors = mutableListOf<FieldError>()
     errors.addAll(validateNullableStringLength("name", dto.name))
-    errors.addAll(validateNullableDescriptionLength("description", dto.description))
     errors.addAll(validateNullableJsonObjectSize("phones", dto.phones))
     errors.addAll(validateNullableJsonObjectSize("workTime", dto.workTime))
     errors.addAll(validateNullableJsonObjectSize("amenities", dto.amenities))
-    errors.addAll(validateNullableStringLength("parentPlaceName", dto.parentPlaceName))
-    errors.addAll(validateNullableStringLength("parentPlaceType", dto.parentPlaceType))
+    errors.addAll(validateNullableJsonObjectSize("externalMaps", dto.externalMaps))
+    errors.addAll(validateNullableStringLength("accessNote", dto.accessNote))
+    errors.addAll(validateNullableStringLength("directionGuide", dto.directionGuide))
     return errors
 }
 
@@ -112,11 +112,11 @@ fun validateRestroomCreateFields(dto: RestroomCreateDto): List<FieldError> {
 fun validateRestroomUpdateFields(dto: RestroomUpdateDto): List<FieldError> {
     val errors = mutableListOf<FieldError>()
     errors.addAll(validateNullableStringLength("name", dto.name))
-    errors.addAll(validateNullableDescriptionLength("description", dto.description))
     errors.addAll(validateNullableJsonObjectSize("phones", dto.phones))
     errors.addAll(validateNullableJsonObjectSize("workTime", dto.workTime))
     errors.addAll(validateNullableJsonObjectSize("amenities", dto.amenities))
-    errors.addAll(validateNullableStringLength("parentPlaceName", dto.parentPlaceName))
-    errors.addAll(validateNullableStringLength("parentPlaceType", dto.parentPlaceType))
+    errors.addAll(validateNullableJsonObjectSize("externalMaps", dto.externalMaps))
+    errors.addAll(validateNullableStringLength("accessNote", dto.accessNote))
+    errors.addAll(validateNullableStringLength("directionGuide", dto.directionGuide))
     return errors
 }

@@ -8,6 +8,7 @@ import by.yayauheny.shared.dto.LatLon
 import by.yayauheny.shared.enums.AccessibilityType
 import by.yayauheny.shared.enums.DataSourceType
 import by.yayauheny.shared.enums.FeeType
+import by.yayauheny.shared.enums.PlaceType
 import by.yayauheny.shared.enums.RestroomStatus
 import yayauheny.by.model.restroom.NearestRestroomResponseDto
 import yayauheny.by.model.restroom.RestroomResponseDto
@@ -24,22 +25,27 @@ object RestroomMapper {
         return RestroomResponseDto(
             id = record[RESTROOMS.ID]!!,
             cityId = record[RESTROOMS.CITY_ID],
+            buildingId = record[RESTROOMS.BUILDING_ID],
+            subwayStationId = record[RESTROOMS.SUBWAY_STATION_ID],
             name = record[RESTROOMS.NAME],
-            description = record[RESTROOMS.DESCRIPTION],
             address = record[RESTROOMS.ADDRESS]!!,
             phones = record[RESTROOMS.PHONES].toJsonObjectOrEmpty(),
             workTime = record[RESTROOMS.WORK_TIME].toJsonObjectOrEmpty(),
             feeType = FeeType.valueOf(record[RESTROOMS.FEE_TYPE]!!),
             accessibilityType = AccessibilityType.valueOf(record[RESTROOMS.ACCESSIBILITY_TYPE]!!),
+            placeType = PlaceType.fromString(record[RESTROOMS.PLACE_TYPE]),
             coordinates = LatLon(lat = lat, lon = lon),
             dataSource = DataSourceType.valueOf(record[RESTROOMS.DATA_SOURCE]!!),
             status = RestroomStatus.valueOf(record[RESTROOMS.STATUS]!!),
             amenities = record[RESTROOMS.AMENITIES].toJsonObjectOrEmpty(),
-            parentPlaceName = record[RESTROOMS.PARENT_PLACE_NAME],
-            parentPlaceType = record[RESTROOMS.PARENT_PLACE_TYPE],
-            inheritParentSchedule = record[RESTROOMS.INHERIT_PARENT_SCHEDULE] ?: false,
+            externalMaps = record[RESTROOMS.EXTERNAL_MAPS].toJsonObjectOrEmpty(),
+            accessNote = record[RESTROOMS.ACCESS_NOTE],
+            directionGuide = record[RESTROOMS.DIRECTION_GUIDE],
+            inheritBuildingSchedule = record[RESTROOMS.INHERIT_BUILDING_SCHEDULE] ?: false,
+            hasPhotos = record[RESTROOMS.HAS_PHOTOS] ?: false,
             createdAt = record[RESTROOMS.CREATED_AT]!!,
-            updatedAt = record[RESTROOMS.UPDATED_AT]!!
+            updatedAt = record[RESTROOMS.UPDATED_AT]!!,
+            distanceMeters = record["distance_meters"] as? Int
         )
     }
 
@@ -50,19 +56,23 @@ object RestroomMapper {
         var q: UpdateSetMoreStep<*> =
             updateStep
                 .set(RESTROOMS.ADDRESS, dto.address)
-                .set(RESTROOMS.INHERIT_PARENT_SCHEDULE, dto.inheritParentSchedule)
+                .set(RESTROOMS.INHERIT_BUILDING_SCHEDULE, dto.inheritBuildingSchedule)
                 .set(RESTROOMS.FEE_TYPE, dto.feeType.name)
                 .set(RESTROOMS.ACCESSIBILITY_TYPE, dto.accessibilityType.name)
+                .set(RESTROOMS.PLACE_TYPE, dto.placeType?.id)
                 .set(RESTROOMS.STATUS, dto.status.name)
+                .set(RESTROOMS.BUILDING_ID, dto.buildingId)
+                .set(RESTROOMS.SUBWAY_STATION_ID, dto.subwayStationId)
                 .set(RESTROOMS.UPDATED_AT, Instant.now())
 
         dto.name?.let { q = q.set(RESTROOMS.NAME, it) }
-        dto.description?.let { q = q.set(RESTROOMS.DESCRIPTION, it) }
         dto.phones?.let { q = q.set(RESTROOMS.PHONES, it.toJSONBOrEmpty()) }
         dto.workTime?.let { q = q.set(RESTROOMS.WORK_TIME, it.toJSONBOrEmpty()) }
         dto.amenities?.let { q = q.set(RESTROOMS.AMENITIES, it.toJSONBOrEmpty()) }
-        dto.parentPlaceName?.let { q = q.set(RESTROOMS.PARENT_PLACE_NAME, it) }
-        dto.parentPlaceType?.let { q = q.set(RESTROOMS.PARENT_PLACE_TYPE, it) }
+        dto.externalMaps?.let { q = q.set(RESTROOMS.EXTERNAL_MAPS, it.toJSONBOrEmpty()) }
+        dto.accessNote?.let { q = q.set(RESTROOMS.ACCESS_NOTE, it) }
+        dto.directionGuide?.let { q = q.set(RESTROOMS.DIRECTION_GUIDE, it) }
+        q = q.set(RESTROOMS.HAS_PHOTOS, dto.hasPhotos)
 
         return q
     }

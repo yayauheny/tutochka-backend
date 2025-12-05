@@ -1,12 +1,9 @@
 -- liquibase formatted sql
 
 -- changeset yayauheny:init-extensions
-CREATE
-EXTENSION IF NOT EXISTS pgcrypto;
-CREATE
-EXTENSION IF NOT EXISTS postgis;
-CREATE
-EXTENSION IF NOT EXISTS btree_gist;
+CREATE EXTENSION IF NOT EXISTS pgcrypto;
+CREATE EXTENSION IF NOT EXISTS postgis;
+CREATE EXTENSION IF NOT EXISTS btree_gist;
 -- rollback DROP EXTENSION IF EXISTS pgcrypto;
 -- rollback DROP EXTENSION IF EXISTS postgis;
 -- rollback DROP EXTENSION IF EXISTS btree_gist;
@@ -24,7 +21,6 @@ CREATE TABLE countries
     deleted_at TIMESTAMP             DEFAULT NULL
 );
 -- rollback DROP TABLE countries;
-
 
 -- changeset yayauheny:init-cities-table
 CREATE TABLE cities
@@ -45,43 +41,98 @@ CREATE TABLE cities
 );
 -- rollback DROP TABLE cities;
 
+-- changeset yayauheny:init-subway-lines
+CREATE TABLE subway_lines
+(
+    id         UUID PRIMARY KEY      DEFAULT gen_random_uuid(),
+    city_id    UUID         NOT NULL REFERENCES cities (id) ON DELETE CASCADE,
+    name_ru    VARCHAR(100) NOT NULL,
+    name_en    VARCHAR(100) NOT NULL,
+    hex_color  VARCHAR(7)   NOT NULL,
+    created_at TIMESTAMP    NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
+-- rollback DROP TABLE subway_lines;
 
--- changeset yayauheny:init-restrooms-table
+-- changeset yayauheny:init-subway-stations-v2
+CREATE TABLE subway_stations
+(
+    id             UUID PRIMARY KEY      DEFAULT gen_random_uuid(),
+    subway_line_id UUID         NOT NULL REFERENCES subway_lines (id) ON DELETE CASCADE,
+    name_ru        VARCHAR(255) NOT NULL,
+    name_en        VARCHAR(255) NOT NULL,
+    coordinates    GEOMETRY(POINT, 4326) NOT NULL,
+    created_at     TIMESTAMP    NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
+CREATE INDEX idx_subway_stations_coordinates ON subway_stations USING GIST (coordinates);
+-- rollback DROP TABLE subway_stations;
+
+-- changeset yayauheny:init-buildings-table-v2
+CREATE TABLE buildings
+(
+    id            UUID PRIMARY KEY      DEFAULT gen_random_uuid(),
+    city_id       UUID         NOT NULL REFERENCES cities (id) ON DELETE CASCADE,
+    name          VARCHAR(255),
+    address       VARCHAR(255) NOT NULL,
+    building_type VARCHAR(50),
+    work_time     JSONB,
+    coordinates   GEOMETRY(POINT, 4326) NOT NULL,
+    external_ids  JSONB                 DEFAULT '{}'::jsonb,
+    is_deleted    BOOLEAN               DEFAULT false,
+    created_at    TIMESTAMP    NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at    TIMESTAMP    NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
+CREATE INDEX idx_buildings_coordinates ON buildings USING GIST (coordinates);
+CREATE INDEX idx_buildings_external_ids ON buildings USING GIN (external_ids);
+-- rollback DROP TABLE buildings;
+
+-- changeset yayauheny:init-restrooms-release-v1
 CREATE TABLE restrooms
 (
-    id                      UUID PRIMARY KEY      DEFAULT gen_random_uuid(),
-    city_id                 UUID         REFERENCES cities (id) ON DELETE SET NULL,
-    name                    VARCHAR(255),
-    description             VARCHAR(255),
-    address                 VARCHAR(255) NOT NULL,
-    phones                  JSONB,
-    work_time               JSONB,
-    fee_type                VARCHAR(20)  NOT NULL,
-    accessibility_type      VARCHAR(20)  NOT NULL,
-    coordinates             GEOMETRY(POINT, 4326) NOT NULL UNIQUE,
-    data_source             VARCHAR(20)  NOT NULL,
-    status                  VARCHAR(20)  NOT NULL,
-    amenities               JSONB                 DEFAULT '{}'::jsonb,
-    parent_place_name       VARCHAR(255),
-    parent_place_type       VARCHAR(50),
-    inherit_parent_schedule BOOLEAN               DEFAULT false,
-    is_deleted              BOOLEAN               DEFAULT false,
-    created_at              TIMESTAMP    NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    updated_at              TIMESTAMP    NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    deleted_at              TIMESTAMP             DEFAULT NULL
+    id                        UUID PRIMARY KEY      DEFAULT gen_random_uuid(),
+    city_id                   UUID REFERENCES cities (id) ON DELETE SET NULL,
+    building_id               UUID REFERENCES buildings (id) ON DELETE SET NULL,
+    subway_station_id         UUID REFERENCES subway_stations (id) ON DELETE SET NULL,
+
+    name                      VARCHAR(255),
+    place_type                VARCHAR(50),
+    address                   VARCHAR(255) NOT NULL,
+
+    direction_guide           TEXT,
+    access_note               TEXT,
+
+    fee_type                  VARCHAR(20)  NOT NULL,
+    accessibility_type        VARCHAR(20)  NOT NULL,
+    status                    VARCHAR(20)  NOT NULL DEFAULT 'active',
+
+    phones                    JSONB,
+    work_time                 JSONB,
+    inherit_building_schedule BOOLEAN               DEFAULT false,
+
+    amenities                 JSONB                 DEFAULT '{}'::jsonb,
+    has_photos                BOOLEAN               DEFAULT false,
+
+    coordinates               GEOMETRY(POINT, 4326) NOT NULL,
+    external_maps             JSONB                 DEFAULT '{}'::jsonb,
+    data_source               VARCHAR(50)  NOT NULL,
+
+    is_deleted                BOOLEAN               DEFAULT false,
+    created_at                TIMESTAMP    NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at                TIMESTAMP    NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    deleted_at                TIMESTAMP             DEFAULT NULL
 );
+
+CREATE INDEX idx_restrooms_coordinates ON restrooms USING GIST (coordinates);
+CREATE INDEX idx_restrooms_filters ON restrooms (fee_type, accessibility_type, place_type) WHERE is_deleted = false;
+CREATE INDEX idx_restrooms_building_id ON restrooms (building_id);
 -- rollback DROP TABLE restrooms;
 
-
--- changeset yayauheny:create-restrooms-coordinates-index
-CREATE INDEX idx_restrooms_coordinates ON restrooms USING GIST (coordinates);
-CREATE INDEX idx_cities_bounds ON cities USING GIST(city_bounds);
+-- changeset yayauheny:create-geo-performance-indexes
+CREATE INDEX idx_cities_bounds ON cities USING GIST (city_bounds);
 CREATE INDEX idx_cities_coordinates ON cities USING GIST (coordinates);
--- rollback DROP INDEX IF EXISTS idx_restrooms_coordinates;
 -- rollback DROP INDEX IF EXISTS idx_cities_bounds;
 -- rollback DROP INDEX IF EXISTS idx_cities_coordinates;
 
--- changeset yayauheny:create-performance-indexes
+-- changeset yayauheny:create-status-performance-indexes
 CREATE INDEX idx_restrooms_status ON restrooms (status) WHERE is_deleted = false;
 CREATE INDEX idx_restrooms_city_id ON restrooms (city_id) WHERE is_deleted = false;
 CREATE INDEX idx_restrooms_is_deleted ON restrooms (is_deleted);

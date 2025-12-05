@@ -22,7 +22,6 @@ import yayauheny.by.model.city.CityResponseDto
 import yayauheny.by.model.city.CityUpdateDto
 import yayauheny.by.repository.CityRepository
 import yayauheny.by.tables.references.CITIES
-import yayauheny.by.util.getCitiesCoordinateFields
 import yayauheny.by.util.pointExpr
 import yayauheny.by.util.transactionSuspend
 
@@ -110,6 +109,15 @@ class CityRepositoryImpl(
         )
     private val cityQueryBuilder = QueryBuilder(fields = cityFields)
     private val executor = QueryExecutor(ctx, CityMapper::mapFromRecord)
+
+    /**
+     * Возвращает координатные поля (lat/lon) для таблицы CITIES.
+     * Используется в запросах, где нужны только координаты без других полей.
+     */
+    private fun getCitiesCoordinateFields(): List<org.jooq.Field<*>> {
+        val c = CITIES
+        return listOf(c.COORDINATES.latAlias(), c.COORDINATES.lonAlias())
+    }
 
     /**
      * Единый набор полей для SELECT/RETURNING запросов городов.

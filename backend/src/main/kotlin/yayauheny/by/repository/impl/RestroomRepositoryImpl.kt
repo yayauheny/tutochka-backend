@@ -16,15 +16,13 @@ import yayauheny.by.common.query.PaginationRequest
 import yayauheny.by.common.query.builder.QueryBuilder
 import yayauheny.by.common.query.builder.QueryExecutor
 import by.yayauheny.shared.enums.RestroomStatus
+import by.yayauheny.shared.enums.PlaceType
 import yayauheny.by.model.restroom.NearestRestroomResponseDto
 import yayauheny.by.model.restroom.RestroomCreateDto
 import yayauheny.by.model.restroom.RestroomResponseDto
 import yayauheny.by.model.restroom.RestroomUpdateDto
 import yayauheny.by.repository.RestroomRepository
 import yayauheny.by.tables.references.RESTROOMS
-import yayauheny.by.util.getAllRestroomsFieldsExceptCoordinates
-import yayauheny.by.util.getAllRestroomsFieldsWithCoordinates
-import yayauheny.by.util.getRestroomsCoordinateFields
 import yayauheny.by.util.distanceGeographyTo
 import yayauheny.by.util.knnOrderTo
 import yayauheny.by.util.pointExpr
@@ -74,6 +72,13 @@ class RestroomRepositoryImpl(
                     sortable = true,
                     allowedOps = setOf(FilterOperator.EQ, FilterOperator.NE, FilterOperator.IN)
                 ),
+            "placeType" to
+                FieldMeta(
+                    field = RESTROOMS.PLACE_TYPE,
+                    parser = FieldParsers.string,
+                    sortable = true,
+                    allowedOps = setOf(FilterOperator.EQ, FilterOperator.IN)
+                ),
             "feeType" to
                 FieldMeta(
                     field = RESTROOMS.FEE_TYPE,
@@ -85,6 +90,20 @@ class RestroomRepositoryImpl(
                 FieldMeta(
                     field = RESTROOMS.ACCESSIBILITY_TYPE,
                     parser = FieldParsers.string,
+                    sortable = true,
+                    allowedOps = setOf(FilterOperator.EQ, FilterOperator.IN)
+                ),
+            "buildingId" to
+                FieldMeta(
+                    field = RESTROOMS.BUILDING_ID,
+                    parser = FieldParsers.uuid,
+                    sortable = true,
+                    allowedOps = setOf(FilterOperator.EQ, FilterOperator.IN)
+                ),
+            "subwayStationId" to
+                FieldMeta(
+                    field = RESTROOMS.SUBWAY_STATION_ID,
+                    parser = FieldParsers.uuid,
                     sortable = true,
                     allowedOps = setOf(FilterOperator.EQ, FilterOperator.IN)
                 ),
@@ -126,6 +145,56 @@ class RestroomRepositoryImpl(
 
     private val restroomQueryBuilder = QueryBuilder(fields = restroomFields)
     private val executor = QueryExecutor(ctx, RestroomMapper::mapFromRecord)
+
+    /**
+     * Возвращает все поля таблицы RESTROOMS кроме coordinates (для SELECT запросов)
+     */
+    private fun getAllRestroomsFieldsExceptCoordinates(): List<org.jooq.Field<*>> {
+        val r = RESTROOMS
+        return listOf(
+            r.ID,
+            r.CITY_ID,
+            r.BUILDING_ID,
+            r.SUBWAY_STATION_ID,
+            r.NAME,
+            r.ADDRESS,
+            r.PHONES,
+            r.WORK_TIME,
+            r.FEE_TYPE,
+            r.ACCESSIBILITY_TYPE,
+            r.PLACE_TYPE,
+            r.DATA_SOURCE,
+            r.STATUS,
+            r.AMENITIES,
+            r.EXTERNAL_MAPS,
+            r.ACCESS_NOTE,
+            r.DIRECTION_GUIDE,
+            r.INHERIT_BUILDING_SCHEDULE,
+            r.HAS_PHOTOS,
+            r.IS_DELETED,
+            r.CREATED_AT,
+            r.UPDATED_AT,
+            r.DELETED_AT
+        )
+    }
+
+    /**
+     * Возвращает все поля таблицы RESTROOMS с координатами (lat/lon) для SELECT запросов.
+     * Устраняет дублирование кода создания latField и lonField в репозиториях.
+     */
+    private fun getAllRestroomsFieldsWithCoordinates(): List<org.jooq.Field<*>> {
+        val r = RESTROOMS
+        return getAllRestroomsFieldsExceptCoordinates() + r.COORDINATES.latAlias() + r.COORDINATES.lonAlias()
+    }
+
+    /**
+     * Возвращает координатные поля (lat/lon) для таблицы RESTROOMS.
+     * Используется в запросах, где нужны только координаты без других полей.
+     */
+    private fun getRestroomsCoordinateFields(): List<org.jooq.Field<*>> {
+        val r = RESTROOMS
+        return listOf(r.COORDINATES.latAlias(), r.COORDINATES.lonAlias())
+    }
 
     override suspend fun findAll(pagination: PaginationRequest): PageResponse<RestroomResponseDto> =
         withContext(Dispatchers.IO) {
@@ -178,22 +247,26 @@ class RestroomRepositoryImpl(
         .insertInto(RESTROOMS)
         .set(RESTROOMS.ID, id)
         .set(RESTROOMS.CITY_ID, createDto.cityId)
+        .set(RESTROOMS.BUILDING_ID, createDto.buildingId)
+        .set(RESTROOMS.SUBWAY_STATION_ID, createDto.subwayStationId)
         .set(RESTROOMS.NAME, createDto.name)
-        .set(RESTROOMS.DESCRIPTION, createDto.description)
         .set(RESTROOMS.ADDRESS, createDto.address)
         .set(RESTROOMS.PHONES, createDto.phones.toJSONBOrEmpty())
         .set(RESTROOMS.WORK_TIME, createDto.workTime.toJSONBOrEmpty())
         .set(RESTROOMS.FEE_TYPE, createDto.feeType.name)
         .set(RESTROOMS.ACCESSIBILITY_TYPE, createDto.accessibilityType.name)
+        .set(RESTROOMS.PLACE_TYPE, createDto.placeType?.id)
         .set(
             RESTROOMS.COORDINATES,
             pointExpr(createDto.coordinates.lon, createDto.coordinates.lat, RESTROOMS.COORDINATES)
         ).set(RESTROOMS.DATA_SOURCE, createDto.dataSource.name)
         .set(RESTROOMS.STATUS, createDto.status.name)
         .set(RESTROOMS.AMENITIES, createDto.amenities.toJSONBOrEmpty())
-        .set(RESTROOMS.PARENT_PLACE_NAME, createDto.parentPlaceName)
-        .set(RESTROOMS.PARENT_PLACE_TYPE, createDto.parentPlaceType)
-        .set(RESTROOMS.INHERIT_PARENT_SCHEDULE, createDto.inheritParentSchedule)
+        .set(RESTROOMS.EXTERNAL_MAPS, createDto.externalMaps.toJSONBOrEmpty())
+        .set(RESTROOMS.ACCESS_NOTE, createDto.accessNote)
+        .set(RESTROOMS.DIRECTION_GUIDE, createDto.directionGuide)
+        .set(RESTROOMS.INHERIT_BUILDING_SCHEDULE, createDto.inheritBuildingSchedule)
+        .set(RESTROOMS.HAS_PHOTOS, createDto.hasPhotos)
         .set(RESTROOMS.CREATED_AT, now)
         .set(RESTROOMS.UPDATED_AT, now)
 
