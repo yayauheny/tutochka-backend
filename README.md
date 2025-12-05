@@ -48,9 +48,9 @@
 - **Koin 3.5.6** - Lightweight dependency injection framework
 
 ### Database & ORM
-- **PostgreSQL** - Robust, open-source relational database
-- **jOOQ 3.20.8** - Kotlin SQL framework
-- **PostGIS** - Spatial database extension for location data
+- **PostgreSQL 15+** - Robust, open-source relational database
+- **PostGIS** - Spatial database extension for geo queries
+- **jOOQ 3.20.8** - Type-safe SQL DSL
 - **HikariCP 5.1.0** - High-performance JDBC connection pool
 
 ### Development & Quality
@@ -69,8 +69,8 @@
 ## 🚀 Quick Start / Быстрый старт
 
 ### Prerequisites / Требования
-- **Java 17+** / **JDK 17+**
-- **PostgreSQL 13+** with PostGIS extension
+- **Java 21 LTS**
+- **PostgreSQL 15+** с расширениями **postgis**, **pgcrypto**, **btree_gist**
 - **Docker** (optional, for containerized setup)
 
 ### Environment Variables / Переменные окружения
@@ -109,17 +109,17 @@ APP_ENV=development
 
 3. **Run Database Migrations / Запустите миграции базы данных:**
    ```bash
-   ./gradlew liquibaseUpdate
+   ./gradlew backend:liquibaseUpdate
    ```
 
 4. **Start the Application / Запустите приложение:**
    ```bash
    # Development mode / Режим разработки
-   ./gradlew run
+   ./gradlew backend:run
    
    # Or build and run / Или соберите и запустите
-   ./gradlew build
-   java -jar build/libs/tutochka-backend-0.1.0.jar
+   ./gradlew backend:build
+   java -jar backend/build/libs/backend-all.jar
    ```
 
 5. **Access the API / Получите доступ к API:**
@@ -135,12 +135,14 @@ APP_ENV=development
 | Method | Endpoint | Description / Описание |
 |--------|----------|----------------------|
 | `GET` | `/countries` | Get all countries / Получить все страны |
-| `GET` | `/countries/{id}` | Get country by ID / Получить страну по ID |
 | `GET` | `/cities` | Get all cities / Получить все города |
-| `GET` | `/cities/{id}` | Get city by ID / Получить город по ID |
+| `GET` | `/buildings` | List buildings (with `placeType`, `cityId`, JSONB externalIds) |
+| `GET` | `/subway/lines` | List subway lines (hexColor, isDeleted) |
+| `GET` | `/subway/stations` | List subway stations with geo coordinates |
 | `GET` | `/restrooms` | Get all restrooms / Получить все туалеты |
-| `GET` | `/restrooms/nearest` | Find nearest restrooms / Найти ближайшие туалеты |
+| `GET` | `/restrooms/nearest` | Find nearest restrooms (PostGIS KNN) |
 | `GET` | `/restrooms/city/{cityId}` | Get restrooms by city / Получить туалеты по городу |
+| `GET` | `/restrooms/{id}` | Get restroom by ID |
 
 ### Example Usage / Пример использования
 
@@ -224,10 +226,10 @@ docker-compose up -d
 ## 🗄️ Database Schema / Схема БД
 
 ### English
-Core entities are **Buildings** and **Restrooms**. Restrooms can inherit properties (e.g., schedules) from Buildings. Subway stations are linked geospatially to support navigation and proximity search.
+Core entities: **Buildings** (with `placeType`, `external_ids`, PostGIS coordinates), **Restrooms** (linked to building and subway station, JSONB amenities/external_maps, `placeType`, `fee_type`, `access_note`, `direction_guide`, `inherit_building_schedule`, `has_photos`). Subway lines/stations carry hexColor and soft-delete flags; stations are linked by city/line and used for nearest assignment.
 
 ### Русский
-Ключевые сущности — **Buildings** и **Restrooms**. Туалеты могут наследовать свойства (например, график работы) от зданий. Станции метро связаны геопространственно для навигации и поиска ближайших точек.
+Ключевые сущности: **Buildings** (тип места `placeType`, `external_ids`, координаты PostGIS), **Restrooms** (связаны с зданием и станцией метро, JSONB `amenities`/`external_maps`, поля `placeType`, `fee_type`, `access_note`, `direction_guide`, `inherit_building_schedule`, `has_photos`). Линии и станции метро с цветом (hexColor) и soft-delete, станции по городу/линии и используются для привязки ближайшего метро.
 
 ## 📖 Documentation / Документация
 
