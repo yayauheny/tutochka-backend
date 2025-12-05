@@ -2,7 +2,7 @@
 
 > **A REST API for finding public restrooms and toilets worldwide**
 
-[![Version](https://img.shields.io/badge/Version-0.1.0-blue.svg)](https://github.com/your-org/tutochka-backend/releases/tag/v0.1.0)
+[![Version](https://img.shields.io/badge/Version-1.0.0-blue.svg)](https://github.com/your-org/tutochka-backend/releases/tag/v1.0.0)
 [![Kotlin](https://img.shields.io/badge/Kotlin-2.1.10-blue.svg)](https://kotlinlang.org/)
 [![Ktor](https://img.shields.io/badge/Ktor-3.2.3-green.svg)](https://ktor.io/)
 [![PostgreSQL](https://img.shields.io/badge/PostgreSQL-42.7.7-blue.svg)](https://postgresql.org/)
@@ -18,7 +18,9 @@
 **Key Features:**
 - 🌍 **Global Coverage** - Support for countries and cities worldwide
 - 📍 **Location-Based Search** - Find nearest restrooms by coordinates
+- 🧭 **Smart Navigation** - Search by venue types (malls, restaurants) with indoor directions inside buildings
 - ♿ **Accessibility Info** - Detailed accessibility and amenity information
+- 🧩 **Hybrid Data Model** - Relational core (SQL) plus flexible JSONB attributes for rapid data adaptation
 - 📱 **RESTful API** - Clean, well-documented REST endpoints
 - 🔍 **Advanced Search** - Filter by fee type, accessibility, and more
 - 📊 **Pagination** - Efficient data retrieval with pagination support
@@ -29,7 +31,9 @@
 **Основные возможности:**
 - 🌍 **Глобальное покрытие** - Поддержка стран и городов по всему миру
 - 📍 **Поиск по местоположению** - Поиск ближайших туалетов по координатам
+- 🧭 **Умная навигация** - Поиск по типам заведений (ТЦ, рестораны) и indoor-инструкции внутри зданий
 - ♿ **Информация о доступности** - Подробная информация о доступности и удобствах
+- 🧩 **Гибридная модель данных** - Жёсткая реляционная структура (SQL) + гибкие атрибуты в JSONB для быстрой адаптации
 - 📱 **RESTful API** - Чистые, хорошо документированные REST endpoints
 - 🔍 **Расширенный поиск** - Фильтрация по типу оплаты, доступности и другим параметрам
 - 📊 **Пагинация** - Эффективное получение данных с поддержкой пагинации
@@ -211,6 +215,20 @@ docker-compose up -d
 - **Mappers:** Convert between database records and DTOs
 - **Configuration:** Dependency injection modules and database configuration
 
+### Data Model / Модель данных
+- **Relational core:** Buildings → Restrooms with subway linkage; cities/countries remain top-level geography.
+- **Hybrid attributes:** JSONB columns for amenities, external IDs, and map metadata to iterate quickly without schema churn.
+- **Inheritance:** Restrooms can inherit schedules and context from parent buildings (`inherit_building_schedule`).
+- **Geo:** PostGIS points for buildings/restrooms and subway stations to enable nearest and indoor-style guidance.
+
+## 🗄️ Database Schema / Схема БД
+
+### English
+Core entities are **Buildings** and **Restrooms**. Restrooms can inherit properties (e.g., schedules) from Buildings. Subway stations are linked geospatially to support navigation and proximity search.
+
+### Русский
+Ключевые сущности — **Buildings** и **Restrooms**. Туалеты могут наследовать свойства (например, график работы) от зданий. Станции метро связаны геопространственно для навигации и поиска ближайших точек.
+
 ## 📖 Documentation / Документация
 
 - **API Documentation:** Available at `/swagger-ui.html` when running
@@ -229,61 +247,21 @@ docker-compose up -d
 
 ## 🗺️ Roadmap & Future Improvements / Дорожная карта и улучшения
 
-### High Priority / Высокий приоритет
+### Phase 1: Automation & Data (Автоматизация и Данные)
+- [ ] **Automated Import Engine** — Parsers for 2GIS and Yandex Maps to auto-create buildings and attach restrooms.
+- [ ] **Schedule Sync** — Inherit restroom schedule from building (`inherit_building_schedule`).
+- [ ] **Subway Integration** — Import metro lines/stations and geo-search nearest stations.
 
-#### Performance & Scalability / Производительность и масштабируемость
-- [ ] **In-memory caching** - Implement Caffeine cache for countries and cities to reduce database load (Task #5)
-- [ ] **API optimization** - Batch write operations to Task Master AI to reduce API calls (Task #27)
-- [ ] **Query optimization** - Review and optimize database queries, especially for nearest restrooms endpoint
+### Phase 2: Community & Content (Сообщество и Контент)
+- [ ] **User Submissions Bot** — Telegram bot to receive new restroom submissions from users.
+- [ ] **Admin Moderation Panel** — Approve/reject bot submissions and resolve import conflicts.
+- [ ] **Photo Storage** — Integrate S3/MinIO for real photos (replace `has_photos` placeholder).
+- [ ] **Review System** — Full reviews and ratings (DB stubs already exist).
 
-#### Code Quality & Maintainability / Качество кода и поддерживаемость
-- [ ] **Standardize error messages** - Centralize error messages and implement i18n-ready constants (Task #8)
-- [ ] **Structured logging** - Add context (request path, method, status, query params) to error logs (Task #14)
-- [ ] **Update repository exception tests** - Complete tests for RepositoryException and EntityNotFoundException (Task #13.1)
-
-### Medium Priority / Средний приоритет
-
-#### Testing & Quality Assurance / Тестирование и качество
-- [ ] **Test quality audit** - Assess test code for readability, duplication, complexity (Task #58)
-- [ ] **Test performance analysis** - Identify slow tests and bottlenecks (Task #59)
-- [ ] **Test stability** - Detect and fix flaky tests, timing dependencies (Task #60)
-- [ ] **Missing test scenarios** - Identify gaps in error handling, edge cases, integration scenarios (Task #61)
-- [ ] **Mock usage review** - Evaluate mock patterns and test data creation (Task #62)
-- [ ] **Edge case tests** - Add comprehensive tests for validation, pagination, coordinates (Task #47)
-
-#### Architecture & Refactoring / Архитектура и рефакторинг
-- [ ] **Package reorganization** - Separate DTOs and entities in model package (Task #15)
-- [ ] **Split common package** - Organize into api.errors, mapper, query.builder subpackages (Task #16)
-- [ ] **Group utility functions** - Organize util package by domain (http, geo, db, serialization, config) (Task #17)
-
-#### Features / Функциональность
-- [ ] **Filtering and status checking** - Implement local task filtering by status, priority, dependencies (Task #29)
-- [ ] **AI model integration** - Configure economical models (sonar, gemini-2.0-flash) for operations (Task #28)
-
-### Low Priority / Низкий приоритет
-
-#### Development Tools / Инструменты разработки
-- [ ] **Structured logging format** - Enforce markdown format for implementation logs (Task #75)
-- [ ] **Commit message format** - Standardize git commit messages (Task #76)
-- [ ] **Utility tests** - Add unit tests for GeoDsl, ApplicationCallExtensions, RepositoryExtensions (Task #20)
-
-#### Documentation / Документация
-- [ ] **API documentation improvements** - Enhance OpenAPI specs with more examples
-- [ ] **Architecture documentation** - Expand ARCHITECTURE_IMPROVEMENTS.md with detailed diagrams
-- [ ] **Contributing guide** - Add CONTRIBUTING.md with development guidelines
-
-### Future Considerations / Будущие улучшения
-
-- [ ] **Authentication & Authorization** - Add JWT-based authentication for protected endpoints
-- [ ] **Rate limiting** - Implement rate limiting to prevent abuse
-- [ ] **Metrics & Monitoring** - Add Prometheus metrics and health checks
-- [ ] **CI/CD Pipeline** - Set up GitHub Actions for automated testing and deployment
-- [ ] **API versioning** - Implement proper API versioning strategy
-- [ ] **GraphQL support** - Consider adding GraphQL endpoint alongside REST
-- [ ] **Full-text search** - Add Elasticsearch for advanced search capabilities
-- [ ] **Image upload** - Support for restroom photos and images
-- [ ] **User reviews & ratings** - Allow users to rate and review restrooms
-- [ ] **Real-time updates** - WebSocket support for real-time restroom status updates
+### Phase 3: Ecosystem & Monetization (Экосистема и Монетизация)
+- [ ] **Access Codes System** — Store/share access codes and key notes (`access_note` already in schema).
+- [ ] **Contributor Rewards** — Incentives for users who update data or add new locations.
+- [ ] **Advanced Filtering** — JSONB-based filters for amenities (changing tables, showers, etc.).
 
 ---
 
