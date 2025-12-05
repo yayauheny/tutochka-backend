@@ -6,5 +6,8 @@ import yayauheny.by.model.building.BuildingResponseDto
 import yayauheny.by.model.building.BuildingUpdateDto
 
 interface BuildingRepository : BaseRepository<BuildingResponseDto, BuildingCreateDto, BuildingUpdateDto, UUID> {
-    suspend fun findByExternalId(provider: String, externalId: String): BuildingResponseDto?
+    suspend fun findByExternalId(
+        provider: String,
+        externalId: String
+    ): BuildingResponseDto?
 }

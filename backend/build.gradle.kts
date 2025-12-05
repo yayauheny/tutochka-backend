@@ -67,9 +67,12 @@ val tcImage = providers.gradleProperty("testcontainers.postgis.image").get()
 val tcDbName = providers.gradleProperty("testcontainers.db.name").get()
 
 val containerInstance: PostgreSQLContainer<Nothing>? =
-    if ("generateJooq" in project.gradle.startParameter.taskNames ||
-        "update" in project.gradle.startParameter.taskNames ||
-        "updateMain" in project.gradle.startParameter.taskNames
+    if (project.gradle.startParameter.taskNames.any {
+            it.contains("generateJooq", ignoreCase = true) ||
+                it.contains("update", ignoreCase = true) ||
+                it.endsWith(":generateJooq") ||
+                it.endsWith(":update")
+        }
     ) {
         val container =
             PostgreSQLContainer<Nothing>(

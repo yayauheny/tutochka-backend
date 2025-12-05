@@ -49,6 +49,7 @@ CREATE TABLE subway_lines
     name_ru    VARCHAR(100) NOT NULL,
     name_en    VARCHAR(100) NOT NULL,
     hex_color  VARCHAR(7)   NOT NULL,
+    is_deleted BOOLEAN               DEFAULT false,
     created_at TIMESTAMP    NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
 -- rollback DROP TABLE subway_lines;
@@ -61,6 +62,7 @@ CREATE TABLE subway_stations
     name_ru        VARCHAR(255) NOT NULL,
     name_en        VARCHAR(255) NOT NULL,
     coordinates    GEOMETRY(POINT, 4326) NOT NULL,
+    is_deleted     BOOLEAN               DEFAULT false,
     created_at     TIMESTAMP    NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
 CREATE INDEX idx_subway_stations_coordinates ON subway_stations USING GIST (coordinates);

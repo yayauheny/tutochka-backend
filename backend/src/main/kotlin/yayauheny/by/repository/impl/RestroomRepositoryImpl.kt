@@ -16,7 +16,6 @@ import yayauheny.by.common.query.PaginationRequest
 import yayauheny.by.common.query.builder.QueryBuilder
 import yayauheny.by.common.query.builder.QueryExecutor
 import by.yayauheny.shared.enums.RestroomStatus
-import by.yayauheny.shared.enums.PlaceType
 import yayauheny.by.model.restroom.NearestRestroomResponseDto
 import yayauheny.by.model.restroom.RestroomCreateDto
 import yayauheny.by.model.restroom.RestroomResponseDto
@@ -25,6 +24,8 @@ import yayauheny.by.repository.RestroomRepository
 import yayauheny.by.tables.references.RESTROOMS
 import yayauheny.by.util.distanceGeographyTo
 import yayauheny.by.util.knnOrderTo
+import yayauheny.by.util.latAlias
+import yayauheny.by.util.lonAlias
 import yayauheny.by.util.pointExpr
 import yayauheny.by.util.reqDouble
 import yayauheny.by.util.toJSONBOrEmpty

@@ -21,6 +21,8 @@ import yayauheny.by.model.building.BuildingResponseDto
 import yayauheny.by.model.building.BuildingUpdateDto
 import yayauheny.by.repository.BuildingRepository
 import yayauheny.by.tables.references.BUILDINGS
+import yayauheny.by.util.latAlias
+import yayauheny.by.util.lonAlias
 import yayauheny.by.util.transactionSuspend
 
 class BuildingRepositoryImpl(
@@ -122,11 +124,9 @@ class BuildingRepositoryImpl(
         return getAllBuildingsFieldsExceptCoordinates() + b.COORDINATES.latAlias() + b.COORDINATES.lonAlias()
     }
 
-    private fun projection(): Array<org.jooq.SelectFieldOrAsterisk> =
-        getAllBuildingsFieldsWithCoordinates().toTypedArray()
+    private fun projection(): Array<org.jooq.SelectFieldOrAsterisk> = getAllBuildingsFieldsWithCoordinates().toTypedArray()
 
-    private fun notDeletedCondition() =
-        BUILDINGS.IS_DELETED.eq(false).or(BUILDINGS.IS_DELETED.isNull)
+    private fun notDeletedCondition() = BUILDINGS.IS_DELETED.eq(false).or(BUILDINGS.IS_DELETED.isNull)
 
     override suspend fun findAll(pagination: PaginationRequest): PageResponse<BuildingResponseDto> =
         withContext(Dispatchers.IO) {
@@ -167,7 +167,10 @@ class BuildingRepositoryImpl(
                 ?.let { BuildingMapper.mapFromRecord(it) }
         }
 
-    override suspend fun findByExternalId(provider: String, externalId: String): BuildingResponseDto? =
+    override suspend fun findByExternalId(
+        provider: String,
+        externalId: String
+    ): BuildingResponseDto? =
         withContext(Dispatchers.IO) {
             ctx
                 .select(*projection())
@@ -176,8 +179,7 @@ class BuildingRepositoryImpl(
                     notDeletedCondition().and(
                         DSL.condition("{0} ->> {1} = {2}", BUILDINGS.EXTERNAL_IDS, provider, externalId)
                     )
-                )
-                .orderBy(BUILDINGS.CREATED_AT.desc(), BUILDINGS.ID.desc())
+                ).orderBy(BUILDINGS.CREATED_AT.desc(), BUILDINGS.ID.desc())
                 .limit(1)
                 .fetchOne()
                 ?.let { BuildingMapper.mapFromRecord(it) }
@@ -188,7 +190,8 @@ class BuildingRepositoryImpl(
             val id = UUID.randomUUID()
             val now = Instant.now()
             val rec =
-                BuildingMapper.mapToSaveRecord(txCtx, createDto, id, now)
+                BuildingMapper
+                    .mapToSaveRecord(txCtx, createDto, id, now)
                     .returning(*projection())
                     .fetchOne()
                     ?: throw EntityNotFoundException("Здание", "не удалось сохранить")

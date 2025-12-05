@@ -22,6 +22,8 @@ import yayauheny.by.model.city.CityResponseDto
 import yayauheny.by.model.city.CityUpdateDto
 import yayauheny.by.repository.CityRepository
 import yayauheny.by.tables.references.CITIES
+import yayauheny.by.util.latAlias
+import yayauheny.by.util.lonAlias
 import yayauheny.by.util.pointExpr
 import yayauheny.by.util.transactionSuspend
 

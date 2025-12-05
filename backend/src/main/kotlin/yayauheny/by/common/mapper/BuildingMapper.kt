@@ -40,15 +40,18 @@ object BuildingMapper {
         id: UUID,
         now: Instant
     ): org.jooq.InsertReturningStep<*> =
-        ctx.insertInto(BUILDINGS)
+        ctx
+            .insertInto(BUILDINGS)
             .set(BUILDINGS.ID, id)
             .set(BUILDINGS.CITY_ID, dto.cityId)
             .set(BUILDINGS.NAME, dto.name)
             .set(BUILDINGS.ADDRESS, dto.address)
             .set(BUILDINGS.BUILDING_TYPE, dto.buildingType?.id)
             .set(BUILDINGS.WORK_TIME, dto.workTime.toJSONBOrEmpty())
-            .set(BUILDINGS.COORDINATES, yayauheny.by.util.pointExpr(dto.coordinates.lon, dto.coordinates.lat, BUILDINGS.COORDINATES))
-            .set(BUILDINGS.EXTERNAL_IDS, dto.externalIds.toJSONBOrEmpty())
+            .set(
+                BUILDINGS.COORDINATES,
+                yayauheny.by.util.pointExpr(dto.coordinates.lon, dto.coordinates.lat, BUILDINGS.COORDINATES)
+            ).set(BUILDINGS.EXTERNAL_IDS, dto.externalIds.toJSONBOrEmpty())
             .set(BUILDINGS.CREATED_AT, now)
             .set(BUILDINGS.UPDATED_AT, now)
 
