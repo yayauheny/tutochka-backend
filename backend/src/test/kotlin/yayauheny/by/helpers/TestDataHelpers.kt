@@ -479,11 +479,17 @@ object TestDataHelpers {
         cityId: UUID = UUID.randomUUID(),
         nameRu: String = "Автозаводская линия",
         nameEn: String = "Avtozavodskaya Line",
+        nameLocal: String? = "Аўтазаводская лінія",
+        nameLocalLang: String? = "be",
+        shortCode: String? = "2",
         hexColor: String = "#EF161E"
     ) = SubwayLineCreateDto(
         cityId = cityId,
         nameRu = nameRu,
         nameEn = nameEn,
+        nameLocal = nameLocal,
+        nameLocalLang = nameLocalLang,
+        shortCode = shortCode,
         hexColor = hexColor
     )
 
@@ -492,6 +498,9 @@ object TestDataHelpers {
         cityId: UUID = UUID.randomUUID(),
         nameRu: String = "Автозаводская линия",
         nameEn: String = "Avtozavodskaya Line",
+        nameLocal: String? = "Аўтазаводская лінія",
+        nameLocalLang: String? = "be",
+        shortCode: String? = "2",
         hexColor: String = "#EF161E",
         isDeleted: Boolean = false,
         createdAt: Instant = Instant.now()
@@ -500,6 +509,9 @@ object TestDataHelpers {
         cityId = cityId,
         nameRu = nameRu,
         nameEn = nameEn,
+        nameLocal = nameLocal,
+        nameLocalLang = nameLocalLang,
+        shortCode = shortCode,
         hexColor = hexColor,
         isDeleted = isDeleted,
         createdAt = createdAt
@@ -509,12 +521,20 @@ object TestDataHelpers {
         subwayLineId: UUID = UUID.randomUUID(),
         nameRu: String = "Площадь Победы",
         nameEn: String = "Victory Square",
+        nameLocal: String? = "Плошча Перамогі",
+        nameLocalLang: String? = "be",
+        isTransfer: Boolean = false,
+        externalIds: JsonObject? = null,
         lat: Double = 53.9006,
         lon: Double = 27.5590
     ) = SubwayStationCreateDto(
         subwayLineId = subwayLineId,
         nameRu = nameRu,
         nameEn = nameEn,
+        nameLocal = nameLocal,
+        nameLocalLang = nameLocalLang,
+        isTransfer = isTransfer,
+        externalIds = externalIds,
         coordinates = LatLon(lat = lat, lon = lon)
     )
 
@@ -523,6 +543,9 @@ object TestDataHelpers {
         subwayLineId: UUID = UUID.randomUUID(),
         nameRu: String = "Площадь Победы",
         nameEn: String = "Victory Square",
+        nameLocal: String? = "Плошча Перамогі",
+        nameLocalLang: String? = "be",
+        isTransfer: Boolean = false,
         lat: Double = 53.9006,
         lon: Double = 27.5590,
         isDeleted: Boolean = false,
@@ -532,6 +555,9 @@ object TestDataHelpers {
         subwayLineId = subwayLineId,
         nameRu = nameRu,
         nameEn = nameEn,
+        nameLocal = nameLocal,
+        nameLocalLang = nameLocalLang,
+        isTransfer = isTransfer,
         coordinates = LatLon(lat = lat, lon = lon),
         isDeleted = isDeleted,
         createdAt = createdAt
