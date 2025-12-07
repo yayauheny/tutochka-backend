@@ -11,14 +11,25 @@ data class SubwayStationResponseDto(
     @Contextual val subwayLineId: UUID,
     val nameRu: String,
     val nameEn: String,
+    val nameLocal: String? = null,
+    val nameLocalLang: String? = null,
+    val isTransfer: Boolean = false,
     val coordinates: LatLon,
     val isDeleted: Boolean,
     @Contextual val createdAt: Instant,
     val line: SubwayLineResponseDto? = null
 ) {
-    fun displayName(): String? =
-        nameRu.takeIf { it.isNotBlank() }
-            ?: nameEn.takeIf { it.isNotBlank() }
+    /**
+     * Returns display name based on preferred language.
+     * Priority: preferredLang -> nameLocal -> nameRu -> nameEn
+     */
+    fun displayName(preferredLang: String? = null): String =
+        when (preferredLang) {
+            nameLocalLang -> nameLocal?.takeIf { it.isNotBlank() } ?: nameRu ?: nameEn
+            "ru" -> nameRu.takeIf { it.isNotBlank() } ?: nameLocal ?: nameEn
+            "en" -> nameEn.takeIf { it.isNotBlank() } ?: nameLocal ?: nameRu
+            else -> nameLocal?.takeIf { it.isNotBlank() } ?: nameRu ?: nameEn
+        }
 
     fun lineColor(): String? = line?.hexColor?.takeIf { it.isNotBlank() }
 }

@@ -6,6 +6,13 @@ databaseChangeLog:
         - sqlFile:
             path: migration/1757246414_init_tables.sql
             relativeToChangelogFile: true
+  - changeSet:
+      id: import-minsk-metro
+      author: yayauheny
+      changes:
+        - sqlFile:
+            path: migration/20251205_import_minsk_metro.sql
+            relativeToChangelogFile: true
 #  - changeSet:
 #      id: import-2gis-20250928
 #      author: yayauheny

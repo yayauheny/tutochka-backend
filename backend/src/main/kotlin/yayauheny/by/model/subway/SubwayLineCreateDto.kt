@@ -15,6 +15,12 @@ data class SubwayLineCreateDto(
     val nameRu: String,
     @field:Schema(description = "English name", required = true)
     val nameEn: String,
+    @field:Schema(description = "Local name (e.g., Belarusian, Kazakh)", required = false)
+    val nameLocal: String? = null,
+    @field:Schema(description = "Local language code (e.g., 'be', 'kk')", required = false)
+    val nameLocalLang: String? = null,
+    @field:Schema(description = "Short code for the line (e.g., '1', '2', 'M1')", required = false)
+    val shortCode: String? = null,
     @field:Schema(description = "Hex color code", example = "#FF0000", required = true)
     val hexColor: String
 )
