@@ -24,8 +24,8 @@ import yayauheny.by.model.restroom.RestroomCreateDto
 import yayauheny.by.model.restroom.RestroomUpdateDto
 import yayauheny.by.repository.BuildingRepository
 import yayauheny.by.repository.RestroomRepository
+import yayauheny.by.repository.SubwayRepository
 import yayauheny.by.service.import.ImportStrategy
-import yayauheny.by.service.import.SubwayBindingService
 
 /**
  * Стратегия импорта данных из 2ГИС.
@@ -34,7 +34,7 @@ import yayauheny.by.service.import.SubwayBindingService
 class TwoGisImportStrategy(
     private val buildingRepository: BuildingRepository,
     private val restroomRepository: RestroomRepository,
-    private val subwayBindingService: SubwayBindingService
+    private val subwayRepository: SubwayRepository
 ) : ImportStrategy {
     private val json =
         Json {
@@ -61,8 +61,12 @@ class TwoGisImportStrategy(
         // 2. Обрабатываем туалет
         val restroomId = upsertRestroom(cityId, place, buildingId)
 
-        // 3. Привязываем ближайшую станцию метро
-        subwayBindingService.bindNearestSubwayStation(restroomId)
+        // 3. Привязываем ближайшую станцию метро (используем координаты из place)
+        subwayRepository.setNearestStationForRestroom(
+            restroomId = restroomId,
+            lat = place.point.lat,
+            lon = place.point.lon
+        )
 
         return ImportObjectResult(
             restroomId = restroomId,
