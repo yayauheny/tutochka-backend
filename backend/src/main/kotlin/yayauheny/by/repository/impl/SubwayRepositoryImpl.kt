@@ -184,6 +184,10 @@ class SubwayRepositoryImpl(
         forceUpdate: Boolean
     ): Int =
         withContext(Dispatchers.IO) {
+            // Используем коррелированный подзапрос с правильной ссылкой на внешнюю таблицу через DSL.field
+            val restroomsCityIdField = DSL.field("restrooms.city_id", SQLDataType.UUID)
+            val restroomsCoordinatesField = DSL.field("restrooms.coordinates", SQLDataType.OTHER)
+
             val subquery =
                 ctx
                     .select(SUBWAY_STATIONS.ID)
@@ -192,7 +196,7 @@ class SubwayRepositoryImpl(
                     .on(SUBWAY_STATIONS.SUBWAY_LINE_ID.eq(SUBWAY_LINES.ID))
                     .where(
                         SUBWAY_LINES.CITY_ID
-                            .eq(RESTROOMS.CITY_ID)
+                            .eq(restroomsCityIdField)
                             .and(SUBWAY_STATIONS.IS_DELETED.eq(false))
                             .and(SUBWAY_LINES.IS_DELETED.eq(false))
                     ).orderBy(
@@ -200,7 +204,7 @@ class SubwayRepositoryImpl(
                             "{0} <-> {1}",
                             SQLDataType.DOUBLE,
                             SUBWAY_STATIONS.COORDINATES,
-                            RESTROOMS.COORDINATES
+                            restroomsCoordinatesField
                         )
                     ).limit(1)
                     .asField<UUID>("nearest_id")
