@@ -7,5 +7,9 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
  */
 @ConfigurationProperties(prefix = "backend")
 public record BackendProperties(
-    String baseUrl
+    String baseUrl,
+    int connectTimeoutMs,
+    int readTimeoutMs,
+    int retryAttempts,
+    long retryDelayMs
 ) {}

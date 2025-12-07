@@ -22,6 +22,9 @@ import yayauheny.by.model.restroom.RestroomResponseDto
 import yayauheny.by.model.restroom.RestroomUpdateDto
 import yayauheny.by.repository.RestroomRepository
 import yayauheny.by.tables.references.RESTROOMS
+import yayauheny.by.tables.references.BUILDINGS
+import yayauheny.by.tables.references.SUBWAY_STATIONS
+import yayauheny.by.tables.references.SUBWAY_LINES
 import yayauheny.by.util.distanceGeographyTo
 import yayauheny.by.util.knnOrderTo
 import yayauheny.by.util.latAlias
@@ -332,10 +335,52 @@ class RestroomRepositoryImpl(
             val coordinateFields = getRestroomsCoordinateFields()
             val knnField = RESTROOMS.COORDINATES.knnOrderTo(latitude, longitude)
             val distanceField = RESTROOMS.COORDINATES.distanceGeographyTo(latitude, longitude)
+            val b = BUILDINGS
+            val s = SUBWAY_STATIONS
+            val l = SUBWAY_LINES
+
+            val selectFields =
+                getAllRestroomsFieldsExceptCoordinates() +
+                    coordinateFields +
+                    distanceField.`as`("distance") +
+                    listOf(
+                        b.ID.`as`("b_id"),
+                        b.CITY_ID.`as`("b_city_id"),
+                        b.NAME.`as`("b_name"),
+                        b.ADDRESS.`as`("b_address"),
+                        b.BUILDING_TYPE.`as`("b_type"),
+                        b.WORK_TIME.`as`("b_work_time"),
+                        b.COORDINATES.latAlias().`as`("b_lat"),
+                        b.COORDINATES.lonAlias().`as`("b_lon"),
+                        b.EXTERNAL_IDS.`as`("b_external_ids"),
+                        b.IS_DELETED.`as`("b_is_deleted"),
+                        b.CREATED_AT.`as`("b_created_at"),
+                        b.UPDATED_AT.`as`("b_updated_at"),
+                        s.ID.`as`("s_id"),
+                        s.NAME_RU.`as`("s_name_ru"),
+                        s.NAME_EN.`as`("s_name_en"),
+                        s.COORDINATES.latAlias().`as`("s_lat"),
+                        s.COORDINATES.lonAlias().`as`("s_lon"),
+                        s.IS_DELETED.`as`("s_is_deleted"),
+                        s.CREATED_AT.`as`("s_created_at"),
+                        l.ID.`as`("l_id"),
+                        l.CITY_ID.`as`("l_city_id"),
+                        l.NAME_RU.`as`("l_name_ru"),
+                        l.NAME_EN.`as`("l_name_en"),
+                        l.HEX_COLOR.`as`("l_hex"),
+                        l.IS_DELETED.`as`("l_is_deleted"),
+                        l.CREATED_AT.`as`("l_created_at")
+                    )
 
             ctx
-                .select(*(getAllRestroomsFieldsExceptCoordinates() + coordinateFields + distanceField.`as`("distance")).toTypedArray())
+                .select(*selectFields.toTypedArray())
                 .from(RESTROOMS)
+                .leftJoin(b)
+                .on(RESTROOMS.BUILDING_ID.eq(b.ID))
+                .leftJoin(s)
+                .on(RESTROOMS.SUBWAY_STATION_ID.eq(s.ID))
+                .leftJoin(l)
+                .on(s.SUBWAY_LINE_ID.eq(l.ID))
                 .where(
                     RESTROOMS.COORDINATES
                         .withinDistanceOf(latitude, longitude, maxDistance)

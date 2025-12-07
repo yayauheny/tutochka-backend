@@ -35,5 +35,7 @@ data class RestroomResponseDto(
     val hasPhotos: Boolean,
     @Contextual val createdAt: Instant,
     @Contextual val updatedAt: Instant,
-    val distanceMeters: Int? = null
+    val distanceMeters: Int? = null,
+    val building: BuildingResponseDto? = null,
+    val subwayStation: SubwayStationResponseDto? = null
 )

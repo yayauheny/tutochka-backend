@@ -52,7 +52,12 @@ public class Messages {
     public static final String TOILET_DETAILS = """
         🐥 {name}
         📍 {address}
-        📝 {description}
+        🏷 Тип: {placeType}
+        💰 Оплата: {fee}
+        ♿ Доступность: {accessibility}
+        📝 Заметка: {description}
+        🧭 Маршрут: {direction}
+        🗺 Карта: {mapsLink}
         """;
 
     public static final String LOCATION_REQUEST = "Поделись геолокацией для поиска туалетов:";

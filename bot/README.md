@@ -20,6 +20,10 @@ Bot модуль может запускаться независимо от bac
 
 #### Опциональные
 - `BACKEND_BASE_URL` - URL backend API (по умолчанию: `http://localhost:8080/api/v1`)
+- `BACKEND_CONNECT_TIMEOUT_MS` - таймаут подключения к backend (мс, по умолчанию `3000`)
+- `BACKEND_READ_TIMEOUT_MS` - таймаут чтения ответа (мс, по умолчанию `5000`)
+- `BACKEND_RETRY_ATTEMPTS` - число попыток повторить запрос к backend (по умолчанию `2`)
+- `BACKEND_RETRY_DELAY_MS` - задержка между попытками (мс, по умолчанию `200`)
 - `PORT` - порт для HTTP сервера (по умолчанию: `8081`)
 - `BOT_MODE` - режим работы бота: `POLLING` или `WEBHOOK` (по умолчанию: `POLLING`)
 - `BOT_AUTO_REGISTER` - автоматическая регистрация бота при старте (по умолчанию: `false`)

@@ -4,12 +4,16 @@ import java.time.Instant
 import org.jooq.Record
 import org.jooq.UpdateSetFirstStep
 import org.jooq.UpdateSetMoreStep
+import org.jooq.JSONB
 import by.yayauheny.shared.dto.LatLon
 import by.yayauheny.shared.enums.AccessibilityType
 import by.yayauheny.shared.enums.DataSourceType
 import by.yayauheny.shared.enums.FeeType
 import by.yayauheny.shared.enums.PlaceType
 import by.yayauheny.shared.enums.RestroomStatus
+import by.yayauheny.shared.dto.BuildingResponseDto
+import by.yayauheny.shared.dto.SubwayLineResponseDto
+import by.yayauheny.shared.dto.SubwayStationResponseDto
 import yayauheny.by.model.restroom.NearestRestroomResponseDto
 import yayauheny.by.model.restroom.RestroomResponseDto
 import yayauheny.by.model.restroom.RestroomUpdateDto
@@ -82,6 +86,65 @@ object RestroomMapper {
     ): NearestRestroomResponseDto {
         val lat = record.reqDouble("lat")
         val lon = record.reqDouble("lon")
+
+        val buildingId = record.get(RESTROOMS.BUILDING_ID) as? java.util.UUID
+        val building =
+            buildingId?.let {
+                val bLat = record.get("b_lat", Double::class.java)
+                val bLon = record.get("b_lon", Double::class.java)
+                val bTypeRaw = record.get("b_type", String::class.java)
+                val bAddress: String = record.get("final_address", String::class.java) ?: ""
+                val bType = PlaceType.fromString(bTypeRaw)
+
+                val buildingDto =
+                    BuildingResponseDto(
+                        id = it,
+                        cityId = record.get("b_city_id", java.util.UUID::class.java) ?: record[RESTROOMS.CITY_ID]!!,
+                        name = record.get("b_name", String::class.java),
+                        address = bAddress,
+                        buildingType = bType,
+                        workTime = record.get("b_work_time", org.jooq.JSONB::class.java)?.toJsonObjectOrEmpty(),
+                        coordinates = if (bLat != null && bLon != null) LatLon(bLat, bLon) else LatLon(lat, lon),
+                        externalIds = record.get("b_external_ids", org.jooq.JSONB::class.java)?.toJsonObjectOrEmpty(),
+                        isDeleted = record.get("b_is_deleted", Boolean::class.java) ?: false,
+                        createdAt = record.get("b_created_at", java.time.Instant::class.java) ?: record[RESTROOMS.CREATED_AT]!!,
+                        updatedAt = record.get("b_updated_at", java.time.Instant::class.java) ?: record[RESTROOMS.UPDATED_AT]!!
+                    )
+                buildingDto
+            }
+
+        val stationId = record.get("s_id") as? java.util.UUID
+        val station =
+            stationId?.let {
+                val sLat = record.get("s_lat", Double::class.java)
+                val sLon = record.get("s_lon", Double::class.java)
+                val lineId = record.get("l_id") as? java.util.UUID
+                val line =
+                    lineId?.let {
+                        SubwayLineResponseDto(
+                            id = it,
+                            cityId = record.get("l_city_id", java.util.UUID::class.java) ?: record[RESTROOMS.CITY_ID]!!,
+                            nameRu = record.get("l_name_ru", String::class.java) ?: "",
+                            nameEn = record.get("l_name_en", String::class.java) ?: "",
+                            hexColor = record.get("l_hex", String::class.java) ?: "",
+                            isDeleted = record.get("l_is_deleted", Boolean::class.java) ?: false,
+                            createdAt = record.get("l_created_at", java.time.Instant::class.java) ?: record[RESTROOMS.CREATED_AT]!!
+                        )
+                    }
+                val stationDto =
+                    SubwayStationResponseDto(
+                        id = stationId,
+                        subwayLineId = lineId ?: stationId, // fallback just to keep non-null id
+                        nameRu = record.get("s_name_ru", String::class.java) ?: "",
+                        nameEn = record.get("s_name_en", String::class.java) ?: "",
+                        coordinates = if (sLat != null && sLon != null) LatLon(sLat, sLon) else LatLon(lat, lon),
+                        isDeleted = record.get("s_is_deleted", Boolean::class.java) ?: false,
+                        createdAt = record.get("s_created_at", java.time.Instant::class.java) ?: record[RESTROOMS.CREATED_AT]!!,
+                        line = line
+                    )
+                stationDto
+            }
+
         return NearestRestroomResponseDto(
             id = record[RESTROOMS.ID]!!,
             name = record[RESTROOMS.NAME],
@@ -89,7 +152,10 @@ object RestroomMapper {
             coordinates = LatLon(lat = lat, lon = lon),
             distanceMeters = distanceMeters,
             feeType = FeeType.valueOf(record[RESTROOMS.FEE_TYPE]!!),
-            isOpen = null
+            isOpen = null,
+            placeType = PlaceType.entries.find { p -> p.id == record.get(RESTROOMS.PLACE_TYPE) } ?: PlaceType.OTHER,
+            building = building,
+            subwayStation = station
         )
     }
 }

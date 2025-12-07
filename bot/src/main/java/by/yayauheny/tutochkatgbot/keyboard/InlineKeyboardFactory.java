@@ -5,7 +5,6 @@ import by.yayauheny.shared.dto.NearestRestroomResponseDto;
 import by.yayauheny.shared.dto.RestroomResponseDto;
 import by.yayauheny.tutochkatgbot.messages.Messages;
 import by.yayauheny.tutochkatgbot.service.FormatterService;
-import by.yayauheny.tutochkatgbot.util.DistanceFormat;
 import org.springframework.stereotype.Component;
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.InlineKeyboardMarkup;
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.buttons.InlineKeyboardButton;
