@@ -5,6 +5,7 @@ import org.koin.dsl.module
 import yayauheny.by.controller.CityController
 import yayauheny.by.controller.CountryController
 import yayauheny.by.controller.HealthController
+import yayauheny.by.controller.ImportController
 import yayauheny.by.controller.RestroomController
 import yayauheny.by.service.CityService
 import yayauheny.by.service.CountryService
@@ -16,4 +17,5 @@ val controllerModule =
         single<CityController> { CityController(get<CityService>()) }
         single<RestroomController> { RestroomController(get<RestroomService>()) }
         single<HealthController> { HealthController(get<DSLContext>()) }
+        single<ImportController> { ImportController(get()) }
     }

@@ -8,6 +8,7 @@ import org.koin.ktor.ext.inject
 import yayauheny.by.controller.CityController
 import yayauheny.by.controller.CountryController
 import yayauheny.by.controller.HealthController
+import yayauheny.by.controller.ImportController
 import yayauheny.by.controller.RestroomController
 
 fun Application.configureRouting() {
@@ -15,6 +16,7 @@ fun Application.configureRouting() {
     val cityController by inject<CityController>()
     val restroomController by inject<RestroomController>()
     val healthController by inject<HealthController>()
+    val importController by inject<ImportController>()
 
     routing {
         with(healthController) { healthRoutes() }
@@ -23,6 +25,7 @@ fun Application.configureRouting() {
             with(countryController) { countryRoutes() }
             with(cityController) { cityRoutes() }
             with(restroomController) { restroomRoutes() }
+            with(importController) { importRoutes() }
         }
     }
 }
