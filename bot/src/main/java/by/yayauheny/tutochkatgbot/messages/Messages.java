@@ -50,13 +50,22 @@ public class Messages {
     public static final String SOMETHING_WENT_WRONG = "Упс, что-то пошло не так. Попробуй ещё раз.";
 
     public static final String TOILET_DETAILS = """
-        🐥 {name}
+        <b>{name}</b>
         📍 {address}
+        
         🏷 Тип: {placeType}
-        💰 Оплата: {fee}
+        {feeIcon} Оплата: {feeText}
         ♿ Доступность: {accessibility}
-        📝 Заметка: {description}
-        🧭 Маршрут: {direction}
+        
+        ⏰ Время работы:
+        {workTime}
+        
+        🏢 Здание: {buildingInfo}
+        🚇 Метро: {subwayInfo}
+        
+        📝 Заметка: {accessNote}
+        🧭 Маршрут: {directionGuide}
+        
         🗺 Карта: {mapsLink}
         """;
 

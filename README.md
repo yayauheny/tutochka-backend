@@ -231,6 +231,82 @@ Core entities: **Buildings** (with `placeType`, `external_ids`, PostGIS coordina
 ### Русский
 Ключевые сущности: **Buildings** (тип места `placeType`, `external_ids`, координаты PostGIS), **Restrooms** (связаны с зданием и станцией метро, JSONB `amenities`/`external_maps`, поля `placeType`, `fee_type`, `access_note`, `direction_guide`, `inherit_building_schedule`, `has_photos`). Линии и станции метро с цветом (hexColor) и soft-delete, станции по городу/линии и используются для привязки ближайшего метро.
 
+---
+
+## 🤖 Telegram Bot / Telegram Бот
+
+### Features / Возможности
+- 📍 **Location-based search** — Find nearest restrooms by sharing location
+- 🎨 **Clean UI design** — Informative card format with colored subway indicators
+- 🔴🔵🟢 **Subway visualization** — Color-coded metro lines for Minsk (Red, Blue, Green)
+- 🏢 **Building integration** — Display building names and inherit schedules
+- 💸🆓 **Fee indicators** — Clear payment status icons
+- ⏰ **Working hours** — Display schedules with inheritance from buildings
+
+### Bot Display Format / Формат отображения бота
+
+**List View (Вариант 2: Карточка с инфострокой):**
+```
+<b>ТЦ Galleria Minsk</b>
+📍 200 м • 🆓 Бесплатно • 🔵 Немига
+```
+
+**Detail View:**
+- Clean, structured layout with HTML formatting
+- Building and subway information
+- Working hours (inherited from building if enabled)
+- Access notes and direction guides
+
+### Configuration / Конфигурация
+
+See [bot/README.md](bot/README.md) for detailed bot configuration and environment variables.
+
+---
+
+## 🎯 MVP Readiness Checklist / Чеклист готовности MVP
+
+### ✅ Completed / Выполнено
+- [x] **Database Schema v1.0** — Complete schema with buildings, subway lines/stations, restrooms
+- [x] **REST API** — All core endpoints implemented and tested
+- [x] **Telegram Bot** — Functional bot with location-based search
+- [x] **Subway Integration** — Metro lines/stations with color coding
+- [x] **Building Integration** — Buildings linked to restrooms with schedule inheritance
+- [x] **Bot UI Redesign** — Clean, informative display format
+- [x] **HTTP Client Resilience** — Retries and timeouts for backend calls
+- [x] **Shared DTOs** — Common models between backend and bot modules
+
+### 🔄 In Progress / В процессе
+- [ ] **Data Population** — Initial data import for Minsk (buildings, subway, restrooms)
+- [ ] **Production Deployment** — Docker setup, environment configuration
+
+### 📋 Remaining for MVP / Осталось для MVP
+- [ ] **Production Environment Setup**
+  - [ ] Docker Compose configuration for production
+  - [ ] Environment variable documentation
+  - [ ] Database backup strategy
+  - [ ] Monitoring and logging setup
+- [ ] **Data Import**
+  - [ ] Minsk buildings data (shopping centers, restaurants, etc.)
+  - [ ] Minsk subway lines and stations (3 lines: Red, Blue, Green)
+  - [ ] Initial restroom data for Minsk
+  - [ ] Building-restroom linkages
+  - [ ] Subway station-restroom assignments
+- [ ] **Testing & Quality**
+  - [ ] End-to-end testing
+  - [ ] Load testing for API endpoints
+  - [ ] Bot user acceptance testing
+- [ ] **Documentation**
+  - [ ] API usage examples
+  - [ ] Deployment guide
+  - [ ] Bot user guide
+
+### 🚀 Next Steps for MVP Launch / Следующие шаги для запуска MVP
+1. **Data Import** — Populate database with Minsk data (buildings, subway, restrooms)
+2. **Production Setup** — Configure Docker, environment variables, monitoring
+3. **Testing** — Comprehensive testing of all features
+4. **Documentation** — Complete user and deployment documentation
+5. **Launch** — Deploy to production environment
+
 ## 📖 Documentation / Документация
 
 - **API Documentation:** Available at `/swagger-ui.html` when running
@@ -250,9 +326,10 @@ Core entities: **Buildings** (with `placeType`, `external_ids`, PostGIS coordina
 ## 🗺️ Roadmap & Future Improvements / Дорожная карта и улучшения
 
 ### Phase 1: Automation & Data (Автоматизация и Данные)
+- [x] **Schedule Sync** — Inherit restroom schedule from building (`inherit_building_schedule`) ✅ **COMPLETED**
+- [x] **Subway Integration** — Import metro lines/stations and geo-search nearest stations ✅ **COMPLETED**
+- [x] **Bot Display Redesign** — Clean, informative design with colored subway indicators (🔴🔵🟢) ✅ **COMPLETED**
 - [ ] **Automated Import Engine** — Parsers for 2GIS and Yandex Maps to auto-create buildings and attach restrooms.
-- [ ] **Schedule Sync** — Inherit restroom schedule from building (`inherit_building_schedule`).
-- [ ] **Subway Integration** — Import metro lines/stations and geo-search nearest stations.
 
 ### Phase 2: Community & Content (Сообщество и Контент)
 - [ ] **User Submissions Bot** — Telegram bot to receive new restroom submissions from users.

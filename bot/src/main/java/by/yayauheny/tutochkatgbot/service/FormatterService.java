@@ -1,7 +1,9 @@
 package by.yayauheny.tutochkatgbot.service;
 
+import by.yayauheny.shared.dto.BuildingResponseDto;
 import by.yayauheny.shared.dto.NearestRestroomResponseDto;
 import by.yayauheny.shared.dto.RestroomResponseDto;
+import by.yayauheny.shared.dto.SubwayStationResponseDto;
 import by.yayauheny.shared.enums.AccessibilityType;
 import by.yayauheny.shared.enums.FeeType;
 import by.yayauheny.shared.enums.PlaceType;
@@ -13,6 +15,7 @@ import by.yayauheny.tutochkatgbot.util.Text;
 import by.yayauheny.tutochkatgbot.util.WorkTimeFormatter;
 import org.springframework.stereotype.Service;
 
+import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
 
@@ -20,88 +23,281 @@ import java.util.Optional;
 public class FormatterService {
 
     public String toiletDetails(RestroomResponseDto toilet) {
-        String name = Optional.ofNullable(toilet.getName()).orElse("Туалет");
-        String address = Optional.ofNullable(toilet.getAddress()).orElse("Адрес не указан");
-
-        String accessNote =
-            Optional.ofNullable(toilet.getAccessNote())
-                .filter(note -> !note.trim().isEmpty())
-                .orElse("Дополнительная информация не указана");
-
-        String directionGuide =
-            Optional.ofNullable(toilet.getDirectionGuide())
-                .filter(note -> !note.trim().isEmpty())
-                .orElse("Маршрут не указан");
-
+        // Выбираем название с учетом здания
+        String name = selectDisplayNameForDetails(toilet);
+        
+        // Выбираем адрес с учетом наследования от здания
+        String address = selectAddress(toilet);
+        
+        // Выбираем расписание работы с учетом наследования
+        String workTime = selectWorkTime(toilet);
+        
+        // Форматируем тип места
         String placeType =
             Optional.ofNullable(toilet.getPlaceType())
                 .map(pt -> pt.getLocalizedName("ru"))
                 .orElse("Не указано");
-
-        String fee =
-            toilet.getFeeType() == FeeType.FREE
-                ? "Бесплатный"
-                : "Платный";
-
+        
+        // Иконка и текст оплаты
+        String feeIcon = getFeeIcon(toilet.getFeeType());
+        String feeText = toilet.getFeeType() == FeeType.FREE ? "Бесплатно" : "Платно";
+        
+        // Форматируем доступность
         String accessibility = formatAccessibility(toilet.getAccessibilityType());
-
+        
+        // Дополнительная информация
+        String accessNote =
+            Optional.ofNullable(toilet.getAccessNote())
+                .filter(note -> !note.trim().isEmpty())
+                .orElse(null);
+        
+        String directionGuide =
+            Optional.ofNullable(toilet.getDirectionGuide())
+                .filter(note -> !note.trim().isEmpty())
+                .orElse(null);
+        
+        // Информация о метро
+        String subwayInfo = formatSubwayInfoForDetails(toilet.getSubwayStation());
+        
+        // Информация о здании
+        String buildingInfo = formatBuildingInfo(toilet.getBuilding());
+        
+        // Ссылка на карту
         String externalMap = Links.getDefaultMapsLink(toilet.getCoordinates().getLat(), toilet.getCoordinates().getLon());
 
-        return Text.substitute(Messages.TOILET_DETAILS, Map.of(
-            "name", name,
-            "address", address,
-            "description", accessNote,
-            "direction", directionGuide,
-            "placeType", placeType,
-            "fee", fee,
-            "accessibility", accessibility,
-            "mapsLink", externalMap
-        ));
+        Map<String, String> params = new HashMap<>();
+        params.put("name", name);
+        params.put("address", address);
+        params.put("workTime", workTime);
+        params.put("placeType", placeType);
+        params.put("feeIcon", feeIcon);
+        params.put("feeText", feeText);
+        params.put("accessibility", accessibility);
+        params.put("accessNote", accessNote != null ? accessNote : "—");
+        params.put("directionGuide", directionGuide != null ? directionGuide : "—");
+        params.put("subwayInfo", subwayInfo);
+        params.put("buildingInfo", buildingInfo);
+        params.put("mapsLink", externalMap);
+        
+        return Text.substitute(Messages.TOILET_DETAILS, params);
+    }
+    
+    /**
+     * Выбирает отображаемое название для детального вида.
+     */
+    private String selectDisplayNameForDetails(RestroomResponseDto toilet) {
+        String name = Optional.ofNullable(toilet.getName())
+            .map(String::trim)
+            .orElse("");
+        
+        if (name.isBlank() || name.equalsIgnoreCase("Туалет")) {
+            return Optional.ofNullable(toilet.getBuilding())
+                .map(b -> b.displayName())
+                .filter(str -> str != null && !str.isBlank())
+                .orElse("Туалет");
+        }
+        
+        return name;
+    }
+    
+    /**
+     * Выбирает адрес с учетом наследования от здания.
+     */
+    private String selectAddress(RestroomResponseDto toilet) {
+        String address = Optional.ofNullable(toilet.getAddress())
+            .map(String::trim)
+            .orElse("");
+        
+        // Если адрес туалета пустой и есть здание, используем адрес здания
+        if (address.isBlank() && toilet.getBuilding() != null) {
+            address = Optional.ofNullable(toilet.getBuilding().getAddress())
+                .map(String::trim)
+                .orElse("");
+        }
+        
+        return address.isBlank() ? "Адрес не указан" : address;
+    }
+    
+    /**
+     * Выбирает расписание работы с учетом наследования от здания.
+     */
+    @SuppressWarnings("unchecked")
+    private String selectWorkTime(RestroomResponseDto toilet) {
+        // Если включено наследование расписания и есть здание, используем расписание здания
+        if (toilet.getInheritBuildingSchedule() && toilet.getBuilding() != null) {
+            java.util.Map<String, Object> buildingWorkTime = extractWorkTimeMapViaReflection(toilet.getBuilding());
+            if (buildingWorkTime != null && !buildingWorkTime.isEmpty()) {
+                return WorkTimeFormatter.formatWorkTime(buildingWorkTime);
+            }
+        }
+        
+        // Иначе используем расписание туалета
+        java.util.Map<String, Object> workTime = extractWorkTimeMapViaReflection(toilet);
+        if (workTime != null && !workTime.isEmpty()) {
+            return WorkTimeFormatter.formatWorkTime(workTime);
+        }
+        
+        return "Время работы не указано";
+    }
+    
+    /**
+     * Извлекает Map из workTime через рефлексию, чтобы избежать зависимости от JsonObject.
+     */
+    @SuppressWarnings("unchecked")
+    private java.util.Map<String, Object> extractWorkTimeMapViaReflection(Object dto) {
+        try {
+            // Вызываем getWorkTime() через рефлексию
+            java.lang.reflect.Method getWorkTimeMethod = dto.getClass().getMethod("getWorkTime");
+            Object workTimeObj = getWorkTimeMethod.invoke(dto);
+            
+            if (workTimeObj == null) {
+                return null;
+            }
+            
+            // Если уже Map (после десериализации kotlinx.serialization)
+            if (workTimeObj instanceof java.util.Map) {
+                return (java.util.Map<String, Object>) workTimeObj;
+            }
+            
+            // Если это JsonObject из kotlinx.serialization, пытаемся получить содержимое
+            // JsonObject имеет метод getContent() или content, который возвращает Map
+            try {
+                java.lang.reflect.Method contentMethod = workTimeObj.getClass().getMethod("getContent");
+                Object content = contentMethod.invoke(workTimeObj);
+                if (content instanceof java.util.Map) {
+                    return (java.util.Map<String, Object>) content;
+                }
+            } catch (NoSuchMethodException e) {
+                // Пробуем другой метод
+                try {
+                    java.lang.reflect.Method contentMethod = workTimeObj.getClass().getMethod("content");
+                    Object content = contentMethod.invoke(workTimeObj);
+                    if (content instanceof java.util.Map) {
+                        return (java.util.Map<String, Object>) content;
+                    }
+                } catch (NoSuchMethodException e2) {
+                    // Игнорируем
+                }
+            }
+        } catch (Exception e) {
+            // Игнорируем ошибки рефлексии
+        }
+        
+        return null;
+    }
+    
+    /**
+     * Форматирует информацию о метро для детального вида.
+     */
+    private String formatSubwayInfoForDetails(SubwayStationResponseDto station) {
+        if (station == null) {
+            return "—";
+        }
+        
+        String emoji = Optional.ofNullable(station.lineColor())
+            .map(SubwayEmoji::getEmojiForColor)
+            .orElse("🚇");
+        
+        String stationName = Optional.ofNullable(station.displayName())
+            .orElse("");
+        
+        if (stationName.isBlank()) {
+            return "—";
+        }
+        
+        return emoji + " " + stationName;
+    }
+    
+    /**
+     * Форматирует информацию о здании для детального вида.
+     */
+    private String formatBuildingInfo(BuildingResponseDto building) {
+        if (building == null) {
+            return "—";
+        }
+        
+        String buildingName = building.displayName();
+        if (buildingName == null || buildingName.isBlank()) {
+            return "—";
+        }
+        
+        return buildingName;
     }
 
     public String toiletListItem(NearestRestroomResponseDto toilet) {
-        String name = Optional.ofNullable(toilet.getName()).orElse("Туалет");
+        // Выбираем название: если название общее ("Туалет"), используем название здания
+        String name = selectDisplayName(toilet);
+        
+        // Форматируем расстояние
         String distance = DistanceFormat.meters(toilet.getDistanceMeters());
-        String feeType =
-            toilet.getFeeType() == FeeType.FREE
-                ? "Бесплатный"
-                : "Платный";
-
-        String place =
-            Optional.ofNullable(toilet.getPlaceType())
-                .map(pt -> pt.getLocalizedName("ru"))
-                .orElse("Тип не указан");
-
-        String building =
-            Optional.ofNullable(toilet.getBuilding())
+        
+        // Иконка и текст оплаты
+        String feeIcon = getFeeIcon(toilet.getFeeType());
+        String feeText = toilet.getFeeType() == FeeType.FREE ? "Бесплатно" : "Платно";
+        
+        // Форматируем метро с цветным индикатором
+        String subwayInfo = formatSubwayInfo(toilet.getSubwayStation());
+        
+        // Собираем детали в одну строку через разделитель •
+        StringBuilder details = new StringBuilder();
+        details.append("📍 ").append(distance);
+        details.append(" • ").append(feeIcon).append(" ").append(feeText);
+        
+        if (!subwayInfo.isBlank()) {
+            details.append(" • ").append(subwayInfo);
+        }
+        
+        // Формируем итоговое сообщение: название жирным, детали обычным текстом
+        return "<b>" + name + "</b>\n" + details.toString();
+    }
+    
+    /**
+     * Выбирает отображаемое название туалета.
+     * Если название общее ("Туалет") или пустое, использует название здания.
+     */
+    private String selectDisplayName(NearestRestroomResponseDto toilet) {
+        String name = Optional.ofNullable(toilet.getName())
+            .map(String::trim)
+            .orElse("");
+        
+        // Если название пустое или слишком общее, используем название здания
+        if (name.isBlank() || name.equalsIgnoreCase("Туалет") || name.equalsIgnoreCase("Туалет")) {
+            return Optional.ofNullable(toilet.getBuilding())
                 .map(b -> b.displayName())
                 .filter(str -> str != null && !str.isBlank())
-                .orElse(null);
-
-        String subway =
-            Optional.ofNullable(toilet.getSubwayStation())
-                .map(st -> {
-                    String emoji = Optional.ofNullable(st.lineColor())
-                        .map(SubwayEmoji::getEmojiForColor)
-                        .orElse("🚇");
-                    String label = Optional.ofNullable(st.displayName()).orElse("");
-                    return (emoji + " " + label).trim();
-                })
-                .orElse("");
-
-        StringBuilder sb = new StringBuilder();
-        sb.append("🐥 ").append(name);
-        sb.append(" • ").append(feeType);
-        sb.append(" • ").append(place);
-        sb.append(" — ").append(distance);
-        if (building != null && !building.isBlank()) {
-            sb.append("\n🏢 ").append(building);
+                .orElse("Туалет");
         }
-        if (!subway.isBlank()) {
-            sb.append("\n🚇 ").append(subway);
+        
+        return name;
+    }
+    
+    /**
+     * Форматирует информацию о метро с цветным индикатором.
+     */
+    private String formatSubwayInfo(SubwayStationResponseDto station) {
+        if (station == null) {
+            return "";
         }
-
-        return sb.toString();
+        
+        String emoji = Optional.ofNullable(station.lineColor())
+            .map(SubwayEmoji::getEmojiForColor)
+            .orElse("🚇");
+        
+        String stationName = Optional.ofNullable(station.displayName())
+            .orElse("");
+        
+        if (stationName.isBlank()) {
+            return "";
+        }
+        
+        return emoji + " " + stationName;
+    }
+    
+    /**
+     * Возвращает иконку для типа оплаты.
+     */
+    private String getFeeIcon(FeeType feeType) {
+        return feeType == FeeType.FREE ? "🆓" : "💸";
     }
 
     public String toiletsFound(int count) {
