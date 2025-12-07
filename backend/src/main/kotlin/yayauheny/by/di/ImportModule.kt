@@ -3,6 +3,7 @@ package yayauheny.by.di
 import org.koin.dsl.module
 import yayauheny.by.service.import.ImportService
 import yayauheny.by.service.import.ImportStrategy
+import yayauheny.by.service.import.SubwayBindingService
 import yayauheny.by.service.import.twogis.TwoGisImportStrategy
 
 /**
@@ -11,11 +12,20 @@ import yayauheny.by.service.import.twogis.TwoGisImportStrategy
  */
 val importModule =
     module {
+        // Сервис привязки станций метро
+        single<SubwayBindingService> {
+            SubwayBindingService(
+                restroomRepository = get(),
+                subwayRepository = get()
+            )
+        }
+
         // Стратегии импорта
         single<ImportStrategy> {
             TwoGisImportStrategy(
                 buildingRepository = get(),
-                restroomRepository = get()
+                restroomRepository = get(),
+                subwayBindingService = get()
             )
         }
 
