@@ -414,4 +414,28 @@ class RestroomRepositoryImpl(
                 fetchCount = true
             )
         }
+
+    override suspend fun findByExternalMap(
+        provider: String,
+        externalId: String
+    ): RestroomResponseDto? =
+        withContext(Dispatchers.IO) {
+            ctx
+                .select(*getAllRestroomsFieldsWithCoordinates().toTypedArray())
+                .from(RESTROOMS)
+                .where(
+                    (RESTROOMS.IS_DELETED.eq(false).or(RESTROOMS.IS_DELETED.isNull))
+                        .and(
+                            org.jooq.impl.DSL.condition(
+                                "{0} ->> {1} = {2}",
+                                RESTROOMS.EXTERNAL_MAPS,
+                                provider,
+                                externalId
+                            )
+                        )
+                ).orderBy(RESTROOMS.CREATED_AT.desc(), RESTROOMS.ID.desc())
+                .limit(1)
+                .fetchOne()
+                ?.let { RestroomMapper.mapFromRecord(it) }
+        }
 }

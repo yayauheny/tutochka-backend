@@ -7,6 +7,7 @@ import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.JsonObject
 import by.yayauheny.shared.dto.LatLon
 import by.yayauheny.shared.enums.PlaceType
+import yayauheny.by.model.import.BuildingImportStatus
 
 @Serializable
 @Schema(description = "Data for updating a building")
@@ -25,5 +26,7 @@ data class BuildingUpdateDto(
     @field:Schema(description = "Coordinates")
     val coordinates: LatLon?,
     @field:Schema(description = "External IDs JSONB map")
-    val externalIds: JsonObject?
+    val externalIds: JsonObject?,
+    @field:Schema(description = "Import status", example = "COMPLETED")
+    val importStatus: BuildingImportStatus? = null
 )

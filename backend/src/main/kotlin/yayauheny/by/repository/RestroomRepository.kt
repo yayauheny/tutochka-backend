@@ -19,4 +19,15 @@ interface RestroomRepository : BaseRepository<RestroomResponseDto, RestroomCreat
         cityId: UUID,
         pagination: yayauheny.by.common.query.PaginationRequest
     ): yayauheny.by.common.query.PageResponse<RestroomResponseDto>
+
+    /**
+     * Находит туалет по внешнему ID из external_maps JSONB поля.
+     * @param provider провайдер (например, "2gis")
+     * @param externalId внешний ID от провайдера
+     * @return найденный туалет или null
+     */
+    suspend fun findByExternalMap(
+        provider: String,
+        externalId: String
+    ): RestroomResponseDto?
 }

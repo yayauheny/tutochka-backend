@@ -14,6 +14,8 @@ import yayauheny.by.util.toJSONBOrEmpty
 import yayauheny.by.util.toJsonObjectOrEmpty
 import by.yayauheny.shared.dto.LatLon
 import by.yayauheny.shared.enums.PlaceType
+import org.jooq.impl.DSL
+import org.jooq.impl.SQLDataType
 
 object BuildingMapper {
     fun mapFromRecord(record: Record): BuildingResponseDto {
@@ -52,6 +54,7 @@ object BuildingMapper {
                 BUILDINGS.COORDINATES,
                 yayauheny.by.util.pointExpr(dto.coordinates.lon, dto.coordinates.lat, BUILDINGS.COORDINATES)
             ).set(BUILDINGS.EXTERNAL_IDS, dto.externalIds.toJSONBOrEmpty())
+            .set(DSL.field("import_status", SQLDataType.VARCHAR(20)), dto.importStatus.name.lowercase())
             .set(BUILDINGS.CREATED_AT, now)
             .set(BUILDINGS.UPDATED_AT, now)
 
@@ -75,6 +78,9 @@ object BuildingMapper {
                     BUILDINGS.COORDINATES,
                     yayauheny.by.util.pointExpr(it.lon, it.lat, BUILDINGS.COORDINATES)
                 )
+        }
+        dto.importStatus?.let {
+            q = q.set(DSL.field("import_status", SQLDataType.VARCHAR(20)), it.name.lowercase())
         }
 
         return q

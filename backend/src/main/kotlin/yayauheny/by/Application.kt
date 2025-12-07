@@ -19,6 +19,7 @@ import yayauheny.by.config.configureRouting
 import yayauheny.by.config.runLiquibaseMigrations
 import yayauheny.by.di.controllerModule
 import yayauheny.by.di.databaseConfigModule
+import yayauheny.by.di.importModule
 import yayauheny.by.di.serviceModule
 import yayauheny.by.util.InstantSerializer
 import yayauheny.by.util.UUIDSerializer
@@ -34,6 +35,7 @@ fun Application.module() {
             listOf(
                 databaseConfigModule,
                 serviceModule,
+                importModule,
                 controllerModule
             )
         )

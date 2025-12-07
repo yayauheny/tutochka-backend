@@ -79,6 +79,7 @@ CREATE TABLE buildings
     work_time     JSONB,
     coordinates   GEOMETRY(POINT, 4326) NOT NULL,
     external_ids  JSONB                 DEFAULT '{}'::jsonb,
+    import_status VARCHAR(20)  NOT NULL DEFAULT 'completed',
     is_deleted    BOOLEAN               DEFAULT false,
     created_at    TIMESTAMP    NOT NULL DEFAULT CURRENT_TIMESTAMP,
     updated_at    TIMESTAMP    NOT NULL DEFAULT CURRENT_TIMESTAMP
@@ -126,6 +127,7 @@ CREATE TABLE restrooms
 CREATE INDEX idx_restrooms_coordinates ON restrooms USING GIST (coordinates);
 CREATE INDEX idx_restrooms_filters ON restrooms (fee_type, accessibility_type, place_type) WHERE is_deleted = false;
 CREATE INDEX idx_restrooms_building_id ON restrooms (building_id);
+CREATE INDEX idx_restrooms_external_maps ON restrooms USING GIN (external_maps);
 -- rollback DROP TABLE restrooms;
 
 -- changeset yayauheny:create-geo-performance-indexes
@@ -147,3 +149,23 @@ CREATE INDEX idx_cities_country_id ON cities (country_id) WHERE is_deleted = fal
 -- rollback DROP INDEX IF EXISTS idx_cities_is_deleted;
 -- rollback DROP INDEX IF EXISTS idx_countries_is_deleted;
 -- rollback DROP INDEX IF EXISTS idx_cities_country_id;
+
+-- changeset yayauheny:init-restroom-imports-table
+CREATE TABLE restroom_imports
+(
+    id           UUID PRIMARY KEY      DEFAULT gen_random_uuid(),
+    provider     VARCHAR(50) NOT NULL,
+    payload_type VARCHAR(50) NOT NULL,
+    city_id      UUID REFERENCES cities (id) ON DELETE SET NULL,
+    raw_payload  JSONB      NOT NULL,
+    building_id  UUID REFERENCES buildings (id) ON DELETE SET NULL,
+    restroom_id  UUID REFERENCES restrooms (id) ON DELETE SET NULL,
+    status       VARCHAR(20) NOT NULL DEFAULT 'pending',
+    error_message TEXT,
+    created_at   TIMESTAMP   NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    processed_at TIMESTAMP            DEFAULT NULL
+);
+CREATE INDEX idx_restroom_imports_provider_status ON restroom_imports (provider, status);
+CREATE INDEX idx_restroom_imports_restroom_id ON restroom_imports (restroom_id);
+CREATE INDEX idx_restroom_imports_building_id ON restroom_imports (building_id);
+-- rollback DROP TABLE restroom_imports;
