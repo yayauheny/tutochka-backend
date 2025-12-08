@@ -31,7 +31,6 @@ class PSQLExceptionHandlingTest : BaseIntegrationTest() {
         runTest {
             val testEnv = DatabaseTestHelper.createTestEnvironment(dslContext)
 
-            // Создаем первый город
             val cityJson =
                 """
                 {
@@ -44,7 +43,6 @@ class PSQLExceptionHandlingTest : BaseIntegrationTest() {
                 """.trimIndent()
 
             KtorTestApplication.withApp(dslContext) { client ->
-                // Создаем первый город
                 val firstResponse =
                     client.post("/api/v1/cities") {
                         contentType(ContentType.Application.Json)
@@ -52,15 +50,12 @@ class PSQLExceptionHandlingTest : BaseIntegrationTest() {
                     }
                 assertEquals(HttpStatusCode.Created, firstResponse.status)
 
-                // Пытаемся создать дубликат (если есть unique constraint на nameEn)
                 val duplicateResponse =
                     client.post("/api/v1/cities") {
                         contentType(ContentType.Application.Json)
                         setBody(cityJson)
                     }
 
-                // Проверяем, что получили правильный статус
-                // Если unique constraint есть, должен быть 409, иначе может быть другой статус
                 assertTrue(
                     duplicateResponse.status == HttpStatusCode.Conflict ||
                         duplicateResponse.status == HttpStatusCode.BadRequest ||

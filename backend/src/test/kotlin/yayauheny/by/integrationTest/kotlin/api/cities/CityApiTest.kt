@@ -107,7 +107,6 @@ class CityApiTest : BaseIntegrationTest() {
                     response.assertStatusAndJsonContent(HttpStatusCode.NotFound)
                     val json = Json.parseToJsonElement(response.bodyAsText()).jsonObject
                     val message = json["message"]?.jsonPrimitive?.content
-                    // Проверяем, что сообщение об ошибке присутствует (может быть на русском или английском)
                     assertTrue(message != null && (message.lowercase().contains("not found") || message.contains("не найден")))
                 }
             }

@@ -54,7 +54,6 @@ class CountryApiTest : BaseIntegrationTest() {
                     val json = Json.parseToJsonElement(response.bodyAsText()).jsonObject
                     assertEquals(409, json["status"]!!.jsonPrimitive.intOrNull)
                     val message = json["message"]?.jsonPrimitive?.content
-                    // Проверяем, что сообщение об ошибке присутствует (может быть на русском или английском)
                     assertTrue(
                         message != null &&
                             (message.lowercase().contains("exist") || message.contains("существует") || message.contains("уже"))

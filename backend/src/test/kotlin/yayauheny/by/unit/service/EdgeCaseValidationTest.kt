@@ -169,7 +169,6 @@ class EdgeCaseValidationTest {
                 )
 
             // validateRestroomOnCreate не проверяет name (это nullable поле)
-            // Проверяем через validateRestroomCreateFields
             val errors1 = validateRestroomCreateFields(dto1)
 
             assertTrue(errors1.isNotEmpty(), "Name over 255 characters should be invalid")
@@ -188,7 +187,6 @@ class EdgeCaseValidationTest {
                     accessNote = tooLongDescription
                 )
 
-            // Проверяем через validateRestroomCreateFields
             val errors2 = validateRestroomCreateFields(dto2)
 
             assertTrue(errors2.isNotEmpty(), "AccessNote over 10000 characters should be invalid")

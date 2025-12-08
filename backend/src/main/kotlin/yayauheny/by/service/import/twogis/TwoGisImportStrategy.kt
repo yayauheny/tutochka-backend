@@ -145,7 +145,6 @@ class TwoGisImportStrategy(
             // Пока просто возвращаем ID существующего
             existingBuilding.id
         } else {
-            // Создаем новое здание
             val createDto =
                 BuildingCreateDto(
                     cityId = cityId,

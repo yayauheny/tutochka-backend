@@ -292,8 +292,6 @@ class CityRepositoryErrorHandlingTest : BaseIntegrationTest() {
 
                 assertTrue(exception.sqlState == "23505", "Expected unique constraint violation")
 
-                // Проверяем, что город с дублирующимися координатами не был сохранен
-                // createTestEnvironment создает один город, и мы создали еще один - должно быть 2 города
                 val citiesWithDuplicateCoordinates =
                     dslContext
                         .selectCount()

@@ -58,7 +58,6 @@ class TransactionTest : BaseIntegrationTest() {
         runTest {
             val testId = java.util.UUID.randomUUID()
 
-            // Выполняем успешную транзакцию
             dslContext.transactionSuspend { txCtx ->
                 txCtx
                     .insertInto(RESTROOMS)

@@ -35,7 +35,6 @@ class ImportController(
                         request.cityId
                     )
 
-                    // Выполняем импорт через ImportService
                     val result =
                         importService.import(
                             provider = request.provider,
