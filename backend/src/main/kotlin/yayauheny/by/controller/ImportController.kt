@@ -6,6 +6,8 @@ import io.ktor.server.response.respond
 import io.ktor.server.routing.Route
 import io.ktor.server.routing.post
 import io.ktor.server.routing.route
+import kotlinx.serialization.json.jsonArray
+import kotlinx.serialization.json.jsonObject
 import org.slf4j.LoggerFactory
 import yayauheny.by.common.errors.FieldError
 import yayauheny.by.common.errors.ValidationException
@@ -24,10 +26,7 @@ class ImportController(
                 try {
                     val request = call.receive<ImportRequestDto>()
 
-                    // Валидация базовых полей
-                    if (request.payload.isEmpty()) {
-                        throw ValidationException(listOf(FieldError("payload", "Payload cannot be empty")))
-                    }
+                    validatePayload(request)
 
                     logger.info(
                         "Import request received: provider={}, payloadType={}, cityId={}",
@@ -71,6 +70,31 @@ class ImportController(
                     throw e
                 }
             }
+        }
+    }
+
+    private fun validatePayload(request: ImportRequestDto) {
+        if (request.payload.isEmpty()) {
+            throw ValidationException(listOf(FieldError("payload", "Payload cannot be empty")))
+        }
+
+        val hasId = request.payload["id"] != null
+        val hasResultItems =
+            request.payload["result"]
+                ?.jsonObject
+                ?.get("items")
+                ?.jsonArray
+                ?.isNotEmpty() == true
+
+        if (!hasId && !hasResultItems) {
+            throw ValidationException(
+                listOf(
+                    FieldError(
+                        "payload",
+                        "Payload must contain either id or result.items with at least one element"
+                    )
+                )
+            )
         }
     }
 }

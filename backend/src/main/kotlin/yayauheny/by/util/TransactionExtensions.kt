@@ -26,7 +26,6 @@ suspend fun <T> DSLContext.transactionSuspend(block: suspend (DSLContext) -> T):
             var result: T? = null
             transaction { configuration ->
                 val txCtx = DSL.using(configuration)
-                // Используем runBlocking для выполнения suspend функции внутри синхронного блока транзакции
                 result =
                     kotlinx.coroutines.runBlocking {
                         block(txCtx)

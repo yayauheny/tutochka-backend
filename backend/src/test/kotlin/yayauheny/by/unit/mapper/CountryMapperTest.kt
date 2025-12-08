@@ -20,7 +20,6 @@ class CountryMapperTest {
         @Test
         @DisplayName("GIVEN valid record WHEN mapFromRecord THEN return CountryResponseDto with all fields")
         fun mapFromRecord_returns_correct_dto() {
-            // Given
             val testId = UUID.randomUUID()
             val testCode = "US"
             val testNameRu = "США"
@@ -32,10 +31,8 @@ class CountryMapperTest {
             every { mockRecord[COUNTRIES.NAME_RU] } returns testNameRu
             every { mockRecord[COUNTRIES.NAME_EN] } returns testNameEn
 
-            // When
             val result = CountryMapper.mapFromRecord(mockRecord)
 
-            // Then
             assertNotNull(result)
             assertEquals(testId, result.id)
             assertEquals(testCode, result.code)

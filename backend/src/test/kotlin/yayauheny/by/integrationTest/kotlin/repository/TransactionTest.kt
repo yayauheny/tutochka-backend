@@ -42,8 +42,6 @@ class TransactionTest : BaseIntegrationTest() {
                 assertEquals("Simulated error", e.message)
             }
 
-            // Проверяем, что запись не была сохранена (rollback сработал)
-            // Не используем selectFrom, так как coordinates (geometry) требует специального binding
             val savedRecord =
                 dslContext
                     .select(RESTROOMS.ID, RESTROOMS.NAME)
@@ -75,8 +73,6 @@ class TransactionTest : BaseIntegrationTest() {
                     .execute()
             }
 
-            // Проверяем, что запись была сохранена (commit сработал)
-            // Не используем selectFrom, так как coordinates (geometry) требует специального binding
             val savedRecord =
                 dslContext
                     .select(RESTROOMS.ID, RESTROOMS.NAME)

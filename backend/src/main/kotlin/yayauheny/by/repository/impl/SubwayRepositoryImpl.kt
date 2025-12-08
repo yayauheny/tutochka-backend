@@ -55,9 +55,9 @@ class SubwayRepositoryImpl(
             SUBWAY_STATIONS.CREATED_AT
         )
 
-    private fun notDeletedLineCondition() = SUBWAY_LINES.IS_DELETED.eq(false).or(SUBWAY_LINES.IS_DELETED.isNull)
+    private fun notDeletedLineCondition() = SUBWAY_LINES.IS_DELETED.isFalse
 
-    private fun notDeletedStationCondition() = SUBWAY_STATIONS.IS_DELETED.eq(false).or(SUBWAY_STATIONS.IS_DELETED.isNull)
+    private fun notDeletedStationCondition() = SUBWAY_STATIONS.IS_DELETED.isFalse
 
     private fun fetchStationById(
         ctx: DSLContext,
@@ -165,8 +165,8 @@ class SubwayRepositoryImpl(
                     .where(
                         SUBWAY_LINES.CITY_ID
                             .eq(RESTROOMS.CITY_ID)
-                            .and(SUBWAY_STATIONS.IS_DELETED.eq(false))
-                            .and(SUBWAY_LINES.IS_DELETED.eq(false))
+                            .and(SUBWAY_STATIONS.IS_DELETED.isFalse)
+                            .and(SUBWAY_LINES.IS_DELETED.isFalse)
                     ).orderBy(SUBWAY_STATIONS.COORDINATES.knnOrderTo(lat, lon))
                     .limit(1)
 
@@ -191,7 +191,6 @@ class SubwayRepositoryImpl(
         forceUpdate: Boolean
     ): Int =
         withContext(Dispatchers.IO) {
-            // Используем коррелированный подзапрос с правильной ссылкой на внешнюю таблицу через DSL.field
             val restroomsCityIdField = DSL.field("restrooms.city_id", SQLDataType.UUID)
             val restroomsCoordinatesField = DSL.field("restrooms.coordinates", SQLDataType.OTHER)
 
@@ -204,8 +203,8 @@ class SubwayRepositoryImpl(
                     .where(
                         SUBWAY_LINES.CITY_ID
                             .eq(restroomsCityIdField)
-                            .and(SUBWAY_STATIONS.IS_DELETED.eq(false))
-                            .and(SUBWAY_LINES.IS_DELETED.eq(false))
+                            .and(SUBWAY_STATIONS.IS_DELETED.isFalse)
+                            .and(SUBWAY_LINES.IS_DELETED.isFalse)
                     ).orderBy(
                         DSL.field(
                             "{0} <-> {1}",

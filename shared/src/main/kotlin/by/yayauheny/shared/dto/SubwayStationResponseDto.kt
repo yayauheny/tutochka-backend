@@ -21,15 +21,21 @@ data class SubwayStationResponseDto(
 ) {
     /**
      * Returns display name based on preferred language.
-     * Priority: preferredLang -> nameLocal -> nameRu -> nameEn
      */
-    fun displayName(preferredLang: String? = null): String =
-        when (preferredLang) {
-            nameLocalLang -> nameLocal?.takeIf { it.isNotBlank() } ?: nameRu ?: nameEn
-            "ru" -> nameRu.takeIf { it.isNotBlank() } ?: nameLocal ?: nameEn
-            "en" -> nameEn.takeIf { it.isNotBlank() } ?: nameLocal ?: nameRu
-            else -> nameLocal?.takeIf { it.isNotBlank() } ?: nameRu ?: nameEn
-        }
+    fun displayName(preferredLang: String? = null): String {
+        val lang = preferredLang?.lowercase()?.trim()
+        val normalizedLocalLang = nameLocalLang?.lowercase()?.trim()
+
+        val candidates =
+            when (lang) {
+                normalizedLocalLang -> listOf(nameLocal, nameRu, nameEn)
+                "ru" -> listOf(nameRu, nameLocal, nameEn)
+                "en" -> listOf(nameEn, nameLocal, nameRu)
+                else -> listOf(nameLocal, nameEn, nameRu)
+            }
+
+        return candidates.firstOrNull { !it.isNullOrBlank() }?.trim() ?: "Unknown"
+    }
 
     fun lineColor(): String? = line?.hexColor?.takeIf { it.isNotBlank() }
 }

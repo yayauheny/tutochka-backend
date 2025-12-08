@@ -128,16 +128,12 @@ class CityRepositoryImpl(
     private fun cityProjection(): Array<SelectFieldOrAsterisk> {
         val coordinateFields = getCitiesCoordinateFields()
 
-        // Не используем CITIES.asterisk(), потому что оно включает coordinates (Geometry),
-        // который jOOQ не может правильно прочитать без специальной обработки.
-        // Используем только вычисляемые поля lat/lon через ST_X/ST_Y
         return arrayOf(
             CITIES.ID,
             CITIES.COUNTRY_ID,
             CITIES.NAME_RU,
             CITIES.NAME_EN,
             CITIES.REGION,
-            // CITIES.COORDINATES - не включаем, используем только lat/lon через ST_X/ST_Y
             CITIES.CREATED_AT,
             CITIES.UPDATED_AT,
             CITIES.IS_DELETED,
@@ -151,7 +147,7 @@ class CityRepositoryImpl(
                 ctx
                     .select(*cityProjection())
                     .from(CITIES)
-                    .where(CITIES.IS_DELETED.eq(false).or(CITIES.IS_DELETED.isNull))
+                    .where(CITIES.IS_DELETED.isFalse)
             // Сортировка по умолчанию для стабильности результатов
             // QueryExecutor.applySorting добавит дополнительную сортировку, если указана в запросе
             val baseQueryWithDefaultSort = baseQuery.orderBy(CITIES.CREATED_AT.desc(), CITIES.ID.asc())
@@ -173,7 +169,7 @@ class CityRepositoryImpl(
                 .where(
                     CITIES.ID
                         .eq(id)
-                        .and(CITIES.IS_DELETED.eq(false).or(CITIES.IS_DELETED.isNull))
+                        .and(CITIES.IS_DELETED.isFalse)
                 ).fetchOne()
                 ?.map { CityMapper.mapFromRecord(it) }
         }
@@ -184,7 +180,7 @@ class CityRepositoryImpl(
                 ctx
                     .select(*cityProjection())
                     .from(CITIES)
-                    .where(CITIES.IS_DELETED.eq(false).or(CITIES.IS_DELETED.isNull))
+                    .where(CITIES.IS_DELETED.isFalse)
             executor.executeSingle(
                 baseQuery = baseQuery,
                 filters = filters,
@@ -283,7 +279,7 @@ class CityRepositoryImpl(
                 ctx
                     .select(*cityProjection())
                     .from(CITIES)
-                    .where(CITIES.IS_DELETED.eq(false).or(CITIES.IS_DELETED.isNull))
+                    .where(CITIES.IS_DELETED.isFalse)
                     .orderBy(CITIES.CREATED_AT.desc(), CITIES.ID.asc())
             executor.executePaginated(
                 baseQuery = baseQuery as org.jooq.SelectConditionStep<*>,
@@ -310,7 +306,7 @@ class CityRepositoryImpl(
                     .or(
                         CITIES.NAME_RU.likeIgnoreCase(searchPattern).escape('\\'),
                         CITIES.NAME_EN.likeIgnoreCase(searchPattern).escape('\\')
-                    ).and(CITIES.IS_DELETED.eq(false).or(CITIES.IS_DELETED.isNull))
+                    ).and(CITIES.IS_DELETED.isFalse)
 
             val baseQuery =
                 ctx

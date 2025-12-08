@@ -1,5 +1,6 @@
 package yayauheny.by.di
 
+import org.jooq.DSLContext
 import org.koin.dsl.module
 import yayauheny.by.service.import.ImportService
 import yayauheny.by.service.import.ImportStrategy
@@ -14,9 +15,7 @@ val importModule =
         // Стратегии импорта
         single<ImportStrategy> {
             TwoGisImportStrategy(
-                buildingRepository = get(),
-                restroomRepository = get(),
-                subwayRepository = get()
+                dsl = get<DSLContext>()
             )
         }
 

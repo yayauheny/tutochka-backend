@@ -34,7 +34,6 @@ class CityServiceTest {
         @DisplayName("should_retrieve_all_cities")
         fun should_retrieve_all_cities() =
             runTest {
-                // Given
                 val pagination = PaginationRequest(page = 0, size = 10)
                 val expectedPage =
                     yayauheny.by.common.query.PageResponse(
@@ -48,10 +47,8 @@ class CityServiceTest {
                     )
                 coEvery { cityRepository.findAll(pagination) } returns expectedPage
 
-                // When
                 val result = cityService.getAllCities(pagination)
 
-                // Then
                 assertEquals(expectedPage, result)
                 coVerify { cityRepository.findAll(pagination) }
             }
@@ -60,14 +57,11 @@ class CityServiceTest {
         @DisplayName("should_return_city_when_found_by_id")
         fun should_return_city_when_found_by_id() =
             runTest {
-                // Given
                 val city = TestDataHelpers.createCityResponseDto()
                 coEvery { cityRepository.findById(city.id) } returns city
 
-                // When
                 val result = cityService.getCityById(city.id)
 
-                // Then
                 assertEquals(city, result)
                 coVerify { cityRepository.findById(city.id) }
             }
@@ -76,14 +70,11 @@ class CityServiceTest {
         @DisplayName("should_return_null_when_city_not_found_by_id")
         fun should_return_null_when_city_not_found_by_id() =
             runTest {
-                // Given
                 val id = UUID.randomUUID()
                 coEvery { cityRepository.findById(id) } returns null
 
-                // When
                 val result = cityService.getCityById(id)
 
-                // Then
                 assertNull(result)
                 coVerify { cityRepository.findById(id) }
             }
@@ -92,7 +83,6 @@ class CityServiceTest {
         @DisplayName("should_retrieve_cities_by_country_id")
         fun should_retrieve_cities_by_country_id() =
             runTest {
-                // Given
                 val countryId = UUID.randomUUID()
                 val pagination = PaginationRequest(page = 0, size = 10)
                 val expectedPage =
@@ -107,10 +97,8 @@ class CityServiceTest {
                     )
                 coEvery { cityRepository.findByCountryId(countryId, pagination) } returns expectedPage
 
-                // When
                 val result = cityService.getCitiesByCountry(countryId, pagination)
 
-                // Then
                 assertEquals(expectedPage, result)
                 coVerify { cityRepository.findByCountryId(countryId, pagination) }
             }
@@ -119,7 +107,6 @@ class CityServiceTest {
         @DisplayName("should_search_cities_by_name")
         fun should_search_cities_by_name() =
             runTest {
-                // Given
                 val searchName = "Minsk"
                 val pagination = PaginationRequest(page = 0, size = 10)
                 val expectedPage =
@@ -134,10 +121,8 @@ class CityServiceTest {
                     )
                 coEvery { cityRepository.findByName(searchName, pagination) } returns expectedPage
 
-                // When
                 val result = cityService.searchCitiesByName(searchName, pagination)
 
-                // Then
                 assertEquals(expectedPage, result)
                 coVerify { cityRepository.findByName(searchName, pagination) }
             }
@@ -150,7 +135,6 @@ class CityServiceTest {
         @DisplayName("should_create_new_city_with_valid_country")
         fun should_create_new_city_with_valid_country() =
             runTest {
-                // Given
                 val country = TestDataHelpers.createCountryResponseDto()
                 val createDto = TestDataHelpers.createCityCreateDto(countryId = country.id)
                 val expectedResponse = TestDataHelpers.createCityResponseDto(countryId = country.id)
@@ -158,10 +142,8 @@ class CityServiceTest {
                 coEvery { cityRepository.findSingle(any()) } returns null
                 coEvery { cityRepository.save(any()) } returns expectedResponse
 
-                // When
                 val result = cityService.createCity(createDto)
 
-                // Then
                 assertEquals(expectedResponse, result)
                 coVerify { countryRepository.findById(country.id) }
                 coVerify(exactly = 2) { cityRepository.findSingle(any()) }
@@ -172,12 +154,10 @@ class CityServiceTest {
         @DisplayName("should_throw_exception_when_country_not_found")
         fun should_throw_exception_when_country_not_found() =
             runTest {
-                // Given
                 val countryId = UUID.randomUUID()
                 val createDto = TestDataHelpers.createCityCreateDto(countryId = countryId)
                 coEvery { countryRepository.findById(countryId) } returns null
 
-                // When & Then
                 assertThrows<IllegalArgumentException> {
                     cityService.createCity(createDto)
                 }
@@ -190,13 +170,11 @@ class CityServiceTest {
         @DisplayName("should_throw_exception_when_city_name_already_exists_in_country")
         fun should_throw_exception_when_city_name_already_exists_in_country() =
             runTest {
-                // Given
                 val country = TestDataHelpers.createCountryResponseDto()
                 val createDto = TestDataHelpers.createCityCreateDto(countryId = country.id)
                 coEvery { countryRepository.findById(country.id) } returns country
                 coEvery { cityRepository.findSingle(any()) } returns TestDataHelpers.createCityResponseDto()
 
-                // When & Then
                 assertThrows<yayauheny.by.common.errors.ConflictException> {
                     cityService.createCity(createDto)
                 }
@@ -211,7 +189,6 @@ class CityServiceTest {
         @DisplayName("should_handle_different_latitude_values")
         fun should_handle_different_latitude_values(lat: Double) =
             runTest {
-                // Given
                 val country = TestDataHelpers.createCountryResponseDto()
                 val createDto =
                     TestDataHelpers.createCityCreateDto(
@@ -227,10 +204,8 @@ class CityServiceTest {
                 coEvery { cityRepository.findSingle(any()) } returns null
                 coEvery { cityRepository.save(any()) } returns expectedResponse
 
-                // When
                 val result = cityService.createCity(createDto)
 
-                // Then
                 assertEquals(expectedResponse, result)
                 coVerify { cityRepository.save(any()) }
             }
@@ -243,7 +218,6 @@ class CityServiceTest {
         @DisplayName("should_update_existing_city")
         fun should_update_existing_city() =
             runTest {
-                // Given
                 val existingCity = TestDataHelpers.createCityResponseDto()
                 val updateDto = TestDataHelpers.createCityUpdateDto()
                 val updatedCity =
@@ -253,10 +227,8 @@ class CityServiceTest {
                     )
                 coEvery { cityRepository.update(any(), any()) } returns updatedCity
 
-                // When
                 val result = cityService.updateCity(existingCity.id, updateDto)
 
-                // Then
                 assertEquals(updatedCity, result)
                 coVerify { cityRepository.update(existingCity.id, updateDto) }
             }
@@ -265,12 +237,10 @@ class CityServiceTest {
         @DisplayName("should_throw_exception_when_updating_non_existent_city")
         fun should_throw_exception_when_updating_non_existent_city() =
             runTest {
-                // Given
                 val id = UUID.randomUUID()
                 val updateDto = TestDataHelpers.createCityUpdateDto()
                 coEvery { cityRepository.update(any(), any()) } throws IllegalStateException("Failed to update city $id")
 
-                // When & Then
                 assertThrows<IllegalStateException> {
                     cityService.updateCity(id, updateDto)
                 }
@@ -286,14 +256,11 @@ class CityServiceTest {
         @DisplayName("should_return_true_when_city_exists_and_is_deleted")
         fun should_return_true_when_city_exists_and_is_deleted() =
             runTest {
-                // Given
                 val id = UUID.randomUUID()
                 coEvery { cityRepository.deleteById(id) } returns true
 
-                // When
                 val result = cityService.deleteCity(id)
 
-                // Then
                 assertTrue(result)
                 coVerify { cityRepository.deleteById(id) }
             }
@@ -302,14 +269,11 @@ class CityServiceTest {
         @DisplayName("should_return_false_when_city_does_not_exist")
         fun should_return_false_when_city_does_not_exist() =
             runTest {
-                // Given
                 val id = UUID.randomUUID()
                 coEvery { cityRepository.deleteById(id) } returns false
 
-                // When
                 val result = cityService.deleteCity(id)
 
-                // Then
                 assertFalse(result)
                 coVerify { cityRepository.deleteById(id) }
             }

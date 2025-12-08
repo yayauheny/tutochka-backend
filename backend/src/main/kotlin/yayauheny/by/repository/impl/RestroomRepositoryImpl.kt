@@ -5,6 +5,7 @@ import java.util.UUID
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import org.jooq.DSLContext
+import org.jooq.impl.DSL
 import yayauheny.by.common.errors.EntityNotFoundException
 import yayauheny.by.common.mapper.RestroomMapper
 import yayauheny.by.common.query.FieldMeta
@@ -206,7 +207,7 @@ class RestroomRepositoryImpl(
                 ctx
                     .select(*getAllRestroomsFieldsWithCoordinates().toTypedArray())
                     .from(RESTROOMS)
-                    .where(RESTROOMS.IS_DELETED.eq(false).or(RESTROOMS.IS_DELETED.isNull))
+                    .where(RESTROOMS.IS_DELETED.isFalse)
             executor.executePaginated(
                 baseQuery = baseQuery,
                 request = pagination,
@@ -221,7 +222,7 @@ class RestroomRepositoryImpl(
                 ctx
                     .select(*getAllRestroomsFieldsWithCoordinates().toTypedArray())
                     .from(RESTROOMS)
-                    .where(RESTROOMS.IS_DELETED.eq(false).or(RESTROOMS.IS_DELETED.isNull))
+                    .where(RESTROOMS.IS_DELETED.isFalse)
             executor.executeSingle(
                 baseQuery = baseQuery,
                 filters = filters,
@@ -237,7 +238,7 @@ class RestroomRepositoryImpl(
                 .where(
                     RESTROOMS.ID
                         .eq(id)
-                        .and(RESTROOMS.IS_DELETED.eq(false).or(RESTROOMS.IS_DELETED.isNull))
+                        .and(RESTROOMS.IS_DELETED.isFalse)
                 ).fetchOne()
                 ?.map { RestroomMapper.mapFromRecord(it) }
         }
@@ -385,7 +386,7 @@ class RestroomRepositoryImpl(
                     RESTROOMS.COORDINATES
                         .withinDistanceOf(latitude, longitude, maxDistance)
                         .and(RESTROOMS.STATUS.eq(RestroomStatus.ACTIVE.name))
-                        .and(RESTROOMS.IS_DELETED.eq(false).or(RESTROOMS.IS_DELETED.isNull))
+                        .and(RESTROOMS.IS_DELETED.isFalse)
                 ).orderBy(knnField.asc())
                 .limit(limit ?: 5)
                 .fetch()
@@ -406,7 +407,7 @@ class RestroomRepositoryImpl(
                 ctx
                     .select(*getAllRestroomsFieldsWithCoordinates().toTypedArray())
                     .from(RESTROOMS)
-                    .where(RESTROOMS.IS_DELETED.eq(false).or(RESTROOMS.IS_DELETED.isNull))
+                    .where(RESTROOMS.IS_DELETED.isFalse)
             executor.executePaginated(
                 baseQuery = baseQuery,
                 request = pagination.copy(filters = filters),
@@ -424,10 +425,10 @@ class RestroomRepositoryImpl(
                 .select(*getAllRestroomsFieldsWithCoordinates().toTypedArray())
                 .from(RESTROOMS)
                 .where(
-                    (RESTROOMS.IS_DELETED.eq(false).or(RESTROOMS.IS_DELETED.isNull))
+                    RESTROOMS.IS_DELETED.isFalse
                         .and(
-                            org.jooq.impl.DSL.condition(
-                                "{0} ->> {1} = {2}",
+                            DSL.condition(
+                                "{0} @> jsonb_build_object({1}, {2})",
                                 RESTROOMS.EXTERNAL_MAPS,
                                 provider,
                                 externalId

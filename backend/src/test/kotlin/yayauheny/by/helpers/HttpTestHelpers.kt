@@ -322,7 +322,6 @@ fun createRestroomJsonFromTestData(
                 }
             )
             put("amenities", testData.amenities)
-            // Используем пустые объекты если phones/workTime null, как в unit тестах
             put("phones", testData.phones ?: buildJsonObject {})
             put("workTime", testData.workTime ?: buildJsonObject {})
         }

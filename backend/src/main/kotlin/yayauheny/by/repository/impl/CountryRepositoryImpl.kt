@@ -101,7 +101,7 @@ class CountryRepositoryImpl(
             val baseQuery =
                 ctx
                     .selectFrom(COUNTRIES)
-                    .where(COUNTRIES.IS_DELETED.eq(false).or(COUNTRIES.IS_DELETED.isNull))
+                    .where(COUNTRIES.IS_DELETED.isFalse)
             executor.executePaginated(
                 baseQuery = baseQuery,
                 request = pagination,
@@ -117,7 +117,7 @@ class CountryRepositoryImpl(
                 .where(
                     COUNTRIES.ID
                         .eq(id)
-                        .and(COUNTRIES.IS_DELETED.eq(false).or(COUNTRIES.IS_DELETED.isNull))
+                        .and(COUNTRIES.IS_DELETED.isFalse)
                 ).fetchOne()
                 ?.map { CountryMapper.mapFromRecord(it) }
         }
@@ -127,7 +127,7 @@ class CountryRepositoryImpl(
             val baseQuery =
                 ctx
                     .selectFrom(COUNTRIES)
-                    .where(COUNTRIES.IS_DELETED.eq(false).or(COUNTRIES.IS_DELETED.isNull))
+                    .where(COUNTRIES.IS_DELETED.isFalse)
             executor.executeSingle(
                 baseQuery = baseQuery,
                 filters = filters,

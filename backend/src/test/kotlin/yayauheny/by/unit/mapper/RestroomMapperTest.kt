@@ -28,7 +28,6 @@ class RestroomMapperTest {
         @Test
         @DisplayName("GIVEN valid record WHEN mapFromRecord THEN return RestroomResponseDto with all fields")
         fun mapFromRecord_returns_correct_dto() {
-            // Given
             val testId = UUID.randomUUID()
             val testCityId = UUID.randomUUID()
             val testName = "Test Restroom"
@@ -73,10 +72,8 @@ class RestroomMapperTest {
             every { mockRecord[RESTROOMS.CREATED_AT] } returns testCreatedAt
             every { mockRecord[RESTROOMS.UPDATED_AT] } returns testUpdatedAt
 
-            // When
             val result = RestroomMapper.mapFromRecord(mockRecord)
 
-            // Then
             assertNotNull(result)
             assertEquals(testId, result.id)
             assertEquals(testCityId, result.cityId)
@@ -101,7 +98,6 @@ class RestroomMapperTest {
         @Test
         @DisplayName("GIVEN record with null optional fields WHEN mapFromRecord THEN return DTO with null values")
         fun mapFromRecord_with_null_optional_fields_returns_dto_with_nulls() {
-            // Given
             val testId = UUID.randomUUID()
             val testAddress = "Test Address"
             val testLat = 55.7558
@@ -138,10 +134,8 @@ class RestroomMapperTest {
             every { mockRecord[RESTROOMS.CREATED_AT] } returns testCreatedAt
             every { mockRecord[RESTROOMS.UPDATED_AT] } returns testUpdatedAt
 
-            // When
             val result = RestroomMapper.mapFromRecord(mockRecord)
 
-            // Then
             assertNotNull(result)
             assertNull(result.cityId)
             assertNull(result.name)
@@ -151,7 +145,6 @@ class RestroomMapperTest {
         @Test
         @DisplayName("GIVEN record with JSONB fields WHEN mapFromRecord THEN return DTO with parsed JSON")
         fun mapFromRecord_with_jsonb_fields_returns_parsed_json() {
-            // Given
             val testId = UUID.randomUUID()
             val testAddress = "Test Address"
             val testLat = 55.7558
@@ -195,10 +188,8 @@ class RestroomMapperTest {
             every { mockRecord[RESTROOMS.CREATED_AT] } returns testCreatedAt
             every { mockRecord[RESTROOMS.UPDATED_AT] } returns testUpdatedAt
 
-            // When
             val result = RestroomMapper.mapFromRecord(mockRecord)
 
-            // Then
             assertNotNull(result)
             assertNotNull(result.phones)
             assertNotNull(result.workTime)
@@ -217,7 +208,6 @@ class RestroomMapperTest {
         @Test
         @DisplayName("GIVEN valid record WHEN mapToNearestRestroom THEN return NearestRestroomResponseDto")
         fun mapToNearestRestroom_returns_correct_dto() {
-            // Given
             val testId = UUID.randomUUID()
             val testName = "Test Restroom"
             val testAddress = "Test Address"
@@ -234,10 +224,8 @@ class RestroomMapperTest {
             every { mockRecord[RESTROOMS.ADDRESS] } returns testAddress
             every { mockRecord[RESTROOMS.FEE_TYPE] } returns testFeeType.name
 
-            // When
             val result = RestroomMapper.mapToNearestRestroom(mockRecord, testDistance)
 
-            // Then
             assertNotNull(result)
             assertEquals(testId, result.id)
             assertEquals(testName, result.name)

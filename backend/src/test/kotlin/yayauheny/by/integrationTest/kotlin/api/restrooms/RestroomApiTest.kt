@@ -32,7 +32,6 @@ class RestroomApiTest : BaseIntegrationTest() {
     @DisplayName("GIVEN existing restrooms WHEN GET nearest with valid coordinates THEN return nearest restrooms with distance")
     fun given_existing_restrooms_when_get_nearest_with_valid_coordinates_then_return_nearest_restrooms() =
         runTest {
-            // Given
             val testEnv = DatabaseTestHelper.createTestEnvironment(dslContext)
             DatabaseTestHelper.insertTestRestroom(
                 dslContext,
@@ -53,7 +52,6 @@ class RestroomApiTest : BaseIntegrationTest() {
                 )
             )
 
-            // When
             KtorTestApplication.withApp(dslContext) { client ->
                 val response =
                     client.testGet(
@@ -61,7 +59,6 @@ class RestroomApiTest : BaseIntegrationTest() {
                         mapOf("lat" to "55.7558", "lon" to "37.6176", "limit" to "5")
                     )
 
-                // Then
                 response.assertStatusAndJsonContent(HttpStatusCode.OK)
                 val jsonArray = Json.parseToJsonElement(response.bodyAsText()).jsonArray
                 assertTrue(jsonArray.isNotEmpty(), "Response should contain at least one restroom")
@@ -81,10 +78,8 @@ class RestroomApiTest : BaseIntegrationTest() {
     @DisplayName("GIVEN no restrooms WHEN GET nearest with valid coordinates THEN return empty array")
     fun given_no_restrooms_when_get_nearest_with_valid_coordinates_then_return_empty_array() =
         runTest {
-            // Given
             // (no restrooms in database)
 
-            // When
             KtorTestApplication.withApp(dslContext) { client ->
                 val response =
                     client.testGet(
@@ -92,7 +87,6 @@ class RestroomApiTest : BaseIntegrationTest() {
                         mapOf("lat" to "55.7558", "lon" to "37.6176", "limit" to "5")
                     )
 
-                // Then
                 assertEquals(HttpStatusCode.OK, response.status)
                 response.assertJsonContentType()
                 val body = response.bodyAsText()
@@ -104,7 +98,6 @@ class RestroomApiTest : BaseIntegrationTest() {
     @DisplayName("GIVEN multiple restrooms WHEN GET nearest THEN return sorted by distance with correct distance values")
     fun given_multiple_restrooms_when_get_nearest_then_return_sorted_by_distance() =
         runTest {
-            // Given
             val testEnv = DatabaseTestHelper.createTestEnvironment(dslContext)
             DatabaseTestHelper.insertTestRestroom(
                 dslContext,
@@ -134,7 +127,6 @@ class RestroomApiTest : BaseIntegrationTest() {
                 )
             )
 
-            // When
             KtorTestApplication.withApp(dslContext) { client ->
                 val response =
                     client.testGet(
@@ -142,7 +134,6 @@ class RestroomApiTest : BaseIntegrationTest() {
                         mapOf("lat" to "55.7558", "lon" to "37.6176", "limit" to "10")
                     )
 
-                // Then
                 assertEquals(HttpStatusCode.OK, response.status)
                 response.assertJsonContentType()
                 val body = response.bodyAsText()
@@ -218,7 +209,6 @@ class RestroomApiTest : BaseIntegrationTest() {
     @DisplayName("GIVEN many restrooms WHEN GET nearest with small limit THEN return only limited results")
     fun given_many_restrooms_when_get_nearest_with_small_limit_then_return_only_limited_results() =
         runTest {
-            // Given
             val testEnv = DatabaseTestHelper.createTestEnvironment(dslContext)
             repeat(10) { i ->
                 DatabaseTestHelper.insertTestRestroom(
@@ -232,7 +222,6 @@ class RestroomApiTest : BaseIntegrationTest() {
                 )
             }
 
-            // When
             KtorTestApplication.withApp(dslContext) { client ->
                 val response =
                     client.testGet(
@@ -240,7 +229,6 @@ class RestroomApiTest : BaseIntegrationTest() {
                         mapOf("lat" to "55.7558", "lon" to "37.6176", "limit" to "3")
                     )
 
-                // Then
                 assertEquals(HttpStatusCode.OK, response.status)
                 response.assertJsonContentType()
                 val body = response.bodyAsText()
@@ -267,7 +255,6 @@ class RestroomApiTest : BaseIntegrationTest() {
     @DisplayName("GIVEN active and inactive restrooms WHEN GET nearest THEN return only active restrooms")
     fun given_active_and_inactive_restrooms_when_get_nearest_then_return_only_active_restrooms() =
         runTest {
-            // Given
             val testEnv = DatabaseTestHelper.createTestEnvironment(dslContext)
 
             DatabaseTestHelper.insertTestRestroom(
@@ -291,7 +278,6 @@ class RestroomApiTest : BaseIntegrationTest() {
                 )
             )
 
-            // When
             KtorTestApplication.withApp(dslContext) { client ->
                 val response =
                     client.testGet(
@@ -299,7 +285,6 @@ class RestroomApiTest : BaseIntegrationTest() {
                         mapOf("lat" to "55.7558", "lon" to "37.6176", "limit" to "10")
                     )
 
-                // Then
                 assertEquals(HttpStatusCode.OK, response.status)
                 response.assertJsonContentType()
                 val body = response.bodyAsText()
@@ -329,11 +314,8 @@ class RestroomApiTest : BaseIntegrationTest() {
         @DisplayName("GET /api/v1/restrooms/nearest with invalid lat type returns 400")
         fun nearest_invalid_lat_type() =
             runTest {
-                // Given
-                // When
                 KtorTestApplication.withApp(dslContext) { client ->
                     val response = client.testGet("/api/v1/restrooms/nearest", mapOf("lat" to "abc", "lon" to "37.6"))
-                    // Then
                     response.assertStatusAndJsonContent(HttpStatusCode.BadRequest)
                 }
             }
@@ -342,11 +324,8 @@ class RestroomApiTest : BaseIntegrationTest() {
         @DisplayName("GET /api/v1/restrooms/nearest with out-of-range coordinates returns 400 with validation errors")
         fun nearest_out_of_range_coordinates() =
             runTest {
-                // Given
-                // When
                 KtorTestApplication.withApp(dslContext) { client ->
                     val response = client.testGet("/api/v1/restrooms/nearest", mapOf("lat" to "91.0", "lon" to "37.6"))
-                    // Then
                     response.assertStatusAndJsonContent(HttpStatusCode.BadRequest)
 
                     val errorResponse = response.parseErrorResponse()

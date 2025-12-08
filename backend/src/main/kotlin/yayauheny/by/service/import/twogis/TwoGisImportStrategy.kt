@@ -1,23 +1,24 @@
 package yayauheny.by.service.import.twogis
 
-import java.util.UUID
-import kotlinx.serialization.json.Json
-import kotlinx.serialization.json.JsonObject
-import kotlinx.serialization.json.JsonPrimitive
-import kotlinx.serialization.json.buildJsonObject
-import kotlinx.serialization.json.jsonArray
-import kotlinx.serialization.json.jsonObject
 import by.yayauheny.shared.dto.LatLon
 import by.yayauheny.shared.enums.AccessibilityType
 import by.yayauheny.shared.enums.DataSourceType
 import by.yayauheny.shared.enums.FeeType
 import by.yayauheny.shared.enums.PlaceType
 import by.yayauheny.shared.enums.RestroomStatus
+import java.util.UUID
+import kotlinx.serialization.encodeToString
+import kotlinx.serialization.json.Json
+import kotlinx.serialization.json.JsonObject
+import kotlinx.serialization.json.JsonPrimitive
+import kotlinx.serialization.json.buildJsonObject
+import org.jooq.DSLContext
+import org.slf4j.LoggerFactory
 import yayauheny.by.model.building.BuildingCreateDto
 import yayauheny.by.model.import.BuildingImportStatus
-import yayauheny.by.service.import.ImportObjectResult
 import yayauheny.by.model.import.ImportPayloadType
 import yayauheny.by.model.import.ImportProvider
+import yayauheny.by.model.import.twogis.TwoGisResponse
 import yayauheny.by.model.import.twogis.TwoGisAttributeGroup
 import yayauheny.by.model.import.twogis.TwoGisPlace
 import yayauheny.by.model.restroom.RestroomCreateDto
@@ -25,17 +26,21 @@ import yayauheny.by.model.restroom.RestroomUpdateDto
 import yayauheny.by.repository.BuildingRepository
 import yayauheny.by.repository.RestroomRepository
 import yayauheny.by.repository.SubwayRepository
+import yayauheny.by.repository.impl.BuildingRepositoryImpl
+import yayauheny.by.repository.impl.RestroomRepositoryImpl
+import yayauheny.by.repository.impl.SubwayRepositoryImpl
+import yayauheny.by.service.import.ImportObjectResult
 import yayauheny.by.service.import.ImportStrategy
+import yayauheny.by.util.transactionSuspend
 
 /**
  * Стратегия импорта данных из 2ГИС.
  * Парсит JSON ответ 2ГИС и создает/обновляет здания и туалеты.
  */
 class TwoGisImportStrategy(
-    private val buildingRepository: BuildingRepository,
-    private val restroomRepository: RestroomRepository,
-    private val subwayRepository: SubwayRepository
+    private val dsl: DSLContext
 ) : ImportStrategy {
+    private val logger = LoggerFactory.getLogger(TwoGisImportStrategy::class.java)
     private val json =
         Json {
             ignoreUnknownKeys = true
@@ -49,29 +54,35 @@ class TwoGisImportStrategy(
         payloadType: ImportPayloadType,
         payload: JsonObject
     ): ImportObjectResult {
-        // Парсим JSON 2ГИС
         val place = parsePlace(payload, payloadType)
+        val tags = collectTags(place.attributeGroups)
 
-        // 1. Обрабатываем здание (если есть building_id)
-        val buildingId =
-            place.address.buildingId?.let { buildingIdStr ->
-                upsertBuilding(cityId, place, buildingIdStr)
-            }
+        return dsl.transactionSuspend { txCtx ->
+            val txRepos =
+                TxRepos(
+                    building = BuildingRepositoryImpl(txCtx),
+                    restroom = RestroomRepositoryImpl(txCtx),
+                    subway = SubwayRepositoryImpl(txCtx)
+                )
 
-        // 2. Обрабатываем туалет
-        val restroomId = upsertRestroom(cityId, place, buildingId)
+            val buildingId =
+                place.address.buildingId?.let { buildingIdStr ->
+                    upsertBuilding(txRepos.building, cityId, place, buildingIdStr)
+                }
 
-        // 3. Привязываем ближайшую станцию метро (используем координаты из place)
-        subwayRepository.setNearestStationForRestroom(
-            restroomId = restroomId,
-            lat = place.point.lat,
-            lon = place.point.lon
-        )
+            val restroomId = upsertRestroom(txRepos.restroom, cityId, place, buildingId, tags)
 
-        return ImportObjectResult(
-            restroomId = restroomId,
-            buildingId = buildingId
-        )
+            txRepos.subway.setNearestStationForRestroom(
+                restroomId = restroomId,
+                lat = place.point.lat,
+                lon = place.point.lon
+            )
+
+            ImportObjectResult(
+                restroomId = restroomId,
+                buildingId = buildingId
+            )
+        }
     }
 
     /**
@@ -82,29 +93,31 @@ class TwoGisImportStrategy(
         payload: JsonObject,
         payloadType: ImportPayloadType
     ): TwoGisPlace {
-        return when (payloadType) {
-            ImportPayloadType.TWO_GIS_PLACE_JSON -> {
-                // Проверяем, это единичный item или полный ответ
-                if (payload.containsKey("result")) {
-                    // Полный ответ: {"result": {"items": [{"id": "...", ...}]}}
-                    val result =
-                        payload["result"]?.jsonObject
-                            ?: error("Invalid 2GIS response structure: missing result")
-                    val itemsElement =
-                        result["items"]
-                            ?: error("Invalid 2GIS response structure: missing result.items")
-
-                    // Парсим массив items и берем первый элемент
-                    val itemsArray = itemsElement.jsonArray
-                    if (itemsArray.isEmpty()) {
-                        error("Invalid 2GIS response structure: items array is empty")
+        return runCatching {
+            when (payloadType) {
+                ImportPayloadType.TWO_GIS_PLACE_JSON -> {
+                    if (payload.containsKey("result")) {
+                        val response = json.decodeFromJsonElement(TwoGisResponse.serializer(), payload)
+                        response.result.items.firstOrNull()
+                            ?: error("Invalid 2GIS response structure: result.items is empty")
+                    } else {
+                        json.decodeFromJsonElement(TwoGisPlace.serializer(), payload)
                     }
-                    json.decodeFromJsonElement(TwoGisPlace.serializer(), itemsArray.first().jsonObject)
-                } else {
-                    // Единичный item
-                    json.decodeFromJsonElement(TwoGisPlace.serializer(), payload)
                 }
             }
+        }.getOrElse { e ->
+            val payloadPreview =
+                runCatching { json.encodeToString(JsonObject.serializer(), payload) }
+                    .getOrElse { payload.toString() }
+                    .take(1000)
+
+            logger.error(
+                "Failed to parse 2GIS payload (type={}): {}",
+                payloadType,
+                payloadPreview,
+                e
+            )
+            throw IllegalArgumentException("Failed to parse 2GIS payload: ${e.message}", e)
         }
     }
 
@@ -112,17 +125,14 @@ class TwoGisImportStrategy(
      * Создает или обновляет здание на основе данных 2ГИС.
      */
     private suspend fun upsertBuilding(
+        repo: BuildingRepository,
         cityId: UUID,
         place: TwoGisPlace,
         buildingIdStr: String
     ): UUID? {
-        // Ищем существующее здание по external_ids['2gis']
-        val existingBuilding = buildingRepository.findByExternalId("2gis", buildingIdStr)
+        val existingBuilding = repo.findByExternalId("2gis", buildingIdStr)
 
-        val externalIds =
-            buildJsonObject {
-                put("2gis", JsonPrimitive(buildingIdStr))
-            }
+        val externalIds = buildExternalIds("2gis", buildingIdStr)
 
         val coordinates =
             LatLon(
@@ -139,7 +149,7 @@ class TwoGisImportStrategy(
             val createDto =
                 BuildingCreateDto(
                     cityId = cityId,
-                    name = null, // Здание создается "по пути", имя пока неизвестно
+                    name = null,
                     address = place.addressName,
                     buildingType = null,
                     workTime = null,
@@ -147,7 +157,7 @@ class TwoGisImportStrategy(
                     externalIds = externalIds,
                     importStatus = BuildingImportStatus.PENDING_DETAILS
                 )
-            buildingRepository.save(createDto).id
+            repo.save(createDto).id
         }
     }
 
@@ -155,17 +165,15 @@ class TwoGisImportStrategy(
      * Создает или обновляет туалет на основе данных 2ГИС.
      */
     private suspend fun upsertRestroom(
+        repo: RestroomRepository,
         cityId: UUID,
         place: TwoGisPlace,
-        buildingId: UUID?
+        buildingId: UUID?,
+        tags: Set<String>
     ): UUID {
-        // Ищем существующий туалет по external_maps['2gis']
-        val existingRestroom = restroomRepository.findByExternalMap("2gis", place.id)
+        val existingRestroom = repo.findByExternalMap("2gis", place.id)
 
-        val externalMaps =
-            buildJsonObject {
-                put("2gis", JsonPrimitive(place.id))
-            }
+        val externalMaps = buildExternalIds("2gis", place.id)
 
         val coordinates =
             LatLon(
@@ -174,10 +182,10 @@ class TwoGisImportStrategy(
             )
 
         // Маппинг полей из 2ГИС
-        val feeType = mapFeeType(place.attributeGroups)
-        val accessibilityType = mapAccessibilityType(place.attributeGroups)
-        val amenities = mapAmenities(place.attributeGroups)
-        val workTime = place.schedule // schedule уже JsonObject, можно использовать как есть
+        val feeType = mapFeeType(tags)
+        val accessibilityType = mapAccessibilityType(tags)
+        val amenities = mapAmenities(tags)
+        val workTime = place.schedule
         val hasPhotos = place.flags?.photos ?: false
 
         val addressFull = place.addressComment?.let { "${place.addressName}, $it" } ?: place.addressName
@@ -228,20 +236,18 @@ class TwoGisImportStrategy(
                     buildingId = createDto.buildingId,
                     subwayStationId = createDto.subwayStationId
                 )
-            restroomRepository.update(existingRestroom.id, updateDto).id
+            repo.update(existingRestroom.id, updateDto).id
         } else {
-            // Создаем новый туалет
-            restroomRepository.save(createDto).id
+            repo.save(createDto).id
         }
     }
 
     /**
      * Маппит теги 2ГИС на FeeType.
      */
-    private fun mapFeeType(attributeGroups: List<TwoGisAttributeGroup>): FeeType {
-        val allTags = attributeGroups.flatMap { group -> group.attributes }.map { attr -> attr.tag.lowercase() }
+    private fun mapFeeType(tags: Set<String>): FeeType {
         return when {
-            allTags.any { tag -> tag.contains("paid_toilet") || tag.contains("toilet_paid") } -> FeeType.PAID
+            tags.any { tag -> tag.contains("paid_toilet") || tag.contains("toilet_paid") } -> FeeType.PAID
             else -> FeeType.FREE
         }
     }
@@ -249,14 +255,13 @@ class TwoGisImportStrategy(
     /**
      * Маппит теги 2ГИС на AccessibilityType.
      */
-    private fun mapAccessibilityType(attributeGroups: List<TwoGisAttributeGroup>): AccessibilityType {
-        val allTags = attributeGroups.flatMap { group -> group.attributes }.map { attr -> attr.tag.lowercase() }
+    private fun mapAccessibilityType(tags: Set<String>): AccessibilityType {
         return when {
-            allTags.any { tag -> tag.contains("wc_inclusive") || tag.contains("accessible") } -> AccessibilityType.DISABLED
-            allTags.any { tag -> tag.contains("men") || tag.contains("мужской") } -> AccessibilityType.MEN
-            allTags.any { tag -> tag.contains("women") || tag.contains("женский") } -> AccessibilityType.WOMEN
-            allTags.any { tag -> tag.contains("family") || tag.contains("семейный") } -> AccessibilityType.FAMILY
-            allTags.any { tag -> tag.contains("unisex") || tag.contains("универсальный") } -> AccessibilityType.UNISEX
+            tags.any { tag -> tag.contains("wc_inclusive") || tag.contains("accessible") } -> AccessibilityType.DISABLED
+            tags.any { tag -> tag.contains("men") || tag.contains("мужской") } -> AccessibilityType.MEN
+            tags.any { tag -> tag.contains("women") || tag.contains("женский") } -> AccessibilityType.WOMEN
+            tags.any { tag -> tag.contains("family") || tag.contains("семейный") } -> AccessibilityType.FAMILY
+            tags.any { tag -> tag.contains("unisex") || tag.contains("универсальный") } -> AccessibilityType.UNISEX
             else -> AccessibilityType.UNISEX // По умолчанию
         }
     }
@@ -264,15 +269,35 @@ class TwoGisImportStrategy(
     /**
      * Маппит теги 2ГИС на amenities JSONB.
      */
-    private fun mapAmenities(attributeGroups: List<TwoGisAttributeGroup>): JsonObject {
-        val allTags = attributeGroups.flatMap { group -> group.attributes }.map { attr -> attr.tag.lowercase() }
-        val paidToilet = allTags.any { tag -> tag.contains("paid_toilet") || tag.contains("toilet_paid") }
-        val paymentCard = allTags.any { tag -> tag.contains("payment_type_card") || tag.contains("card") }
-        val accessibleWc = allTags.any { tag -> tag.contains("wc_inclusive") || tag.contains("accessible") }
+    private fun mapAmenities(tags: Set<String>): JsonObject {
+        val paidToilet = tags.any { tag -> tag.contains("paid_toilet") || tag.contains("toilet_paid") }
+        val paymentCard = tags.any { tag -> tag.contains("payment_type_card") || tag.contains("card") }
+        val accessibleWc = tags.any { tag -> tag.contains("wc_inclusive") || tag.contains("accessible") }
         return buildJsonObject {
             put("paid_toilet", JsonPrimitive(paidToilet))
             put("payment_card", JsonPrimitive(paymentCard))
             put("accessible_wc", JsonPrimitive(accessibleWc))
         }
     }
+
+    private fun buildExternalIds(
+        provider: String,
+        id: String
+    ): JsonObject =
+        buildJsonObject {
+            put(provider, JsonPrimitive(id))
+        }
+
+    private fun collectTags(attributeGroups: List<TwoGisAttributeGroup>): Set<String> =
+        attributeGroups
+            .asSequence()
+            .flatMap { it.attributes.asSequence() }
+            .map { it.tag.lowercase() }
+            .toSet()
+
+    private data class TxRepos(
+        val building: BuildingRepository,
+        val restroom: RestroomRepository,
+        val subway: SubwayRepository
+    )
 }

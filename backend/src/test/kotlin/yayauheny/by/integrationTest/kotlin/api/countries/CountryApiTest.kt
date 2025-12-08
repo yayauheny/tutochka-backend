@@ -27,7 +27,6 @@ class CountryApiTest : BaseIntegrationTest() {
         @DisplayName("GIVEN existing country code WHEN POST country with duplicate code THEN return 409 Conflict")
         fun create_country_duplicate_code_returns_409() =
             runTest {
-                // Given
                 val firstCountryJson =
                     """
                     {
@@ -37,7 +36,6 @@ class CountryApiTest : BaseIntegrationTest() {
                     }
                     """.trimIndent()
 
-                // When
                 KtorTestApplication.withApp(dslContext) { client ->
                     val firstResponse = client.testPost("/api/v1/countries", firstCountryJson)
                     assertEquals(HttpStatusCode.Created, firstResponse.status)
@@ -52,7 +50,6 @@ class CountryApiTest : BaseIntegrationTest() {
                         """.trimIndent()
                     val response = client.testPost("/api/v1/countries", duplicateCodeJson)
 
-                    // Then
                     response.assertStatusAndJsonContent(HttpStatusCode.Conflict)
                     val json = Json.parseToJsonElement(response.bodyAsText()).jsonObject
                     assertEquals(409, json["status"]!!.jsonPrimitive.intOrNull)

@@ -126,7 +126,7 @@ class BuildingRepositoryImpl(
 
     private fun projection(): Array<org.jooq.SelectFieldOrAsterisk> = getAllBuildingsFieldsWithCoordinates().toTypedArray()
 
-    private fun notDeletedCondition() = BUILDINGS.IS_DELETED.eq(false).or(BUILDINGS.IS_DELETED.isNull)
+    private fun notDeletedCondition() = BUILDINGS.IS_DELETED.isFalse
 
     private fun fetchById(
         ctx: DSLContext,
@@ -188,7 +188,12 @@ class BuildingRepositoryImpl(
                 .from(BUILDINGS)
                 .where(
                     notDeletedCondition().and(
-                        DSL.condition("{0} ->> {1} = {2}", BUILDINGS.EXTERNAL_IDS, provider, externalId)
+                        DSL.condition(
+                            "{0} @> jsonb_build_object({1}, {2})",
+                            BUILDINGS.EXTERNAL_IDS,
+                            provider,
+                            externalId
+                        )
                     )
                 ).orderBy(BUILDINGS.CREATED_AT.desc(), BUILDINGS.ID.desc())
                 .limit(1)

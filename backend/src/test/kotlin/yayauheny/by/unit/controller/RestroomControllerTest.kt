@@ -24,15 +24,12 @@ class RestroomControllerTest : RoutingTestBase() {
         @DisplayName("GIVEN restrooms endpoint WHEN GET /api/v1/restrooms THEN return 200 and call service with default pagination")
         fun restrooms_endpoint_returns_200_and_calls_service_with_default_pagination() =
             runTest {
-                // Given
                 coEvery { restroomService.getAllRestrooms(any()) } returns
                     PageResponse(emptyList<RestroomResponseDto>(), 0, 20, 0, 0, true, true)
 
-                // When
                 withRoutingApp { client ->
                     val response = client.testGet("/api/v1/restrooms")
 
-                    // Then
                     assertEquals(HttpStatusCode.OK, response.status)
                     response.assertJsonContentType()
                 }
@@ -44,15 +41,12 @@ class RestroomControllerTest : RoutingTestBase() {
         @DisplayName("GIVEN pagination parameters WHEN GET restrooms THEN pass parameters to service")
         fun restrooms_with_pagination_parameters_passes_to_service() =
             runTest {
-                // Given
                 coEvery { restroomService.getAllRestrooms(any()) } returns
                     PageResponse(emptyList<RestroomResponseDto>(), 1, 10, 0, 0, false, true)
 
-                // When
                 withRoutingApp { client ->
                     val response = client.testGet("/api/v1/restrooms", mapOf("page" to "1", "size" to "10"))
 
-                    // Then
                     assertEquals(HttpStatusCode.OK, response.status)
                 }
 
@@ -69,15 +63,12 @@ class RestroomControllerTest : RoutingTestBase() {
         @DisplayName("GIVEN valid UUID WHEN GET restroom by ID THEN return 200 and call service")
         fun get_restroom_by_valid_id_returns_200_and_calls_service() =
             runTest {
-                // Given
                 val restroomId = UUID.randomUUID()
                 coEvery { restroomService.getRestroomById(any()) } returns TestDataHelpers.createRestroomResponseDto(id = restroomId)
 
-                // When
                 withRoutingApp { client ->
                     val response = client.testGet("/api/v1/restrooms/$restroomId")
 
-                    // Then
                     assertEquals(HttpStatusCode.OK, response.status)
                     response.assertJsonContentType()
                 }
@@ -89,15 +80,12 @@ class RestroomControllerTest : RoutingTestBase() {
         @DisplayName("GIVEN restroom not found WHEN GET restroom by ID THEN return 404")
         fun get_restroom_not_found_returns_404() =
             runTest {
-                // Given
                 val restroomId = UUID.randomUUID()
                 coEvery { restroomService.getRestroomById(any()) } returns null
 
-                // When
                 withRoutingApp { client ->
                     val response = client.testGet("/api/v1/restrooms/$restroomId")
 
-                    // Then
                     assertEquals(HttpStatusCode.NotFound, response.status)
                 }
 
@@ -108,14 +96,11 @@ class RestroomControllerTest : RoutingTestBase() {
         @DisplayName("GIVEN invalid UUID WHEN GET restroom by ID THEN return 400 and skip service")
         fun get_restroom_by_invalid_uuid_returns_400_and_skips_service() =
             runTest {
-                // Given
                 // (invalid UUID format)
 
-                // When
                 withRoutingApp { client ->
                     val response = client.testGet("/api/v1/restrooms/not-a-uuid")
 
-                    // Then
                     assertEquals(HttpStatusCode.BadRequest, response.status)
                 }
 
@@ -130,16 +115,13 @@ class RestroomControllerTest : RoutingTestBase() {
         @DisplayName("GIVEN valid city ID WHEN GET restrooms by city THEN return 200 and call service")
         fun get_restrooms_by_valid_city_id_returns_200_and_calls_service() =
             runTest {
-                // Given
                 val cityId = UUID.randomUUID()
                 coEvery { restroomService.getRestroomsByCity(any(), any()) } returns
                     PageResponse(emptyList<RestroomResponseDto>(), 0, 20, 0, 0, true, true)
 
-                // When
                 withRoutingApp { client ->
                     val response = client.testGet("/api/v1/restrooms/city/$cityId")
 
-                    // Then
                     assertEquals(HttpStatusCode.OK, response.status)
                     response.assertJsonContentType()
                 }
@@ -153,14 +135,11 @@ class RestroomControllerTest : RoutingTestBase() {
         @DisplayName("GIVEN invalid city ID WHEN GET restrooms by city THEN return 400 and skip service")
         fun get_restrooms_by_invalid_city_id_returns_400_and_skips_service() =
             runTest {
-                // Given
                 // (invalid UUID format)
 
-                // When
                 withRoutingApp { client ->
                     val response = client.testGet("/api/v1/restrooms/city/invalid-uuid")
 
-                    // Then
                     assertEquals(HttpStatusCode.BadRequest, response.status)
                 }
 
@@ -175,10 +154,8 @@ class RestroomControllerTest : RoutingTestBase() {
         @DisplayName("GIVEN valid coordinates WHEN GET nearest restrooms THEN return 200 and call service with parsed values")
         fun get_nearest_restrooms_with_valid_coordinates_returns_200_and_calls_service() =
             runTest {
-                // Given
                 coEvery { restroomService.findNearestRestrooms(any(), any(), any()) } returns emptyList()
 
-                // When
                 withRoutingApp { client ->
                     val response =
                         client.testGet(
@@ -186,7 +163,6 @@ class RestroomControllerTest : RoutingTestBase() {
                             mapOf("lat" to "55.7558", "lon" to "37.6176", "limit" to "10")
                         )
 
-                    // Then
                     assertEquals(HttpStatusCode.OK, response.status)
                     response.assertJsonContentType()
                 }
@@ -200,10 +176,8 @@ class RestroomControllerTest : RoutingTestBase() {
         @DisplayName("GIVEN coordinates without limit WHEN GET nearest restrooms THEN use default limit")
         fun get_nearest_restrooms_without_limit_uses_default() =
             runTest {
-                // Given
                 coEvery { restroomService.findNearestRestrooms(any(), any(), any()) } returns emptyList()
 
-                // When
                 withRoutingApp { client ->
                     val response =
                         client.testGet(
@@ -211,7 +185,6 @@ class RestroomControllerTest : RoutingTestBase() {
                             mapOf("lat" to "55.7558", "lon" to "37.6176")
                         )
 
-                    // Then
                     assertEquals(HttpStatusCode.OK, response.status)
                 }
 
@@ -224,10 +197,8 @@ class RestroomControllerTest : RoutingTestBase() {
         @DisplayName("GIVEN invalid coordinates WHEN GET nearest restrooms THEN return 400 and skip service")
         fun get_nearest_restrooms_with_invalid_coordinates_returns_400_and_skips_service() =
             runTest {
-                // Given
                 // (invalid lat format)
 
-                // When
                 withRoutingApp { client ->
                     val response =
                         client.testGet(
@@ -235,7 +206,6 @@ class RestroomControllerTest : RoutingTestBase() {
                             mapOf("lat" to "invalid", "lon" to "37.6176")
                         )
 
-                    // Then
                     assertEquals(HttpStatusCode.BadRequest, response.status)
                 }
 
@@ -246,10 +216,8 @@ class RestroomControllerTest : RoutingTestBase() {
         @DisplayName("GIVEN missing coordinates WHEN GET nearest restrooms THEN return 400 and skip service")
         fun get_nearest_restrooms_with_missing_coordinates_returns_400_and_skips_service() =
             runTest {
-                // Given
                 // (missing lat parameter)
 
-                // When
                 withRoutingApp { client ->
                     val response =
                         client.testGet(
@@ -257,7 +225,6 @@ class RestroomControllerTest : RoutingTestBase() {
                             mapOf("lon" to "37.6176")
                         )
 
-                    // Then
                     assertEquals(HttpStatusCode.BadRequest, response.status)
                 }
 
@@ -268,10 +235,8 @@ class RestroomControllerTest : RoutingTestBase() {
         @DisplayName("GIVEN out of range coordinates WHEN GET nearest restrooms THEN return 400")
         fun get_nearest_restrooms_with_out_of_range_coordinates_returns_400() =
             runTest {
-                // Given
                 coEvery { restroomService.findNearestRestrooms(any(), any(), any()) } returns emptyList()
 
-                // When
                 withRoutingApp { client ->
                     val response =
                         client.testGet(
@@ -279,7 +244,6 @@ class RestroomControllerTest : RoutingTestBase() {
                             mapOf("lat" to "91.0", "lon" to "37.6176", "limit" to "5")
                         )
 
-                    // Then
                     assertEquals(HttpStatusCode.BadRequest, response.status)
                     response.assertJsonContentType()
                 }
@@ -297,7 +261,6 @@ class RestroomControllerTest : RoutingTestBase() {
         @DisplayName("GIVEN valid restroom data WHEN POST restroom THEN return 201 and call service")
         fun create_restroom_with_valid_data_returns_201_and_calls_service() =
             runTest {
-                // Given
                 val cityId = UUID.randomUUID()
                 coEvery { restroomService.createRestroom(any()) } returns TestDataHelpers.createRestroomResponseDto()
 
@@ -324,11 +287,9 @@ class RestroomControllerTest : RoutingTestBase() {
                     }
                     """.trimIndent()
 
-                // When
                 withRoutingApp { client ->
                     val response = client.testPost("/api/v1/restrooms", validJson)
 
-                    // Then
                     assertEquals(HttpStatusCode.Created, response.status)
                     response.assertJsonContentType()
                 }
@@ -344,14 +305,11 @@ class RestroomControllerTest : RoutingTestBase() {
         @DisplayName("GIVEN invalid JSON WHEN POST restroom THEN return 400 and skip service")
         fun create_restroom_with_invalid_json_returns_400_and_skips_service() =
             runTest {
-                // Given
                 // (invalid JSON syntax)
 
-                // When
                 withRoutingApp { client ->
                     val response = client.testPost("/api/v1/restrooms", "{ invalid json }")
 
-                    // Then
                     assertEquals(HttpStatusCode.BadRequest, response.status)
                 }
 
@@ -362,14 +320,11 @@ class RestroomControllerTest : RoutingTestBase() {
         @DisplayName("GIVEN malformed JSON WHEN POST restroom THEN return 400 and skip service")
         fun create_restroom_with_malformed_json_returns_400_and_skips_service() =
             runTest {
-                // Given
                 // (missing required fields)
 
-                // When
                 withRoutingApp { client ->
                     val response = client.testPost("/api/v1/restrooms", """{"name": "Test"}""") // Missing required fields
 
-                    // Then
                     assertEquals(HttpStatusCode.BadRequest, response.status)
                 }
 
@@ -380,14 +335,11 @@ class RestroomControllerTest : RoutingTestBase() {
         @DisplayName("GIVEN empty request body WHEN POST restroom THEN return 415 and skip service")
         fun create_restroom_with_empty_body_returns_415_and_skips_service() =
             runTest {
-                // Given
                 // (empty body)
 
-                // When
                 withRoutingApp { client ->
                     val response = client.testPost("/api/v1/restrooms", "")
 
-                    // Then
                     assertEquals(HttpStatusCode.UnsupportedMediaType, response.status)
                 }
 

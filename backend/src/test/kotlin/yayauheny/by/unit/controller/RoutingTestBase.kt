@@ -20,16 +20,19 @@ import yayauheny.by.config.configureRouting
 import yayauheny.by.controller.CityController
 import yayauheny.by.controller.CountryController
 import yayauheny.by.controller.HealthController
+import yayauheny.by.controller.ImportController
 import yayauheny.by.controller.RestroomController
 import org.jooq.DSLContext
 import yayauheny.by.service.CityService
 import yayauheny.by.service.CountryService
 import yayauheny.by.service.RestroomService
+import yayauheny.by.service.import.ImportService
 
 abstract class RoutingTestBase {
     protected val countryService = mockk<CountryService>()
     protected val cityService = mockk<CityService>()
     protected val restroomService = mockk<RestroomService>()
+    protected val importService = mockk<ImportService>(relaxed = true)
     private val dslContext =
         mockk<DSLContext>(relaxed = true) {
             // Настраиваем DSLContext для успешного health check
@@ -45,6 +48,7 @@ abstract class RoutingTestBase {
                 single<CountryService> { countryService }
                 single<CityService> { cityService }
                 single<RestroomService> { restroomService }
+                single<ImportService> { importService }
                 single<DSLContext> { dslContext }
             },
             module {
@@ -52,6 +56,7 @@ abstract class RoutingTestBase {
                 single { CityController(get()) }
                 single { RestroomController(get()) }
                 single { HealthController(get()) }
+                single { ImportController(get()) }
             }
         )
 
