@@ -16,6 +16,9 @@ dependencies {
 
     implementation("org.springframework.boot:spring-boot-starter-validation")
     implementation("org.springframework.boot:spring-boot-starter-web")
+    implementation("org.springframework.boot:spring-boot-starter-actuator")
+    implementation("io.micrometer:micrometer-registry-prometheus")
+    implementation("com.github.ben-manes.caffeine:caffeine:3.1.8")
     implementation("org.telegram:telegrambots:6.9.7.1")
 
     testImplementation("org.springframework.boot:spring-boot-starter-test")
