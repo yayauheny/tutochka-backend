@@ -22,6 +22,8 @@ dependencies {
     implementation("org.telegram:telegrambots:6.9.7.1")
 
     testImplementation("org.springframework.boot:spring-boot-starter-test")
+    testImplementation("com.github.tomakehurst:wiremock-standalone:3.3.1")
+    testImplementation("com.fasterxml.jackson.module:jackson-module-kotlin")
     testRuntimeOnly("org.junit.platform:junit-platform-launcher")
 }
 
