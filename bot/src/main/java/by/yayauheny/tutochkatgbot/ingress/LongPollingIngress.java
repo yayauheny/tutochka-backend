@@ -12,7 +12,7 @@ import org.telegram.telegrambots.meta.api.objects.Update;
  */
 @Component
 @ConditionalOnProperty(name = "bot.mode", havingValue = "POLLING", matchIfMissing = true)
-public class LongPollingIngress extends TelegramLongPollingBot implements UpdateIngress {
+public class LongPollingIngress extends TelegramLongPollingBot {
     
     private final TelegramProperties telegramProperties;
     private final UpdateRouter router;
@@ -37,11 +37,4 @@ public class LongPollingIngress extends TelegramLongPollingBot implements Update
         router.route(update);
     }
     
-    @Override
-    public void start() {
-    }
-    
-    @Override
-    public void stop() {
-    }
 }

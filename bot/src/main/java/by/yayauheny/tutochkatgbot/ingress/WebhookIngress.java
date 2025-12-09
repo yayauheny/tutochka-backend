@@ -10,7 +10,7 @@ import org.telegram.telegrambots.meta.api.objects.Update;
  */
 @Component
 @ConditionalOnProperty(name = "bot.mode", havingValue = "WEBHOOK")
-public class WebhookIngress implements UpdateIngress {
+public class WebhookIngress {
     
     private final UpdateRouter router;
     
@@ -24,13 +24,5 @@ public class WebhookIngress implements UpdateIngress {
      */
     public void handleWebhook(Update update) {
         router.route(update);
-    }
-    
-    @Override
-    public void start() {
-    }
-    
-    @Override
-    public void stop() {
     }
 }

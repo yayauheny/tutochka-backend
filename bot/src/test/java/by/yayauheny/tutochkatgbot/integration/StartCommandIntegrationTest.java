@@ -8,7 +8,7 @@ import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.boot.test.mock.mockito.MockBean;
+import org.springframework.boot.test.mock.mockito.MockitoBean;
 import org.springframework.test.context.TestPropertySource;
 import org.telegram.telegrambots.meta.api.objects.Chat;
 import org.telegram.telegrambots.meta.api.objects.Message;
@@ -31,10 +31,10 @@ class StartCommandIntegrationTest {
     @Autowired
     private UpdateRouter updateRouter;
 
-    @MockBean
+    @MockitoBean
     private MessageSender messageSender;
 
-    @MockBean
+    @MockitoBean
     private WebBackendClient backendClient;
 
     @Test

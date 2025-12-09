@@ -8,7 +8,7 @@ import by.yayauheny.shared.enums.AccessibilityType;
 import by.yayauheny.shared.enums.FeeType;
 import by.yayauheny.shared.enums.PlaceType;
 import by.yayauheny.tutochkatgbot.messages.Messages;
-import by.yayauheny.tutochkatgbot.util.SubwayEmoji;
+import by.yayauheny.tutochkatgbot.util.EmojiConstants;
 import by.yayauheny.tutochkatgbot.util.DistanceFormat;
 import by.yayauheny.tutochkatgbot.util.Links;
 import by.yayauheny.tutochkatgbot.util.Text;
@@ -195,8 +195,8 @@ public class FormatterService {
         }
         
         String emoji = Optional.ofNullable(station.lineColor())
-            .map(SubwayEmoji::getEmojiForColor)
-            .orElse("🚇");
+            .map(EmojiConstants::getEmojiForColor)
+            .orElse(EmojiConstants.METRO);
         
         String stationName = Optional.ofNullable(station.displayName("ru"))
             .orElse("");
@@ -240,7 +240,7 @@ public class FormatterService {
         
         // Собираем детали в одну строку через разделитель •
         StringBuilder details = new StringBuilder();
-        details.append("📍 ").append(distance);
+        details.append(EmojiConstants.PIN).append(" ").append(distance);
         details.append(" • ").append(feeIcon).append(" ").append(feeText);
         
         if (!subwayInfo.isBlank()) {
@@ -280,8 +280,8 @@ public class FormatterService {
         }
         
         String emoji = Optional.ofNullable(station.lineColor())
-            .map(SubwayEmoji::getEmojiForColor)
-            .orElse("🚇");
+            .map(EmojiConstants::getEmojiForColor)
+            .orElse(EmojiConstants.METRO);
         
         String stationName = Optional.ofNullable(station.displayName("ru"))
             .orElse("");
@@ -297,7 +297,7 @@ public class FormatterService {
      * Возвращает иконку для типа оплаты.
      */
     private String getFeeIcon(FeeType feeType) {
-        return feeType == FeeType.FREE ? "🆓" : "💸";
+        return feeType == FeeType.FREE ? EmojiConstants.FREE : EmojiConstants.PAID;
     }
 
     public String toiletsFound(int count) {
@@ -326,6 +326,6 @@ public class FormatterService {
      * Пока используется как вспомогательный хелпер для будущих ответов с метро.
      */
     public String colorToEmoji(String hexColor) {
-        return SubwayEmoji.getEmojiForColor(hexColor);
+        return EmojiConstants.getEmojiForColor(hexColor);
     }
 }

@@ -1,10 +1,12 @@
 package by.yayauheny.tutochkatgbot.messages;
 
+import by.yayauheny.tutochkatgbot.util.EmojiConstants;
+
 public class Messages {
     
-    public static final String BUTTON_SHARE_LOCATION = "📍 Поделиться геолокацией";
+    public static final String BUTTON_SHARE_LOCATION = EmojiConstants.PIN + " Поделиться геолокацией";
     public static final String BUTTON_BACK_TO_LIST = "⬅️ Назад к списку";
-    public static final String BUTTON_OPEN_MAPS = "🗺 Открыть в картах";
+    public static final String BUTTON_OPEN_MAPS = EmojiConstants.MAP + " Открыть в картах";
     public static final String BUTTON_SEARCH_AGAIN = "🔍 Поиск заново";
     public static final String BUTTON_HELP = "❓ Помощь";
 
@@ -24,19 +26,19 @@ public class Messages {
     public static final String HELP_MESSAGE = """
         🤖 Бот для поиска туалетов
         
-        📍 Способы поиска:
+        %s Способы поиска:
         • Отправьте текущую геолокацию
         • Выберите точку на карте (скрепка → Локация → выбрать место)
         • Отправьте место с адресом (Venue)
         
         🔍 Используй кнопки для навигации
         ⬅️ Назад к списку - вернуться к списку туалетов
-        🗺 Открыть в картах - показать туалет на карте
+        %s Открыть в картах - показать туалет на карте
         
         Команды:
         /start - начать работу
         /help - показать эту справку
-        """;
+        """.formatted(EmojiConstants.PIN, EmojiConstants.MAP);
 
     public static final String NO_TOILETS_FOUND = "К сожалению, поблизости туалетов не найдено. " +
             "Попробуйте увеличить радиус поиска или отправьте точку на карте (скрепка → Локация → выбрать место) " +
@@ -51,23 +53,33 @@ public class Messages {
 
     public static final String TOILET_DETAILS = """
         <b>{name}</b>
-        📍 {address}
+        %s {address}
         
-        🏷 Тип: {placeType}
+        %s Тип: {placeType}
         {feeIcon} Оплата: {feeText}
-        ♿ Доступность: {accessibility}
+        %s Доступность: {accessibility}
         
-        ⏰ Время работы:
+        %s Время работы:
         {workTime}
         
-        🏢 Здание: {buildingInfo}
-        🚇 Метро: {subwayInfo}
+        %s Здание: {buildingInfo}
+        %s Метро: {subwayInfo}
         
-        📝 Заметка: {accessNote}
-        🧭 Маршрут: {directionGuide}
+        %s Заметка: {accessNote}
+        %s Маршрут: {directionGuide}
         
-        🗺 Карта: {mapsLink}
-        """;
+        %s Карта: {mapsLink}
+        """.formatted(
+            EmojiConstants.PIN,
+            EmojiConstants.TAG,
+            EmojiConstants.ACCESSIBILITY,
+            EmojiConstants.CLOCK,
+            EmojiConstants.BUILDING,
+            EmojiConstants.METRO,
+            EmojiConstants.NOTE,
+            EmojiConstants.ROUTE,
+            EmojiConstants.MAP
+        );
 
     public static final String LOCATION_REQUEST = "Поделись геолокацией для поиска туалетов:";
 
