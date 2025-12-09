@@ -198,7 +198,7 @@ public class FormatterService {
             .map(SubwayEmoji::getEmojiForColor)
             .orElse("🚇");
         
-        String stationName = Optional.ofNullable(station.displayName())
+        String stationName = Optional.ofNullable(station.displayName("ru"))
             .orElse("");
         
         if (stationName.isBlank()) {
@@ -283,7 +283,7 @@ public class FormatterService {
             .map(SubwayEmoji::getEmojiForColor)
             .orElse("🚇");
         
-        String stationName = Optional.ofNullable(station.displayName())
+        String stationName = Optional.ofNullable(station.displayName("ru"))
             .orElse("");
         
         if (stationName.isBlank()) {

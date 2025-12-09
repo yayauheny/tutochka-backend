@@ -1,12 +1,8 @@
 package by.yayauheny.tutochkatgbot.cache;
 
 import by.yayauheny.shared.dto.LatLon;
-import by.yayauheny.shared.dto.RestroomResponseDto;
-import by.yayauheny.shared.enums.AccessibilityType;
-import by.yayauheny.shared.enums.DataSourceType;
+import by.yayauheny.shared.dto.NearestRestroomResponseDto;
 import by.yayauheny.shared.enums.FeeType;
-import by.yayauheny.shared.enums.PlaceType;
-import by.yayauheny.shared.enums.RestroomStatus;
 import com.github.benmanes.caffeine.cache.Caffeine;
 import org.junit.jupiter.api.Test;
 
@@ -22,7 +18,7 @@ class CaffeineRestroomCacheServiceTest {
 
     private final CaffeineRestroomCacheService service = new CaffeineRestroomCacheService(
         Caffeine.newBuilder().build(),
-        Caffeine.<UUID, RestroomResponseDto>newBuilder().build()
+        Caffeine.<UUID, NearestRestroomResponseDto>newBuilder().build()
     );
 
     @Test
@@ -46,13 +42,13 @@ class CaffeineRestroomCacheServiceTest {
     @Test
     void infoCacheShouldStoreAndRetrieveRestroom() {
         UUID id = UUID.randomUUID();
-        RestroomResponseDto restroom = sampleRestroom(id);
+        NearestRestroomResponseDto restroom = sampleRestroom(id);
 
         assertTrue(service.getRestroomInfo(id).isEmpty(), "Cache should be empty initially");
 
         service.putRestroomInfo(id, restroom);
 
-        Optional<RestroomResponseDto> cached = service.getRestroomInfo(id);
+        Optional<NearestRestroomResponseDto> cached = service.getRestroomInfo(id);
         assertTrue(cached.isPresent());
         assertEquals(restroom.getId(), cached.get().getId());
 
@@ -60,30 +56,15 @@ class CaffeineRestroomCacheServiceTest {
         assertTrue(service.getRestroomInfo(id).isEmpty(), "Cache should be empty after eviction");
     }
 
-    private RestroomResponseDto sampleRestroom(UUID id) {
-        return new RestroomResponseDto(
+    private NearestRestroomResponseDto sampleRestroom(UUID id) {
+        return new NearestRestroomResponseDto(
             id,
-            null,
-            null,
-            null,
             "Test",
             "Test address",
-            null,
-            null,
-            FeeType.FREE,
-            AccessibilityType.NONE,
-            PlaceType.PUBLIC,
             new LatLon(53.9, 27.56),
-            DataSourceType.MANUAL,
-            RestroomStatus.ACTIVE,
-            null,
-            null,
-            null,
-            null,
-            false,
-            false,
-            Instant.now(),
-            Instant.now(),
+            12.3,
+            FeeType.FREE,
+            true,
             null,
             null,
             null

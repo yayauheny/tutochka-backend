@@ -10,6 +10,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.test.context.TestPropertySource;
+import org.telegram.telegrambots.meta.api.objects.Chat;
 import org.telegram.telegrambots.meta.api.objects.Message;
 import org.telegram.telegrambots.meta.api.objects.Update;
 import org.telegram.telegrambots.meta.api.objects.User;
@@ -58,7 +59,9 @@ class StartCommandIntegrationTest {
         Update update = new Update();
         Message message = new Message();
         message.setText("/start");
-        message.setChatId(123L);
+        Chat chat = new Chat();
+        chat.setId(123L);
+        message.setChat(chat);
         message.setMessageId(1);
         User from = new User();
         from.setId(10L);

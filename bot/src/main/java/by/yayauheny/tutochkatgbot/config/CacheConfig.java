@@ -1,6 +1,6 @@
 package by.yayauheny.tutochkatgbot.config;
 
-import by.yayauheny.shared.dto.RestroomResponseDto;
+import by.yayauheny.shared.dto.NearestRestroomResponseDto;
 import by.yayauheny.tutochkatgbot.cache.GeoKey;
 import com.github.benmanes.caffeine.cache.Cache;
 import com.github.benmanes.caffeine.cache.Caffeine;
@@ -27,7 +27,7 @@ public class CacheConfig {
     }
 
     @Bean
-    public Cache<UUID, RestroomResponseDto> restroomInfoCache() {
+    public Cache<UUID, NearestRestroomResponseDto> restroomInfoCache() {
         return Caffeine.newBuilder()
             .expireAfterWrite(Duration.ofHours(12))
             .maximumSize(100)

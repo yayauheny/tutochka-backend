@@ -1,6 +1,6 @@
 package by.yayauheny.tutochkatgbot.cache;
 
-import by.yayauheny.shared.dto.RestroomResponseDto;
+import by.yayauheny.shared.dto.NearestRestroomResponseDto;
 import com.github.benmanes.caffeine.cache.Cache;
 import org.springframework.stereotype.Service;
 
@@ -12,11 +12,11 @@ import java.util.UUID;
 public class CaffeineRestroomCacheService implements RestroomCacheService {
 
     private final Cache<GeoKey, List<UUID>> geoCache;
-    private final Cache<UUID, RestroomResponseDto> infoCache;
+    private final Cache<UUID, NearestRestroomResponseDto> infoCache;
 
     public CaffeineRestroomCacheService(
         Cache<GeoKey, List<UUID>> geoCache,
-        Cache<UUID, RestroomResponseDto> infoCache
+        Cache<UUID, NearestRestroomResponseDto> infoCache
     ) {
         this.geoCache = geoCache;
         this.infoCache = infoCache;
@@ -36,7 +36,7 @@ public class CaffeineRestroomCacheService implements RestroomCacheService {
     }
 
     @Override
-    public Optional<RestroomResponseDto> getRestroomInfo(UUID id) {
+    public Optional<NearestRestroomResponseDto> getRestroomInfo(UUID id) {
         if (id == null) {
             return Optional.empty();
         }
@@ -44,7 +44,7 @@ public class CaffeineRestroomCacheService implements RestroomCacheService {
     }
 
     @Override
-    public void putRestroomInfo(UUID id, RestroomResponseDto dto) {
+    public void putRestroomInfo(UUID id, NearestRestroomResponseDto dto) {
         if (id == null || dto == null) {
             return;
         }
