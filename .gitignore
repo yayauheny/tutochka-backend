@@ -352,7 +352,6 @@ gradle-app.setting
 
 # Environment variables
 .env
-mcp.json
 
 # Logs
 logs
@@ -379,6 +378,3 @@ node_modules/
 # Keep only README.md and templates
 !.taskmaster/README.md
 !.taskmaster/templates/ 
-.taskmaster/tasks/tasks.json
-.cursor/mcp.json
-install.sh

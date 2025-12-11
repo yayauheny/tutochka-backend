@@ -1,33 +1,33 @@
 package yayauheny.by.helpers
 
-import java.time.Instant
-import java.util.UUID
-import kotlinx.serialization.json.JsonObject
-import kotlinx.serialization.json.JsonPrimitive
-import kotlinx.serialization.json.buildJsonObject
-import yayauheny.by.model.restroom.NearestRestroomResponseDto
-import yayauheny.by.model.restroom.RestroomCreateDto
-import yayauheny.by.model.restroom.RestroomResponseDto
-import yayauheny.by.model.restroom.RestroomUpdateDto
-import yayauheny.by.model.city.CityCreateDto
-import yayauheny.by.model.city.CityResponseDto
-import yayauheny.by.model.city.CityUpdateDto
-import yayauheny.by.model.country.CountryCreateDto
-import yayauheny.by.model.country.CountryResponseDto
-import yayauheny.by.model.country.CountryUpdateDto
-import yayauheny.by.model.building.BuildingCreateDto
-import yayauheny.by.model.building.BuildingResponseDto
-import yayauheny.by.model.building.BuildingUpdateDto
-import yayauheny.by.model.subway.SubwayLineCreateDto
-import yayauheny.by.model.subway.SubwayLineResponseDto
-import yayauheny.by.model.subway.SubwayStationCreateDto
-import yayauheny.by.model.subway.SubwayStationResponseDto
 import by.yayauheny.shared.dto.LatLon
 import by.yayauheny.shared.enums.AccessibilityType
 import by.yayauheny.shared.enums.DataSourceType
 import by.yayauheny.shared.enums.FeeType
 import by.yayauheny.shared.enums.PlaceType
 import by.yayauheny.shared.enums.RestroomStatus
+import java.time.Instant
+import java.util.UUID
+import kotlinx.serialization.json.JsonObject
+import kotlinx.serialization.json.JsonPrimitive
+import kotlinx.serialization.json.buildJsonObject
+import yayauheny.by.model.building.BuildingCreateDto
+import yayauheny.by.model.building.BuildingResponseDto
+import yayauheny.by.model.building.BuildingUpdateDto
+import yayauheny.by.model.city.CityCreateDto
+import yayauheny.by.model.city.CityResponseDto
+import yayauheny.by.model.city.CityUpdateDto
+import yayauheny.by.model.country.CountryCreateDto
+import yayauheny.by.model.country.CountryResponseDto
+import yayauheny.by.model.country.CountryUpdateDto
+import yayauheny.by.model.restroom.NearestRestroomResponseDto
+import yayauheny.by.model.restroom.RestroomCreateDto
+import yayauheny.by.model.restroom.RestroomResponseDto
+import yayauheny.by.model.restroom.RestroomUpdateDto
+import yayauheny.by.model.subway.SubwayLineCreateDto
+import yayauheny.by.model.subway.SubwayLineResponseDto
+import yayauheny.by.model.subway.SubwayStationCreateDto
+import yayauheny.by.model.subway.SubwayStationResponseDto
 
 object TestDataHelpers {
     fun createCountryCreateDto(
@@ -82,8 +82,7 @@ object TestDataHelpers {
         nameEn = nameEn,
         region = region,
         coordinates =
-            by.yayauheny.shared.dto
-                .LatLon(lat = lat, lon = lon)
+            LatLon(lat = lat, lon = lon)
     )
 
     fun createCityUpdateDto(
@@ -91,9 +90,8 @@ object TestDataHelpers {
         nameRu: String = "Минск",
         nameEn: String = "Minsk",
         region: String? = "Минская область",
-        coordinates: by.yayauheny.shared.dto.LatLon =
-            by.yayauheny.shared.dto
-                .LatLon(lat = 53.9006, lon = 27.5590)
+        coordinates: LatLon =
+            LatLon(lat = 53.9006, lon = 27.5590)
     ) = CityUpdateDto(
         countryId = countryId,
         nameRu = nameRu,
@@ -117,8 +115,7 @@ object TestDataHelpers {
         nameEn = nameEn,
         region = region,
         coordinates =
-            by.yayauheny.shared.dto
-                .LatLon(lat = lat, lon = lon)
+            LatLon(lat = lat, lon = lon)
     )
 
     fun createCityList(
@@ -174,8 +171,7 @@ object TestDataHelpers {
         accessibilityType = accessibilityType,
         placeType = placeType,
         coordinates =
-            by.yayauheny.shared.dto
-                .LatLon(lat = lat, lon = lon),
+            LatLon(lat = lat, lon = lon),
         dataSource = dataSource,
         amenities = amenities,
         externalMaps = externalMaps,
@@ -196,9 +192,8 @@ object TestDataHelpers {
         feeType: FeeType = FeeType.FREE,
         accessibilityType: AccessibilityType = AccessibilityType.DISABLED,
         placeType: PlaceType = PlaceType.OTHER,
-        coordinates: by.yayauheny.shared.dto.LatLon =
-            by.yayauheny.shared.dto
-                .LatLon(lat = 40.7829, lon = -73.9654),
+        coordinates: LatLon =
+            LatLon(lat = 40.7829, lon = -73.9654),
         status: RestroomStatus = RestroomStatus.ACTIVE,
         amenities: JsonObject? = createBasicAmenities(),
         externalMaps: JsonObject? =
@@ -272,8 +267,7 @@ object TestDataHelpers {
         accessibilityType = accessibilityType,
         placeType = placeType,
         coordinates =
-            by.yayauheny.shared.dto
-                .LatLon(lat = lat, lon = lon),
+            LatLon(lat = lat, lon = lon),
         dataSource = dataSource,
         status = status,
         amenities = amenities,
@@ -314,8 +308,7 @@ object TestDataHelpers {
         name = name,
         address = address,
         coordinates =
-            by.yayauheny.shared.dto
-                .LatLon(lat = lat, lon = lon),
+            LatLon(lat = lat, lon = lon),
         distanceMeters = distanceMeters,
         feeType = feeType,
         isOpen = isOpen
@@ -377,27 +370,27 @@ object TestDataHelpers {
 
     fun createInvalidCountryData(): Map<String, Any> =
         mapOf(
-            "nameRu" to "", // Empty name
-            "nameEn" to "", // Empty name
+            "nameRu" to "",
+            "nameEn" to "",
             "code" to "INVALID_CODE_TOO_LONG" // Too long code
         )
 
     fun createInvalidCityData(): Map<String, Any> =
         mapOf(
             "countryId" to "invalid-uuid",
-            "nameRu" to "", // Empty name
-            "nameEn" to "", // Empty name
-            "lat" to 200.0, // Invalid latitude
-            "lon" to 200.0 // Invalid longitude
+            "nameRu" to "",
+            "nameEn" to "",
+            "lat" to 200.0,
+            "lon" to 200.0
         )
 
     fun createInvalidRestroomData(): Map<String, Any> =
         mapOf(
             "cityId" to "invalid-uuid",
-            "name" to "", // Empty name
+            "name" to "",
             "address" to "", // Empty address
-            "lat" to 200.0, // Invalid latitude
-            "lon" to 200.0 // Invalid longitude
+            "lat" to 200.0,
+            "lon" to 200.0
         )
 
     fun createBuildingCreateDto(

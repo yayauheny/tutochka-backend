@@ -57,7 +57,7 @@ CREATE TABLE subway_lines
 );
 -- rollback DROP TABLE subway_lines;
 
--- changeset yayauheny:init-subway-stations-v2
+-- changeset yayauheny:init-subway-stations
 CREATE TABLE subway_stations
 (
     id               UUID PRIMARY KEY      DEFAULT gen_random_uuid(),
@@ -75,7 +75,7 @@ CREATE TABLE subway_stations
 CREATE INDEX idx_subway_stations_coordinates ON subway_stations USING GIST (coordinates);
 -- rollback DROP TABLE subway_stations;
 
--- changeset yayauheny:init-buildings-table-v2
+-- changeset yayauheny:init-buildings-table
 CREATE TABLE buildings
 (
     id            UUID PRIMARY KEY      DEFAULT gen_random_uuid(),

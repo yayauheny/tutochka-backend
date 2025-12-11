@@ -7,7 +7,17 @@ import io.ktor.http.HttpStatusCode
 import io.ktor.http.contentType
 import kotlin.test.assertEquals
 import kotlin.test.assertTrue
-import kotlinx.serialization.json.*
+import kotlinx.serialization.json.JsonArray
+import kotlinx.serialization.json.JsonElement
+import kotlinx.serialization.json.JsonNull
+import kotlinx.serialization.json.JsonObject
+import kotlinx.serialization.json.booleanOrNull
+import kotlinx.serialization.json.contentOrNull
+import kotlinx.serialization.json.doubleOrNull
+import kotlinx.serialization.json.intOrNull
+import kotlinx.serialization.json.jsonObject
+import kotlinx.serialization.json.jsonPrimitive
+import kotlinx.serialization.json.longOrNull
 
 /**
  * JSON Test Helpers with DSL-style assertions.
@@ -96,8 +106,9 @@ class ResponseExpect(
     fun contentTypeJson() =
         apply {
             val ct = response.contentType()
-            assertTrue(
-                ct?.match(ContentType.Application.Json) == true,
+            assertEquals(
+                ct?.match(ContentType.Application.Json),
+                true,
                 "Expected Content-Type application/json but was $ct"
             )
         }
@@ -198,7 +209,7 @@ class JsonExpect(
     ) {
         val arr = root.getByPath(path).asArray()
         assertTrue(arr != null, "JSON path '$path' is not an array. Body: $rawBody")
-        arr!!.forEach {
+        arr.forEach {
             assertTrue(it is JsonObject, "Element in '$path' is not object. Body: $rawBody")
             assertEach(it.jsonObject)
         }

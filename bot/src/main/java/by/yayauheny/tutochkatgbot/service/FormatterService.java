@@ -39,8 +39,9 @@ public class FormatterService {
                 .orElse("Не указано");
         
         // Иконка и текст оплаты
-        String feeIcon = getFeeIcon(toilet.getFeeType());
-        String feeText = toilet.getFeeType() == FeeType.FREE ? "Бесплатно" : "Платно";
+        FeeType feeType = toilet.getFeeType();
+        String feeIcon = getFeeIcon(feeType);
+        String feeText = feeText(feeType);
         
         // Форматируем доступность
         String accessibility = formatAccessibility(toilet.getAccessibilityType());
@@ -142,6 +143,8 @@ public class FormatterService {
     
     /**
      * Извлекает Map из workTime через рефлексию, чтобы избежать зависимости от JsonObject.
+     * JsonObject из kotlinx.serialization недоступен напрямую в Java, поэтому используем рефлексию
+     * для вызова геттера getWorkTime() и преобразования результата в Map.
      */
     @SuppressWarnings("unchecked")
     private java.util.Map<String, Object> extractWorkTimeMapViaReflection(Object dto) {
@@ -154,7 +157,7 @@ public class FormatterService {
                 return null;
             }
             
-            // Если уже Map (после десериализации kotlinx.serialization)
+            // Если уже Map (после десериализации через Jackson)
             if (workTimeObj instanceof java.util.Map) {
                 return (java.util.Map<String, Object>) workTimeObj;
             }
@@ -232,8 +235,9 @@ public class FormatterService {
         String distance = DistanceFormat.meters(toilet.getDistanceMeters());
         
         // Иконка и текст оплаты
-        String feeIcon = getFeeIcon(toilet.getFeeType());
-        String feeText = toilet.getFeeType() == FeeType.FREE ? "Бесплатно" : "Платно";
+        FeeType feeType = toilet.getFeeType();
+        String feeIcon = getFeeIcon(feeType);
+        String feeText = feeText(feeType);
         
         // Форматируем метро с цветным индикатором
         String subwayInfo = formatSubwayInfo(toilet.getSubwayStation());
@@ -297,7 +301,20 @@ public class FormatterService {
      * Возвращает иконку для типа оплаты.
      */
     private String getFeeIcon(FeeType feeType) {
-        return feeType == FeeType.FREE ? EmojiConstants.FREE : EmojiConstants.PAID;
+        if (feeType == null || feeType == FeeType.FREE) {
+            return EmojiConstants.FREE;
+        }
+        return EmojiConstants.PAID;
+    }
+    
+    /**
+     * Возвращает текст для типа оплаты.
+     */
+    private String feeText(FeeType feeType) {
+        if (feeType == null || feeType == FeeType.FREE) {
+            return "Бесплатно";
+        }
+        return "Платно";
     }
 
     public String toiletsFound(int count) {

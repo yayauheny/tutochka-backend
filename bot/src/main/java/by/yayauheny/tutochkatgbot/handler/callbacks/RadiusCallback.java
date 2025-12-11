@@ -5,6 +5,8 @@ import by.yayauheny.tutochkatgbot.callback.CallbackData;
 import by.yayauheny.tutochkatgbot.handler.CallbackHandler;
 import by.yayauheny.tutochkatgbot.handler.UpdateContext;
 import by.yayauheny.tutochkatgbot.service.UserService;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
 import org.telegram.telegrambots.meta.api.objects.Update;
 
@@ -13,6 +15,7 @@ import org.telegram.telegrambots.meta.api.objects.Update;
  */
 @Component
 public class RadiusCallback implements CallbackHandler {
+    private static final Logger logger = LoggerFactory.getLogger(RadiusCallback.class);
     private final MessageSender sender;
     private final UserService userService;
 
@@ -34,12 +37,26 @@ public class RadiusCallback implements CallbackHandler {
     @Override
     public void handle(Update update, UpdateContext ctx) throws Exception {
         try {
-            int radius = Integer.parseInt(CallbackData.arg(ctx.callbackData()));
+            String radiusStr = CallbackData.arg(ctx.callbackData());
+            if (radiusStr == null || radiusStr.isBlank()) {
+                logger.warn("Empty radius in callback: {}", ctx.callbackData());
+                sender.editOrReply(ctx, "❌ Ошибка: неверный радиус", null);
+                return;
+            }
+            
+            int radius = Integer.parseInt(radiusStr);
+            if (radius <= 0) {
+                logger.warn("Invalid radius value: {}", radius);
+                sender.editOrReply(ctx, "❌ Ошибка: радиус должен быть больше 0", null);
+                return;
+            }
+            
             userService.setRadius(ctx.userId(), radius);
             
             String message = "✅ Радиус поиска изменен на " + radius + " м";
             sender.editOrReply(ctx, message, null);
         } catch (NumberFormatException e) {
+            logger.warn("Invalid radius format in callback: {}", ctx.callbackData(), e);
             sender.editOrReply(ctx, "❌ Ошибка: неверный радиус", null);
         }
     }

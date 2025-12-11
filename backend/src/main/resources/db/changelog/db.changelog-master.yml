@@ -13,10 +13,10 @@ databaseChangeLog:
         - sqlFile:
             path: migration/20251205_import_minsk_metro.sql
             relativeToChangelogFile: true
-#  - changeSet:
-#      id: import-2gis-20250928
-#      author: yayauheny
-#      changes:
-#        - sqlFile:
-#            path: migration/20250928_import_2gis_toilets.sql
-#            relativeToChangelogFile: true
+  - changeSet:
+      id: seed-initial-restrooms-minsk-2gis
+      author: yayauheny
+      changes:
+        - sqlFile:
+            path: migration/20251209_seed_initial_restrooms_minsk_2gis.sql
+            relativeToChangelogFile: true

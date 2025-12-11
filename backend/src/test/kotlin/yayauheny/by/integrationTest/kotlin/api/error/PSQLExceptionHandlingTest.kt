@@ -8,19 +8,19 @@ import io.ktor.client.statement.bodyAsText
 import io.ktor.http.ContentType
 import io.ktor.http.HttpStatusCode
 import io.ktor.http.contentType
+import java.util.UUID
 import kotlin.test.assertEquals
 import kotlin.test.assertNotNull
 import kotlin.test.assertTrue
 import kotlinx.coroutines.test.runTest
 import kotlinx.serialization.json.Json
+import kotlinx.serialization.json.intOrNull
 import kotlinx.serialization.json.jsonObject
 import kotlinx.serialization.json.jsonPrimitive
-import kotlinx.serialization.json.intOrNull
 import org.junit.jupiter.api.DisplayName
 import org.junit.jupiter.api.Tag
 import org.junit.jupiter.api.Test
 import yayauheny.by.helpers.DatabaseTestHelper
-import java.util.UUID
 
 @Tag("integration")
 @DisplayName("PSQLException Handling Tests")
@@ -97,8 +97,6 @@ class PSQLExceptionHandlingTest : BaseIntegrationTest() {
                         setBody(cityJson)
                     }
 
-                // Должен быть 400 Bad Request из-за foreign key violation
-                // или 404 если проверка происходит раньше в сервисе
                 assertTrue(
                     response.status == HttpStatusCode.BadRequest ||
                         response.status == HttpStatusCode.NotFound
@@ -144,8 +142,6 @@ class PSQLExceptionHandlingTest : BaseIntegrationTest() {
                         setBody(restroomJson)
                     }
 
-                // Должен быть 400 Bad Request из-за foreign key violation
-                // или 404 если проверка происходит раньше в сервисе
                 assertTrue(
                     response.status == HttpStatusCode.BadRequest ||
                         response.status == HttpStatusCode.NotFound
@@ -165,7 +161,6 @@ class PSQLExceptionHandlingTest : BaseIntegrationTest() {
         runTest {
             val testEnv = DatabaseTestHelper.createTestEnvironment(dslContext)
 
-            // Пытаемся создать город без обязательного поля (если есть NOT NULL constraint)
             val cityJson =
                 """
                 {
@@ -184,10 +179,7 @@ class PSQLExceptionHandlingTest : BaseIntegrationTest() {
                         setBody(cityJson)
                     }
 
-                // Может быть 400 из-за валидации или из-за NOT NULL violation в БД
-                assertTrue(
-                    response.status == HttpStatusCode.BadRequest
-                )
+                assertEquals(response.status, HttpStatusCode.BadRequest)
 
                 val errorBody = Json.parseToJsonElement(response.bodyAsText()).jsonObject
                 assertEquals(400, errorBody["status"]?.jsonPrimitive?.intOrNull)

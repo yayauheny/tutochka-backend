@@ -41,11 +41,19 @@ public class LocationMessageHandler implements MessageHandler {
 
     @Override
     public void handle(Update update, UpdateContext ctx) throws Exception {
-        userService.saveLocation(ctx.userId(), ctx.latitude(), ctx.longitude());
+        Double latitude = ctx.latitude();
+        Double longitude = ctx.longitude();
+        
+        if (latitude == null || longitude == null) {
+            sender.sendText(ctx.chatId(), Messages.SOMETHING_WENT_WRONG);
+            return;
+        }
+        
+        userService.saveLocation(ctx.userId(), latitude, longitude);
         
         int radius = userService.getRadius(ctx.userId()).orElse(UserService.DEFAULT_RADIUS);
         
-        var results = searchService.findNearby(ctx.latitude(), ctx.longitude(), radius, 10);
+        var results = searchService.findNearby(latitude, longitude, radius, 10);
         
         if (results.isEmpty()) {
             sender.sendText(ctx.chatId(), Messages.NO_TOILETS_FOUND, inlineKeyboard.radiusSelection());

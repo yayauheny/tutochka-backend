@@ -8,6 +8,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.telegram.telegrambots.meta.api.objects.Message;
 import org.telegram.telegrambots.meta.api.objects.Update;
+import org.telegram.telegrambots.meta.api.objects.User;
 
 import java.util.List;
 
@@ -34,19 +35,22 @@ class AdminCacheEvictCommandTest {
     }
 
     @Test
-    void canHandleSupportsBothCommands() {
-        Update geo = commandUpdate("/evict-geo");
-        Update info = commandUpdate("/evict-info");
-        Update other = commandUpdate("/start");
+    void canHandleSupportsBothCommandsForAdmin() {
+        Update geo = commandUpdate("/evict-geo", 1L);
+        Update info = commandUpdate("/evict-info", 1L);
+        Update other = commandUpdate("/start", 1L);
+        Update nonAdmin = commandUpdate("/evict-geo", 99L);
 
         assertTrue(handler.canHandle(geo));
         assertTrue(handler.canHandle(info));
         assertFalse(handler.canHandle(other));
+        // Non-admin should not be able to handle admin commands
+        assertFalse(handler.canHandle(nonAdmin));
     }
 
     @Test
     void authorizedUserCanEvictGeoCache() {
-        Update update = commandUpdate("/evict-geo");
+        Update update = commandUpdate("/evict-geo", 1L);
         UpdateContext ctx = new UpdateContext(10L, 1L, "/evict-geo", false, null, null, false, null, 1);
 
         handler.handle(update, ctx);
@@ -58,7 +62,7 @@ class AdminCacheEvictCommandTest {
 
     @Test
     void authorizedUserCanEvictInfoCache() {
-        Update update = commandUpdate("/evict-info");
+        Update update = commandUpdate("/evict-info", 1L);
         UpdateContext ctx = new UpdateContext(10L, 1L, "/evict-info", false, null, null, false, null, 1);
 
         handler.handle(update, ctx);
@@ -67,23 +71,15 @@ class AdminCacheEvictCommandTest {
         verify(sender, times(1)).sendText(10L, "Кэш информации о туалетах очищен.");
     }
 
-    @Test
-    void unauthorizedUserGetsDenial() {
-        Update update = commandUpdate("/evict-geo");
-        UpdateContext ctx = new UpdateContext(10L, 99L, "/evict-geo", false, null, null, false, null, 1);
-
-        handler.handle(update, ctx);
-
-        verifyNoInteractions(cacheService);
-        verify(sender, times(1)).sendText(10L, "Команда недоступна.");
-    }
-
-    private Update commandUpdate(String text) {
+    private Update commandUpdate(String text, long userId) {
         Update update = mock(Update.class);
         Message message = mock(Message.class);
+        User user = mock(User.class);
         when(update.hasMessage()).thenReturn(true);
         when(update.getMessage()).thenReturn(message);
         when(message.getText()).thenReturn(text);
+        when(message.getFrom()).thenReturn(user);
+        when(user.getId()).thenReturn(userId);
         return update;
     }
 }

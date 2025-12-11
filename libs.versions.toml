@@ -21,6 +21,7 @@ jtsCore = "1.20.0"
 caffeine = "3.1.8"
 telegrambots = "6.9.7.1"
 wiremock = "2.35.0"
+resilience4j = "2.2.0"
 
 [plugins]
 kotlinJvm = { id = "org.jetbrains.kotlin.jvm", version.ref = "kotlin" }
@@ -78,6 +79,7 @@ logbackClassic = { module = "ch.qos.logback:logback-classic", version.ref = "log
 caffeine = { module = "com.github.ben-manes.caffeine:caffeine", version.ref = "caffeine" }
 telegramBots = { module = "org.telegram:telegrambots", version.ref = "telegrambots" }
 wiremockJre8 = { module = "com.github.tomakehurst:wiremock-jre8", version.ref = "wiremock" }
+resilience4jRetry = { module = "io.github.resilience4j:resilience4j-retry", version.ref = "resilience4j" }
 
 # Testing
 testcontainersPostgres = { module = "org.testcontainers:postgresql", version.ref = "testcontainers" }

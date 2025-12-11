@@ -36,7 +36,7 @@ public class SettingsCommand implements CommandHandler {
     @Override
     public void handle(Update update, UpdateContext ctx) throws Exception {
         String message = "🔧 Настройки:\n\n" +
-                "• Радиус поиска: " + userService.getRadius(ctx.userId()).orElse(500) + " м\n" +
+                "• Радиус поиска: " + userService.getRadius(ctx.userId()).orElse(UserService.DEFAULT_RADIUS) + " м\n" +
                 "• Единицы измерения: метры";
         
         sender.sendText(ctx.chatId(), message, inlineKeyboard.radiusSelection());

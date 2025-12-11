@@ -3,17 +3,20 @@
 -- changeset yayauheny:import-minsk-metro
 -- Импорт данных Минского метро: страна, город, линии и станции
 
+-- Подстраховка: добавляем недостающие геоколонки, если схемы были применены частично
+ALTER TABLE cities ADD COLUMN IF NOT EXISTS coordinates GEOMETRY(POINT, 4326);
+ALTER TABLE cities ADD COLUMN IF NOT EXISTS city_bounds GEOMETRY(Polygon, 4326);
+
 -- 0. Страна Беларусь
 INSERT INTO countries (code, name_ru, name_en)
 VALUES ('BY', 'Беларусь', 'Belarus')
 ON CONFLICT (code) DO NOTHING;
 
 -- 1. Город Минск (примерные координаты центра)
-INSERT INTO cities (country_id, name_ru, name_en, region, city_bounds, coordinates)
+INSERT INTO cities (country_id, name_ru, name_en, region, coordinates)
 SELECT c.id,
        'Минск',
        'Minsk',
-       NULL,
        NULL,
        ST_SetSRID(ST_MakePoint(27.5619, 53.9023), 4326)
 FROM countries c

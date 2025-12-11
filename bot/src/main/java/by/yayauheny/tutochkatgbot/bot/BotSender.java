@@ -131,11 +131,8 @@ public class BotSender implements MessageSender {
      * @param errorMessage error message
      */
     public void safeReply(UpdateContext ctx, String errorMessage) {
-        try {
-            sendText(ctx.chatId(), errorMessage);
-        } catch (Exception e) {
-            logger.error("Failed to send error message: {}", e.getMessage(), e);
-        }
+        // sendText already handles exceptions internally, so no need for try-catch here
+        sendText(ctx.chatId(), errorMessage);
     }
 
     @Override

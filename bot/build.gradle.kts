@@ -20,6 +20,9 @@ dependencies {
     implementation("io.micrometer:micrometer-registry-prometheus")
     implementation(libs.caffeine)
     implementation(libs.telegramBots)
+    implementation(libs.resilience4jRetry)
+    implementation("org.apache.httpcomponents.client5:httpclient5")
+    implementation("org.apache.httpcomponents.core5:httpcore5")
 
     testImplementation("org.springframework.boot:spring-boot-starter-test")
     testImplementation(libs.wiremockJre8)

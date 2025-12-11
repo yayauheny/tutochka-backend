@@ -47,15 +47,22 @@ public class BackToListCallback implements CallbackHandler {
 
     @Override
     public void handle(Update update, UpdateContext ctx) throws Exception {
-        var session = userService.getSession(ctx.userId());
+        var sessionOpt = userService.getSession(ctx.userId());
         
-        if (session.isEmpty() || session.get().location() == null) {
+        if (sessionOpt.isEmpty()) {
             sender.sendText(ctx.chatId(), Messages.LOCATION_REQUEST, replyKeyboard.shareLocation());
             return;
         }
         
-        var location = session.get().location();
-        int radius = userService.getRadius(ctx.userId()).orElse(500);
+        var session = sessionOpt.get();
+        var location = session.location();
+        
+        if (location == null) {
+            sender.sendText(ctx.chatId(), Messages.LOCATION_REQUEST, replyKeyboard.shareLocation());
+            return;
+        }
+        
+        int radius = userService.getRadius(ctx.userId()).orElse(UserService.DEFAULT_RADIUS);
         
         var results = searchService.findNearby(location.latitude(), location.longitude(), radius, 10);
         

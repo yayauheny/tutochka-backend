@@ -1,5 +1,10 @@
 package yayauheny.by.helpers
 
+import by.yayauheny.shared.enums.AccessibilityType
+import by.yayauheny.shared.enums.DataSourceType
+import by.yayauheny.shared.enums.FeeType
+import by.yayauheny.shared.enums.PlaceType
+import by.yayauheny.shared.enums.RestroomStatus
 import java.time.Instant
 import java.util.UUID
 import kotlinx.serialization.json.JsonObject
@@ -7,11 +12,6 @@ import kotlinx.serialization.json.JsonPrimitive
 import kotlinx.serialization.json.buildJsonObject
 import org.jooq.DSLContext
 import org.jooq.impl.DSL
-import by.yayauheny.shared.enums.AccessibilityType
-import by.yayauheny.shared.enums.DataSourceType
-import by.yayauheny.shared.enums.FeeType
-import by.yayauheny.shared.enums.PlaceType
-import by.yayauheny.shared.enums.RestroomStatus
 import yayauheny.by.tables.references.CITIES
 import yayauheny.by.tables.references.COUNTRIES
 import yayauheny.by.tables.references.RESTROOMS
@@ -27,7 +27,7 @@ data class TestCountryData(
 data class TestCityData(
     val nameRu: String = "Test City RU ${UUID.randomUUID().toString().take(8)}",
     val nameEn: String = "Test City EN ${UUID.randomUUID().toString().take(8)}",
-    val lat: Double = 55.7558 + (Math.random() * 0.1 - 0.05), // Случайное смещение для уникальности координат
+    val lat: Double = 55.7558 + (Math.random() * 0.1 - 0.05),
     val lon: Double = 37.6176 + (Math.random() * 0.1 - 0.05)
 )
 
@@ -39,7 +39,7 @@ data class TestRestroomData(
     val feeType: FeeType = FeeType.FREE,
     val accessibilityType: AccessibilityType = AccessibilityType.UNISEX,
     val placeType: PlaceType = PlaceType.OTHER,
-    val lat: Double = 55.7558 + (Math.random() * 0.1 - 0.05), // Случайное смещение для уникальности координат
+    val lat: Double = 55.7558 + (Math.random() * 0.1 - 0.05),
     val lon: Double = 37.6176 + (Math.random() * 0.1 - 0.05),
     val dataSource: DataSourceType = DataSourceType.MANUAL,
     val status: RestroomStatus = RestroomStatus.ACTIVE,
@@ -67,7 +67,7 @@ object DatabaseTestHelper {
     fun createTestCityData(
         nameRu: String = "Test City RU ${UUID.randomUUID().toString().take(8)}",
         nameEn: String = "Test City EN ${UUID.randomUUID().toString().take(8)}",
-        lat: Double = 55.7558 + (Math.random() * 0.1 - 0.05), // Добавляем небольшое случайное смещение для уникальности координат
+        lat: Double = 55.7558 + (Math.random() * 0.1 - 0.05),
         lon: Double = 37.6176 + (Math.random() * 0.1 - 0.05)
     ) = TestCityData(nameRu, nameEn, lat, lon)
 
@@ -79,7 +79,7 @@ object DatabaseTestHelper {
         feeType: FeeType = FeeType.FREE,
         accessibilityType: AccessibilityType = AccessibilityType.UNISEX,
         placeType: PlaceType = PlaceType.OTHER,
-        lat: Double = 55.7558 + (Math.random() * 0.1 - 0.05), // Случайное смещение для уникальности координат
+        lat: Double = 55.7558 + (Math.random() * 0.1 - 0.05),
         lon: Double = 37.6176 + (Math.random() * 0.1 - 0.05),
         dataSource: DataSourceType = DataSourceType.MANUAL,
         status: RestroomStatus = RestroomStatus.ACTIVE,
@@ -189,7 +189,7 @@ object DatabaseTestHelper {
                 .set(RESTROOMS.WORK_TIME, data.workTime.toJSONBOrEmpty())
                 .set(RESTROOMS.FEE_TYPE, data.feeType.name)
                 .set(RESTROOMS.ACCESSIBILITY_TYPE, data.accessibilityType.name)
-                .set(RESTROOMS.PLACE_TYPE, data.placeType?.id)
+                .set(RESTROOMS.PLACE_TYPE, data.placeType.id)
                 .set(
                     RESTROOMS.COORDINATES,
                     pointExpr(data.lon, data.lat, RESTROOMS.COORDINATES)

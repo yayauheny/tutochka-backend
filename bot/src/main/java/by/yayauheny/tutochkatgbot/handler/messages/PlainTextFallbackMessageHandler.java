@@ -27,7 +27,7 @@ public class PlainTextFallbackMessageHandler implements MessageHandler {
 
     @Override
     public void handle(Update update, UpdateContext ctx) throws Exception {
-        String message = "Не понял запрос. Поделись геолокацией или наберите /help";
+        String message = "Не понял запрос. Поделись геолокацией или набери /help";
         sender.sendText(ctx.chatId(), message, replyKeyboard.shareLocation());
     }
 }

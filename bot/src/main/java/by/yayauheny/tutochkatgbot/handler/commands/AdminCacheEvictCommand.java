@@ -32,18 +32,21 @@ public class AdminCacheEvictCommand implements CommandHandler {
 
     @Override
     public boolean canHandle(Update update) {
-        return update.hasMessage()
-            && update.getMessage().getText() != null
-            && (COMMAND_GEO.equals(update.getMessage().getText()) || COMMAND_INFO.equals(update.getMessage().getText()));
+        if (!update.hasMessage() || update.getMessage().getText() == null) {
+            return false;
+        }
+        String text = update.getMessage().getText();
+        // Only handle if user is admin - otherwise let it be treated as unknown command
+        if (!(COMMAND_GEO.equals(text) || COMMAND_INFO.equals(text))) {
+            return false;
+        }
+        // Check admin status - only handle if admin
+        long userId = update.getMessage().getFrom().getId();
+        return isAdmin(userId);
     }
 
     @Override
     public void handle(Update update, UpdateContext ctx) {
-        if (!isAdmin(ctx.userId())) {
-            sender.sendText(ctx.chatId(), "Команда недоступна.");
-            return;
-        }
-
         String command = ctx.text();
         if (COMMAND_GEO.equals(command)) {
             cacheService.evictGeo();

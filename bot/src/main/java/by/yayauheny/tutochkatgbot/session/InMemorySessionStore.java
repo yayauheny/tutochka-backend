@@ -9,6 +9,7 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
+import jakarta.annotation.PreDestroy;
 
 /**
  * In-memory session store with TTL cleanup
@@ -22,6 +23,11 @@ public class InMemorySessionStore implements SessionStore {
     
     public InMemorySessionStore() {
         cleanupExecutor.scheduleAtFixedRate(this::cleanupExpiredSessions, 5, 5, TimeUnit.MINUTES);
+    }
+    
+    @PreDestroy
+    public void shutdown() {
+        cleanupExecutor.shutdown();
     }
     
     @Override

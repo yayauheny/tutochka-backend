@@ -9,11 +9,11 @@ import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.DisplayName
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
+import yayauheny.by.common.query.PageResponse
 import yayauheny.by.helpers.TestDataHelpers
 import yayauheny.by.helpers.assertJsonContentType
 import yayauheny.by.helpers.testGet
 import yayauheny.by.helpers.testPost
-import yayauheny.by.common.query.PageResponse
 import yayauheny.by.model.restroom.RestroomResponseDto
 
 class RestroomControllerTest : RoutingTestBase() {
@@ -42,7 +42,7 @@ class RestroomControllerTest : RoutingTestBase() {
         fun restrooms_with_pagination_parameters_passes_to_service() =
             runTest {
                 coEvery { restroomService.getAllRestrooms(any()) } returns
-                    PageResponse(emptyList<RestroomResponseDto>(), 1, 10, 0, 0, false, true)
+                    PageResponse(emptyList(), 1, 10, 0, 0, false, true)
 
                 withRoutingApp { client ->
                     val response = client.testGet("/api/v1/restrooms", mapOf("page" to "1", "size" to "10"))
@@ -96,8 +96,6 @@ class RestroomControllerTest : RoutingTestBase() {
         @DisplayName("GIVEN invalid UUID WHEN GET restroom by ID THEN return 400 and skip service")
         fun get_restroom_by_invalid_uuid_returns_400_and_skips_service() =
             runTest {
-                // (invalid UUID format)
-
                 withRoutingApp { client ->
                     val response = client.testGet("/api/v1/restrooms/not-a-uuid")
 
@@ -135,8 +133,6 @@ class RestroomControllerTest : RoutingTestBase() {
         @DisplayName("GIVEN invalid city ID WHEN GET restrooms by city THEN return 400 and skip service")
         fun get_restrooms_by_invalid_city_id_returns_400_and_skips_service() =
             runTest {
-                // (invalid UUID format)
-
                 withRoutingApp { client ->
                     val response = client.testGet("/api/v1/restrooms/city/invalid-uuid")
 
@@ -197,8 +193,6 @@ class RestroomControllerTest : RoutingTestBase() {
         @DisplayName("GIVEN invalid coordinates WHEN GET nearest restrooms THEN return 400 and skip service")
         fun get_nearest_restrooms_with_invalid_coordinates_returns_400_and_skips_service() =
             runTest {
-                // (invalid lat format)
-
                 withRoutingApp { client ->
                     val response =
                         client.testGet(
@@ -216,8 +210,6 @@ class RestroomControllerTest : RoutingTestBase() {
         @DisplayName("GIVEN missing coordinates WHEN GET nearest restrooms THEN return 400 and skip service")
         fun get_nearest_restrooms_with_missing_coordinates_returns_400_and_skips_service() =
             runTest {
-                // (missing lat parameter)
-
                 withRoutingApp { client ->
                     val response =
                         client.testGet(
@@ -320,8 +312,6 @@ class RestroomControllerTest : RoutingTestBase() {
         @DisplayName("GIVEN malformed JSON WHEN POST restroom THEN return 400 and skip service")
         fun create_restroom_with_malformed_json_returns_400_and_skips_service() =
             runTest {
-                // (missing required fields)
-
                 withRoutingApp { client ->
                     val response = client.testPost("/api/v1/restrooms", """{"name": "Test"}""") // Missing required fields
 
@@ -335,8 +325,6 @@ class RestroomControllerTest : RoutingTestBase() {
         @DisplayName("GIVEN empty request body WHEN POST restroom THEN return 415 and skip service")
         fun create_restroom_with_empty_body_returns_415_and_skips_service() =
             runTest {
-                // (empty body)
-
                 withRoutingApp { client ->
                     val response = client.testPost("/api/v1/restrooms", "")
 

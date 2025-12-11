@@ -1,6 +1,8 @@
 package integration.repository
 
 import integration.base.BaseIntegrationTest
+import java.util.UUID
+import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
 import kotlin.test.assertNotNull
 import kotlin.test.assertNull
@@ -8,7 +10,6 @@ import kotlin.test.assertTrue
 import kotlinx.coroutines.test.runTest
 import kotlinx.serialization.json.JsonPrimitive
 import kotlinx.serialization.json.buildJsonObject
-import kotlinx.serialization.json.put
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.DisplayName
 import org.junit.jupiter.api.Nested
@@ -20,7 +21,6 @@ import yayauheny.by.helpers.DatabaseTestHelper
 import yayauheny.by.helpers.TestDataHelpers
 import yayauheny.by.repository.impl.BuildingRepositoryImpl
 import yayauheny.by.tables.references.BUILDINGS
-import java.util.UUID
 
 @Tag("integration")
 @DisplayName("BuildingRepository Error Handling Tests")
@@ -48,8 +48,9 @@ class BuildingRepositoryErrorHandlingTest : BaseIntegrationTest() {
                         repository.save(buildingDto)
                     }
 
-                assertTrue(
-                    exception.sqlState == "23503",
+                assertEquals(
+                    exception.sqlState,
+                    "23503",
                     "Expected foreign key violation (23503), got ${exception.sqlState}"
                 )
                 assertNotNull(exception.message)

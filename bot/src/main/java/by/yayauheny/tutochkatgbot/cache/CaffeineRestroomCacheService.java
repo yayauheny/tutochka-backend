@@ -23,16 +23,16 @@ public class CaffeineRestroomCacheService implements RestroomCacheService {
     }
 
     @Override
-    public Optional<List<UUID>> getNearestIds(double latitude, double longitude) {
-        return Optional.ofNullable(geoCache.getIfPresent(geoKey(latitude, longitude)));
+    public Optional<List<UUID>> getNearestIds(GeoKey key) {
+        return Optional.ofNullable(geoCache.getIfPresent(key));
     }
 
     @Override
-    public void putNearestIds(double latitude, double longitude, List<UUID> ids) {
+    public void putNearestIds(GeoKey key, List<UUID> ids) {
         if (ids == null) {
             return;
         }
-        geoCache.put(geoKey(latitude, longitude), ids);
+        geoCache.put(key, ids);
     }
 
     @Override
@@ -61,7 +61,4 @@ public class CaffeineRestroomCacheService implements RestroomCacheService {
         infoCache.invalidateAll();
     }
 
-    private GeoKey geoKey(double latitude, double longitude) {
-        return new GeoKey(latitude, longitude);
-    }
 }

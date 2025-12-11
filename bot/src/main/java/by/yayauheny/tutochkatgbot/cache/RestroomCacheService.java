@@ -7,9 +7,9 @@ import java.util.Optional;
 import java.util.UUID;
 
 public interface RestroomCacheService {
-    Optional<List<UUID>> getNearestIds(double latitude, double longitude);
+    Optional<List<UUID>> getNearestIds(GeoKey key);
 
-    void putNearestIds(double latitude, double longitude, List<UUID> ids);
+    void putNearestIds(GeoKey key, List<UUID> ids);
 
     Optional<NearestRestroomResponseDto> getRestroomInfo(UUID id);
 

@@ -11,6 +11,20 @@ import java.util.Optional;
  * Uses shared DTOs to avoid duplication between backend and bot modules.
  */
 public interface BackendClient {
-    List<NearestRestroomResponseDto> findNearest(double lat, double lon, int limit);
+    /**
+     * Find nearest restrooms
+     * @param lat latitude
+     * @param lon longitude
+     * @param limit maximum number of results
+     * @param distanceMeters maximum distance in meters
+     * @return list of nearest restrooms
+     */
+    List<NearestRestroomResponseDto> findNearest(double lat, double lon, int limit, int distanceMeters);
+    
+    /**
+     * Get restroom by ID
+     * @param id restroom ID
+     * @return restroom details
+     */
     Optional<RestroomResponseDto> getById(String id);
 }

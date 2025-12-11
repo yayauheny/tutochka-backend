@@ -52,11 +52,11 @@ services:
         max-size: "10m"
         max-file: "3"
 
-  app:
+  backend:
     build:
       context: ..
       dockerfile: Dockerfile
-    container_name: tutochka_app
+    container_name: tutochka_backend
     environment:
       # Database Configuration
       DB_HOST: postgres
@@ -77,7 +77,7 @@ services:
     ports:
       - "8080:8080"
     volumes:
-      - app_logs:/app/logs
+      - backend_logs:/app/logs
     depends_on:
       postgres:
         condition: service_healthy
@@ -104,10 +104,68 @@ services:
         max-size: "10m"
         max-file: "3"
 
+  bot:
+    build:
+      context: ..
+      dockerfile: bot/Dockerfile
+    container_name: tutochka_bot
+    environment:
+      # Telegram Bot Configuration
+      TELEGRAM_BOT_USERNAME: ${TELEGRAM_BOT_USERNAME}
+      TELEGRAM_BOT_TOKEN: ${TELEGRAM_BOT_TOKEN}
+      BOT_MODE: ${BOT_MODE:-POLLING}
+      BOT_AUTO_REGISTER: ${BOT_AUTO_REGISTER:-false}
+      BOT_WEBHOOK_PATH: ${BOT_WEBHOOK_PATH:-/telegram/webhook}
+      BOT_WEBHOOK_PUBLIC_URL: ${BOT_WEBHOOK_PUBLIC_URL:-}
+      BOT_ADMIN_IDS: ${BOT_ADMIN_IDS:-}
+      
+      # Backend Configuration
+      BACKEND_BASE_URL: ${BACKEND_BASE_URL:-http://backend:8080/api/v1}
+      BACKEND_CONNECT_TIMEOUT_MS: ${BACKEND_CONNECT_TIMEOUT_MS:-3000}
+      BACKEND_READ_TIMEOUT_MS: ${BACKEND_READ_TIMEOUT_MS:-5000}
+      BACKEND_RETRY_ATTEMPTS: ${BACKEND_RETRY_ATTEMPTS:-2}
+      BACKEND_RETRY_DELAY_MS: ${BACKEND_RETRY_DELAY_MS:-200}
+      
+      # Application Configuration
+      PORT: 8081
+      SPRING_PROFILES_ACTIVE: prod
+      TZ: UTC
+    ports:
+      - "8081:8081"
+    volumes:
+      - bot_logs:/app/logs
+    depends_on:
+      backend:
+        condition: service_healthy
+    restart: unless-stopped
+    networks:
+      - tutochka_network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8081/actuator/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s
+    deploy:
+      resources:
+        limits:
+          memory: 512M
+          cpus: '0.5'
+        reservations:
+          memory: 256M
+          cpus: '0.25'
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+
 volumes:
   postgres_data:
     driver: local
-  app_logs:
+  backend_logs:
+    driver: local
+  bot_logs:
     driver: local
 
 networks:

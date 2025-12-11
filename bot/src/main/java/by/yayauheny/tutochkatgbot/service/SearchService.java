@@ -1,6 +1,7 @@
 package by.yayauheny.tutochkatgbot.service;
 
 import by.yayauheny.shared.dto.NearestRestroomResponseDto;
+import by.yayauheny.tutochkatgbot.cache.GeoKey;
 import by.yayauheny.tutochkatgbot.cache.RestroomCacheService;
 import by.yayauheny.tutochkatgbot.integration.BackendClient;
 import org.springframework.stereotype.Service;
@@ -32,7 +33,8 @@ public class SearchService {
      * @return list of nearby restrooms
      */
     public List<NearestRestroomResponseDto> findNearby(double lat, double lon, int radiusMeters, int limit) {
-        var cached = cacheService.getNearestIds(lat, lon)
+        GeoKey key = new GeoKey(lat, lon, radiusMeters, limit);
+        var cached = cacheService.getNearestIds(key)
             .map(ids -> ids.stream()
                 .map(cacheService::getRestroomInfo)
                 .flatMap(Optional::stream)
@@ -43,12 +45,14 @@ public class SearchService {
             return filterAndLimit(cached, radiusMeters, limit);
         }
 
-        var result = backend.findNearest(lat, lon, limit);
+        // Backend filters by distanceMeters, so we pass radiusMeters to optimize query
+        var result = backend.findNearest(lat, lon, limit, radiusMeters);
 
         var ids = result.stream().map(NearestRestroomResponseDto::getId).toList();
-        cacheService.putNearestIds(lat, lon, ids);
+        cacheService.putNearestIds(key, ids);
         result.forEach(dto -> cacheService.putRestroomInfo(dto.getId(), dto));
 
+        // Backend already filters by distance, but we apply limit here as a safety measure
         return filterAndLimit(result, radiusMeters, limit);
     }
 

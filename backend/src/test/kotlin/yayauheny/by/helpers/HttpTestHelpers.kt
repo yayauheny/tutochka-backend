@@ -20,9 +20,9 @@ import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.buildJsonObject
 import kotlinx.serialization.json.put
 import kotlinx.serialization.modules.SerializersModule
+import yayauheny.by.common.errors.ErrorResponse
 import yayauheny.by.util.InstantSerializer
 import yayauheny.by.util.UUIDSerializer
-import yayauheny.by.common.errors.ErrorResponse
 
 val testJson =
     Json {
@@ -69,7 +69,7 @@ suspend fun HttpClient.testDelete(path: String): HttpResponse =
 
 suspend fun HttpResponse.parseErrorResponse(): ErrorResponse {
     val body = this.bodyAsText()
-    return yayauheny.by.helpers.testJson
+    return testJson
         .decodeFromString<ErrorResponse>(body)
 }
 
@@ -77,15 +77,17 @@ fun ErrorResponse.assertHasFieldError(
     field: String,
     expectedMessage: String? = null
 ) {
-    assertTrue(
-        this.errors?.any { it.field == field } == true,
+    assertEquals(
+        this.errors?.any { it.field == field },
+        true,
         "Error response should contain field error for '$field', but got: ${this.errors}"
     )
 
     if (expectedMessage != null) {
         val fieldError = this.errors?.find { it.field == field }
-        assertTrue(
-            fieldError?.message?.contains(expectedMessage) == true,
+        assertEquals(
+            fieldError?.message?.contains(expectedMessage),
+            true,
             "Field error for '$field' should contain message '$expectedMessage', but got: '${fieldError?.message}'"
         )
     }
@@ -103,8 +105,9 @@ fun ErrorResponse.assertHasValidationErrors() {
  */
 fun HttpResponse.assertJsonContentType() {
     val contentType = this.headers["Content-Type"]
-    assertTrue(
-        contentType?.contains("application/json") == true,
+    assertEquals(
+        contentType?.contains("application/json"),
+        true,
         "Expected Content-Type to contain 'application/json', but got: $contentType"
     )
 }

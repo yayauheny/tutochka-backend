@@ -63,8 +63,6 @@ class CityApiTest : BaseIntegrationTest() {
         @DisplayName("GIVEN valid name parameter WHEN search cities THEN return results")
         fun search_cities_with_valid_name() =
             runTest {
-                // (search parameter)
-
                 KtorTestApplication.withApp(dslContext) { client ->
                     val response = client.testGet("/api/v1/cities/search", mapOf("name" to "Test"))
 
@@ -77,8 +75,6 @@ class CityApiTest : BaseIntegrationTest() {
         @DisplayName("GIVEN missing name parameter WHEN search cities THEN return 400")
         fun search_cities_without_name_parameter() =
             runTest {
-                // (no name parameter)
-
                 KtorTestApplication.withApp(dslContext) { client ->
                     val response = client.testGet("/api/v1/cities/search")
 
@@ -92,9 +88,6 @@ class CityApiTest : BaseIntegrationTest() {
     @Nested
     @DisplayName("E2E Test Cases")
     inner class E2ETestCases {
-        // E2E tests for search functionality (real database queries)
-        // E2E tests for country relationships (foreign key constraints)
-
         @Test
         @DisplayName("GIVEN non-existing city ID WHEN GET city by ID THEN return 404")
         fun get_city_non_existing_uuid() =
