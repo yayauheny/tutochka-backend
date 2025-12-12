@@ -244,6 +244,7 @@ val jooqExcludePatterns =
     )
 
 tasks.withType<org.jlleitschuh.gradle.ktlint.tasks.BaseKtLintCheckTask>().configureEach {
+    dependsOn("generateJooq")
     exclude { projectFileTree ->
         val file = projectFileTree.file
         val absolutePath = file.absolutePath
@@ -264,6 +265,10 @@ tasks.withType<org.jlleitschuh.gradle.ktlint.tasks.BaseKtLintCheckTask>().config
             absolutePath.endsWith("yayauheny/by/Public.kt") ||
             absolutePath.endsWith("yayauheny/by/DefaultCatalog.kt")
     }
+}
+
+tasks.matching { it.name.startsWith("runKtlintFormat") }.configureEach {
+    dependsOn("generateJooq")
 }
 
 tasks.named("runKtlintCheckOverMainSourceSet", org.jlleitschuh.gradle.ktlint.tasks.KtLintCheckTask::class.java).configure {
