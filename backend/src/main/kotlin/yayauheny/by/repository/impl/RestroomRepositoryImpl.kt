@@ -33,15 +33,20 @@ import yayauheny.by.util.lonAlias
 import yayauheny.by.util.pointExpr
 import yayauheny.by.util.reqDouble
 import yayauheny.by.util.toJSONBOrEmpty
+import yayauheny.by.util.toJsonObjectOrEmpty
 import yayauheny.by.util.transactionSuspend
 import yayauheny.by.util.withinDistanceOf
 import yayauheny.by.config.ApiConstants
 import yayauheny.by.service.import.schedule.ScheduleMappingService
+import yayauheny.by.model.import.ImportProvider
+import yayauheny.by.model.schedule.ScheduleUtils
+import org.slf4j.LoggerFactory
 
 class RestroomRepositoryImpl(
     private val ctx: DSLContext,
     private val scheduleMappingService: ScheduleMappingService? = null
 ) : RestroomRepository {
+    private val logger = LoggerFactory.getLogger(RestroomRepositoryImpl::class.java)
     private val restroomFields =
         mapOf(
             "id" to
@@ -392,9 +397,14 @@ class RestroomRepositoryImpl(
                 ).orderBy(knnField.asc())
                 .limit(limit ?: 5)
                 .fetch()
-                .map {
-                    val distance = it.reqDouble("distance")
-                    RestroomMapper.mapToNearestRestroom(it, distance, scheduleMappingService)
+                .map { record ->
+                    val distance = record.reqDouble("distance")
+
+                    // Compute isOpen from schedule
+                    val workTimeJson = record[RESTROOMS.WORK_TIME]?.toJsonObjectOrEmpty()
+                    val isOpen = computeIsOpen(record[RESTROOMS.ID], workTimeJson)
+
+                    RestroomMapper.mapToNearestRestroom(record, distance, isOpen)
                 }
         }
 
@@ -441,4 +451,24 @@ class RestroomRepositoryImpl(
                 .fetchOne()
                 ?.let { RestroomMapper.mapFromRecord(it) }
         }
+
+    /**
+     * Compute isOpen status from workTime schedule
+     */
+    private fun computeIsOpen(
+        restroomId: UUID?,
+        workTimeJson: kotlinx.serialization.json.JsonObject?
+    ): Boolean? {
+        if (workTimeJson == null || workTimeJson.isEmpty() || scheduleMappingService == null) {
+            return null
+        }
+
+        return try {
+            val schedule = scheduleMappingService.mapSchedule(ImportProvider.TWO_GIS, workTimeJson)
+            ScheduleUtils.isOpenNow(schedule)
+        } catch (e: Exception) {
+            logger.warn("Failed to parse schedule for restroom $restroomId", e)
+            null
+        }
+    }
 }

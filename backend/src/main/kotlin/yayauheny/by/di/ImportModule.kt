@@ -31,11 +31,7 @@ val importModule =
         // Schedule adapters
         single<ScheduleAdapter> { TwoGisScheduleAdapter() }
 
-        single<List<ScheduleAdapter>> {
-            listOf(get<ScheduleAdapter>())
-        }
-
         single<ScheduleMappingService> {
-            ScheduleMappingService(adapters = get())
+            ScheduleMappingService(adapters = getAll<ScheduleAdapter>())
         }
     }

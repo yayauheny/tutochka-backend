@@ -1,9 +1,9 @@
 package yayauheny.by.model.schedule
 
 import java.time.DayOfWeek
+import java.time.Instant
 import java.time.LocalTime
 import java.time.ZoneId
-import java.time.ZonedDateTime
 
 /**
  * Utility functions for working with Schedule
@@ -12,12 +12,25 @@ object ScheduleUtils {
     /**
      * Check if the restroom is currently open based on schedule
      * @param schedule schedule to check
-     * @param zoneId timezone (defaults to UTC)
+     * @param zoneId timezone (defaults to system default)
      * @return true if open now, false otherwise
      */
     fun isOpenNow(
         schedule: Schedule,
         zoneId: ZoneId = ZoneId.systemDefault()
+    ): Boolean = isOpenAt(schedule, Instant.now(), zoneId)
+
+    /**
+     * Check if the restroom is open at a specific instant
+     * @param schedule schedule to check
+     * @param instant specific moment in time
+     * @param zoneId timezone
+     * @return true if open at that moment, false otherwise
+     */
+    fun isOpenAt(
+        schedule: Schedule,
+        instant: Instant,
+        zoneId: ZoneId
     ): Boolean {
         if (schedule.isEmpty()) {
             return false // No schedule means closed
@@ -27,12 +40,12 @@ object ScheduleUtils {
             return true
         }
 
-        val now = ZonedDateTime.now(zoneId)
-        val currentDayOfWeek = now.dayOfWeek
-        val currentTime = now.toLocalTime()
+        val zonedDateTime = instant.atZone(zoneId)
+        val currentDayOfWeek = zonedDateTime.dayOfWeek
+        val currentTime = zonedDateTime.toLocalTime()
 
         // Convert DayOfWeek to Weekday
-        val weekday =
+        val weekdayToday =
             when (currentDayOfWeek) {
                 DayOfWeek.MONDAY -> Weekday.MON
                 DayOfWeek.TUESDAY -> Weekday.TUE
@@ -43,11 +56,43 @@ object ScheduleUtils {
                 DayOfWeek.SUNDAY -> Weekday.SUN
             }
 
-        val daySchedule = schedule.days[weekday] ?: return false
+        // 1) Check normal intervals for today
+        schedule.days[weekdayToday]?.let { daySchedule ->
+            if (daySchedule.workingHours.any { interval ->
+                    isTimeInInterval(currentTime, interval.from, interval.to)
+                }
+            ) {
+                return true
+            }
+        }
 
-        // Check if current time falls within any working interval
-        return daySchedule.workingHours.any { interval ->
-            isTimeInInterval(currentTime, interval.from, interval.to)
+        // 2) Check intervals that overflow from yesterday (midnight crossover)
+        val weekdayYesterday = previous(weekdayToday)
+        schedule.days[weekdayYesterday]?.let { daySchedule ->
+            if (daySchedule.workingHours.any { interval ->
+                    // Only check intervals that cross midnight
+                    interval.from > interval.to && isTimeInInterval(currentTime, interval.from, interval.to)
+                }
+            ) {
+                return true
+            }
+        }
+
+        return false
+    }
+
+    /**
+     * Get previous weekday
+     */
+    private fun previous(weekday: Weekday): Weekday {
+        return when (weekday) {
+            Weekday.MON -> Weekday.SUN
+            Weekday.TUE -> Weekday.MON
+            Weekday.WED -> Weekday.TUE
+            Weekday.THU -> Weekday.WED
+            Weekday.FRI -> Weekday.THU
+            Weekday.SAT -> Weekday.FRI
+            Weekday.SUN -> Weekday.SAT
         }
     }
 

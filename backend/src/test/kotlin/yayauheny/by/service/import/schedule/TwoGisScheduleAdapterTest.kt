@@ -219,4 +219,87 @@ class TwoGisScheduleAdapterTest {
         // Should only have one valid interval
         assertEquals(1, mondaySchedule.workingHours.size)
     }
+
+    @Test
+    fun `toSchedule handles 24:00 time correctly`() {
+        val jsonSchedule =
+            buildJsonObject {
+                put(
+                    "Mon",
+                    buildJsonObject {
+                        put(
+                            "working_hours",
+                            json
+                                .parseToJsonElement(
+                                    """
+                                    [{"from": "00:00", "to": "24:00"}]
+                                    """.trimIndent()
+                                ).jsonArray
+                        )
+                    }
+                )
+                put("is_24x7", false)
+            }
+
+        val schedule = adapter.toSchedule(jsonSchedule)
+        val mondaySchedule = schedule.days[Weekday.MON]!!
+        assertEquals(1, mondaySchedule.workingHours.size)
+        // "24:00" should be converted to MIDNIGHT (00:00)
+        assertEquals(LocalTime.MIDNIGHT, mondaySchedule.workingHours[0].to)
+        assertEquals(LocalTime.MIDNIGHT, mondaySchedule.workingHours[0].from)
+    }
+
+    @Test
+    fun `toSchedule handles partial day with 24:00 end time`() {
+        val jsonSchedule =
+            buildJsonObject {
+                put(
+                    "Mon",
+                    buildJsonObject {
+                        put(
+                            "working_hours",
+                            json
+                                .parseToJsonElement(
+                                    """
+                                    [{"from": "10:00", "to": "24:00"}]
+                                    """.trimIndent()
+                                ).jsonArray
+                        )
+                    }
+                )
+                put("is_24x7", false)
+            }
+
+        val schedule = adapter.toSchedule(jsonSchedule)
+        val mondaySchedule = schedule.days[Weekday.MON]!!
+        assertEquals(1, mondaySchedule.workingHours.size)
+        assertEquals(LocalTime.of(10, 0), mondaySchedule.workingHours[0].from)
+        assertEquals(LocalTime.MIDNIGHT, mondaySchedule.workingHours[0].to)
+    }
+
+    @Test
+    fun `toSchedule handles is_24x7 with additional intervals`() {
+        val jsonSchedule =
+            buildJsonObject {
+                put("is_24x7", true)
+                put(
+                    "Mon",
+                    buildJsonObject {
+                        put(
+                            "working_hours",
+                            json
+                                .parseToJsonElement(
+                                    """
+                                    [{"from": "09:00", "to": "18:00"}]
+                                    """.trimIndent()
+                                ).jsonArray
+                        )
+                    }
+                )
+            }
+
+        val schedule = adapter.toSchedule(jsonSchedule)
+        // is_24x7 flag should take precedence
+        assertTrue(schedule.is24x7)
+    }
 }

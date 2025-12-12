@@ -33,17 +33,16 @@ class TwoGisScheduleAdapter : ScheduleAdapter {
         }
 
         val is24x7 =
-            try {
-                rawSchedule["is_24x7"]?.let { element ->
-                    if (element is JsonPrimitive) {
-                        element.content == "true" || element.content == "1"
-                    } else {
-                        false
-                    }
-                } ?: false
-            } catch (e: Exception) {
-                false
-            }
+            (rawSchedule["is_24x7"] as? JsonPrimitive)?.let { prim ->
+                // Try boolean first, then check if it's "1" as string/int
+                when {
+                    prim.content == "true" -> true
+                    prim.content == "false" -> false
+                    prim.content == "1" -> true
+                    prim.content == "0" -> false
+                    else -> false
+                }
+            } ?: false
 
         val days = EnumMap<Weekday, DaySchedule>(Weekday::class.java)
 
@@ -82,14 +81,29 @@ class TwoGisScheduleAdapter : ScheduleAdapter {
             val toStr = (toElement as? JsonPrimitive)?.content
 
             if (fromStr != null && toStr != null) {
-                try {
-                    val from = LocalTime.parse(fromStr)
-                    val to = LocalTime.parse(toStr)
+                val from = parseTimeOrNull(fromStr)
+                val to = parseTimeOrNull(toStr)
+                if (from != null && to != null) {
                     WorkingInterval(from, to)
-                } catch (e: Exception) {
-                    null // Skip invalid intervals
+                } else {
+                    null
                 }
             } else {
+                null
+            }
+        }
+    }
+
+    /**
+     * Parse time string, handling special case "24:00" which represents end of day (midnight)
+     */
+    private fun parseTimeOrNull(value: String): LocalTime? {
+        return if (value == "24:00") {
+            LocalTime.MIDNIGHT // Treat as end of day
+        } else {
+            try {
+                LocalTime.parse(value)
+            } catch (e: Exception) {
                 null
             }
         }

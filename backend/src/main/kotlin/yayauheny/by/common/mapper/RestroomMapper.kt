@@ -14,22 +14,15 @@ import by.yayauheny.shared.enums.RestroomStatus
 import by.yayauheny.shared.dto.BuildingResponseDto
 import by.yayauheny.shared.dto.SubwayLineResponseDto
 import by.yayauheny.shared.dto.SubwayStationResponseDto
-import yayauheny.by.model.import.ImportProvider
 import yayauheny.by.model.restroom.NearestRestroomResponseDto
 import yayauheny.by.model.restroom.RestroomResponseDto
 import yayauheny.by.model.restroom.RestroomUpdateDto
-import yayauheny.by.model.schedule.ScheduleUtils
-import yayauheny.by.service.import.schedule.ScheduleMappingService
 import yayauheny.by.tables.references.RESTROOMS
 import yayauheny.by.util.reqDouble
 import yayauheny.by.util.toJSONBOrEmpty
 import yayauheny.by.util.toJsonObjectOrEmpty
 
 object RestroomMapper {
-    // ScheduleMappingService will be injected via DI in the future
-    // For now, we'll compute isOpen directly in the mapper
-    private val scheduleMappingService: ScheduleMappingService? = null
-
     fun mapFromRecord(record: Record): RestroomResponseDto {
         val lat = record.reqDouble("lat")
         val lon = record.reqDouble("lon")
@@ -90,7 +83,7 @@ object RestroomMapper {
     fun mapToNearestRestroom(
         record: Record,
         distanceMeters: Double,
-        scheduleMappingService: ScheduleMappingService? = null
+        isOpen: Boolean? = null
     ): NearestRestroomResponseDto {
         val lat = record.reqDouble("lat")
         val lon = record.reqDouble("lon")
@@ -151,20 +144,6 @@ object RestroomMapper {
                         line = line
                     )
                 stationDto
-            }
-
-        // Compute isOpen from schedule
-        val workTimeJson = record[RESTROOMS.WORK_TIME]?.toJsonObjectOrEmpty()
-        val isOpen =
-            if (workTimeJson != null && !workTimeJson.isEmpty() && scheduleMappingService != null) {
-                try {
-                    val schedule = scheduleMappingService.mapSchedule(ImportProvider.TWO_GIS, workTimeJson)
-                    ScheduleUtils.isOpenNow(schedule)
-                } catch (e: Exception) {
-                    null // If schedule parsing fails, return null
-                }
-            } else {
-                null
             }
 
         return NearestRestroomResponseDto(
