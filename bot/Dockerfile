@@ -1,5 +1,5 @@
 # Multi-stage build for lightweight production image
-FROM gradle:8.5-jdk17 AS builder
+FROM gradle:8.5-jdk21 AS builder
 
 # Set working directory
 WORKDIR /app
@@ -21,7 +21,7 @@ ENV SKIP_KTLINT=true
 RUN ./gradlew :bot:bootJar --no-daemon -x test -x ktlintCheck -x ktlintFormat
 
 # Production stage with lightweight JRE
-FROM eclipse-temurin:17-jre-jammy AS production
+FROM eclipse-temurin:21-jre-jammy AS production
 
 # Install necessary packages for production server
 RUN apt-get update && apt-get install -y \

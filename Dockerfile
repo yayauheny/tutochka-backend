@@ -1,5 +1,5 @@
 # Multi-stage build for lightweight production image
-FROM gradle:8.5-jdk17 AS builder
+FROM gradle:8.5-jdk21 AS builder
 
 # Set working directory
 WORKDIR /app
@@ -13,15 +13,16 @@ COPY build.gradle.kts settings.gradle.kts libs.versions.toml ./
 RUN ./gradlew dependencies --no-daemon
 
 # Copy source code
-COPY src/ src/
-COPY liquibase/ liquibase/
+COPY backend/src/ backend/src/
+COPY backend/liquibase/ backend/liquibase/
+COPY shared/src/ shared/src/
 
 # Build the application (skip ktlint for Docker build)
 ENV SKIP_KTLINT=true
-RUN ./gradlew build --no-daemon -x test -x ktlintCheck -x ktlintFormat -x ktlintKotlinScriptCheck -x ktlintMainSourceSetCheck -x ktlintTestSourceSetCheck
+RUN ./gradlew :backend:build --no-daemon -x test -x ktlintCheck -x ktlintFormat -x ktlintKotlinScriptCheck -x ktlintMainSourceSetCheck -x ktlintTestSourceSetCheck
 
 # Production stage with lightweight JRE
-FROM eclipse-temurin:17-jre-jammy AS production
+FROM eclipse-temurin:21-jre-jammy AS production
 
 # Install necessary packages for production server
 RUN apt-get update && apt-get install -y \
@@ -43,7 +44,7 @@ RUN groupadd -g 1001 appgroup && \
 WORKDIR /app
 
 # Copy the built JAR from builder stage
-COPY --from=builder /app/build/libs/tutochka-backend-*.jar app.jar
+COPY --from=builder /app/backend/build/libs/tutochka-backend-*.jar app.jar
 
 # Create logs directory
 RUN mkdir -p /app/logs && \

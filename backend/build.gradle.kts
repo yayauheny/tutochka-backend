@@ -186,6 +186,7 @@ val testsParallel = providers.gradleProperty("tests.parallel").get()
 val testsTagIntegration = providers.gradleProperty("tests.tags.integration").get()
 
 tasks.test {
+    dependsOn("generateJooq")
     useJUnitPlatform {
         excludeTags(testsTagIntegration)
     }
@@ -199,6 +200,7 @@ tasks.test {
 }
 
 tasks.register<Test>("integrationTest") {
+    dependsOn("generateJooq")
     description = "Runs integration tests."
     group = "verification"
     useJUnitPlatform {
@@ -335,7 +337,7 @@ tasks.named("build") {
 }
 
 tasks.named("compileKotlin") {
-    dependsOn("ktlintFormat")
+    dependsOn("ktlintFormat", "generateJooq")
 }
 
 val jacocoExcludes =
