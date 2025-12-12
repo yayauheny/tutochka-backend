@@ -1,7 +1,8 @@
 package by.yayauheny.tutochkatgbot.integration;
 
-import by.yayauheny.shared.dto.NearestRestroomResponseDto;
-import by.yayauheny.shared.enums.FeeType;
+import by.yayauheny.tutochkatgbot.dto.backend.NearestRestroomResponseDto;
+import by.yayauheny.tutochkatgbot.dto.backend.LatLon;
+import by.yayauheny.tutochkatgbot.dto.backend.FeeType;
 import by.yayauheny.tutochkatgbot.TutochkaTgBotApplication;
 import by.yayauheny.tutochkatgbot.bot.MessageSender;
 import by.yayauheny.tutochkatgbot.integration.WebBackendClient;
@@ -12,9 +13,9 @@ import org.mockito.ArgumentCaptor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
-import org.telegram.telegrambots.meta.api.objects.Chat;
-import org.telegram.telegrambots.meta.api.objects.Location;
-import org.telegram.telegrambots.meta.api.objects.Message;
+import org.telegram.telegrambots.meta.api.objects.chat.Chat;
+import org.telegram.telegrambots.meta.api.objects.location.Location;
+import org.telegram.telegrambots.meta.api.objects.message.Message;
 import org.telegram.telegrambots.meta.api.objects.Update;
 import org.telegram.telegrambots.meta.api.objects.User;
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.InlineKeyboardMarkup;
@@ -73,16 +74,22 @@ class LocationSearchIntegrationTest {
     private Update locationUpdate(double lat, double lon) {
         Update update = new Update();
         Message message = new Message();
-        Chat chat = new Chat();
-        chat.setId(123L);
+        Chat chat = Chat.builder()
+                .id(123L)
+                .type("private")
+                .build();
         message.setChat(chat);
         message.setMessageId(1);
-        User from = new User();
-        from.setId(10L);
+        User from = User.builder()
+                .id(10L)
+                .isBot(false)
+                .firstName("Test")
+                .build();
         message.setFrom(from);
-        Location location = new Location();
-        location.setLatitude(lat);
-        location.setLongitude(lon);
+        Location location = Location.builder()
+                .latitude(lat)
+                .longitude(lon)
+                .build();
         message.setLocation(location);
         update.setMessage(message);
         return update;
@@ -93,7 +100,7 @@ class LocationSearchIntegrationTest {
             java.util.UUID.randomUUID(),
             "Test restroom",
             "Test address",
-            new by.yayauheny.shared.dto.LatLon(53.9, 27.56),
+            new LatLon(53.9, 27.56),
             123.0,
             FeeType.FREE,
             true,

@@ -10,6 +10,7 @@ import by.yayauheny.tutochkatgbot.messages.Messages;
 import by.yayauheny.tutochkatgbot.service.FormatterService;
 import by.yayauheny.tutochkatgbot.service.SearchService;
 import by.yayauheny.tutochkatgbot.service.UserService;
+import org.springframework.core.annotation.Order;
 import org.springframework.stereotype.Component;
 import org.telegram.telegrambots.meta.api.objects.Update;
 
@@ -17,6 +18,7 @@ import org.telegram.telegrambots.meta.api.objects.Update;
  * Handler for back to list callback (b:list)
  */
 @Component
+@Order(2)
 public class BackToListCallback implements CallbackHandler {
     private final MessageSender sender;
     private final SearchService searchService;

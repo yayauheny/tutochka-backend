@@ -1,8 +1,8 @@
 package by.yayauheny.tutochkatgbot.cache;
 
-import by.yayauheny.shared.dto.LatLon;
-import by.yayauheny.shared.dto.NearestRestroomResponseDto;
-import by.yayauheny.shared.enums.FeeType;
+import by.yayauheny.tutochkatgbot.dto.backend.LatLon;
+import by.yayauheny.tutochkatgbot.dto.backend.NearestRestroomResponseDto;
+import by.yayauheny.tutochkatgbot.dto.backend.FeeType;
 import com.github.benmanes.caffeine.cache.Caffeine;
 import java.util.List;
 import java.util.Optional;
@@ -47,7 +47,7 @@ class CaffeineRestroomCacheServiceTest {
 
         Optional<NearestRestroomResponseDto> cached = service.getRestroomInfo(id);
         assertTrue(cached.isPresent());
-        assertEquals(restroom.getId(), cached.get().getId());
+        assertEquals(restroom.id(), cached.get().id());
 
         service.evictInfo();
         assertTrue(service.getRestroomInfo(id).isEmpty(), "Cache should be empty after eviction");

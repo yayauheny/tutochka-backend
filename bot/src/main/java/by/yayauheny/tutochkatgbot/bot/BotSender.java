@@ -3,9 +3,9 @@ package by.yayauheny.tutochkatgbot.bot;
 import by.yayauheny.tutochkatgbot.handler.UpdateContext;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Component;
-import org.telegram.telegrambots.meta.bots.AbsSender;
+import org.telegram.telegrambots.bots.TelegramWebhookBot;
+import org.telegram.telegrambots.meta.api.methods.AnswerCallbackQuery;
 import org.telegram.telegrambots.meta.api.methods.send.SendMessage;
 import org.telegram.telegrambots.meta.api.methods.updatingmessages.EditMessageText;
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.InlineKeyboardMarkup;
@@ -18,9 +18,9 @@ import org.telegram.telegrambots.meta.exceptions.TelegramApiException;
 @Component
 public class BotSender implements MessageSender {
     private static final Logger logger = LoggerFactory.getLogger(BotSender.class);
-    private final AbsSender bot;
+    private final TelegramWebhookBot bot;
 
-    public BotSender(@Qualifier("botAbsSender") AbsSender bot) {
+    public BotSender(TelegramWebhookBot bot) {
         this.bot = bot;
     }
 
@@ -143,5 +143,20 @@ public class BotSender implements MessageSender {
     @Override
     public void editMessage(EditMessageText message) throws TelegramApiException {
         bot.execute(message);
+    }
+    
+    @Override
+    public void answerCallbackQuery(String callbackQueryId, String text) {
+        try {
+            AnswerCallbackQuery answer = AnswerCallbackQuery.builder()
+                    .callbackQueryId(callbackQueryId)
+                    .text(text)
+                    .showAlert(text != null && text.length() > 200) // Show alert for long messages
+                    .build();
+            bot.execute(answer);
+            logger.debug("Answered callback query: {}", callbackQueryId);
+        } catch (TelegramApiException e) {
+            logger.error("Failed to answer callback query {}: {}", callbackQueryId, e.getMessage(), e);
+        }
     }
 }

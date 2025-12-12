@@ -11,15 +11,13 @@ java {
 }
 
 dependencies {
-    implementation(project(":backend"))
-    implementation(project(":shared"))
-
     implementation("org.springframework.boot:spring-boot-starter-validation")
     implementation("org.springframework.boot:spring-boot-starter-web")
     implementation("org.springframework.boot:spring-boot-starter-actuator")
     implementation("io.micrometer:micrometer-registry-prometheus")
     implementation(libs.caffeine)
-    implementation(libs.telegramBots)
+    implementation(libs.telegrambotsClient)
+    implementation(libs.telegrambotsWebhook)
     implementation(libs.resilience4jRetry)
     implementation("org.apache.httpcomponents.client5:httpclient5")
     implementation("org.apache.httpcomponents.core5:httpcore5")

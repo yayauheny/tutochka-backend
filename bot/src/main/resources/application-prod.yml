@@ -8,10 +8,8 @@ telegram:
     token: ${TELEGRAM_BOT_TOKEN}
 
 bot:
-  mode: ${BOT_MODE:POLLING}
-  auto-register: ${BOT_AUTO_REGISTER:false}
   webhook-path: ${BOT_WEBHOOK_PATH:/telegram/webhook}
-  webhook-public-url: ${BOT_WEBHOOK_PUBLIC_URL:}
+  async-processing: ${BOT_ASYNC_PROCESSING:true}
   admin:
     ids: ${BOT_ADMIN_IDS:}
 

@@ -3,12 +3,16 @@ package by.yayauheny.tutochkatgbot.router;
 import by.yayauheny.tutochkatgbot.bot.MessageSender;
 import by.yayauheny.tutochkatgbot.handler.*;
 import by.yayauheny.tutochkatgbot.messages.Messages;
+import by.yayauheny.tutochkatgbot.util.CommandUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.core.annotation.AnnotationAwareOrderComparator;
 import org.springframework.stereotype.Component;
+import org.telegram.telegrambots.meta.api.objects.Message;
 import org.telegram.telegrambots.meta.api.objects.Update;
 
 import java.util.List;
+import java.util.stream.Collectors;
 
 /**
  * Router for handling different types of updates
@@ -26,9 +30,16 @@ public class UpdateRouter {
                        List<CallbackHandler> callbackHandlers,
                        List<MessageHandler> messageHandlers,
                        MessageSender sender) {
-        this.commandHandlers = commandHandlers;
-        this.callbackHandlers = callbackHandlers;
-        this.messageHandlers = messageHandlers;
+        // Sort handlers by @Order annotation to ensure deterministic order
+        this.commandHandlers = commandHandlers.stream()
+                .sorted(AnnotationAwareOrderComparator.INSTANCE)
+                .collect(Collectors.toList());
+        this.callbackHandlers = callbackHandlers.stream()
+                .sorted(AnnotationAwareOrderComparator.INSTANCE)
+                .collect(Collectors.toList());
+        this.messageHandlers = messageHandlers.stream()
+                .sorted(AnnotationAwareOrderComparator.INSTANCE)
+                .collect(Collectors.toList());
         this.sender = sender;
     }
     
@@ -48,7 +59,8 @@ public class UpdateRouter {
             return;
         }
         
-        if (ctx.text() != null && ctx.text().startsWith("/")) {
+        // Check for commands using MessageEntity instead of startsWith("/")
+        if (update.hasMessage() && CommandUtils.isCommand(update.getMessage())) {
             handleCommand(update, ctx);
             return;
         }
@@ -60,6 +72,8 @@ public class UpdateRouter {
         String callbackData = ctx.callbackData();
         if (callbackData == null) {
             logger.warn("Callback query without data: {}", update.getCallbackQuery());
+            // Answer callback to remove spinner even if no data
+            sender.answerCallbackQuery(update.getCallbackQuery().getId(), null);
             return;
         }
         
@@ -68,24 +82,35 @@ public class UpdateRouter {
                 try {
                     logger.debug("Handling callback with handler: {}", handler.getClass().getSimpleName());
                     handler.handle(update, ctx);
+                    // Answer callback to remove spinner after successful handling
+                    sender.answerCallbackQuery(update.getCallbackQuery().getId(), null);
                     return;
                 } catch (Exception e) {
                     logger.error("Error in callback handler {}: {}", handler.getClass().getSimpleName(), e.getMessage(), e);
-                    sender.safeReply(ctx, Messages.SOMETHING_WENT_WRONG);
+                    // Answer callback with error message
+                    sender.answerCallbackQuery(update.getCallbackQuery().getId(), Messages.SOMETHING_WENT_WRONG);
                     return;
                 }
             }
         }
         
         logger.warn("No callback handler found for data: {}", callbackData);
-        sender.safeReply(ctx, "Действие недоступно. Попробуй ещё раз или начни с /start.");
+        // Answer callback to remove spinner
+        sender.answerCallbackQuery(update.getCallbackQuery().getId(), "Действие недоступно. Попробуй ещё раз или начни с /start.");
     }
     
     private void handleCommand(Update update, UpdateContext ctx) {
+        String command = CommandUtils.extractCommand(update.getMessage());
+        if (command == null) {
+            logger.warn("Could not extract command from message");
+            sender.safeReply(ctx, Messages.UNKNOWN_COMMAND);
+            return;
+        }
+        
         for (CommandHandler handler : commandHandlers) {
             if (handler.canHandle(update)) {
                 try {
-                    logger.debug("Handling command with handler: {}", handler.getClass().getSimpleName());
+                    logger.debug("Handling command {} with handler: {}", command, handler.getClass().getSimpleName());
                     handler.handle(update, ctx);
                     return;
                 } catch (Exception e) {
@@ -96,7 +121,7 @@ public class UpdateRouter {
             }
         }
         
-        logger.warn("No command handler found for: {}", ctx.text());
+        logger.warn("No command handler found for: {}", command);
         sender.safeReply(ctx, Messages.UNKNOWN_COMMAND);
     }
     
@@ -115,7 +140,11 @@ public class UpdateRouter {
             }
         }
         
+        // Different message for plain text vs unknown command
         logger.warn("No message handler found for update: {}", update);
-        sender.safeReply(ctx, Messages.UNKNOWN_COMMAND);
+        String fallbackMessage = CommandUtils.isCommand(update.getMessage()) 
+            ? Messages.UNKNOWN_COMMAND 
+            : Messages.UNKNOWN_MESSAGE;
+        sender.safeReply(ctx, fallbackMessage);
     }
 }

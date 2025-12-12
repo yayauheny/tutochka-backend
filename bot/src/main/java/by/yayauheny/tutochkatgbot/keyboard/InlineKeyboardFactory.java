@@ -1,16 +1,16 @@
 package by.yayauheny.tutochkatgbot.keyboard;
 
 import by.yayauheny.tutochkatgbot.callback.CallbackData;
-import by.yayauheny.shared.dto.NearestRestroomResponseDto;
-import by.yayauheny.shared.dto.RestroomResponseDto;
+import by.yayauheny.tutochkatgbot.dto.backend.NearestRestroomResponseDto;
+import by.yayauheny.tutochkatgbot.dto.backend.RestroomResponseDto;
 import by.yayauheny.tutochkatgbot.messages.Messages;
 import by.yayauheny.tutochkatgbot.service.FormatterService;
 import org.springframework.stereotype.Component;
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.InlineKeyboardMarkup;
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.buttons.InlineKeyboardButton;
+import org.telegram.telegrambots.meta.api.objects.replykeyboard.buttons.InlineKeyboardRow;
 
 import java.util.List;
-import java.util.Optional;
 
 /**
  * Factory for inline keyboards
@@ -29,9 +29,9 @@ public class InlineKeyboardFactory {
      * @return inline keyboard markup
      */
     public InlineKeyboardMarkup toiletList(List<NearestRestroomResponseDto> toilets) {
-        List<List<InlineKeyboardButton>> rows = toilets.stream()
+        List<InlineKeyboardRow> rows = toilets.stream()
             .map(this::createToiletButton)
-            .map(List::of)
+            .map(button -> new InlineKeyboardRow(List.of(button)))
             .toList();
         
         return InlineKeyboardMarkup.builder()
@@ -57,8 +57,8 @@ public class InlineKeyboardFactory {
         
         return InlineKeyboardMarkup.builder()
                 .keyboard(List.of(
-                    List.of(mapsButton),
-                    List.of(backButton)
+                    new InlineKeyboardRow(List.of(mapsButton)),
+                    new InlineKeyboardRow(List.of(backButton))
                 ))
                 .build();
     }
@@ -90,8 +90,8 @@ public class InlineKeyboardFactory {
         
         return InlineKeyboardMarkup.builder()
                 .keyboard(List.of(
-                    List.of(radius500, radius1km),
-                    List.of(radius2km, radius5km)
+                    new InlineKeyboardRow(List.of(radius500, radius1km)),
+                    new InlineKeyboardRow(List.of(radius2km, radius5km))
                 ))
                 .build();
     }
@@ -101,7 +101,7 @@ public class InlineKeyboardFactory {
         
         return InlineKeyboardButton.builder()
                 .text(buttonText)
-                .callbackData(CallbackData.detail(toilet.getId().toString()))
+                .callbackData(CallbackData.detail(toilet.id().toString()))
                 .build();
     }
 }

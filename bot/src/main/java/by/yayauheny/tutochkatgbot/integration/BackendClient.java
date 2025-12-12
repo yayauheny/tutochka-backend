@@ -1,7 +1,7 @@
 package by.yayauheny.tutochkatgbot.integration;
 
-import by.yayauheny.shared.dto.NearestRestroomResponseDto;
-import by.yayauheny.shared.dto.RestroomResponseDto;
+import by.yayauheny.tutochkatgbot.dto.backend.NearestRestroomResponseDto;
+import by.yayauheny.tutochkatgbot.dto.backend.RestroomResponseDto;
 
 import java.util.List;
 import java.util.Optional;

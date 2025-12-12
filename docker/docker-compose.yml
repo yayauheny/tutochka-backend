@@ -113,10 +113,7 @@ services:
       # Telegram Bot Configuration
       TELEGRAM_BOT_USERNAME: ${TELEGRAM_BOT_USERNAME}
       TELEGRAM_BOT_TOKEN: ${TELEGRAM_BOT_TOKEN}
-      BOT_MODE: ${BOT_MODE:-POLLING}
-      BOT_AUTO_REGISTER: ${BOT_AUTO_REGISTER:-false}
       BOT_WEBHOOK_PATH: ${BOT_WEBHOOK_PATH:-/telegram/webhook}
-      BOT_WEBHOOK_PUBLIC_URL: ${BOT_WEBHOOK_PUBLIC_URL:-}
       BOT_ADMIN_IDS: ${BOT_ADMIN_IDS:-}
       
       # Backend Configuration

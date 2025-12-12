@@ -36,9 +36,7 @@ DB_PASSWORD=your_secure_db_password
 # Telegram Bot
 TELEGRAM_BOT_USERNAME=your_bot_username
 TELEGRAM_BOT_TOKEN=your_bot_token_from_botfather
-BOT_MODE=WEBHOOK
 BOT_WEBHOOK_PATH=/telegram/webhook
-BOT_WEBHOOK_PUBLIC_URL=https://your-domain.com/telegram/webhook
 BOT_ADMIN_IDS=123456789,987654321  # Telegram user IDs через запятую
 
 # Backend

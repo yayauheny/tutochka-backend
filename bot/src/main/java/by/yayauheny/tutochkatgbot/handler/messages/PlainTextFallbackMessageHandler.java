@@ -4,6 +4,8 @@ import by.yayauheny.tutochkatgbot.bot.MessageSender;
 import by.yayauheny.tutochkatgbot.handler.MessageHandler;
 import by.yayauheny.tutochkatgbot.handler.UpdateContext;
 import by.yayauheny.tutochkatgbot.keyboard.ReplyKeyboardFactory;
+import by.yayauheny.tutochkatgbot.util.CommandUtils;
+import org.springframework.core.annotation.Order;
 import org.springframework.stereotype.Component;
 import org.telegram.telegrambots.meta.api.objects.Update;
 
@@ -11,6 +13,7 @@ import org.telegram.telegrambots.meta.api.objects.Update;
  * Fallback handler for unknown text messages
  */
 @Component
+@Order(2)  // Fallback should be checked last
 public class PlainTextFallbackMessageHandler implements MessageHandler {
     private final MessageSender sender;
     private final ReplyKeyboardFactory replyKeyboard;
@@ -22,7 +25,10 @@ public class PlainTextFallbackMessageHandler implements MessageHandler {
 
     @Override
     public boolean canHandle(Update update, UpdateContext ctx) {
-        return ctx.text() != null && !ctx.text().startsWith("/");
+        // Only handle plain text messages (not commands)
+        return ctx.text() != null && 
+               update.hasMessage() && 
+               !CommandUtils.isCommand(update.getMessage());
     }
 
     @Override

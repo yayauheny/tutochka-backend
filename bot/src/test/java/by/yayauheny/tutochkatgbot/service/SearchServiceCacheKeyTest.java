@@ -1,8 +1,8 @@
 package by.yayauheny.tutochkatgbot.service;
 
-import by.yayauheny.shared.dto.LatLon;
-import by.yayauheny.shared.dto.NearestRestroomResponseDto;
-import by.yayauheny.shared.enums.FeeType;
+import by.yayauheny.tutochkatgbot.dto.backend.LatLon;
+import by.yayauheny.tutochkatgbot.dto.backend.NearestRestroomResponseDto;
+import by.yayauheny.tutochkatgbot.dto.backend.FeeType;
 import by.yayauheny.tutochkatgbot.cache.CaffeineRestroomCacheService;
 import by.yayauheny.tutochkatgbot.cache.GeoKey;
 import by.yayauheny.tutochkatgbot.cache.RestroomCacheService;

@@ -7,6 +7,7 @@ import by.yayauheny.tutochkatgbot.handler.UpdateContext;
 import by.yayauheny.tutochkatgbot.service.UserService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.core.annotation.Order;
 import org.springframework.stereotype.Component;
 import org.telegram.telegrambots.meta.api.objects.Update;
 
@@ -14,6 +15,7 @@ import org.telegram.telegrambots.meta.api.objects.Update;
  * Handler for radius selection callbacks (r:<meters>)
  */
 @Component
+@Order(3)
 public class RadiusCallback implements CallbackHandler {
     private static final Logger logger = LoggerFactory.getLogger(RadiusCallback.class);
     private final MessageSender sender;

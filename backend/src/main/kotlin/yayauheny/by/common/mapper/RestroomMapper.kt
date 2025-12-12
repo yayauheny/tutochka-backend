@@ -1,19 +1,18 @@
 package yayauheny.by.common.mapper
 
-import java.time.Instant
-import org.jooq.Record
-import org.jooq.UpdateSetFirstStep
-import org.jooq.UpdateSetMoreStep
-import org.jooq.JSONB
+import by.yayauheny.shared.dto.BuildingResponseDto
 import by.yayauheny.shared.dto.LatLon
+import by.yayauheny.shared.dto.SubwayLineResponseDto
+import by.yayauheny.shared.dto.SubwayStationResponseDto
 import by.yayauheny.shared.enums.AccessibilityType
 import by.yayauheny.shared.enums.DataSourceType
 import by.yayauheny.shared.enums.FeeType
 import by.yayauheny.shared.enums.PlaceType
 import by.yayauheny.shared.enums.RestroomStatus
-import by.yayauheny.shared.dto.BuildingResponseDto
-import by.yayauheny.shared.dto.SubwayLineResponseDto
-import by.yayauheny.shared.dto.SubwayStationResponseDto
+import java.time.Instant
+import org.jooq.Record
+import org.jooq.UpdateSetFirstStep
+import org.jooq.UpdateSetMoreStep
 import yayauheny.by.model.restroom.NearestRestroomResponseDto
 import yayauheny.by.model.restroom.RestroomResponseDto
 import yayauheny.by.model.restroom.RestroomUpdateDto
@@ -94,7 +93,7 @@ object RestroomMapper {
                 val bLat = record.get("b_lat", Double::class.java)
                 val bLon = record.get("b_lon", Double::class.java)
                 val bTypeRaw = record.get("b_type", String::class.java)
-                val bAddress: String = record.get("final_address", String::class.java) ?: ""
+                val bAddress: String = record.get("b_address", String::class.java) ?: ""
                 val bType = PlaceType.fromString(bTypeRaw)
 
                 val buildingDto =

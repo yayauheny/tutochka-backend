@@ -5,12 +5,16 @@ import by.yayauheny.tutochkatgbot.cache.RestroomCacheService;
 import by.yayauheny.tutochkatgbot.config.AdminProperties;
 import by.yayauheny.tutochkatgbot.handler.CommandHandler;
 import by.yayauheny.tutochkatgbot.handler.UpdateContext;
+import by.yayauheny.tutochkatgbot.util.CommandUtils;
+import org.springframework.core.annotation.Order;
 import org.springframework.stereotype.Component;
+import org.telegram.telegrambots.meta.api.objects.Message;
 import org.telegram.telegrambots.meta.api.objects.Update;
 
 import java.util.Set;
 
 @Component
+@Order(4)  // Admin commands should be checked last
 public class AdminCacheEvictCommand implements CommandHandler {
     private static final String COMMAND_GEO = "/evict-geo";
     private static final String COMMAND_INFO = "/evict-info";
@@ -32,16 +36,17 @@ public class AdminCacheEvictCommand implements CommandHandler {
 
     @Override
     public boolean canHandle(Update update) {
-        if (!update.hasMessage() || update.getMessage().getText() == null) {
+        if (!update.hasMessage()) {
             return false;
         }
-        String text = update.getMessage().getText();
+        Message message = update.getMessage();
+        String command = CommandUtils.extractCommand(message);
         // Only handle if user is admin - otherwise let it be treated as unknown command
-        if (!(COMMAND_GEO.equals(text) || COMMAND_INFO.equals(text))) {
+        if (command == null || !(COMMAND_GEO.equals(command) || COMMAND_INFO.equals(command))) {
             return false;
         }
         // Check admin status - only handle if admin
-        long userId = update.getMessage().getFrom().getId();
+        long userId = message.getFrom().getId();
         return isAdmin(userId);
     }
 

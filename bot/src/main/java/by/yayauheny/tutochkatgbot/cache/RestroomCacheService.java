@@ -1,6 +1,6 @@
 package by.yayauheny.tutochkatgbot.cache;
 
-import by.yayauheny.shared.dto.NearestRestroomResponseDto;
+import by.yayauheny.tutochkatgbot.dto.backend.NearestRestroomResponseDto;
 
 import java.util.List;
 import java.util.Optional;

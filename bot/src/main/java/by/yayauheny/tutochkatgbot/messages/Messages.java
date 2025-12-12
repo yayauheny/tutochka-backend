@@ -51,6 +51,7 @@ public class Messages {
     public static final String INTERNAL_ERROR = "Произошла внутренняя ошибка. Попробуйте позже.";
     public static final String SOMETHING_WENT_WRONG = "Упс, что-то пошло не так. Попробуй ещё раз.";
     public static final String UNKNOWN_COMMAND = "Неизвестная команда. Напиши /help для помощи.";
+    public static final String UNKNOWN_MESSAGE = "Не понял, что ты имеешь в виду. Поделись геолокацией для поиска туалетов или используй /help для помощи.";
 
     public static final String TOILET_DETAILS = """
         <b>{name}</b>

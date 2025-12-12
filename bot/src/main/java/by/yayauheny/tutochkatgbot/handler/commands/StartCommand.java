@@ -5,13 +5,17 @@ import by.yayauheny.tutochkatgbot.handler.CommandHandler;
 import by.yayauheny.tutochkatgbot.handler.UpdateContext;
 import by.yayauheny.tutochkatgbot.keyboard.ReplyKeyboardFactory;
 import by.yayauheny.tutochkatgbot.messages.Messages;
+import by.yayauheny.tutochkatgbot.util.CommandUtils;
+import org.springframework.core.annotation.Order;
 import org.springframework.stereotype.Component;
+import org.telegram.telegrambots.meta.api.objects.Message;
 import org.telegram.telegrambots.meta.api.objects.Update;
 
 /**
  * Handler for /start command
  */
 @Component
+@Order(1)
 public class StartCommand implements CommandHandler {
     private final MessageSender sender;
     private final ReplyKeyboardFactory replyKeyboard;
@@ -28,7 +32,12 @@ public class StartCommand implements CommandHandler {
 
     @Override
     public boolean canHandle(Update update) {
-        return update.hasMessage() && "/start".equals(update.getMessage().getText());
+        if (!update.hasMessage()) {
+            return false;
+        }
+        Message message = update.getMessage();
+        String command = CommandUtils.extractCommand(message);
+        return "/start".equals(command);
     }
 
     @Override

@@ -1,6 +1,6 @@
 package by.yayauheny.tutochkatgbot.cache;
 
-import by.yayauheny.shared.dto.NearestRestroomResponseDto;
+import by.yayauheny.tutochkatgbot.dto.backend.NearestRestroomResponseDto;
 import com.github.benmanes.caffeine.cache.Cache;
 import org.springframework.stereotype.Service;
 

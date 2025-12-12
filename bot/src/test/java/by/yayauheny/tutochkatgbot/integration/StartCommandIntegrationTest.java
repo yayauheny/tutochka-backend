@@ -10,11 +10,14 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.TestPropertySource;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
-import org.telegram.telegrambots.meta.api.objects.Chat;
-import org.telegram.telegrambots.meta.api.objects.Message;
+import org.telegram.telegrambots.meta.api.objects.chat.Chat;
+import org.telegram.telegrambots.meta.api.objects.message.Message;
+import org.telegram.telegrambots.meta.api.objects.MessageEntity;
 import org.telegram.telegrambots.meta.api.objects.Update;
 import org.telegram.telegrambots.meta.api.objects.User;
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.ReplyKeyboardMarkup;
+
+import java.util.List;
 
 import static by.yayauheny.tutochkatgbot.messages.Messages.WELCOME_MESSAGE;
 import static org.assertj.core.api.Assertions.assertThat;
@@ -24,7 +27,8 @@ import static org.mockito.Mockito.verify;
 @TestPropertySource(properties = {
         "telegram.bot.username=test_bot",
         "telegram.bot.token=test_token",
-        "backend.base-url=http://localhost:9999"
+        "backend.base-url=http://localhost:9999",
+        "bot.async-processing=false"  // Disable async for tests to make them synchronous
 })
 class StartCommandIntegrationTest {
 
@@ -59,13 +63,26 @@ class StartCommandIntegrationTest {
         Update update = new Update();
         Message message = new Message();
         message.setText("/start");
-        Chat chat = new Chat();
-        chat.setId(123L);
+        
+        // Add MessageEntity for bot command to properly test command detection
+        MessageEntity commandEntity = MessageEntity.builder()
+                .type("bot_command")
+                .offset(0)
+                .length("/start".length())
+                .build();
+        message.setEntities(List.of(commandEntity));
+        
+        Chat chat = Chat.builder()
+                .id(123L)
+                .type("private")
+                .build();
         message.setChat(chat);
         message.setMessageId(1);
-        User from = new User();
-        from.setId(10L);
-        from.setFirstName("Test");
+        User from = User.builder()
+                .id(10L)
+                .isBot(false)
+                .firstName("Test")
+                .build();
         message.setFrom(from);
         update.setMessage(message);
         return update;

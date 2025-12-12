@@ -6,7 +6,8 @@ import by.yayauheny.tutochkatgbot.config.AdminProperties;
 import by.yayauheny.tutochkatgbot.handler.UpdateContext;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.telegram.telegrambots.meta.api.objects.Message;
+import org.telegram.telegrambots.meta.api.objects.message.Message;
+import org.telegram.telegrambots.meta.api.objects.MessageEntity;
 import org.telegram.telegrambots.meta.api.objects.Update;
 import org.telegram.telegrambots.meta.api.objects.User;
 
@@ -75,9 +76,18 @@ class AdminCacheEvictCommandTest {
         Update update = mock(Update.class);
         Message message = mock(Message.class);
         User user = mock(User.class);
+        
+        // Create MessageEntity for bot command
+        MessageEntity commandEntity = MessageEntity.builder()
+                .type("bot_command")
+                .offset(0)
+                .length(text.length())
+                .build();
+        
         when(update.hasMessage()).thenReturn(true);
         when(update.getMessage()).thenReturn(message);
         when(message.getText()).thenReturn(text);
+        when(message.getEntities()).thenReturn(List.of(commandEntity));
         when(message.getFrom()).thenReturn(user);
         when(user.getId()).thenReturn(userId);
         return update;

@@ -21,4 +21,11 @@ public interface MessageSender {
     void editOrReply(UpdateContext ctx, String text, InlineKeyboardMarkup inlineKeyboard);
     void editMessage(UpdateContext ctx, String text, InlineKeyboardMarkup inlineKeyboard);
     void safeReply(UpdateContext ctx, String errorMessage);
+    
+    /**
+     * Answer callback query to remove loading spinner
+     * @param callbackQueryId callback query ID
+     * @param text optional text to show to user (null for no text)
+     */
+    void answerCallbackQuery(String callbackQueryId, String text);
 }

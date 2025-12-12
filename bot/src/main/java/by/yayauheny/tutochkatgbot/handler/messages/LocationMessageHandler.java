@@ -9,6 +9,7 @@ import by.yayauheny.tutochkatgbot.messages.Messages;
 import by.yayauheny.tutochkatgbot.service.FormatterService;
 import by.yayauheny.tutochkatgbot.service.SearchService;
 import by.yayauheny.tutochkatgbot.service.UserService;
+import org.springframework.core.annotation.Order;
 import org.springframework.stereotype.Component;
 import org.telegram.telegrambots.meta.api.objects.Update;
 
@@ -16,6 +17,7 @@ import org.telegram.telegrambots.meta.api.objects.Update;
  * Handler for location messages
  */
 @Component
+@Order(1)  // Location handler should be checked before fallback
 public class LocationMessageHandler implements MessageHandler {
     private final MessageSender sender;
     private final SearchService searchService;

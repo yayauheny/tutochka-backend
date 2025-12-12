@@ -10,6 +10,7 @@ import by.yayauheny.tutochkatgbot.service.FormatterService;
 import by.yayauheny.tutochkatgbot.service.SearchService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.core.annotation.Order;
 import org.springframework.stereotype.Component;
 import org.telegram.telegrambots.meta.api.objects.Update;
 
@@ -17,6 +18,7 @@ import org.telegram.telegrambots.meta.api.objects.Update;
  * Handler for toilet detail callbacks (t:<id>)
  */
 @Component
+@Order(1)
 public class ToiletDetailCallback implements CallbackHandler {
     private static final Logger logger = LoggerFactory.getLogger(ToiletDetailCallback.class);
     private final MessageSender sender;

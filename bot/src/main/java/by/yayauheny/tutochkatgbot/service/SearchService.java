@@ -1,6 +1,6 @@
 package by.yayauheny.tutochkatgbot.service;
 
-import by.yayauheny.shared.dto.NearestRestroomResponseDto;
+import by.yayauheny.tutochkatgbot.dto.backend.NearestRestroomResponseDto;
 import by.yayauheny.tutochkatgbot.cache.GeoKey;
 import by.yayauheny.tutochkatgbot.cache.RestroomCacheService;
 import by.yayauheny.tutochkatgbot.integration.BackendClient;
@@ -48,9 +48,9 @@ public class SearchService {
         // Backend filters by distanceMeters, so we pass radiusMeters to optimize query
         var result = backend.findNearest(lat, lon, limit, radiusMeters);
 
-        var ids = result.stream().map(NearestRestroomResponseDto::getId).toList();
+        var ids = result.stream().map(NearestRestroomResponseDto::id).toList();
         cacheService.putNearestIds(key, ids);
-        result.forEach(dto -> cacheService.putRestroomInfo(dto.getId(), dto));
+        result.forEach(dto -> cacheService.putRestroomInfo(dto.id(), dto));
 
         // Backend already filters by distance, but we apply limit here as a safety measure
         return filterAndLimit(result, radiusMeters, limit);
@@ -61,14 +61,14 @@ public class SearchService {
      * @param id restroom ID
      * @return restroom details
      */
-    public Optional<by.yayauheny.shared.dto.RestroomResponseDto> getById(String id) {
+    public Optional<by.yayauheny.tutochkatgbot.dto.backend.RestroomResponseDto> getById(String id) {
         return backend.getById(id);
     }
 
     private List<NearestRestroomResponseDto> filterAndLimit(List<NearestRestroomResponseDto> source, int radiusMeters, int limit) {
         return source.stream()
-            .filter(r -> r.getDistanceMeters() <= radiusMeters)
-            .sorted(Comparator.comparingDouble(NearestRestroomResponseDto::getDistanceMeters))
+            .filter(r -> r.distanceMeters() <= radiusMeters)
+            .sorted(Comparator.comparingDouble(NearestRestroomResponseDto::distanceMeters))
             .limit(limit)
             .toList();
     }

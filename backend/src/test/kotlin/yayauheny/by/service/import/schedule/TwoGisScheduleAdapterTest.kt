@@ -1,5 +1,6 @@
 package yayauheny.by.service.import.schedule
 
+import java.time.LocalTime
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.buildJsonObject
 import kotlinx.serialization.json.jsonArray
@@ -11,7 +12,6 @@ import org.junit.jupiter.api.Test
 import yayauheny.by.model.import.ImportProvider
 import yayauheny.by.model.schedule.Schedule
 import yayauheny.by.model.schedule.Weekday
-import java.time.LocalTime
 
 class TwoGisScheduleAdapterTest {
     private val adapter = TwoGisScheduleAdapter()
@@ -221,7 +221,7 @@ class TwoGisScheduleAdapterTest {
     }
 
     @Test
-    fun `toSchedule handles 24:00 time correctly`() {
+    fun `toSchedule handles 24-00 time correctly`() {
         val jsonSchedule =
             buildJsonObject {
                 put(
@@ -250,7 +250,7 @@ class TwoGisScheduleAdapterTest {
     }
 
     @Test
-    fun `toSchedule handles partial day with 24:00 end time`() {
+    fun `toSchedule handles partial day with 24-00 end time`() {
         val jsonSchedule =
             buildJsonObject {
                 put(

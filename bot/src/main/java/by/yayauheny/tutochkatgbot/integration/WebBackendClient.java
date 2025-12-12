@@ -1,8 +1,8 @@
 package by.yayauheny.tutochkatgbot.integration;
 
 import by.yayauheny.tutochkatgbot.config.BackendProperties;
-import by.yayauheny.shared.dto.NearestRestroomResponseDto;
-import by.yayauheny.shared.dto.RestroomResponseDto;
+import by.yayauheny.tutochkatgbot.dto.backend.NearestRestroomResponseDto;
+import by.yayauheny.tutochkatgbot.dto.backend.RestroomResponseDto;
 import io.github.resilience4j.retry.Retry;
 import io.github.resilience4j.retry.RetryConfig;
 import io.github.resilience4j.retry.RetryRegistry;

@@ -5,13 +5,17 @@ import by.yayauheny.tutochkatgbot.handler.CommandHandler;
 import by.yayauheny.tutochkatgbot.handler.UpdateContext;
 import by.yayauheny.tutochkatgbot.keyboard.InlineKeyboardFactory;
 import by.yayauheny.tutochkatgbot.service.UserService;
+import by.yayauheny.tutochkatgbot.util.CommandUtils;
+import org.springframework.core.annotation.Order;
 import org.springframework.stereotype.Component;
+import org.telegram.telegrambots.meta.api.objects.Message;
 import org.telegram.telegrambots.meta.api.objects.Update;
 
 /**
  * Handler for /settings command
  */
 @Component
+@Order(3)
 public class SettingsCommand implements CommandHandler {
     private final MessageSender sender;
     private final UserService userService;
@@ -30,7 +34,12 @@ public class SettingsCommand implements CommandHandler {
 
     @Override
     public boolean canHandle(Update update) {
-        return update.hasMessage() && "/settings".equals(update.getMessage().getText());
+        if (!update.hasMessage()) {
+            return false;
+        }
+        Message message = update.getMessage();
+        String command = CommandUtils.extractCommand(message);
+        return "/settings".equals(command);
     }
 
     @Override
