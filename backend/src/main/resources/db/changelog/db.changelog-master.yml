@@ -20,3 +20,10 @@ databaseChangeLog:
         - sqlFile:
             path: migration/20251209_seed_initial_restrooms_minsk_2gis.sql
             relativeToChangelogFile: true
+  - changeSet:
+      id: update-subway-stations-for-restrooms
+      author: yayauheny
+      changes:
+        - sqlFile:
+            path: migration/20251210_update_subway_stations_for_restrooms.sql
+            relativeToChangelogFile: true

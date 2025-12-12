@@ -1,7 +1,7 @@
 package by.yayauheny.tutochkatgbot.keyboard;
 
 import by.yayauheny.tutochkatgbot.callback.CallbackData;
-import by.yayauheny.tutochkatgbot.dto.backend.NearestRestroomResponseDto;
+import by.yayauheny.tutochkatgbot.dto.backend.NearestRestroomSlimDto;
 import by.yayauheny.tutochkatgbot.dto.backend.RestroomResponseDto;
 import by.yayauheny.tutochkatgbot.messages.Messages;
 import by.yayauheny.tutochkatgbot.service.FormatterService;
@@ -23,7 +23,7 @@ public class InlineKeyboardFactory {
         this.formatterService = formatterService;
     }
 
-    public InlineKeyboardMarkup toiletList(List<NearestRestroomResponseDto> toilets) {
+    public InlineKeyboardMarkup toiletList(List<NearestRestroomSlimDto> toilets) {
         List<InlineKeyboardRow> rows = toilets.stream()
             .map(this::createToiletButton)
             .map(button -> new InlineKeyboardRow(List.of(button)))
@@ -82,7 +82,7 @@ public class InlineKeyboardFactory {
                 .build();
     }
 
-    private InlineKeyboardButton createToiletButton(NearestRestroomResponseDto toilet) {
+    private InlineKeyboardButton createToiletButton(NearestRestroomSlimDto toilet) {
         String buttonText = formatterService.toiletListItem(toilet);
         
         return InlineKeyboardButton.builder()

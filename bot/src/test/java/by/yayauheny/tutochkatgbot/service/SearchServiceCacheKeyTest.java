@@ -1,7 +1,7 @@
 package by.yayauheny.tutochkatgbot.service;
 
 import by.yayauheny.tutochkatgbot.dto.backend.LatLon;
-import by.yayauheny.tutochkatgbot.dto.backend.NearestRestroomResponseDto;
+import by.yayauheny.tutochkatgbot.dto.backend.NearestRestroomSlimDto;
 import by.yayauheny.tutochkatgbot.dto.backend.FeeType;
 import by.yayauheny.tutochkatgbot.cache.CaffeineRestroomCacheService;
 import by.yayauheny.tutochkatgbot.cache.GeoKey;
@@ -24,7 +24,8 @@ class SearchServiceCacheKeyTest {
 
     private final RestroomCacheService cacheService = new CaffeineRestroomCacheService(
         Caffeine.newBuilder().build(),
-        Caffeine.<UUID, NearestRestroomResponseDto>newBuilder().build()
+        Caffeine.<UUID, NearestRestroomSlimDto>newBuilder().build(),
+        Caffeine.newBuilder().build()
     );
 
     private final BackendClient backend = Mockito.mock(BackendClient.class);
@@ -33,7 +34,7 @@ class SearchServiceCacheKeyTest {
 
     @Test
     void cacheSeparatesByRadiusAndLimit() {
-        NearestRestroomResponseDto dto = sampleNearest();
+        NearestRestroomSlimDto dto = sampleNearest();
         when(backend.findNearest(anyDouble(), anyDouble(), anyInt(), anyInt()))
             .thenReturn(List.of(dto));
 
@@ -51,17 +52,13 @@ class SearchServiceCacheKeyTest {
         verify(backend, times(1)).findNearest(53.9, 27.56, 10, 1000);
     }
 
-    private NearestRestroomResponseDto sampleNearest() {
-        return new NearestRestroomResponseDto(
+    private NearestRestroomSlimDto sampleNearest() {
+        return new NearestRestroomSlimDto(
             UUID.randomUUID(),
             "Test",
-            "Addr",
-            new LatLon(53.9, 27.56),
             10.0,
             FeeType.FREE,
-            true,
-            null,
-            null,
+            new LatLon(53.9, 27.56),
             null
         );
     }

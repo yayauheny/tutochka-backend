@@ -1,8 +1,8 @@
 package yayauheny.by.repository
 
+import by.yayauheny.shared.dto.NearestRestroomSlimDto
 import java.util.UUID
 import yayauheny.by.config.ApiConstants
-import yayauheny.by.model.restroom.NearestRestroomResponseDto
 import yayauheny.by.model.restroom.RestroomCreateDto
 import yayauheny.by.model.restroom.RestroomResponseDto
 import yayauheny.by.model.restroom.RestroomUpdateDto
@@ -13,7 +13,7 @@ interface RestroomRepository : BaseRepository<RestroomResponseDto, RestroomCreat
         longitude: Double,
         limit: Int? = 5,
         distanceMeters: Int? = ApiConstants.DEFAULT_MAX_DISTANCE_METERS
-    ): List<NearestRestroomResponseDto>
+    ): List<NearestRestroomSlimDto>
 
     suspend fun findByCityId(
         cityId: UUID,

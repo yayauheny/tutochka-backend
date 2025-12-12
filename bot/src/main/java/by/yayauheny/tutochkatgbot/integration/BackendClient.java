@@ -1,6 +1,6 @@
 package by.yayauheny.tutochkatgbot.integration;
 
-import by.yayauheny.tutochkatgbot.dto.backend.NearestRestroomResponseDto;
+import by.yayauheny.tutochkatgbot.dto.backend.NearestRestroomSlimDto;
 import by.yayauheny.tutochkatgbot.dto.backend.RestroomResponseDto;
 
 import java.util.List;
@@ -17,9 +17,9 @@ public interface BackendClient {
      * @param lon longitude
      * @param limit maximum number of results
      * @param distanceMeters maximum distance in meters
-     * @return list of nearest restrooms
+     * @return list of nearest restrooms (slim DTO)
      */
-    List<NearestRestroomResponseDto> findNearest(double lat, double lon, int limit, int distanceMeters);
+    List<NearestRestroomSlimDto> findNearest(double lat, double lon, int limit, int distanceMeters);
     
     /**
      * Get restroom by ID

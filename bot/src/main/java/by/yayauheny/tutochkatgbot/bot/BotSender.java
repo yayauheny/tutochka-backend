@@ -41,6 +41,7 @@ public class BotSender implements MessageSender {
             SendMessage message = SendMessage.builder()
                     .chatId(String.valueOf(chatId))
                     .text(text)
+                    .parseMode("HTML")
                     .build();
             
             if (replyKeyboard != null) {
@@ -75,6 +76,7 @@ public class BotSender implements MessageSender {
                 .chatId(String.valueOf(ctx.chatId()))
                 .messageId(ctx.messageId())
                 .text(text)
+                .parseMode("HTML")
                 .build();
             
             if (inlineKeyboard != null) {

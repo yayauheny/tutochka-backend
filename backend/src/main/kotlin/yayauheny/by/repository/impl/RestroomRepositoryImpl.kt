@@ -17,7 +17,7 @@ import yayauheny.by.common.query.PaginationRequest
 import yayauheny.by.common.query.builder.QueryBuilder
 import yayauheny.by.common.query.builder.QueryExecutor
 import by.yayauheny.shared.enums.RestroomStatus
-import yayauheny.by.model.restroom.NearestRestroomResponseDto
+import by.yayauheny.shared.dto.NearestRestroomSlimDto
 import yayauheny.by.model.restroom.RestroomCreateDto
 import yayauheny.by.model.restroom.RestroomResponseDto
 import yayauheny.by.model.restroom.RestroomUpdateDto
@@ -33,7 +33,6 @@ import yayauheny.by.util.lonAlias
 import yayauheny.by.util.pointExpr
 import yayauheny.by.util.reqDouble
 import yayauheny.by.util.toJSONBOrEmpty
-import yayauheny.by.util.toJsonObjectOrEmpty
 import yayauheny.by.util.transactionSuspend
 import yayauheny.by.util.withinDistanceOf
 import yayauheny.by.config.ApiConstants
@@ -239,15 +238,66 @@ class RestroomRepositoryImpl(
 
     override suspend fun findById(id: UUID): RestroomResponseDto? =
         withContext(Dispatchers.IO) {
+            val b = BUILDINGS
+            val s = SUBWAY_STATIONS
+            val l = SUBWAY_LINES
+
+            // Enriched query: include building and subway station data
+            val selectFields =
+                getAllRestroomsFieldsWithCoordinates() +
+                    listOf(
+                        // Building fields
+                        b.ID.`as`("b_id"),
+                        b.CITY_ID.`as`("b_city_id"),
+                        b.NAME.`as`("b_name"),
+                        b.ADDRESS.`as`("b_address"),
+                        b.BUILDING_TYPE.`as`("b_type"),
+                        b.WORK_TIME.`as`("b_work_time"),
+                        b.COORDINATES.latAlias().`as`("b_lat"),
+                        b.COORDINATES.lonAlias().`as`("b_lon"),
+                        b.EXTERNAL_IDS.`as`("b_external_ids"),
+                        b.IS_DELETED.`as`("b_is_deleted"),
+                        b.CREATED_AT.`as`("b_created_at"),
+                        b.UPDATED_AT.`as`("b_updated_at"),
+                        // Subway station fields
+                        s.ID.`as`("s_id"),
+                        s.NAME_RU.`as`("s_name_ru"),
+                        s.NAME_EN.`as`("s_name_en"),
+                        s.NAME_LOCAL.`as`("s_name_local"),
+                        s.NAME_LOCAL_LANG.`as`("s_name_local_lang"),
+                        s.IS_TRANSFER.`as`("s_is_transfer"),
+                        s.COORDINATES.latAlias().`as`("s_lat"),
+                        s.COORDINATES.lonAlias().`as`("s_lon"),
+                        s.IS_DELETED.`as`("s_is_deleted"),
+                        s.CREATED_AT.`as`("s_created_at"),
+                        // Subway line fields
+                        l.ID.`as`("l_id"),
+                        l.CITY_ID.`as`("l_city_id"),
+                        l.NAME_RU.`as`("l_name_ru"),
+                        l.NAME_EN.`as`("l_name_en"),
+                        l.HEX_COLOR.`as`("l_hex"),
+                        l.IS_DELETED.`as`("l_is_deleted"),
+                        l.CREATED_AT.`as`("l_created_at")
+                    )
+
             ctx
-                .select(*getAllRestroomsFieldsWithCoordinates().toTypedArray())
+                .select(*selectFields.toTypedArray())
                 .from(RESTROOMS)
+                .leftJoin(b)
+                .on(RESTROOMS.BUILDING_ID.eq(b.ID).and(b.IS_DELETED.isFalse))
+                .leftJoin(s)
+                .on(RESTROOMS.SUBWAY_STATION_ID.eq(s.ID).and(s.IS_DELETED.isFalse))
+                .leftJoin(l)
+                .on(s.SUBWAY_LINE_ID.eq(l.ID).and(l.IS_DELETED.isFalse))
                 .where(
                     RESTROOMS.ID
                         .eq(id)
                         .and(RESTROOMS.IS_DELETED.isFalse)
                 ).fetchOne()
-                ?.map { RestroomMapper.mapFromRecord(it) }
+                ?.let { record ->
+                    // Use enriched mapper that includes building and subway
+                    RestroomMapper.mapFromRecordEnriched(record)
+                }
         }
 
     private fun buildInsertQuery(
@@ -337,7 +387,7 @@ class RestroomRepositoryImpl(
         longitude: Double,
         limit: Int?,
         distanceMeters: Int?
-    ): List<NearestRestroomResponseDto> =
+    ): List<NearestRestroomSlimDto> =
         withContext(Dispatchers.IO) {
             val maxDistance = (distanceMeters ?: ApiConstants.DEFAULT_MAX_DISTANCE_METERS).toDouble()
             val coordinateFields = getRestroomsCoordinateFields()
@@ -347,48 +397,41 @@ class RestroomRepositoryImpl(
             val s = SUBWAY_STATIONS
             val l = SUBWAY_LINES
 
+            // Slim query: only fields needed for list display
+            // Restroom: id, name, fee_type, coordinates
+            // Building: name, address (for displayName fallback)
+            // Subway: name_ru, name_en, name_local, name_local_lang, line hex_color
             val selectFields =
-                getAllRestroomsFieldsExceptCoordinates() +
+                listOf(
+                    RESTROOMS.ID,
+                    RESTROOMS.NAME,
+                    RESTROOMS.FEE_TYPE
+                ) +
                     coordinateFields +
                     distanceField.`as`("distance") +
                     listOf(
-                        b.ID.`as`("b_id"),
-                        b.CITY_ID.`as`("b_city_id"),
+                        // Building fields for displayName fallback
                         b.NAME.`as`("b_name"),
                         b.ADDRESS.`as`("b_address"),
-                        b.BUILDING_TYPE.`as`("b_type"),
-                        b.WORK_TIME.`as`("b_work_time"),
-                        b.COORDINATES.latAlias().`as`("b_lat"),
-                        b.COORDINATES.lonAlias().`as`("b_lon"),
-                        b.EXTERNAL_IDS.`as`("b_external_ids"),
-                        b.IS_DELETED.`as`("b_is_deleted"),
-                        b.CREATED_AT.`as`("b_created_at"),
-                        b.UPDATED_AT.`as`("b_updated_at"),
+                        // Subway station fields for list display
                         s.ID.`as`("s_id"),
                         s.NAME_RU.`as`("s_name_ru"),
                         s.NAME_EN.`as`("s_name_en"),
-                        s.COORDINATES.latAlias().`as`("s_lat"),
-                        s.COORDINATES.lonAlias().`as`("s_lon"),
-                        s.IS_DELETED.`as`("s_is_deleted"),
-                        s.CREATED_AT.`as`("s_created_at"),
-                        l.ID.`as`("l_id"),
-                        l.CITY_ID.`as`("l_city_id"),
-                        l.NAME_RU.`as`("l_name_ru"),
-                        l.NAME_EN.`as`("l_name_en"),
-                        l.HEX_COLOR.`as`("l_hex"),
-                        l.IS_DELETED.`as`("l_is_deleted"),
-                        l.CREATED_AT.`as`("l_created_at")
+                        s.NAME_LOCAL.`as`("s_name_local"),
+                        s.NAME_LOCAL_LANG.`as`("s_name_local_lang"),
+                        // Subway line color for emoji
+                        l.HEX_COLOR.`as`("l_hex")
                     )
 
             ctx
                 .select(*selectFields.toTypedArray())
                 .from(RESTROOMS)
                 .leftJoin(b)
-                .on(RESTROOMS.BUILDING_ID.eq(b.ID))
+                .on(RESTROOMS.BUILDING_ID.eq(b.ID).and(b.IS_DELETED.isFalse))
                 .leftJoin(s)
-                .on(RESTROOMS.SUBWAY_STATION_ID.eq(s.ID))
+                .on(RESTROOMS.SUBWAY_STATION_ID.eq(s.ID).and(s.IS_DELETED.isFalse))
                 .leftJoin(l)
-                .on(s.SUBWAY_LINE_ID.eq(l.ID))
+                .on(s.SUBWAY_LINE_ID.eq(l.ID).and(l.IS_DELETED.isFalse))
                 .where(
                     RESTROOMS.COORDINATES
                         .withinDistanceOf(latitude, longitude, maxDistance)
@@ -399,10 +442,7 @@ class RestroomRepositoryImpl(
                 .fetch()
                 .map { record ->
                     val distance = record.reqDouble("distance")
-                    val workTimeJson = record[RESTROOMS.WORK_TIME]?.toJsonObjectOrEmpty()
-                    val isOpen = computeIsOpen(record[RESTROOMS.ID], workTimeJson)
-
-                    RestroomMapper.mapToNearestRestroom(record, distance, isOpen)
+                    RestroomMapper.mapToNearestRestroomSlim(record, distance)
                 }
         }
 

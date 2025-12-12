@@ -18,6 +18,7 @@ import java.util.Set;
 public class AdminCacheEvictCommand implements CommandHandler {
     private static final String COMMAND_GEO = "/evict-geo";
     private static final String COMMAND_INFO = "/evict-info";
+    private static final String COMMAND_DETAIL = "/evict-detail";
 
     private final RestroomCacheService cacheService;
     private final MessageSender sender;
@@ -41,7 +42,7 @@ public class AdminCacheEvictCommand implements CommandHandler {
         }
         Message message = update.getMessage();
         String command = CommandUtils.extractCommand(message);
-        if (command == null || !(COMMAND_GEO.equals(command) || COMMAND_INFO.equals(command))) {
+        if (command == null || !(COMMAND_GEO.equals(command) || COMMAND_INFO.equals(command) || COMMAND_DETAIL.equals(command))) {
             return false;
         }
         long userId = message.getFrom().getId();
@@ -60,6 +61,12 @@ public class AdminCacheEvictCommand implements CommandHandler {
         if (COMMAND_INFO.equals(command)) {
             cacheService.evictInfo();
             sender.sendText(ctx.chatId(), "Кэш информации о туалетах очищен.");
+            return;
+        }
+
+        if (COMMAND_DETAIL.equals(command)) {
+            cacheService.evictDetail();
+            sender.sendText(ctx.chatId(), "Кэш детальных карточек туалетов очищен.");
             return;
         }
 

@@ -4,16 +4,19 @@ import java.util.Objects;
 
 /**
  * Immutable key for geo-based cache entries.
+ * Coordinates are rounded to 6 decimal places (~10cm precision) to prevent cache misses due to floating point precision.
  */
 public final class GeoKey {
+    private static final double COORDINATE_PRECISION = 1_000_000.0; // 6 decimal places
+    
     private final double latitude;
     private final double longitude;
     private final int radius;
     private final int limit;
 
     public GeoKey(double latitude, double longitude, int radius, int limit) {
-        this.latitude = latitude;
-        this.longitude = longitude;
+        this.latitude = Math.round(latitude * COORDINATE_PRECISION) / COORDINATE_PRECISION;
+        this.longitude = Math.round(longitude * COORDINATE_PRECISION) / COORDINATE_PRECISION;
         this.radius = radius;
         this.limit = limit;
     }

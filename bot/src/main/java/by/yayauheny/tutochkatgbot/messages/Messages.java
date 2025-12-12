@@ -58,7 +58,7 @@ public class Messages {
         %s {address}
         
         %s Тип: {placeType}
-        {feeIcon} Оплата: {feeText}
+        {feeIcon} Оплата: {feeText}{paymentMethods}
         %s Доступность: {accessibility}
         
         %s Время работы:

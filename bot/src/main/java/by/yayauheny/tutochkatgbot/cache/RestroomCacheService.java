@@ -1,6 +1,7 @@
 package by.yayauheny.tutochkatgbot.cache;
 
-import by.yayauheny.tutochkatgbot.dto.backend.NearestRestroomResponseDto;
+import by.yayauheny.tutochkatgbot.dto.backend.NearestRestroomSlimDto;
+import by.yayauheny.tutochkatgbot.dto.backend.RestroomResponseDto;
 
 import java.util.List;
 import java.util.Optional;
@@ -11,11 +12,23 @@ public interface RestroomCacheService {
 
     void putNearestIds(GeoKey key, List<UUID> ids);
 
-    Optional<NearestRestroomResponseDto> getRestroomInfo(UUID id);
+    /**
+     * Get restroom info from cache (slim DTO for list display)
+     */
+    Optional<NearestRestroomSlimDto> getRestroomInfo(UUID id);
 
-    void putRestroomInfo(UUID id, NearestRestroomResponseDto dto);
+    /**
+     * Put restroom info to cache (slim DTO for list display)
+     */
+    void putRestroomInfo(UUID id, NearestRestroomSlimDto dto);
+
+    Optional<RestroomResponseDto> getRestroomDetail(UUID id);
+
+    void putRestroomDetail(UUID id, RestroomResponseDto dto);
 
     void evictGeo();
 
     void evictInfo();
+    
+    void evictDetail();
 }

@@ -1,7 +1,7 @@
 package by.yayauheny.tutochkatgbot.cache;
 
 import by.yayauheny.tutochkatgbot.dto.backend.LatLon;
-import by.yayauheny.tutochkatgbot.dto.backend.NearestRestroomResponseDto;
+import by.yayauheny.tutochkatgbot.dto.backend.NearestRestroomSlimDto;
 import by.yayauheny.tutochkatgbot.dto.backend.FeeType;
 import com.github.benmanes.caffeine.cache.Caffeine;
 import java.util.List;
@@ -16,7 +16,8 @@ class CaffeineRestroomCacheServiceTest {
 
     private final CaffeineRestroomCacheService service = new CaffeineRestroomCacheService(
             Caffeine.newBuilder().build(),
-            Caffeine.<UUID, NearestRestroomResponseDto>newBuilder().build()
+            Caffeine.<UUID, NearestRestroomSlimDto>newBuilder().build(),
+            Caffeine.newBuilder().build()
     );
 
     @Test
@@ -39,13 +40,13 @@ class CaffeineRestroomCacheServiceTest {
     @Test
     void infoCacheShouldStoreAndRetrieveRestroom() {
         UUID id = UUID.randomUUID();
-        NearestRestroomResponseDto restroom = sampleRestroom(id);
+        NearestRestroomSlimDto restroom = sampleRestroom(id);
 
         assertTrue(service.getRestroomInfo(id).isEmpty(), "Cache should be empty initially");
 
         service.putRestroomInfo(id, restroom);
 
-        Optional<NearestRestroomResponseDto> cached = service.getRestroomInfo(id);
+        Optional<NearestRestroomSlimDto> cached = service.getRestroomInfo(id);
         assertTrue(cached.isPresent());
         assertEquals(restroom.id(), cached.get().id());
 
@@ -53,17 +54,13 @@ class CaffeineRestroomCacheServiceTest {
         assertTrue(service.getRestroomInfo(id).isEmpty(), "Cache should be empty after eviction");
     }
 
-    private NearestRestroomResponseDto sampleRestroom(UUID id) {
-        return new NearestRestroomResponseDto(
+    private NearestRestroomSlimDto sampleRestroom(UUID id) {
+        return new NearestRestroomSlimDto(
                 id,
                 "Test",
-                "Test address",
-                new LatLon(53.9, 27.56),
                 12.3,
                 FeeType.FREE,
-                true,
-                null,
-                null,
+                new LatLon(53.9, 27.56),
                 null
         );
     }

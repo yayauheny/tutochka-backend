@@ -1,6 +1,6 @@
 package by.yayauheny.tutochkatgbot.integration;
 
-import by.yayauheny.tutochkatgbot.dto.backend.NearestRestroomResponseDto;
+import by.yayauheny.tutochkatgbot.dto.backend.NearestRestroomSlimDto;
 import by.yayauheny.tutochkatgbot.dto.backend.LatLon;
 import by.yayauheny.tutochkatgbot.dto.backend.FeeType;
 import by.yayauheny.tutochkatgbot.TutochkaTgBotApplication;
@@ -95,17 +95,13 @@ class LocationSearchIntegrationTest {
         return update;
     }
 
-    private NearestRestroomResponseDto sampleNearest() {
-        return new NearestRestroomResponseDto(
+    private NearestRestroomSlimDto sampleNearest() {
+        return new NearestRestroomSlimDto(
             java.util.UUID.randomUUID(),
             "Test restroom",
-            "Test address",
-            new LatLon(53.9, 27.56),
             123.0,
             FeeType.FREE,
-            true,
-            null,
-            null,
+            new LatLon(53.9, 27.56),
             null
         );
     }

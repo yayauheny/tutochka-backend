@@ -1,7 +1,7 @@
 package by.yayauheny.tutochkatgbot.integration;
 
 import by.yayauheny.tutochkatgbot.config.BackendProperties;
-import by.yayauheny.tutochkatgbot.dto.backend.NearestRestroomResponseDto;
+import by.yayauheny.tutochkatgbot.dto.backend.NearestRestroomSlimDto;
 import by.yayauheny.tutochkatgbot.dto.backend.RestroomResponseDto;
 import io.github.resilience4j.retry.Retry;
 import io.github.resilience4j.retry.RetryConfig;
@@ -51,8 +51,8 @@ public class WebBackendClient implements BackendClient {
     }
 
     @Override
-    public List<NearestRestroomResponseDto> findNearest(double lat, double lon, int limit, int distanceMeters) {
-        NearestRestroomResponseDto[] array =
+    public List<NearestRestroomSlimDto> findNearest(double lat, double lon, int limit, int distanceMeters) {
+        NearestRestroomSlimDto[] array =
             withRetry(() ->
                 client.get()
                     .uri(uri -> uri.path("/restrooms/nearest")
@@ -63,7 +63,7 @@ public class WebBackendClient implements BackendClient {
                         .build())
                     .accept(MediaType.APPLICATION_JSON)
                     .retrieve()
-                    .body(NearestRestroomResponseDto[].class)
+                    .body(NearestRestroomSlimDto[].class)
             );
         return array == null ? List.of() : Arrays.asList(array);
     }

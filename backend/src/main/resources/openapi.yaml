@@ -550,7 +550,7 @@ paths:
               schema:
                 type: array
                 items:
-                  $ref: '#/components/schemas/NearestRestroomResponseDto'
+                  $ref: '#/components/schemas/NearestRestroomSlimDto'
         '400':
           description: Missing or invalid coordinates
           content:
@@ -744,6 +744,7 @@ components:
 
     RestroomResponseDto:
       type: object
+      description: Enriched restroom details DTO with building and subway station information
       properties:
         id:
           type: string
@@ -753,12 +754,17 @@ components:
           type: string
           format: uuid
           description: City ID (optional)
+        buildingId:
+          type: string
+          format: uuid
+          description: Building ID (optional)
+        subwayStationId:
+          type: string
+          format: uuid
+          description: Subway station ID (optional)
         name:
           type: string
           description: Restroom name (optional)
-        description:
-          type: string
-          description: Restroom description (optional)
         address:
           type: string
           description: Restroom address
@@ -767,23 +773,28 @@ components:
           description: Phone numbers as JSON object (optional)
         workTime:
           type: object
-          description: Working hours as JSON object (optional)
+          description: Working hours as JSON object (optional). If inheritBuildingSchedule is true, building.workTime should be used.
         feeType:
           type: string
           enum: [FREE, PAID]
           description: Fee type
         accessibilityType:
           type: string
-          enum: [MEN, WOMEN, UNISEX, FAMILY, DISABLED]
+          enum: [MEN, WOMEN, UNISEX, FAMILY, DISABLED, NONE]
           description: Accessibility type
-        lat:
-          type: number
-          format: double
-          description: Latitude
-        lon:
-          type: number
-          format: double
-          description: Longitude
+        placeType:
+          type: string
+          description: Place type
+        coordinates:
+          type: object
+          description: Geographic coordinates
+          properties:
+            lat:
+              type: number
+              format: double
+            lon:
+              type: number
+              format: double
         dataSource:
           type: string
           enum: [MANUAL, USER, API, IMPORT]
@@ -794,16 +805,22 @@ components:
           description: Restroom status
         amenities:
           type: object
-          description: Amenities as JSON object
-        parentPlaceName:
+          description: Amenities as JSON object. May contain payment_methods array.
+        externalMaps:
+          type: object
+          description: External maps references as JSON object
+        accessNote:
           type: string
-          description: Parent place name (e.g., shopping mall, restaurant)
-        parentPlaceType:
+          description: Access note (optional)
+        directionGuide:
           type: string
-          description: Parent place type
-        inheritParentSchedule:
+          description: Direction guide (optional)
+        inheritBuildingSchedule:
           type: boolean
-          description: Whether to inherit parent place schedule
+          description: Whether to inherit building schedule. If true, use building.workTime.
+        hasPhotos:
+          type: boolean
+          description: Whether restroom has photos
         createdAt:
           type: string
           format: date-time
@@ -812,81 +829,63 @@ components:
           type: string
           format: date-time
           description: Last update timestamp
+        building:
+          $ref: '#/components/schemas/BuildingResponseDto'
+          description: Building information (optional, included when buildingId is present)
+        subwayStation:
+          $ref: '#/components/schemas/SubwayStationResponseDto'
+          description: Subway station information (optional, included when subwayStationId is present)
 
-    NearestRestroomResponseDto:
+    NearestRestroomSlimDto:
       type: object
+      description: Slim DTO for nearest restrooms list. Contains only fields necessary for list UI and caching.
+      required:
+        - id
+        - displayName
+        - distanceMeters
+        - feeType
+        - coordinates
       properties:
         id:
           type: string
           format: uuid
           description: Unique identifier
-        cityId:
+        displayName:
           type: string
-          format: uuid
-          description: City ID (optional)
-        name:
-          type: string
-          description: Restroom name (optional)
-        description:
-          type: string
-          description: Restroom description (optional)
-        address:
-          type: string
-          description: Restroom address
-        phones:
-          type: object
-          description: Phone numbers as JSON object (optional)
-        workTime:
-          type: object
-          description: Working hours as JSON object (optional)
+          description: Display name for the restroom. Computed as restroom.name ?: building.displayName ?: "Туалет"
+        distanceMeters:
+          type: number
+          format: double
+          description: Distance from search point in meters
         feeType:
           type: string
           enum: [FREE, PAID]
           description: Fee type
-        accessibilityType:
-          type: string
-          enum: [MEN, WOMEN, UNISEX, FAMILY, DISABLED]
-          description: Accessibility type
-        lat:
-          type: number
-          format: double
-          description: Latitude
-        lon:
-          type: number
-          format: double
-          description: Longitude
-        dataSource:
-          type: string
-          enum: [MANUAL, USER, API, IMPORT]
-          description: Data source
-        status:
-          type: string
-          enum: [ACTIVE, INACTIVE, PENDING, TEMP_CLOSED]
-          description: Restroom status
-        amenities:
+        coordinates:
           type: object
-          description: Amenities as JSON object
-        parentPlaceName:
-          type: string
-          description: Parent place name (e.g., shopping mall, restaurant)
-        parentPlaceType:
-          type: string
-          description: Parent place type
-        inheritParentSchedule:
-          type: boolean
-          description: Whether to inherit parent place schedule
-        createdAt:
-          type: string
-          format: date-time
-          description: Creation timestamp
-        updatedAt:
-          type: string
-          format: date-time
-          description: Last update timestamp
-        distanceMeters:
-          type: integer
-          format: int32
-          description: Distance from search point in meters
+          description: Geographic coordinates
+          required:
+            - lat
+            - lon
+          properties:
+            lat:
+              type: number
+              format: double
+              description: Latitude
+            lon:
+              type: number
+              format: double
+              description: Longitude
+        subwayStation:
+          type: object
+          description: Minimal subway station info for list display (optional)
+          properties:
+            displayName:
+              type: string
+              description: Localized display name (preferred ru, fallback en/local)
+            lineColorHex:
+              type: string
+              description: Line color hex code for emoji mapping (optional)
 
     PageResponseCountry:
       type: object
@@ -971,6 +970,111 @@ components:
         last:
           type: boolean
           description: Is last page
+
+    BuildingResponseDto:
+      type: object
+      description: Building information DTO
+      properties:
+        id:
+          type: string
+          format: uuid
+        cityId:
+          type: string
+          format: uuid
+        name:
+          type: string
+          description: Building name (optional)
+        address:
+          type: string
+        buildingType:
+          type: string
+          description: Building type
+        workTime:
+          type: object
+          description: Working hours as JSON object (optional)
+        coordinates:
+          type: object
+          properties:
+            lat:
+              type: number
+              format: double
+            lon:
+              type: number
+              format: double
+        externalIds:
+          type: object
+          description: External IDs as JSON object (optional)
+        isDeleted:
+          type: boolean
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+
+    SubwayStationResponseDto:
+      type: object
+      description: Subway station information DTO
+      properties:
+        id:
+          type: string
+          format: uuid
+        subwayLineId:
+          type: string
+          format: uuid
+        nameRu:
+          type: string
+        nameEn:
+          type: string
+        nameLocal:
+          type: string
+          description: Local name (optional)
+        nameLocalLang:
+          type: string
+          description: Local name language (optional)
+        isTransfer:
+          type: boolean
+        coordinates:
+          type: object
+          properties:
+            lat:
+              type: number
+              format: double
+            lon:
+              type: number
+              format: double
+        isDeleted:
+          type: boolean
+        createdAt:
+          type: string
+          format: date-time
+        line:
+          $ref: '#/components/schemas/SubwayLineResponseDto'
+          description: Subway line information (optional)
+
+    SubwayLineResponseDto:
+      type: object
+      description: Subway line information DTO
+      properties:
+        id:
+          type: string
+          format: uuid
+        cityId:
+          type: string
+          format: uuid
+        nameRu:
+          type: string
+        nameEn:
+          type: string
+        hexColor:
+          type: string
+          description: Line color in hex format
+        isDeleted:
+          type: boolean
+        createdAt:
+          type: string
+          format: date-time
 
     ErrorResponse:
       type: object
