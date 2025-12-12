@@ -399,8 +399,6 @@ class RestroomRepositoryImpl(
                 .fetch()
                 .map { record ->
                     val distance = record.reqDouble("distance")
-
-                    // Compute isOpen from schedule
                     val workTimeJson = record[RESTROOMS.WORK_TIME]?.toJsonObjectOrEmpty()
                     val isOpen = computeIsOpen(record[RESTROOMS.ID], workTimeJson)
 
@@ -452,9 +450,6 @@ class RestroomRepositoryImpl(
                 ?.let { RestroomMapper.mapFromRecord(it) }
         }
 
-    /**
-     * Compute isOpen status from workTime schedule
-     */
     private fun computeIsOpen(
         restroomId: UUID?,
         workTimeJson: kotlinx.serialization.json.JsonObject?

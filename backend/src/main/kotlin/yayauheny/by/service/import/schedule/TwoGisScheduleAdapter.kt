@@ -34,7 +34,6 @@ class TwoGisScheduleAdapter : ScheduleAdapter {
 
         val is24x7 =
             (rawSchedule["is_24x7"] as? JsonPrimitive)?.let { prim ->
-                // Try boolean first, then check if it's "1" as string/int
                 when {
                     prim.content == "true" -> true
                     prim.content == "false" -> false
@@ -46,7 +45,6 @@ class TwoGisScheduleAdapter : ScheduleAdapter {
 
         val days = EnumMap<Weekday, DaySchedule>(Weekday::class.java)
 
-        // Parse each day of the week
         val dayKeys = listOf("Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun")
 
         for (dayKey in dayKeys) {
@@ -94,12 +92,9 @@ class TwoGisScheduleAdapter : ScheduleAdapter {
         }
     }
 
-    /**
-     * Parse time string, handling special case "24:00" which represents end of day (midnight)
-     */
     private fun parseTimeOrNull(value: String): LocalTime? {
         return if (value == "24:00") {
-            LocalTime.MIDNIGHT // Treat as end of day
+            LocalTime.MIDNIGHT
         } else {
             try {
                 LocalTime.parse(value)
