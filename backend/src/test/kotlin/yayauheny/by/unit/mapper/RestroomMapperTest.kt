@@ -224,7 +224,7 @@ class RestroomMapperTest {
             every { mockRecord[RESTROOMS.ADDRESS] } returns testAddress
             every { mockRecord[RESTROOMS.FEE_TYPE] } returns testFeeType.name
 
-            val result = RestroomMapper.mapToNearestRestroom(mockRecord, testDistance)
+            val result = RestroomMapper.mapToNearestRestroom(mockRecord, testDistance, null)
 
             assertNotNull(result)
             assertEquals(testId, result.id)
