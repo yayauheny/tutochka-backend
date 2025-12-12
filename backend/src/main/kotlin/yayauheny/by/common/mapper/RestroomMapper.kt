@@ -14,15 +14,22 @@ import by.yayauheny.shared.enums.RestroomStatus
 import by.yayauheny.shared.dto.BuildingResponseDto
 import by.yayauheny.shared.dto.SubwayLineResponseDto
 import by.yayauheny.shared.dto.SubwayStationResponseDto
+import yayauheny.by.model.import.ImportProvider
 import yayauheny.by.model.restroom.NearestRestroomResponseDto
 import yayauheny.by.model.restroom.RestroomResponseDto
 import yayauheny.by.model.restroom.RestroomUpdateDto
+import yayauheny.by.model.schedule.ScheduleUtils
+import yayauheny.by.service.import.schedule.ScheduleMappingService
 import yayauheny.by.tables.references.RESTROOMS
 import yayauheny.by.util.reqDouble
 import yayauheny.by.util.toJSONBOrEmpty
 import yayauheny.by.util.toJsonObjectOrEmpty
 
 object RestroomMapper {
+    // ScheduleMappingService will be injected via DI in the future
+    // For now, we'll compute isOpen directly in the mapper
+    private val scheduleMappingService: ScheduleMappingService? = null
+
     fun mapFromRecord(record: Record): RestroomResponseDto {
         val lat = record.reqDouble("lat")
         val lon = record.reqDouble("lon")
@@ -82,7 +89,8 @@ object RestroomMapper {
 
     fun mapToNearestRestroom(
         record: Record,
-        distanceMeters: Double
+        distanceMeters: Double,
+        scheduleMappingService: ScheduleMappingService? = null
     ): NearestRestroomResponseDto {
         val lat = record.reqDouble("lat")
         val lon = record.reqDouble("lon")
@@ -145,6 +153,20 @@ object RestroomMapper {
                 stationDto
             }
 
+        // Compute isOpen from schedule
+        val workTimeJson = record[RESTROOMS.WORK_TIME]?.toJsonObjectOrEmpty()
+        val isOpen =
+            if (workTimeJson != null && !workTimeJson.isEmpty() && scheduleMappingService != null) {
+                try {
+                    val schedule = scheduleMappingService.mapSchedule(ImportProvider.TWO_GIS, workTimeJson)
+                    ScheduleUtils.isOpenNow(schedule)
+                } catch (e: Exception) {
+                    null // If schedule parsing fails, return null
+                }
+            } else {
+                null
+            }
+
         return NearestRestroomResponseDto(
             id = record[RESTROOMS.ID]!!,
             name = record[RESTROOMS.NAME],
@@ -152,7 +174,7 @@ object RestroomMapper {
             coordinates = LatLon(lat = lat, lon = lon),
             distanceMeters = distanceMeters,
             feeType = FeeType.valueOf(record[RESTROOMS.FEE_TYPE]!!),
-            isOpen = null,
+            isOpen = isOpen,
             placeType = PlaceType.entries.find { p -> p.id == record.get(RESTROOMS.PLACE_TYPE) } ?: PlaceType.OTHER,
             building = building,
             subwayStation = station

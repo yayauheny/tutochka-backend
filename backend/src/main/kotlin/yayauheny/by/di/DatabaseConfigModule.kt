@@ -18,6 +18,7 @@ import yayauheny.by.repository.impl.CountryRepositoryImpl
 import yayauheny.by.repository.impl.RestroomImportRepositoryImpl
 import yayauheny.by.repository.impl.RestroomRepositoryImpl
 import yayauheny.by.repository.impl.SubwayRepositoryImpl
+import yayauheny.by.service.import.schedule.ScheduleMappingService
 
 val databaseConfigModule =
     module {
@@ -28,7 +29,12 @@ val databaseConfigModule =
 
         single<CityRepository> { CityRepositoryImpl(get()) }
         single<CountryRepository> { CountryRepositoryImpl(get()) }
-        single<RestroomRepository> { RestroomRepositoryImpl(get()) }
+        single<RestroomRepository> {
+            RestroomRepositoryImpl(
+                ctx = get(),
+                scheduleMappingService = get<ScheduleMappingService>()
+            )
+        }
         single<BuildingRepository> { BuildingRepositoryImpl(get()) }
         single<SubwayRepository> { SubwayRepositoryImpl(get()) }
         single<RestroomImportRepository> { RestroomImportRepositoryImpl(get()) }

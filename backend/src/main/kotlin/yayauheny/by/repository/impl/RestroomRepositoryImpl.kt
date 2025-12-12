@@ -36,9 +36,11 @@ import yayauheny.by.util.toJSONBOrEmpty
 import yayauheny.by.util.transactionSuspend
 import yayauheny.by.util.withinDistanceOf
 import yayauheny.by.config.ApiConstants
+import yayauheny.by.service.import.schedule.ScheduleMappingService
 
 class RestroomRepositoryImpl(
-    private val ctx: DSLContext
+    private val ctx: DSLContext,
+    private val scheduleMappingService: ScheduleMappingService? = null
 ) : RestroomRepository {
     private val restroomFields =
         mapOf(
@@ -392,7 +394,7 @@ class RestroomRepositoryImpl(
                 .fetch()
                 .map {
                     val distance = it.reqDouble("distance")
-                    RestroomMapper.mapToNearestRestroom(it, distance)
+                    RestroomMapper.mapToNearestRestroom(it, distance, scheduleMappingService)
                 }
         }
 
