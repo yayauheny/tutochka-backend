@@ -1,9 +1,9 @@
 package by.yayauheny.tutochkatgbot.ingress;
 
+import by.yayauheny.tutochkatgbot.service.UpdateProcessingService;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RestController;
-import org.telegram.telegrambots.meta.api.methods.BotApiMethod;
 import org.telegram.telegrambots.meta.api.objects.Update;
 
 /**
@@ -12,14 +12,14 @@ import org.telegram.telegrambots.meta.api.objects.Update;
 @RestController
 public class WebhookController {
     
-    private final TutochkaWebhookBot bot;
+    private final UpdateProcessingService processingService;
     
-    public WebhookController(TutochkaWebhookBot bot) {
-        this.bot = bot;
+    public WebhookController(UpdateProcessingService processingService) {
+        this.processingService = processingService;
     }
     
-    @PostMapping("${bot.webhook-path:/telegram/webhook}")
-    public BotApiMethod<?> handleWebhook(@RequestBody Update update) {
-        return bot.onWebhookUpdateReceived(update);
+    @PostMapping("${telegram.bot.webhook-path}")
+    public void handleWebhook(@RequestBody Update update) {
+        processingService.process(update);
     }
 }

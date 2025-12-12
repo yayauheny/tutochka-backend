@@ -2,6 +2,7 @@ package by.yayauheny.tutochkatgbot.handler;
 
 import by.yayauheny.tutochkatgbot.callback.CallbackData;
 import org.telegram.telegrambots.meta.api.objects.Update;
+import org.telegram.telegrambots.meta.api.objects.message.Message;
 
 /**
  * Context for update processing
@@ -34,7 +35,7 @@ public record UpdateContext(
         }
     }
     
-    private static UpdateContext fromMessage(org.telegram.telegrambots.meta.api.objects.Message message) {
+    private static UpdateContext fromMessage(Message message) {
         long chatId = message.getChatId();
         long userId = extractUserId(message.getFrom());
         String text = message.getText();
@@ -81,7 +82,7 @@ public record UpdateContext(
         return user.getId();
     }
     
-    private static LocationData extractLocationData(org.telegram.telegrambots.meta.api.objects.Message message) {
+    private static LocationData extractLocationData(Message message) {
         if (message.hasLocation()) {
             var location = message.getLocation();
             return new LocationData(true, location.getLatitude(), location.getLongitude());

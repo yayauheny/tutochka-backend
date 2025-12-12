@@ -6,10 +6,11 @@ telegram:
   bot:
     username: ${TELEGRAM_BOT_USERNAME:your_bot_username}
     token: ${TELEGRAM_BOT_TOKEN:your_bot_token}
+    webhook-path: ${BOT_WEBHOOK_PATH:/telegram/webhook}
 
 bot:
-  webhook-path: ${BOT_WEBHOOK_PATH:/telegram/webhook}
   async-processing: ${BOT_ASYNC_PROCESSING:true}
+  webhook-public-url: ${BOT_WEBHOOK_PUBLIC_URL:https://specificative-becki-gastronomically.ngrok-free.dev}
   admin:
     ids: ${BOT_ADMIN_IDS:}
 
@@ -21,7 +22,7 @@ backend:
   retry-delay-ms: ${BACKEND_RETRY_DELAY_MS:200}
 
 server:
-  port: ${PORT:8081}
+  port: ${PORT:80}
 
 logging:
   level:

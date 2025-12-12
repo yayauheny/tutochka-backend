@@ -1,6 +1,6 @@
 package by.yayauheny.tutochkatgbot.util;
 
-import org.telegram.telegrambots.meta.api.objects.Message;
+import org.telegram.telegrambots.meta.api.objects.message.Message;
 import org.telegram.telegrambots.meta.api.objects.MessageEntity;
 
 import java.util.List;
@@ -45,7 +45,6 @@ public class CommandUtils {
                 int length = entity.getLength();
                 if (offset >= 0 && offset + length <= text.length()) {
                     String command = text.substring(offset, offset + length);
-                    // Remove bot username if present (e.g., "/start@YourBot" -> "/start")
                     int atIndex = command.indexOf('@');
                     if (atIndex > 0) {
                         command = command.substring(0, atIndex);

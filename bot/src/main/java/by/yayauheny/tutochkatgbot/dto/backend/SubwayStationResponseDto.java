@@ -21,9 +21,6 @@ public record SubwayStationResponseDto(
     @JsonProperty("createdAt") Instant createdAt,
     @JsonProperty("line") SubwayLineResponseDto line
 ) {
-    /**
-     * Returns display name based on preferred language.
-     */
     public String displayName(String preferredLang) {
         String lang = preferredLang != null ? preferredLang.toLowerCase().trim() : null;
         String normalizedLocalLang = nameLocalLang != null ? nameLocalLang.toLowerCase().trim() : null;

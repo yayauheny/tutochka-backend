@@ -13,7 +13,7 @@ import org.telegram.telegrambots.meta.api.objects.Update;
  * Fallback handler for unknown text messages
  */
 @Component
-@Order(2)  // Fallback should be checked last
+@Order(2)
 public class PlainTextFallbackMessageHandler implements MessageHandler {
     private final MessageSender sender;
     private final ReplyKeyboardFactory replyKeyboard;
@@ -25,7 +25,6 @@ public class PlainTextFallbackMessageHandler implements MessageHandler {
 
     @Override
     public boolean canHandle(Update update, UpdateContext ctx) {
-        // Only handle plain text messages (not commands)
         return ctx.text() != null && 
                update.hasMessage() && 
                !CommandUtils.isCommand(update.getMessage());

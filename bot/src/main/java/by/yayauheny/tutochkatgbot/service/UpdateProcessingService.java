@@ -1,5 +1,7 @@
 package by.yayauheny.tutochkatgbot.service;
 
+import by.yayauheny.tutochkatgbot.service.UpdateHandlingService;
+import by.yayauheny.tutochkatgbot.service.AsyncUpdateHandlingService;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.telegram.telegrambots.meta.api.objects.Update;

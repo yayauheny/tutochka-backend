@@ -86,7 +86,6 @@ public class WebBackendClient implements BackendClient {
         try {
             return decorated.get();
         } catch (RuntimeException ex) {
-            // Unwrap Resilience4j exceptions
             Throwable cause = ex.getCause();
             if (cause instanceof RestClientException) {
                 throw (RestClientException) cause;
@@ -99,13 +98,10 @@ public class WebBackendClient implements BackendClient {
         if (!(throwable instanceof RestClientException ex)) {
             return false;
         }
-        // Don't retry 4xx errors (client errors)
         if (ex instanceof RestClientResponseException resp) {
             int status = resp.getRawStatusCode();
-            // Only retry 5xx errors (server errors)
             return status >= 500;
         }
-        // Retry timeouts / connection issues
         return ex instanceof ResourceAccessException;
     }
 }

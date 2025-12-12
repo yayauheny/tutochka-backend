@@ -157,6 +157,15 @@ services:
         max-size: "10m"
         max-file: "3"
 
+  ngrok:
+    image: ngrok/ngrok:alpine
+    depends_on:
+      - bot
+    environment:
+      - NGROK_AUTHTOKEN=${NGROK_AUTHTOKEN}
+    command: [ "http", "http://bot:8081" ]
+    ports:
+      - "4040:4040"
 volumes:
   postgres_data:
     driver: local

@@ -23,11 +23,6 @@ public class InlineKeyboardFactory {
         this.formatterService = formatterService;
     }
 
-    /**
-     * Create keyboard for toilet list
-     * @param toilets list of toilets
-     * @return inline keyboard markup
-     */
     public InlineKeyboardMarkup toiletList(List<NearestRestroomResponseDto> toilets) {
         List<InlineKeyboardRow> rows = toilets.stream()
             .map(this::createToiletButton)
@@ -39,11 +34,6 @@ public class InlineKeyboardFactory {
                 .build();
     }
 
-    /**
-     * Create keyboard for toilet details
-     * @param toilet toilet data
-     * @return inline keyboard markup
-     */
     public InlineKeyboardMarkup toiletDetails(RestroomResponseDto toilet) {
         InlineKeyboardButton mapsButton = InlineKeyboardButton.builder()
                 .text(Messages.BUTTON_OPEN_MAPS)
@@ -63,10 +53,6 @@ public class InlineKeyboardFactory {
                 .build();
     }
 
-    /**
-     * Create keyboard for radius selection
-     * @return inline keyboard markup
-     */
     public InlineKeyboardMarkup radiusSelection() {
         InlineKeyboardButton radius500 = InlineKeyboardButton.builder()
                 .text(Messages.RADIUS_500M)

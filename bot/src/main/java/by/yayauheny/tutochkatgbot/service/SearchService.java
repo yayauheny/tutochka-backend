@@ -9,7 +9,6 @@ import org.springframework.stereotype.Service;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Optional;
-import java.util.UUID;
 
 /**
  * Service for searching restrooms
@@ -45,14 +44,12 @@ public class SearchService {
             return filterAndLimit(cached, radiusMeters, limit);
         }
 
-        // Backend filters by distanceMeters, so we pass radiusMeters to optimize query
         var result = backend.findNearest(lat, lon, limit, radiusMeters);
 
         var ids = result.stream().map(NearestRestroomResponseDto::id).toList();
         cacheService.putNearestIds(key, ids);
         result.forEach(dto -> cacheService.putRestroomInfo(dto.id(), dto));
 
-        // Backend already filters by distance, but we apply limit here as a safety measure
         return filterAndLimit(result, radiusMeters, limit);
     }
 

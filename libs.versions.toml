@@ -19,7 +19,7 @@ jooqPlugin = "10.1.1"
 jooq = "3.20.8"
 jtsCore = "1.20.0"
 caffeine = "3.1.8"
-telegrambots = "6.9.7.1"
+telegrambots = "9.2.0"
 wiremock = "2.35.0"
 resilience4j = "2.2.0"
 
@@ -77,7 +77,8 @@ logbackClassic = { module = "ch.qos.logback:logback-classic", version.ref = "log
 
 # Bot / misc
 caffeine = { module = "com.github.ben-manes.caffeine:caffeine", version.ref = "caffeine" }
-telegramBots = { module = "org.telegram:telegrambots", version.ref = "telegrambots" }
+telegrambotsClient = { module = "org.telegram:telegrambots-client", version.ref = "telegrambots" }
+telegrambotsWebhook = { module = "org.telegram:telegrambots-webhook", version.ref = "telegrambots" }
 wiremockJre8 = { module = "com.github.tomakehurst:wiremock-jre8", version.ref = "wiremock" }
 resilience4jRetry = { module = "io.github.resilience4j:resilience4j-retry", version.ref = "resilience4j" }
 

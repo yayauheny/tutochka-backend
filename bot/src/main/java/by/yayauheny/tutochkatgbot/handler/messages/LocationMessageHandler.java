@@ -17,7 +17,7 @@ import org.telegram.telegrambots.meta.api.objects.Update;
  * Handler for location messages
  */
 @Component
-@Order(1)  // Location handler should be checked before fallback
+@Order(1)
 public class LocationMessageHandler implements MessageHandler {
     private final MessageSender sender;
     private final SearchService searchService;

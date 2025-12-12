@@ -6,10 +6,11 @@ telegram:
   bot:
     username: ${TELEGRAM_BOT_USERNAME}
     token: ${TELEGRAM_BOT_TOKEN}
+    webhook-path: ${BOT_WEBHOOK_PATH:/telegram/webhook}
 
 bot:
-  webhook-path: ${BOT_WEBHOOK_PATH:/telegram/webhook}
   async-processing: ${BOT_ASYNC_PROCESSING:true}
+  webhook-public-url: ${BOT_WEBHOOK_PUBLIC_URL:}
   admin:
     ids: ${BOT_ADMIN_IDS:}
 

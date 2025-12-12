@@ -8,7 +8,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.core.annotation.AnnotationAwareOrderComparator;
 import org.springframework.stereotype.Component;
-import org.telegram.telegrambots.meta.api.objects.Message;
 import org.telegram.telegrambots.meta.api.objects.Update;
 
 import java.util.List;
@@ -30,7 +29,6 @@ public class UpdateRouter {
                        List<CallbackHandler> callbackHandlers,
                        List<MessageHandler> messageHandlers,
                        MessageSender sender) {
-        // Sort handlers by @Order annotation to ensure deterministic order
         this.commandHandlers = commandHandlers.stream()
                 .sorted(AnnotationAwareOrderComparator.INSTANCE)
                 .collect(Collectors.toList());
@@ -43,10 +41,6 @@ public class UpdateRouter {
         this.sender = sender;
     }
     
-    /**
-     * Route update to appropriate handler
-     * @param update Telegram update
-     */
     public void route(Update update) {
         UpdateContext ctx = UpdateContext.from(update);
         
@@ -55,11 +49,11 @@ public class UpdateRouter {
             ctx.hasLocation(), ctx.hasLocation() ? (update.hasMessage() && update.getMessage().hasLocation() ? "location" : "venue") : "none");
         
         if (update.hasCallbackQuery()) {
+            sender.answerCallbackQuery(update.getCallbackQuery().getId(), null);
             handleCallback(update, ctx);
             return;
         }
         
-        // Check for commands using MessageEntity instead of startsWith("/")
         if (update.hasMessage() && CommandUtils.isCommand(update.getMessage())) {
             handleCommand(update, ctx);
             return;
@@ -72,8 +66,6 @@ public class UpdateRouter {
         String callbackData = ctx.callbackData();
         if (callbackData == null) {
             logger.warn("Callback query without data: {}", update.getCallbackQuery());
-            // Answer callback to remove spinner even if no data
-            sender.answerCallbackQuery(update.getCallbackQuery().getId(), null);
             return;
         }
         
@@ -82,21 +74,17 @@ public class UpdateRouter {
                 try {
                     logger.debug("Handling callback with handler: {}", handler.getClass().getSimpleName());
                     handler.handle(update, ctx);
-                    // Answer callback to remove spinner after successful handling
-                    sender.answerCallbackQuery(update.getCallbackQuery().getId(), null);
                     return;
                 } catch (Exception e) {
                     logger.error("Error in callback handler {}: {}", handler.getClass().getSimpleName(), e.getMessage(), e);
-                    // Answer callback with error message
-                    sender.answerCallbackQuery(update.getCallbackQuery().getId(), Messages.SOMETHING_WENT_WRONG);
+                    sender.safeReply(ctx, Messages.SOMETHING_WENT_WRONG);
                     return;
                 }
             }
         }
         
         logger.warn("No callback handler found for data: {}", callbackData);
-        // Answer callback to remove spinner
-        sender.answerCallbackQuery(update.getCallbackQuery().getId(), "Действие недоступно. Попробуй ещё раз или начни с /start.");
+        sender.safeReply(ctx, "Действие недоступно. Попробуй ещё раз или начни с /start.");
     }
     
     private void handleCommand(Update update, UpdateContext ctx) {
@@ -140,9 +128,9 @@ public class UpdateRouter {
             }
         }
         
-        // Different message for plain text vs unknown command
         logger.warn("No message handler found for update: {}", update);
-        String fallbackMessage = CommandUtils.isCommand(update.getMessage()) 
+        boolean isCmd = update.hasMessage() && CommandUtils.isCommand(update.getMessage());
+        String fallbackMessage = isCmd 
             ? Messages.UNKNOWN_COMMAND 
             : Messages.UNKNOWN_MESSAGE;
         sender.safeReply(ctx, fallbackMessage);

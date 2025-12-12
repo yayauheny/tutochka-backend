@@ -8,13 +8,13 @@ import by.yayauheny.tutochkatgbot.handler.UpdateContext;
 import by.yayauheny.tutochkatgbot.util.CommandUtils;
 import org.springframework.core.annotation.Order;
 import org.springframework.stereotype.Component;
-import org.telegram.telegrambots.meta.api.objects.Message;
+import org.telegram.telegrambots.meta.api.objects.message.Message;
 import org.telegram.telegrambots.meta.api.objects.Update;
 
 import java.util.Set;
 
 @Component
-@Order(4)  // Admin commands should be checked last
+@Order(4)
 public class AdminCacheEvictCommand implements CommandHandler {
     private static final String COMMAND_GEO = "/evict-geo";
     private static final String COMMAND_INFO = "/evict-info";
@@ -41,11 +41,9 @@ public class AdminCacheEvictCommand implements CommandHandler {
         }
         Message message = update.getMessage();
         String command = CommandUtils.extractCommand(message);
-        // Only handle if user is admin - otherwise let it be treated as unknown command
         if (command == null || !(COMMAND_GEO.equals(command) || COMMAND_INFO.equals(command))) {
             return false;
         }
-        // Check admin status - only handle if admin
         long userId = message.getFrom().getId();
         return isAdmin(userId);
     }
