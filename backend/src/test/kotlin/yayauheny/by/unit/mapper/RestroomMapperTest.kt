@@ -223,6 +223,8 @@ class RestroomMapperTest {
             every { mockRecord[RESTROOMS.NAME] } returns testName
             every { mockRecord[RESTROOMS.ADDRESS] } returns testAddress
             every { mockRecord[RESTROOMS.FEE_TYPE] } returns testFeeType.name
+            every { mockRecord[RESTROOMS.WORK_TIME] } returns null
+            every { mockRecord[RESTROOMS.PLACE_TYPE] } returns null
 
             val result = RestroomMapper.mapToNearestRestroom(mockRecord, testDistance, null)
 
