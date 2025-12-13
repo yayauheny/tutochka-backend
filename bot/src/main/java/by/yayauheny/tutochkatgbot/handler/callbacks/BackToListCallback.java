@@ -15,7 +15,7 @@ import org.springframework.stereotype.Component;
 import org.telegram.telegrambots.meta.api.objects.Update;
 
 /**
- * Handler for back to list callback (b:list)
+ * Handler for back to list callback (back:list)
  */
 @Component
 @Order(2)
@@ -39,12 +39,12 @@ public class BackToListCallback implements CallbackHandler {
 
     @Override
     public String prefix() {
-        return "b";
+        return "back";
     }
 
     @Override
     public boolean canHandle(String callbackData) {
-        return CallbackData.isType(callbackData, "b") && "list".equals(CallbackData.arg(callbackData));
+        return CallbackData.isType(callbackData, "back") && "list".equals(CallbackData.arg(callbackData));
     }
 
     @Override

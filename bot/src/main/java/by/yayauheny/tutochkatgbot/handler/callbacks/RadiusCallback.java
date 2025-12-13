@@ -12,7 +12,7 @@ import org.springframework.stereotype.Component;
 import org.telegram.telegrambots.meta.api.objects.Update;
 
 /**
- * Handler for radius selection callbacks (r:<meters>)
+ * Handler for radius selection callbacks (radius:<meters>)
  */
 @Component
 @Order(3)
@@ -28,12 +28,12 @@ public class RadiusCallback implements CallbackHandler {
 
     @Override
     public String prefix() {
-        return "r";
+        return "radius";
     }
 
     @Override
     public boolean canHandle(String callbackData) {
-        return CallbackData.isType(callbackData, "r");
+        return CallbackData.isType(callbackData, "radius");
     }
 
     @Override

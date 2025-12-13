@@ -8,23 +8,23 @@ public final class CallbackData {
     private CallbackData() {}
     
     public static String detail(String id) { 
-        return "t:" + id; 
+        return "detail:" + id; 
     }
     
     public static String moreDetails(String id) { 
-        return "m:" + id; 
+        return "more:" + id; 
     }
     
     public static String hideDetails(String id) { 
-        return "h:" + id; 
+        return "hide:" + id; 
     }
     
     public static String backToList() { 
-        return "b:list"; 
+        return "back:list"; 
     }
     
     public static String radius(int meters) { 
-        return "r:" + meters; 
+        return "radius:" + meters; 
     }
 
     public static boolean isType(String data, String type) { 

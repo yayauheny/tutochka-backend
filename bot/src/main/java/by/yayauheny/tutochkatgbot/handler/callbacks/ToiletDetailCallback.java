@@ -15,7 +15,7 @@ import org.springframework.stereotype.Component;
 import org.telegram.telegrambots.meta.api.objects.Update;
 
 /**
- * Handler for toilet detail callbacks (t:<id>)
+ * Handler for toilet detail callbacks (detail:<id>)
  */
 @Component
 @Order(1)
@@ -36,12 +36,12 @@ public class ToiletDetailCallback implements CallbackHandler {
 
     @Override
     public String prefix() {
-        return "t";
+        return "detail";
     }
 
     @Override
     public boolean canHandle(String callbackData) {
-        return CallbackData.isType(callbackData, "t");
+        return CallbackData.isType(callbackData, "detail");
     }
 
     @Override

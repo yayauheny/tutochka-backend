@@ -15,7 +15,7 @@ import org.springframework.stereotype.Component;
 import org.telegram.telegrambots.meta.api.objects.Update;
 
 /**
- * Handler for "more details" callback (m:<id>)
+ * Handler for "more details" callback (more:<id>)
  */
 @Component
 @Order(2)
@@ -36,12 +36,12 @@ public class MoreDetailsCallback implements CallbackHandler {
 
     @Override
     public String prefix() {
-        return "m";
+        return "more";
     }
 
     @Override
     public boolean canHandle(String callbackData) {
-        return CallbackData.isType(callbackData, "m");
+        return CallbackData.isType(callbackData, "more");
     }
 
     @Override

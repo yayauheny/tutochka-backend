@@ -15,7 +15,7 @@ import org.springframework.stereotype.Component;
 import org.telegram.telegrambots.meta.api.objects.Update;
 
 /**
- * Handler for "hide details" callback (h:<id>)
+ * Handler for "hide details" callback (hide:<id>)
  */
 @Component
 @Order(3)
@@ -36,12 +36,12 @@ public class HideDetailsCallback implements CallbackHandler {
 
     @Override
     public String prefix() {
-        return "h";
+        return "hide";
     }
 
     @Override
     public boolean canHandle(String callbackData) {
-        return CallbackData.isType(callbackData, "h");
+        return CallbackData.isType(callbackData, "hide");
     }
 
     @Override
