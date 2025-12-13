@@ -105,14 +105,16 @@ public class FormatterService {
     }
     
     private String selectWorkTime(RestroomResponseDto toilet) {
-        if (toilet.inheritBuildingSchedule() && toilet.building() != null) {
-            java.util.Map<String, Object> buildingWorkTime = extractWorkTimeMapViaReflection(toilet.building());
+        // If inheritBuildingSchedule is true and building exists, use building's workTime
+        if (Boolean.TRUE.equals(toilet.inheritBuildingSchedule()) && toilet.building() != null) {
+            java.util.Map<String, Object> buildingWorkTime = toilet.building().workTime();
             if (buildingWorkTime != null && !buildingWorkTime.isEmpty()) {
                 return WorkTimeFormatter.formatWorkTime(buildingWorkTime);
             }
         }
         
-        java.util.Map<String, Object> workTime = extractWorkTimeMapViaReflection(toilet);
+        // Otherwise, use restroom's own workTime
+        java.util.Map<String, Object> workTime = toilet.workTime();
         if (workTime != null && !workTime.isEmpty()) {
             return WorkTimeFormatter.formatWorkTime(workTime);
         }

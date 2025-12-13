@@ -24,6 +24,12 @@ public final class WorkTimeFormatter {
             return "Время работы не указано";
         }
         
+        // Check for is_24x7 flag (simplified format)
+        Object is24x7Obj = workTime.get("is_24x7");
+        if (is24x7Obj instanceof Boolean && (Boolean) is24x7Obj) {
+            return "Круглосуточно";
+        }
+        
         StringBuilder result = new StringBuilder();
         
         String comment = extractComment(workTime);
@@ -44,6 +50,11 @@ public final class WorkTimeFormatter {
                 result.append(dayName).append(": ").append(daySchedule);
                 firstDay = false;
             }
+        }
+        
+        // If no days found but we have workTime, return default message
+        if (firstDay && result.length() == 0) {
+            return "Время работы не указано";
         }
         
         return result.toString();
