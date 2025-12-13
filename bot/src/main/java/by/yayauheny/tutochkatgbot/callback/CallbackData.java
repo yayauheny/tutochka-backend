@@ -11,6 +11,14 @@ public final class CallbackData {
         return "t:" + id; 
     }
     
+    public static String moreDetails(String id) { 
+        return "m:" + id; 
+    }
+    
+    public static String hideDetails(String id) { 
+        return "h:" + id; 
+    }
+    
     public static String backToList() { 
         return "b:list"; 
     }

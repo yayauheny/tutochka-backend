@@ -9,6 +9,9 @@ public class Messages {
     public static final String BUTTON_OPEN_MAPS = EmojiConstants.MAP + " Открыть в картах";
     public static final String BUTTON_SEARCH_AGAIN = "🔍 Поиск заново";
     public static final String BUTTON_HELP = "❓ Помощь";
+    public static final String BUTTON_MORE_DETAILS = "ℹ️ Подробнее";
+    public static final String BUTTON_HIDE_DETAILS = "⬆️ Скрыть детали";
+    public static final String BUTTON_BACK = "← Назад";
 
     @Deprecated
     public static final String CALLBACK_TOILET_DETAIL = "toilet_detail_";
@@ -53,6 +56,7 @@ public class Messages {
     public static final String UNKNOWN_COMMAND = "Неизвестная команда. Напиши /help для помощи.";
     public static final String UNKNOWN_MESSAGE = "Не понял, что ты имеешь в виду. Поделись геолокацией для поиска туалетов или используй /help для помощи.";
 
+    @Deprecated
     public static final String TOILET_DETAILS = """
         <b>{name}</b>
         %s {address}
@@ -82,6 +86,32 @@ public class Messages {
             EmojiConstants.ROUTE,
             EmojiConstants.MAP
         );
+
+    public static final String TOILET_DETAILS_COMPACT = """
+        <b>{name}</b>
+        
+        {distancePart}📍 {address}
+        
+        <b>{tags}</b>
+        
+        <b>Тип:</b> {placeType}
+        
+        {howToFindLine}{landmarkLine}
+        """;
+
+    public static final String TOILET_DETAILS_FULL = """
+        <b>{name}</b>
+        
+        {distancePart}📍 {address}
+        
+        <b>{tags}</b>
+        
+        <b>Тип:</b> {placeType}
+        
+        {buildingLine}{subwayLine}
+        
+        {scheduleBlock}{noteBlock}{routeBlock}
+        """;
 
     public static final String LOCATION_REQUEST = "Поделись геолокацией для поиска туалетов:";
 

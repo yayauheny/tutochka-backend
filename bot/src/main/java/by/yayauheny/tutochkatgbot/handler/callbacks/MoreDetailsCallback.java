@@ -15,19 +15,19 @@ import org.springframework.stereotype.Component;
 import org.telegram.telegrambots.meta.api.objects.Update;
 
 /**
- * Handler for toilet detail callbacks (t:<id>)
+ * Handler for "more details" callback (m:<id>)
  */
 @Component
-@Order(1)
-public class ToiletDetailCallback implements CallbackHandler {
-    private static final Logger logger = LoggerFactory.getLogger(ToiletDetailCallback.class);
+@Order(2)
+public class MoreDetailsCallback implements CallbackHandler {
+    private static final Logger logger = LoggerFactory.getLogger(MoreDetailsCallback.class);
     private final MessageSender sender;
     private final SearchService searchService;
     private final FormatterService formatterService;
     private final InlineKeyboardFactory inlineKeyboard;
 
-    public ToiletDetailCallback(MessageSender sender, SearchService searchService,
-                               FormatterService formatterService, InlineKeyboardFactory inlineKeyboard) {
+    public MoreDetailsCallback(MessageSender sender, SearchService searchService,
+                              FormatterService formatterService, InlineKeyboardFactory inlineKeyboard) {
         this.sender = sender;
         this.searchService = searchService;
         this.formatterService = formatterService;
@@ -36,12 +36,12 @@ public class ToiletDetailCallback implements CallbackHandler {
 
     @Override
     public String prefix() {
-        return "t";
+        return "m";
     }
 
     @Override
     public boolean canHandle(String callbackData) {
-        return CallbackData.isType(callbackData, "t");
+        return CallbackData.isType(callbackData, "m");
     }
 
     @Override
@@ -63,15 +63,16 @@ public class ToiletDetailCallback implements CallbackHandler {
                 ? toilet.distanceMeters().doubleValue() 
                 : null;
             
-            // Show compact card by default
-            String text = formatterService.toiletDetailsCompact(toilet, distanceMeters);
-            sender.editOrReply(ctx, text, inlineKeyboard.toiletDetailsCompact(toilet));
+            // Show full card
+            String text = formatterService.toiletDetailsFull(toilet, distanceMeters);
+            sender.editOrReply(ctx, text, inlineKeyboard.toiletDetailsFull(toilet));
         } catch (IllegalArgumentException e) {
             logger.warn("Toilet not found: {}", e.getMessage());
             sender.editOrReply(ctx, Messages.SOMETHING_WENT_WRONG, null);
         } catch (Exception e) {
-            logger.error("Error handling toilet detail callback: {}", e.getMessage(), e);
+            logger.error("Error handling more details callback: {}", e.getMessage(), e);
             sender.editOrReply(ctx, Messages.SOMETHING_WENT_WRONG, null);
         }
     }
 }
+
