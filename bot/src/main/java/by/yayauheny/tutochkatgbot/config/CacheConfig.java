@@ -44,4 +44,13 @@ public class CacheConfig {
             .recordStats()
             .build();
     }
+
+    @Bean
+    public Cache<Long, by.yayauheny.tutochkatgbot.cache.LastLocation> lastLocationCache() {
+        return Caffeine.newBuilder()
+            .expireAfterWrite(Duration.ofMinutes(20))
+            .maximumSize(50_000)
+            .recordStats()
+            .build();
+    }
 }

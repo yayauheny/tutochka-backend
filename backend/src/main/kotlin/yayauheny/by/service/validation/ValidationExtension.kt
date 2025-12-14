@@ -23,8 +23,6 @@ fun ValidationError.pathAsString(): String {
     val pathStr = this.path.toString()
     if (pathStr.isBlank()) return "field"
 
-    // Извлекаем имена полей из строки вида "ValidationPath(PropRef(field1), PropRef(field2))"
-    // используя регулярное выражение для надежного парсинга
     val fieldPattern = Regex("PropRef\\(([^)]+)\\)")
     val matches = fieldPattern.findAll(pathStr)
     val fields = matches.map { it.groupValues[1] }.toList()
@@ -32,7 +30,6 @@ fun ValidationError.pathAsString(): String {
     return if (fields.isNotEmpty()) {
         fields.joinToString(".")
     } else {
-        // Fallback: если паттерн не сработал, возвращаем исходную строку
         pathStr.ifBlank { "field" }
     }
 }

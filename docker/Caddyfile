@@ -1,0 +1,11 @@
+tutochka.by, www.tutochka.by {
+    # Передаем запросы от Телеграма внутрь контейнера с ботом
+    reverse_proxy /telegram/* bot:8081
+
+    # (Опционально) Заглушка для главной страницы, чтобы видеть, что сайт жив
+    respond / "TuTochka (BY) is working!" 200
+}
+
+tutochka.xyz, www.tutochka.xyz, tutochka.site, www.tutochka.site {
+    redir https://tutochka.by{uri}
+}

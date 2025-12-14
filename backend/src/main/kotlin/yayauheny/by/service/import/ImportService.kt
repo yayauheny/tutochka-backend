@@ -39,7 +39,6 @@ class ImportService(
             strategiesByProvider[provider]
                 ?: error("Unsupported import provider: $provider")
 
-        // 1. Создаем запись импорта (PENDING)
         val importId =
             restroomImportRepository.createPending(
                 provider = provider,
@@ -49,10 +48,8 @@ class ImportService(
             )
 
         return try {
-            // 2. Вызываем стратегию
             val result = strategy.importObject(cityId, payloadType, payload)
 
-            // 3. Обновляем запись импорта (SUCCESS)
             restroomImportRepository.markSuccess(
                 id = importId,
                 buildingId = result.buildingId,
@@ -66,7 +63,6 @@ class ImportService(
                 status = ImportJobStatus.SUCCESS
             )
         } catch (t: Throwable) {
-            // 4. Обновляем запись импорта (FAILED)
             restroomImportRepository.markFailed(
                 id = importId,
                 errorMessage = t.message ?: "Unknown error"

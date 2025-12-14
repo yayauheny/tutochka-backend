@@ -105,7 +105,6 @@ public class FormatterService {
     }
     
     private String selectWorkTime(RestroomResponseDto toilet) {
-        // If inheritBuildingSchedule is true and building exists, use building's workTime
         if (Boolean.TRUE.equals(toilet.inheritBuildingSchedule()) && toilet.building() != null) {
             java.util.Map<String, Object> buildingWorkTime = toilet.building().workTime();
             if (buildingWorkTime != null && !buildingWorkTime.isEmpty()) {
@@ -113,7 +112,6 @@ public class FormatterService {
             }
         }
         
-        // Otherwise, use restroom's own workTime
         java.util.Map<String, Object> workTime = toilet.workTime();
         if (workTime != null && !workTime.isEmpty()) {
             return WorkTimeFormatter.formatWorkTime(workTime);
@@ -150,11 +148,9 @@ public class FormatterService {
                         return (java.util.Map<String, Object>) content;
                     }
                 } catch (NoSuchMethodException e2) {
-                    // Ignore
                 }
             }
         } catch (Exception e) {
-            // Ignore reflection errors
         }
         
         return null;
@@ -192,10 +188,6 @@ public class FormatterService {
         return buildingName;
     }
 
-    /**
-     * Format toilet list item for inline button.
-     * Returns plain text without HTML tags (mobile-friendly).
-     */
     public String toiletListItem(NearestRestroomSlimDto toilet) {
         String name = toilet.displayName();
         String distance = DistanceFormat.meters(toilet.distanceMeters());
@@ -212,13 +204,9 @@ public class FormatterService {
             details.append(" • ").append(subwayInfo);
         }
         
-        // Plain text without HTML - mobile-friendly
         return name + "\n" + details.toString();
     }
     
-    /**
-     * Format subway info from slim DTO for list display.
-     */
     private String formatSubwayInfoSlim(SubwayStationSlimDto station) {
         if (station == null) {
             return "";
@@ -239,9 +227,6 @@ public class FormatterService {
         return emoji + " " + stationName;
     }
     
-    /**
-     * Format subway info from full DTO for details display.
-     */
     private String formatSubwayInfo(SubwayStationResponseDto station) {
         if (station == null) {
             return "";
@@ -296,9 +281,6 @@ public class FormatterService {
         return EmojiConstants.getEmojiForColor(hexColor);
     }
 
-    /**
-     * Format compact toilet details card (default view)
-     */
     public String toiletDetailsCompact(RestroomResponseDto toilet, Double distanceMeters) {
         String name = selectDisplayNameForDetails(toilet);
         String address = selectAddress(toilet);
@@ -326,9 +308,6 @@ public class FormatterService {
         return Text.substitute(Messages.TOILET_DETAILS_COMPACT, params).trim();
     }
 
-    /**
-     * Format full toilet details card (expanded view)
-     */
     public String toiletDetailsFull(RestroomResponseDto toilet, Double distanceMeters) {
         String name = selectDisplayNameForDetails(toilet);
         String address = selectAddress(toilet);
@@ -362,25 +341,19 @@ public class FormatterService {
         return Text.substitute(Messages.TOILET_DETAILS_FULL, params).trim();
     }
 
-    /**
-     * Format tags: Открыто/Закрыто/Круглосуточно • Платно/Бесплатно • МГН
-     */
     private String formatTags(RestroomResponseDto toilet, Double distanceMeters) {
         java.util.List<String> tags = new java.util.ArrayList<>();
         
-        // Status tag (Открыто/Закрыто/Круглосуточно)
         String statusTag = formatStatusTag(toilet);
         if (statusTag != null) {
             tags.add(statusTag);
         }
         
-        // Fee tag (Платно/Бесплатно)
         String feeTag = formatFeeTag(toilet.feeType());
         if (feeTag != null) {
             tags.add(feeTag);
         }
         
-        // Accessibility tag (МГН)
         String accessibilityTag = formatAccessibilityTag(toilet.accessibilityType());
         if (accessibilityTag != null) {
             tags.add(accessibilityTag);
@@ -389,11 +362,7 @@ public class FormatterService {
         return tags.isEmpty() ? "—" : String.join(" • ", tags);
     }
 
-    /**
-     * Format status tag: Открыто/Закрыто/Круглосуточно
-     */
     private String formatStatusTag(RestroomResponseDto toilet) {
-        // Check if 24/7
         java.util.Map<String, Object> workTime = toilet.workTime();
         if (workTime != null) {
             Object is24x7 = workTime.get("is_24x7");
@@ -402,7 +371,6 @@ public class FormatterService {
             }
         }
         
-        // Check building workTime if inheritBuildingSchedule
         if (Boolean.TRUE.equals(toilet.inheritBuildingSchedule()) && toilet.building() != null) {
             java.util.Map<String, Object> buildingWorkTime = toilet.building().workTime();
             if (buildingWorkTime != null) {
@@ -413,14 +381,9 @@ public class FormatterService {
             }
         }
         
-        // TODO: Check isOpen from backend if available
-        // For now, return null if we can't determine
         return null;
     }
 
-    /**
-     * Format fee tag: Платно/Бесплатно
-     */
     private String formatFeeTag(FeeType feeType) {
         if (feeType == null) {
             return null;
@@ -431,9 +394,6 @@ public class FormatterService {
         };
     }
 
-    /**
-     * Format accessibility tag: МГН
-     */
     private String formatAccessibilityTag(AccessibilityType accessibilityType) {
         if (accessibilityType == null) {
             return null;
@@ -444,16 +404,12 @@ public class FormatterService {
         };
     }
 
-    /**
-     * Format "How to find" line (only if directionGuide is short)
-     */
     private String formatHowToFindLine(String directionGuide) {
         if (directionGuide == null || directionGuide.trim().isEmpty()) {
             return "";
         }
         
         String trimmed = directionGuide.trim();
-        // Only show if short (≤ 100 chars)
         if (trimmed.length() > 100) {
             return "";
         }
@@ -461,9 +417,6 @@ public class FormatterService {
         return "<b>Как найти:</b> " + trimmed + "\n";
     }
 
-    /**
-     * Format landmark line: building + subway in one line
-     */
     private String formatLandmarkLine(BuildingResponseDto building, SubwayStationResponseDto subway) {
         StringBuilder result = new StringBuilder();
         
@@ -492,9 +445,6 @@ public class FormatterService {
         return "<b>Ориентир:</b> " + result.toString() + "\n";
     }
 
-    /**
-     * Format building line for full card
-     */
     private String formatBuildingLine(BuildingResponseDto building) {
         if (building == null) {
             return "";
@@ -508,9 +458,6 @@ public class FormatterService {
         return "<b>Здание:</b> " + buildingName + "\n";
     }
 
-    /**
-     * Format subway line for full card
-     */
     private String formatSubwayLine(SubwayStationResponseDto subway) {
         if (subway == null) {
             return "";
@@ -528,9 +475,6 @@ public class FormatterService {
         return "<b>Метро:</b> " + emoji + " " + stationName + "\n";
     }
 
-    /**
-     * Format schedule block for full card
-     */
     private String formatScheduleBlock(RestroomResponseDto toilet) {
         String workTime = selectWorkTime(toilet);
         if (workTime == null || workTime.isBlank() || workTime.equals("Время работы не указано")) {
@@ -540,9 +484,6 @@ public class FormatterService {
         return "<b>Расписание:</b>\n" + workTime + "\n\n";
     }
 
-    /**
-     * Format note block for full card
-     */
     private String formatNoteBlock(String accessNote) {
         if (accessNote == null || accessNote.trim().isEmpty()) {
             return "";
@@ -551,9 +492,6 @@ public class FormatterService {
         return "<b>Заметка:</b>\n" + accessNote.trim() + "\n\n";
     }
 
-    /**
-     * Format route block for full card
-     */
     private String formatRouteBlock(String directionGuide) {
         if (directionGuide == null || directionGuide.trim().isEmpty()) {
             return "";
@@ -582,7 +520,6 @@ public class FormatterService {
             return "";
         }
         
-        // Map payment method keys to RU-friendly strings
         java.util.List<String> localized = paymentMethods.stream()
             .map(method -> {
                 return switch (method != null ? method.toLowerCase() : "") {

@@ -33,7 +33,6 @@ suspend fun <T> DSLContext.transactionSuspend(block: suspend (DSLContext) -> T):
             }
             result!!
         } catch (e: DataAccessException) {
-            // Извлекаем оригинальное исключение из cause, если оно было обернуто
             val cause = e.cause
             when {
                 cause is PSQLException -> throw cause

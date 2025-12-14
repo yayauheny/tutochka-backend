@@ -28,7 +28,6 @@ val importModule =
             )
         }
 
-        // Schedule adapters
         single<ScheduleAdapter> { TwoGisScheduleAdapter() }
 
         single<ScheduleMappingService> {

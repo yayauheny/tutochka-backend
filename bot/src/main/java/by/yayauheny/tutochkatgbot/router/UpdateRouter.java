@@ -1,6 +1,7 @@
 package by.yayauheny.tutochkatgbot.router;
 
 import by.yayauheny.tutochkatgbot.bot.MessageSender;
+import by.yayauheny.tutochkatgbot.cache.LastLocationCacheService;
 import by.yayauheny.tutochkatgbot.handler.*;
 import by.yayauheny.tutochkatgbot.messages.Messages;
 import by.yayauheny.tutochkatgbot.util.CommandUtils;
@@ -24,11 +25,13 @@ public class UpdateRouter {
     private final List<CallbackHandler> callbackHandlers;
     private final List<MessageHandler> messageHandlers;
     private final MessageSender sender;
+    private final LastLocationCacheService lastLocationCache;
     
     public UpdateRouter(List<CommandHandler> commandHandlers,
                        List<CallbackHandler> callbackHandlers,
                        List<MessageHandler> messageHandlers,
-                       MessageSender sender) {
+                       MessageSender sender,
+                       LastLocationCacheService lastLocationCache) {
         this.commandHandlers = commandHandlers.stream()
                 .sorted(AnnotationAwareOrderComparator.INSTANCE)
                 .collect(Collectors.toList());
@@ -39,6 +42,7 @@ public class UpdateRouter {
                 .sorted(AnnotationAwareOrderComparator.INSTANCE)
                 .collect(Collectors.toList());
         this.sender = sender;
+        this.lastLocationCache = lastLocationCache;
     }
     
     public void route(Update update) {
@@ -47,6 +51,13 @@ public class UpdateRouter {
         logger.debug("Routing update: chatId={}, userId={}, hasMessage={}, hasCallback={}, hasLocation={}, locationSource={}", 
             ctx.chatId(), ctx.userId(), update.hasMessage(), update.hasCallbackQuery(), 
             ctx.hasLocation(), ctx.hasLocation() ? (update.hasMessage() && update.getMessage().hasLocation() ? "location" : "venue") : "none");
+        
+        if (ctx.hasLocation() && ctx.latitude() != null && ctx.longitude() != null) {
+            String source = update.hasMessage() && update.getMessage().hasLocation() ? "location" : "venue";
+            lastLocationCache.putLastLocation(ctx.chatId(), ctx.latitude(), ctx.longitude(), source);
+            logger.debug("Saved last location to cache: chatId={}, lat={}, lon={}, source={}", 
+                ctx.chatId(), ctx.latitude(), ctx.longitude(), source);
+        }
         
         if (update.hasCallbackQuery()) {
             sender.answerCallbackQuery(update.getCallbackQuery().getId(), null);

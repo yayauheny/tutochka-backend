@@ -5,5 +5,4 @@ package yayauheny.by.model.import
  */
 enum class ImportPayloadType {
     TWO_GIS_PLACE_JSON
-    // Позже добавить типы для Яндекс и др.
 }

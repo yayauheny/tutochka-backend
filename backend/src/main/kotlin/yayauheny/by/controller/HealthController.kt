@@ -44,7 +44,6 @@ class HealthController(
             }
 
             get("/live") {
-                // Liveness check - service is running, no DB check needed
                 call.respond(
                     HttpStatusCode.OK,
                     mapOf(

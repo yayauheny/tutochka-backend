@@ -1,6 +1,6 @@
 package yayauheny.by.service
 
-import by.yayauheny.shared.dto.NearestRestroomSlimDto
+import yayauheny.by.model.dto.NearestRestroomSlimDto
 import java.util.UUID
 import yayauheny.by.common.query.PageResponse
 import yayauheny.by.config.ApiConstants

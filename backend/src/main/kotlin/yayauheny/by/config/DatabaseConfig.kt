@@ -18,6 +18,7 @@ data class DatabaseConfig(
     val name: String = "DB_NAME".env("postgres"),
     val user: String = "DB_USER".env("admin"),
     val password: String = "DB_PASSWORD".env("admin"),
+    val sslMode: String = "DB_SSL_MODE".env("disable"),
     val maxPoolSize: Int = "DB_MAX_POOL_SIZE".envInt(10),
     val minIdle: Int = "DB_MIN_IDLE".envInt(2),
     val connectionTimeout: Long = "DB_CONNECTION_TIMEOUT".envLong(30000L),
@@ -42,6 +43,7 @@ data class DatabaseConfig(
     fun createDataSource(): HikariDataSource =
         HikariDataSource(
             HikariConfig().apply {
+                addDataSourceProperty("sslmode", sslMode)
                 jdbcUrl = "jdbc:postgresql://$host:$port/$name"
                 username = user
                 password = this@DatabaseConfig.password

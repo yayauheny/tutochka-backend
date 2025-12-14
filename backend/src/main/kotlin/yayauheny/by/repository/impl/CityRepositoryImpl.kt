@@ -148,10 +148,7 @@ class CityRepositoryImpl(
                     .select(*cityProjection())
                     .from(CITIES)
                     .where(CITIES.IS_DELETED.isFalse)
-            // Сортировка по умолчанию для стабильности результатов
-            // QueryExecutor.applySorting добавит дополнительную сортировку, если указана в запросе
             val baseQueryWithDefaultSort = baseQuery.orderBy(CITIES.CREATED_AT.desc(), CITIES.ID.asc())
-            // Приводим к SelectConditionStep для совместимости с executePaginated
             val baseQueryCondition = baseQueryWithDefaultSort as org.jooq.SelectConditionStep<*>
             executor.executePaginated(
                 baseQuery = baseQueryCondition,

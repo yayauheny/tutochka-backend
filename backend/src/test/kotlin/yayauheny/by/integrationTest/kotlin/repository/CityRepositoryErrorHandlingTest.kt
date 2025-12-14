@@ -41,7 +41,7 @@ class CityRepositoryErrorHandlingTest : BaseIntegrationTest() {
             runTest {
                 val testEnv = DatabaseTestHelper.createTestEnvironment(dslContext)
                 val duplicateCoordinates =
-                    by.yayauheny.shared.dto
+                    yayauheny.by.model.dto
                         .LatLon(lat = 55.7558, lon = 37.6176)
                 val firstCityDto =
                     TestDataHelpers.createCityCreateDto(
@@ -267,7 +267,7 @@ class CityRepositoryErrorHandlingTest : BaseIntegrationTest() {
             runTest {
                 val testEnv = DatabaseTestHelper.createTestEnvironment(dslContext)
                 val duplicateCoordinates =
-                    by.yayauheny.shared.dto
+                    yayauheny.by.model.dto
                         .LatLon(lat = 55.7558, lon = 37.6176)
                 val firstCityDto =
                     TestDataHelpers.createCityCreateDto(

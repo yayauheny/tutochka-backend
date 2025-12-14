@@ -24,3 +24,4 @@ WHERE r.city_id = (SELECT id FROM cities WHERE country_id = (SELECT id FROM coun
 -- rollback UPDATE restrooms SET subway_station_id = NULL, updated_at = NOW() WHERE city_id = (SELECT id FROM cities WHERE country_id = (SELECT id FROM countries WHERE code = 'BY') AND name_ru = 'Минск') AND subway_station_id IS NOT NULL;
 
 
+

@@ -12,8 +12,8 @@ import yayauheny.by.tables.references.BUILDINGS
 import yayauheny.by.util.reqDouble
 import yayauheny.by.util.toJSONBOrEmpty
 import yayauheny.by.util.toJsonObjectOrEmpty
-import by.yayauheny.shared.dto.LatLon
-import by.yayauheny.shared.enums.PlaceType
+import yayauheny.by.model.dto.LatLon
+import yayauheny.by.model.enums.PlaceType
 import org.jooq.impl.DSL
 import org.jooq.impl.SQLDataType
 

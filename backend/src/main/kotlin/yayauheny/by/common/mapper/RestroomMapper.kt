@@ -1,16 +1,16 @@
 package yayauheny.by.common.mapper
 
-import by.yayauheny.shared.dto.BuildingResponseDto
-import by.yayauheny.shared.dto.LatLon
-import by.yayauheny.shared.dto.NearestRestroomSlimDto
-import by.yayauheny.shared.dto.SubwayLineResponseDto
-import by.yayauheny.shared.dto.SubwayStationResponseDto
-import by.yayauheny.shared.dto.SubwayStationSlimDto
-import by.yayauheny.shared.enums.AccessibilityType
-import by.yayauheny.shared.enums.DataSourceType
-import by.yayauheny.shared.enums.FeeType
-import by.yayauheny.shared.enums.PlaceType
-import by.yayauheny.shared.enums.RestroomStatus
+import yayauheny.by.model.dto.BuildingResponseDto
+import yayauheny.by.model.dto.LatLon
+import yayauheny.by.model.dto.NearestRestroomSlimDto
+import yayauheny.by.model.dto.SubwayLineResponseDto
+import yayauheny.by.model.dto.SubwayStationResponseDto
+import yayauheny.by.model.dto.SubwayStationSlimDto
+import yayauheny.by.model.enums.AccessibilityType
+import yayauheny.by.model.enums.DataSourceType
+import yayauheny.by.model.enums.FeeType
+import yayauheny.by.model.enums.PlaceType
+import yayauheny.by.model.enums.RestroomStatus
 import java.time.Instant
 import org.jooq.Record
 import org.jooq.UpdateSetFirstStep
@@ -61,7 +61,6 @@ object RestroomMapper {
         val lat = record.reqDouble("lat")
         val lon = record.reqDouble("lon")
 
-        // Map building if present
         val bId = record.get("b_id") as? java.util.UUID
         val building =
             bId?.let {
@@ -86,7 +85,6 @@ object RestroomMapper {
                 )
             }
 
-        // Map subway station if present
         val stationId = record.get("s_id") as? java.util.UUID
         val station =
             stationId?.let {
@@ -269,7 +267,6 @@ object RestroomMapper {
         val restroomId = record[RESTROOMS.ID]!!
         val restroomName = record[RESTROOMS.NAME]?.trim()
 
-        // Compute displayName: restroom.name ?: building.displayName ?: "Туалет"
         val displayName =
             when {
                 !restroomName.isNullOrBlank() && restroomName != "Туалет" -> restroomName
@@ -284,7 +281,6 @@ object RestroomMapper {
                 }
             }
 
-        // Map minimal subway station info
         val stationId = record.get("s_id") as? java.util.UUID
         val subwayStation =
             stationId?.let {
@@ -294,7 +290,6 @@ object RestroomMapper {
                 val sNameLocalLang = record.get("s_name_local_lang", String::class.java)
                 val lineColorHex = record.get("l_hex", String::class.java)?.takeIf { it.isNotBlank() }
 
-                // Compute displayName: prefer ru, then local, then en
                 val stationDisplayName =
                     when {
                         !sNameRu.isBlank() -> sNameRu

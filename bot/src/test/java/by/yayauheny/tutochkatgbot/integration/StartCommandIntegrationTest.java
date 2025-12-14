@@ -28,7 +28,8 @@ import static org.mockito.Mockito.verify;
         "telegram.bot.username=test_bot",
         "telegram.bot.token=test_token",
         "backend.base-url=http://localhost:9999",
-        "bot.async-processing=false"  // Disable async for tests to make them synchronous
+        "bot.async-processing=false",
+        "bot.webhook-public-url="  // Empty webhook URL to skip webhook registration in tests
 })
 class StartCommandIntegrationTest {
 

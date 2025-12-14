@@ -3,7 +3,7 @@ package yayauheny.by.service.validation
 import io.konform.validation.Validation
 import io.konform.validation.constraints.maximum
 import io.konform.validation.constraints.minimum
-import by.yayauheny.shared.dto.LatLon
+import yayauheny.by.model.dto.LatLon
 
 /**
  * Параметры для поиска ближайших туалетов

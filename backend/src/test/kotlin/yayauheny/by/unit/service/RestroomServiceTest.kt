@@ -22,15 +22,15 @@ import org.junit.jupiter.params.provider.CsvSource
 import org.junit.jupiter.params.provider.EnumSource
 import org.junit.jupiter.params.provider.ValueSource
 import yayauheny.by.helpers.TestDataHelpers
-import yayauheny.by.model.restroom.NearestRestroomResponseDto
+import yayauheny.by.model.dto.NearestRestroomSlimDto
 import yayauheny.by.common.query.PaginationRequest
 import yayauheny.by.common.query.PageResponse
 import yayauheny.by.model.restroom.RestroomCreateDto
 import yayauheny.by.model.restroom.RestroomResponseDto
-import by.yayauheny.shared.enums.AccessibilityType
-import by.yayauheny.shared.enums.DataSourceType
-import by.yayauheny.shared.enums.FeeType
-import by.yayauheny.shared.enums.RestroomStatus
+import yayauheny.by.model.enums.AccessibilityType
+import yayauheny.by.model.enums.DataSourceType
+import yayauheny.by.model.enums.FeeType
+import yayauheny.by.model.enums.RestroomStatus
 import yayauheny.by.repository.RestroomRepository
 import yayauheny.by.service.RestroomService
 
@@ -129,7 +129,7 @@ class RestroomServiceTest {
             runTest {
                 val latitude = 40.7829
                 val longitude = -73.9654
-                val expectedRestrooms: List<NearestRestroomResponseDto> =
+                val expectedRestrooms: List<NearestRestroomSlimDto> =
                     TestDataHelpers.createNearestRestroomList(
                         limit
                     )
@@ -151,7 +151,7 @@ class RestroomServiceTest {
             runTest {
                 val latitude = 40.7829
                 val longitude = -73.9654
-                val expectedRestrooms: List<NearestRestroomResponseDto> = TestDataHelpers.createNearestRestroomList(5)
+                val expectedRestrooms: List<NearestRestroomSlimDto> = TestDataHelpers.createNearestRestroomList(5)
                 coEvery { restroomRepository.findNearestByLocation(latitude, longitude, 5) } returns expectedRestrooms
 
                 val actualRestrooms = restroomService.findNearestRestrooms(latitude, longitude)
@@ -177,7 +177,7 @@ class RestroomServiceTest {
             lon: Double,
             expectedCount: Int
         ) = runTest {
-            val expectedRestrooms: List<NearestRestroomResponseDto> =
+            val expectedRestrooms: List<NearestRestroomSlimDto> =
                 TestDataHelpers.createNearestRestroomList(
                     expectedCount
                 )

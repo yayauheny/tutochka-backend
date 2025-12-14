@@ -1,3 +1,3 @@
 package yayauheny.by.model.subway
 
-typealias SubwayStationResponseDto = by.yayauheny.shared.dto.SubwayStationResponseDto
+typealias SubwayStationResponseDto = yayauheny.by.model.dto.SubwayStationResponseDto

@@ -18,6 +18,12 @@ application {
 
 kotlin {
     jvmToolchain(21)
+
+    sourceSets {
+        main {
+            kotlin.srcDir("src/generated/kotlin")
+        }
+    }
 }
 
 java {
@@ -37,8 +43,6 @@ buildscript {
 }
 
 dependencies {
-    implementation(project(":shared"))
-
     jooqGenerator(libs.postgresql)
     jooqGenerator(libs.postgis)
 
@@ -166,7 +170,7 @@ jooq {
                     }
                     target.apply {
                         packageName = jooqTargetPackage
-                        directory = "${layout.buildDirectory.get()}/generated-src/jooq"
+                        directory = "$projectDir/src/generated/kotlin"
                     }
                     strategy.name = "org.jooq.codegen.DefaultGeneratorStrategy"
                 }

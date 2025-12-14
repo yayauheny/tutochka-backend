@@ -116,21 +116,14 @@ fun Application.configureErrorHandling() {
 
             val (statusCode, message) =
                 when (cause.sqlState) {
-                    // Unique violation
                     "23505" -> HttpStatusCode.Conflict to "Нарушение уникальности: запись с такими данными уже существует"
-                    // Foreign key violation
                     "23503" -> HttpStatusCode.BadRequest to "Нарушение внешнего ключа: связанная запись не найдена"
-                    // Not null violation
                     "23502" -> HttpStatusCode.BadRequest to "Нарушение ограничения: обязательное поле не может быть пустым"
-                    // Check constraint violation
                     "23514" -> HttpStatusCode.BadRequest to "Нарушение ограничения проверки: данные не соответствуют требованиям"
-                    // Undefined table
                     "42P01" -> HttpStatusCode.InternalServerError to "Ошибка базы данных: таблица не найдена"
-                    // Connection errors
                     "08000", "08003", "08006", "08001", "08004", "08007", "08P01" ->
                         HttpStatusCode.ServiceUnavailable to
                             "Ошибка подключения к базе данных"
-                    // Other database errors
                     else -> HttpStatusCode.InternalServerError to "Ошибка базы данных"
                 }
 

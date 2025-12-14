@@ -18,7 +18,6 @@ import yayauheny.by.util.transactionSuspend
 class RestroomImportRepositoryImpl(
     private val ctx: DSLContext
 ) : RestroomImportRepository {
-    // Временная таблица до генерации jOOQ
     private val restroomImports = DSL.table("restroom_imports")
     private val idField = DSL.field("id", SQLDataType.UUID)
     private val providerField = DSL.field("provider", SQLDataType.VARCHAR(50))

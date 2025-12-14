@@ -13,7 +13,8 @@ ktlint_standard_trailing-comma-on-declaration-site = disabled
 ktlint_standard_function-expression-body = disabled
 
 # Другие часто отключаемые правила
-ktlint_standard_no-wildcard-imports = disabled
+# Включаем проверку wildcard импортов - ktlint будет автоматически заменять их на конкретные при форматировании
+ktlint_standard_no-wildcard-imports = enabled
 ktlint_standard_import-ordering = disabled
 
 # Основное - отключение trailing commas

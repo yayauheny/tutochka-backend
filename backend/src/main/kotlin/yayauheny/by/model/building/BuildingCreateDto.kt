@@ -5,8 +5,8 @@ import java.util.UUID
 import kotlinx.serialization.Contextual
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.JsonObject
-import by.yayauheny.shared.dto.LatLon
-import by.yayauheny.shared.enums.PlaceType
+import yayauheny.by.model.dto.LatLon
+import yayauheny.by.model.enums.PlaceType
 import yayauheny.by.model.import.BuildingImportStatus
 
 @Serializable

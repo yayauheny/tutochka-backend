@@ -58,12 +58,10 @@ public class HideDetailsCallback implements CallbackHandler {
             var toilet = searchService.getById(toiletId)
                     .orElseThrow(() -> new IllegalArgumentException("Toilet not found: " + toiletId));
             
-            // Get distance from toilet DTO if available, otherwise null
             Double distanceMeters = toilet.distanceMeters() != null 
                 ? toilet.distanceMeters().doubleValue() 
                 : null;
             
-            // Show compact card
             String text = formatterService.toiletDetailsCompact(toilet, distanceMeters);
             sender.editOrReply(ctx, text, inlineKeyboard.toiletDetailsCompact(toilet));
         } catch (IllegalArgumentException e) {

@@ -1,6 +1,6 @@
 package integration.api.restrooms
 
-import by.yayauheny.shared.enums.RestroomStatus
+import yayauheny.by.model.enums.RestroomStatus
 import integration.base.BaseIntegrationTest
 import integration.base.KtorTestApplication
 import io.ktor.client.statement.bodyAsText
@@ -68,7 +68,7 @@ class RestroomApiTest : BaseIntegrationTest() {
                 assertTrue(coordinates != null, "Coordinates should be an object")
                 assertTrue(coordinates!!.containsKey("lat"), "Coordinates should have lat field")
                 assertTrue(coordinates.containsKey("lon"), "Coordinates should have lon field")
-                val names = jsonArray.mapNotNull { it.jsonObject["name"]?.jsonPrimitive?.content }
+                val names = jsonArray.mapNotNull { it.jsonObject["displayName"]?.jsonPrimitive?.content }
                 assertTrue(names.any { it.contains("Restroom 1") || it.contains("Restroom 2") }, "Response should contain test restrooms")
             }
         }
@@ -146,7 +146,7 @@ class RestroomApiTest : BaseIntegrationTest() {
                     assertTrue(coordinates != null, "Coordinates should be an object")
                     assertTrue(coordinates!!.containsKey("lat"), "Coordinates should have lat field")
                     assertTrue(coordinates.containsKey("lon"), "Coordinates should have lon field")
-                    assertTrue(restroom.containsKey("name"), "Each restroom should have name field")
+                    assertTrue(restroom.containsKey("displayName"), "Each restroom should have displayName field")
 
                     val distance = restroom["distanceMeters"]?.jsonPrimitive?.doubleOrNull
                     assertTrue(distance != null && distance >= 0, "Distance should be a valid non-negative number")
@@ -161,7 +161,7 @@ class RestroomApiTest : BaseIntegrationTest() {
                 }
 
                 val firstRestroom = jsonArray.first()
-                val firstName = firstRestroom["name"]?.toString()?.removeSurrounding("\"")
+                val firstName = firstRestroom["displayName"]?.toString()?.removeSurrounding("\"")
                 assertEquals(firstName, "Close Restroom", "The closest restroom should be returned first")
 
                 assertTrue(jsonArray.size <= 10, "Response size should not exceed limit")
@@ -169,7 +169,7 @@ class RestroomApiTest : BaseIntegrationTest() {
 
                 val closeRestroom =
                     jsonArray.find {
-                        it["name"]?.toString()?.removeSurrounding("\"") == "Close Restroom"
+                        it["displayName"]?.toString()?.removeSurrounding("\"") == "Close Restroom"
                     }
                 assertNotNull(closeRestroom, "Close Restroom should be found in results")
                 val closeDistance = closeRestroom["distanceMeters"]?.jsonPrimitive?.doubleOrNull
@@ -178,7 +178,7 @@ class RestroomApiTest : BaseIntegrationTest() {
 
                 val mediumRestroom =
                     jsonArray.find {
-                        it["name"]?.toString()?.removeSurrounding("\"") == "Medium Restroom"
+                        it["displayName"]?.toString()?.removeSurrounding("\"") == "Medium Restroom"
                     }
                 assertNotNull(mediumRestroom, "Medium Restroom should be found in results")
                 val mediumDistance = mediumRestroom["distanceMeters"]?.jsonPrimitive?.doubleOrNull
@@ -187,7 +187,7 @@ class RestroomApiTest : BaseIntegrationTest() {
 
                 val farRestroom =
                     jsonArray.find {
-                        it["name"]?.toString()?.removeSurrounding("\"") == "Far Restroom"
+                        it["displayName"]?.toString()?.removeSurrounding("\"") == "Far Restroom"
                     }
                 assertNotNull(farRestroom, "Far Restroom should be found in results")
                 val farDistance = farRestroom["distanceMeters"]?.jsonPrimitive?.doubleOrNull
@@ -286,7 +286,7 @@ class RestroomApiTest : BaseIntegrationTest() {
                 assertEquals(1, jsonArray.size, "Should return only 1 restroom (the active one)")
 
                 val returnedRestroom = jsonArray.first()
-                val name = returnedRestroom["name"]?.toString()?.removeSurrounding("\"")
+                val name = returnedRestroom["displayName"]?.toString()?.removeSurrounding("\"")
                 assertEquals("Active Restroom", name, "Should return the active restroom, not the inactive one")
 
                 val distanceValue = returnedRestroom["distanceMeters"]?.jsonPrimitive

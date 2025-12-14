@@ -9,7 +9,7 @@ import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.CsvSource
 import org.junit.jupiter.params.provider.ValueSource
 import yayauheny.by.model.city.CityCreateDto
-import by.yayauheny.shared.dto.LatLon
+import yayauheny.by.model.dto.LatLon
 import yayauheny.by.common.errors.ValidationException
 import yayauheny.by.service.validation.validateCityOnCreate
 import yayauheny.by.service.validation.validateRestroomCreateFields

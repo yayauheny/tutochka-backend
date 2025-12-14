@@ -16,8 +16,8 @@ import yayauheny.by.common.query.PageResponse
 import yayauheny.by.common.query.PaginationRequest
 import yayauheny.by.common.query.builder.QueryBuilder
 import yayauheny.by.common.query.builder.QueryExecutor
-import by.yayauheny.shared.enums.RestroomStatus
-import by.yayauheny.shared.dto.NearestRestroomSlimDto
+import yayauheny.by.model.enums.RestroomStatus
+import yayauheny.by.model.dto.NearestRestroomSlimDto
 import yayauheny.by.model.restroom.RestroomCreateDto
 import yayauheny.by.model.restroom.RestroomResponseDto
 import yayauheny.by.model.restroom.RestroomUpdateDto
@@ -242,11 +242,9 @@ class RestroomRepositoryImpl(
             val s = SUBWAY_STATIONS
             val l = SUBWAY_LINES
 
-            // Enriched query: include building and subway station data
             val selectFields =
                 getAllRestroomsFieldsWithCoordinates() +
                     listOf(
-                        // Building fields
                         b.ID.`as`("b_id"),
                         b.CITY_ID.`as`("b_city_id"),
                         b.NAME.`as`("b_name"),
@@ -259,7 +257,6 @@ class RestroomRepositoryImpl(
                         b.IS_DELETED.`as`("b_is_deleted"),
                         b.CREATED_AT.`as`("b_created_at"),
                         b.UPDATED_AT.`as`("b_updated_at"),
-                        // Subway station fields
                         s.ID.`as`("s_id"),
                         s.NAME_RU.`as`("s_name_ru"),
                         s.NAME_EN.`as`("s_name_en"),
@@ -270,7 +267,6 @@ class RestroomRepositoryImpl(
                         s.COORDINATES.lonAlias().`as`("s_lon"),
                         s.IS_DELETED.`as`("s_is_deleted"),
                         s.CREATED_AT.`as`("s_created_at"),
-                        // Subway line fields
                         l.ID.`as`("l_id"),
                         l.CITY_ID.`as`("l_city_id"),
                         l.NAME_RU.`as`("l_name_ru"),
@@ -295,7 +291,6 @@ class RestroomRepositoryImpl(
                         .and(RESTROOMS.IS_DELETED.isFalse)
                 ).fetchOne()
                 ?.let { record ->
-                    // Use enriched mapper that includes building and subway
                     RestroomMapper.mapFromRecordEnriched(record)
                 }
         }
@@ -397,10 +392,6 @@ class RestroomRepositoryImpl(
             val s = SUBWAY_STATIONS
             val l = SUBWAY_LINES
 
-            // Slim query: only fields needed for list display
-            // Restroom: id, name, fee_type, coordinates
-            // Building: name, address (for displayName fallback)
-            // Subway: name_ru, name_en, name_local, name_local_lang, line hex_color
             val selectFields =
                 listOf(
                     RESTROOMS.ID,
@@ -410,16 +401,13 @@ class RestroomRepositoryImpl(
                     coordinateFields +
                     distanceField.`as`("distance") +
                     listOf(
-                        // Building fields for displayName fallback
                         b.NAME.`as`("b_name"),
                         b.ADDRESS.`as`("b_address"),
-                        // Subway station fields for list display
                         s.ID.`as`("s_id"),
                         s.NAME_RU.`as`("s_name_ru"),
                         s.NAME_EN.`as`("s_name_en"),
                         s.NAME_LOCAL.`as`("s_name_local"),
                         s.NAME_LOCAL_LANG.`as`("s_name_local_lang"),
-                        // Subway line color for emoji
                         l.HEX_COLOR.`as`("l_hex")
                     )
 

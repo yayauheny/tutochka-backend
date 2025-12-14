@@ -63,7 +63,7 @@ class RestroomController(
 
                 val params =
                     NearestRestroomsParams(
-                        by.yayauheny.shared.dto
+                        yayauheny.by.model.dto
                             .LatLon(lat, lon),
                         limit,
                         distanceMeters

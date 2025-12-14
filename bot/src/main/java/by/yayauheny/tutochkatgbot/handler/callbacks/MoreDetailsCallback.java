@@ -58,12 +58,10 @@ public class MoreDetailsCallback implements CallbackHandler {
             var toilet = searchService.getById(toiletId)
                     .orElseThrow(() -> new IllegalArgumentException("Toilet not found: " + toiletId));
             
-            // Get distance from toilet DTO if available, otherwise null
             Double distanceMeters = toilet.distanceMeters() != null 
                 ? toilet.distanceMeters().doubleValue() 
                 : null;
             
-            // Show full card
             String text = formatterService.toiletDetailsFull(toilet, distanceMeters);
             sender.editOrReply(ctx, text, inlineKeyboard.toiletDetailsFull(toilet));
         } catch (IllegalArgumentException e) {

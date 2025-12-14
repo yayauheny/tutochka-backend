@@ -1,3 +1,3 @@
 package yayauheny.by.model.building
 
-typealias BuildingResponseDto = by.yayauheny.shared.dto.BuildingResponseDto
+typealias BuildingResponseDto = yayauheny.by.model.dto.BuildingResponseDto

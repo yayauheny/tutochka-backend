@@ -1,9 +1,8 @@
 package yayauheny.by.model.restroom
 
-import by.yayauheny.shared.dto.RestroomResponseDto as SharedRestroomResponseDto
+import yayauheny.by.model.dto.RestroomResponseDto
 
 /**
- * Backend-specific wrapper for RestroomResponseDto with Swagger annotations.
- * Uses shared DTO internally to avoid duplication.
+ * Re-export RestroomResponseDto from dto package for backward compatibility.
  */
-typealias RestroomResponseDto = SharedRestroomResponseDto
+typealias RestroomResponseDto = yayauheny.by.model.dto.RestroomResponseDto

@@ -324,6 +324,8 @@ buildNumber.properties
 .gradle
 **/build/
 !src/**/build/
+# Allow jOOQ generated files
+!backend/src/generated/
 
 # Ignore Gradle GUI config
 gradle-app.setting
@@ -350,9 +352,82 @@ gradle-app.setting
 # Ignore kilocode rules directory
 .kilocode/
 
-# Environment variables
+# =============================================================================
+# Environment Variables & Secrets (CRITICAL - Never commit these!)
+# =============================================================================
 .env
+.env.*
+!.env.example
+!.env.template
+*.env
+*.secret
+*.key
+*.pem
+*.p12
+*.pfx
+*.jks
+*.keystore
+*.truststore
 
+# Docker environment files
+docker/.env
+docker/.env.*
+docker/env.local
+docker/env.production
+docker/env.staging
+!docker/env.template
+!docker/env.minimal
+!docker/README.env.md
+
+# =============================================================================
+# Credentials & API Keys
+# =============================================================================
+**/credentials.json
+**/secrets.json
+**/api-keys.json
+**/config/secrets.*
+**/config/credentials.*
+*.credentials
+*.secrets
+
+# =============================================================================
+# Database & Connection Strings
+# =============================================================================
+**/database.properties
+**/db.properties
+**/datasource.properties
+**/*.db
+**/*.sqlite
+**/*.sqlite3
+
+# =============================================================================
+# SSL/TLS Certificates & Keys
+# =============================================================================
+*.crt
+*.cert
+*.cer
+*.key
+*.csr
+*.pem
+*.p7b
+*.p7c
+*.p12
+*.pfx
+**/ssl/
+**/certs/
+**/certificates/
+
+# =============================================================================
+# HashiCorp Vault (игнорирование локальных файлов на будущее)
+# =============================================================================
+vault-token
+.vault-token
+vault.hcl.local
+vault.json.local
+**/vault-secrets.*
+**/.vault/
+
+# =============================================================================
 # Logs
 logs
 npm-debug.log*

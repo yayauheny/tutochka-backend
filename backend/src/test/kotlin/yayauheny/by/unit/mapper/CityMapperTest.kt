@@ -11,7 +11,7 @@ import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertThrows
 import yayauheny.by.common.mapper.CityMapper
-import by.yayauheny.shared.dto.LatLon
+import yayauheny.by.model.dto.LatLon
 import yayauheny.by.tables.references.CITIES
 import java.util.UUID
 

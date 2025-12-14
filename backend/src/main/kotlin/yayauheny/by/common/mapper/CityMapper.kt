@@ -3,7 +3,7 @@ package yayauheny.by.common.mapper
 import org.jooq.Record
 import org.jooq.UpdateSetFirstStep
 import org.jooq.UpdateSetMoreStep
-import by.yayauheny.shared.dto.LatLon
+import yayauheny.by.model.dto.LatLon
 import yayauheny.by.model.city.CityResponseDto
 import yayauheny.by.model.city.CityUpdateDto
 import yayauheny.by.tables.references.CITIES
@@ -13,7 +13,6 @@ object CityMapper {
         val lat = record.get("lat", Double::class.javaObjectType)
         val lon = record.get("lon", Double::class.javaObjectType)
 
-        // Если вдруг не пришли — шанс, что забыли подключить projection:
         require(lat != null && lon != null) {
             "Missing lat/lon in record. Make sure query/returning uses cityProjection() with CITIES.COORDINATES.lat()/lon()."
         }

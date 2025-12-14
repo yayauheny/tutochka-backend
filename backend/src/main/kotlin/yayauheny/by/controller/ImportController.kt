@@ -65,7 +65,6 @@ class ImportController(
                     throw e
                 } catch (e: Exception) {
                     logger.error("Import failed", e)
-                    // ImportService уже сохранил ошибку в restroom_imports через markFailed
                     throw e
                 }
             }

@@ -9,7 +9,6 @@ rootProject.name = "tutochka"
 
 include("backend")
 include("bot")
-include("shared")
 
 dependencyResolutionManagement {
     repositories {

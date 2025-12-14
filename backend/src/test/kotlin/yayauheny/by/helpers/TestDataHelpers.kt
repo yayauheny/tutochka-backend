@@ -1,11 +1,11 @@
 package yayauheny.by.helpers
 
-import by.yayauheny.shared.dto.LatLon
-import by.yayauheny.shared.enums.AccessibilityType
-import by.yayauheny.shared.enums.DataSourceType
-import by.yayauheny.shared.enums.FeeType
-import by.yayauheny.shared.enums.PlaceType
-import by.yayauheny.shared.enums.RestroomStatus
+import yayauheny.by.model.dto.LatLon
+import yayauheny.by.model.enums.AccessibilityType
+import yayauheny.by.model.enums.DataSourceType
+import yayauheny.by.model.enums.FeeType
+import yayauheny.by.model.enums.PlaceType
+import yayauheny.by.model.enums.RestroomStatus
 import java.time.Instant
 import java.util.UUID
 import kotlinx.serialization.json.JsonObject
@@ -20,7 +20,7 @@ import yayauheny.by.model.city.CityUpdateDto
 import yayauheny.by.model.country.CountryCreateDto
 import yayauheny.by.model.country.CountryResponseDto
 import yayauheny.by.model.country.CountryUpdateDto
-import yayauheny.by.model.restroom.NearestRestroomResponseDto
+import yayauheny.by.model.dto.NearestRestroomSlimDto
 import yayauheny.by.model.restroom.RestroomCreateDto
 import yayauheny.by.model.restroom.RestroomResponseDto
 import yayauheny.by.model.restroom.RestroomUpdateDto
@@ -294,24 +294,21 @@ object TestDataHelpers {
             )
         }
 
-    fun createNearestRestroomResponseDto(
+    fun createNearestRestroomSlimDto(
         id: UUID = UUID.randomUUID(),
-        name: String = "Minsk Central Restroom",
-        address: String = "123 Independence Avenue, Minsk, Belarus",
+        displayName: String = "Minsk Central Restroom",
         feeType: FeeType = FeeType.FREE,
         lat: Double = 40.7829,
         lon: Double = -73.9654,
         distanceMeters: Double = 100.0,
-        isOpen: Boolean? = null
-    ) = NearestRestroomResponseDto(
+        subwayStation: yayauheny.by.model.dto.SubwayStationSlimDto? = null
+    ) = NearestRestroomSlimDto(
         id = id,
-        name = name,
-        address = address,
-        coordinates =
-            LatLon(lat = lat, lon = lon),
+        displayName = displayName,
         distanceMeters = distanceMeters,
         feeType = feeType,
-        isOpen = isOpen
+        coordinates = LatLon(lat = lat, lon = lon),
+        subwayStation = subwayStation
     )
 
     fun createNearestRestroomList(
@@ -319,11 +316,10 @@ object TestDataHelpers {
         cityId: UUID = UUID.randomUUID(),
         baseLat: Double = 40.7829,
         baseLon: Double = -73.9654
-    ): List<NearestRestroomResponseDto> =
+    ): List<NearestRestroomSlimDto> =
         (1..count).map { i ->
-            createNearestRestroomResponseDto(
-                name = "Restroom $i",
-                address = "Address $i",
+            createNearestRestroomSlimDto(
+                displayName = "Restroom $i",
                 lat = baseLat + i * 0.01,
                 lon = baseLon - i * 0.01,
                 distanceMeters = i * 50.0 // Simulate increasing distance

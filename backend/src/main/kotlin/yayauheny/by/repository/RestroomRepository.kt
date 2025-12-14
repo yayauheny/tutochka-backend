@@ -1,6 +1,6 @@
 package yayauheny.by.repository
 
-import by.yayauheny.shared.dto.NearestRestroomSlimDto
+import yayauheny.by.model.dto.NearestRestroomSlimDto
 import java.util.UUID
 import yayauheny.by.config.ApiConstants
 import yayauheny.by.model.restroom.RestroomCreateDto

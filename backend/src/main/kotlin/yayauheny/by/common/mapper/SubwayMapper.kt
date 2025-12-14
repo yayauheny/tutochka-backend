@@ -11,7 +11,7 @@ import yayauheny.by.tables.references.SUBWAY_LINES
 import yayauheny.by.tables.references.SUBWAY_STATIONS
 import yayauheny.by.util.pointExpr
 import yayauheny.by.util.reqDouble
-import by.yayauheny.shared.dto.LatLon
+import yayauheny.by.model.dto.LatLon
 
 object SubwayMapper {
     fun mapLineFromRecord(record: Record): SubwayLineResponseDto {

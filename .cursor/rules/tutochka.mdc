@@ -25,62 +25,229 @@ alwaysApply: true
 - ❌ **NEVER**: Make API calls for read-only operations
 
 ### **References**
-- [TASKMASTER_AUTO_WORKFLOW.mdc](mdc:.cursor/rules/TASKMASTER_AUTO_WORKFLOW.mdc) - Workflow rule
-- [taskmaster_integration.mdc](mdc:.cursor/rules/taskmaster_integration.mdc) - Integration rules
+- [taskmaster_integration.mdc](mdc:.cursor/rules/taskmaster_integration.mdc) - Complete Task Master integration guide
+- [taskmaster/dev_workflow.mdc](mdc:.cursor/rules/taskmaster/dev_workflow.mdc) - Development workflow patterns
+- [taskmaster/git_commit.mdc](mdc:.cursor/rules/taskmaster/git_commit.mdc) - Git commit automation
+
+## **Code Style & Comments**
+
+### **Comments Policy**
+- ❌ **NEVER** add comments to new code unless absolutely necessary
+- ❌ **NEVER** add comments that simply repeat what the code does
+- ❌ **NEVER** add TODO/FIXME/HACK comments - fix issues immediately or create tasks
+- ✅ **ONLY** add comments when explaining:
+  - Complex business logic that isn't obvious from code
+  - Non-obvious technical decisions (e.g., workarounds for library limitations)
+  - Performance optimizations that require explanation
+- ✅ **ONLY** use KDoc/Javadoc for public APIs that are part of external contracts
+- Code should be self-documenting through clear naming and structure
 
 ## Core Principles
 - Follow SOLID, DRY, KISS, and YAGNI principles
 - Adhere to OWASP security best practices
 - Break tasks into smallest units and solve problems step-by-step
+- Write self-documenting code - avoid comments, prefer clear naming
 
 ## Technology Stack
-- Framework: Kotlin Ktor 3.x with Kotlin 2.1+
-- JDK: 21 (LTS)
-- Build: Gradle with Kotlin DSL
-- Dependencies: Ktor Server Core/Netty, kotlinx.serialization, Exposed, PostGIS, Liquibase, Testcontainers, Koin, Logback
 
-## Application Structure
-- Keep existing structure (entity, repository, service, routes)
-- Do not force feature-based folders if not explicitly requested
-- Structure should remain similar to Java projects for consistency
+### **Backend Module**
+- **Framework**: Kotlin Ktor 3.x with Kotlin 2.1+
+- **JDK**: 21 (LTS)
+- **Build**: Gradle with Kotlin DSL
+- **Database Access**: jOOQ (SQL-centric, code generation from schema)
+- **Database**: PostgreSQL 17+ with PostGIS extension
+- **Migrations**: Liquibase
+- **DI**: Koin
+- **Testing**: JUnit 5, MockK, Testcontainers
+- **Logging**: Logback
 
-src/main/kotlin/com/company/app/
-├── entity/           # Database entities (Exposed tables, DTOs)
-├── repository/       # Data access layer
-├── service/          # Business logic
-├── route/            # Ktor routes
-└── config/           # DI, configs, utils
+### **Bot Module**
+- **Framework**: Spring Boot 3.x
+- **JDK**: 21 (LTS)
+- **Build**: Gradle with Kotlin DSL
+- **Telegram**: TelegramBots library
+- **HTTP Client**: Spring WebClient (for backend API calls)
+- **Caching**: Caffeine
+- **Testing**: JUnit 5, Mockito, Spring Boot Test
 
-Tests mirror this structure under src/test/kotlin
+## Project Architecture
+
+### **Monorepo Structure**
+```
+tutochka-backend/
+├── backend/          # Kotlin Ktor REST API
+│   ├── src/main/kotlin/yayauheny/by/
+│   │   ├── entity/          # Database entities (jOOQ tables, DTOs)
+│   │   ├── repository/      # Data access layer (jOOQ queries)
+│   │   ├── service/         # Business logic
+│   │   ├── controller/      # Ktor route handlers
+│   │   ├── common/          # Shared utilities, mappers, plugins
+│   │   ├── config/          # DI configuration (Koin)
+│   │   ├── util/            # Extensions, helpers (GeoDsl, etc.)
+│   │   └── model/           # Domain models, DTOs, enums
+│   └── src/main/resources/
+│       └── db/changelog/    # Liquibase migrations
+│
+└── bot/             # Spring Boot Telegram Bot
+    ├── src/main/java/by/yayauheny/tutochkatgbot/
+    │   ├── handler/         # Update handlers (commands, callbacks, messages)
+    │   ├── router/          # UpdateRouter - routes updates to handlers
+    │   ├── service/          # Business logic (SearchService, FormatterService, etc.)
+    │   ├── integration/     # Backend API client (WebBackendClient)
+    │   ├── cache/            # Caching services (Caffeine-based)
+    │   ├── bot/              # Telegram API wrappers (MessageSender, BotSender)
+    │   ├── keyboard/         # Keyboard factories
+    │   ├── config/           # Spring configuration
+    │   ├── ingress/          # Webhook/LongPolling ingress
+    │   └── dto/              # DTOs matching backend API
+    └── src/test/java/        # Tests (unit + integration)
+
+Tests mirror this structure under src/test/kotlin (backend) and src/test/java (bot)
+```
+
+### **Backend Module (Kotlin Ktor)**
+- **Framework**: Ktor 3.x with Netty
+- **Database**: PostgreSQL + PostGIS (via jOOQ)
+- **DI**: Koin
+- **Migrations**: Liquibase
+- **Structure**: Layered architecture (controller → service → repository → database)
+- **API**: RESTful JSON API with pagination, filtering, sorting
+
+### **Bot Module (Spring Boot)**
+- **Framework**: Spring Boot 3.x
+- **Telegram**: TelegramBots library (LongPolling/Webhook)
+- **Integration**: HTTP client to backend API
+- **Architecture**: Handler-based routing pattern
+  - `UpdateRouter` receives updates from Telegram
+  - Routes to appropriate handlers based on update type:
+    - `CommandHandler` - `/start`, `/help`, `/settings`
+    - `CallbackHandler` - inline button callbacks
+    - `MessageHandler` - location messages, plain text
+  - Handlers use `MessageSender` to send responses
+  - `SearchService` queries backend API
+  - `FormatterService` formats responses for Telegram
+  - Caching via `CaffeineLastLocationCacheService` and `CaffeineRestroomCacheService`
+- **Async Processing**: Configurable sync/async update handling
+- **Webhook Support**: Auto-registration via `WebhookRegistrar`
+
+### **Communication Flow**
+```
+Telegram → WebhookController/LongPollingIngress
+    ↓
+UpdateProcessingService (sync/async)
+    ↓
+UpdateRouter.route(Update)
+    ↓
+Handler (CommandHandler/CallbackHandler/MessageHandler)
+    ↓
+Service Layer (SearchService, FormatterService, UserService)
+    ↓
+WebBackendClient → Backend API (HTTP)
+    ↓
+Backend → Database (jOOQ + PostGIS)
+```
+
+### **Module Integration**
+
+#### **Bot → Backend Communication**
+- **Protocol**: HTTP REST API
+- **Client**: `WebBackendClient` (Spring WebClient)
+- **Base URL**: Configured via `BACKEND_BASE_URL` env variable
+- **Timeout Settings**: `BACKEND_CONNECT_TIMEOUT_MS`, `BACKEND_READ_TIMEOUT_MS`
+- **Retry Logic**: Configurable retry attempts and delay
+- **Error Handling**: Maps HTTP errors to domain exceptions
+
+#### **Backend → Database Communication**
+- **Protocol**: JDBC via HikariCP connection pool
+- **ORM**: jOOQ (type-safe SQL DSL)
+- **Transactions**: Managed via `transactionSuspend {}` extension
+- **Migrations**: Liquibase (runs automatically on startup)
+
+#### **Service Boundaries**
+- ✅ **ALWAYS** use HTTP for bot → backend communication
+- ✅ **ALWAYS** use jOOQ for backend → database communication
+- ✅ **ALWAYS** handle network errors gracefully
+- ✅ **ALWAYS** use connection pooling for database
+- ❌ **NEVER** share database connections between modules
+- ❌ **NEVER** bypass HTTP layer for bot → backend communication
 
 ## Application Logic Design
-1. Routes: only handle request/response, delegate logic
-2. Services: contain business rules, call repositories
-3. Repositories: Exposed queries + DB transactions
-4. Entities: Data classes for models
-5. DTOs: Transfer data between layers
+
+### **Backend (Ktor)**
+1. **Controllers**: Handle HTTP requests/responses, delegate to services
+2. **Services**: Contain business rules, call repositories, throw domain exceptions
+3. **Repositories**: jOOQ queries + DB transactions, return DTOs
+4. **DTOs**: Data classes for API contracts
+5. **Mappers**: Convert jOOQ Records to DTOs
+
+### **Bot (Spring Boot)**
+1. **Handlers**: Process Telegram updates, delegate to services
+2. **Services**: Business logic (SearchService, FormatterService, UserService)
+3. **Integration**: WebBackendClient calls backend API
+4. **Router**: UpdateRouter routes updates to appropriate handlers
 
 ## Entities & Data Classes
-- Use data class for DTOs
-- Use object Table : UUIDTable() for Exposed entities
-- Use UUID or auto-incremented integers for IDs
-- Prefer immutability (val over var)
+- Use `data class` for DTOs (immutable, with serialization)
+- jOOQ generates table classes from database schema (in `src/generated/kotlin`)
+- Use UUID for primary keys (generated via `gen_random_uuid()`)
+- Prefer immutability (`val` over `var`)
+- Use `@Serializable` for DTOs that are serialized to JSON
 
-## Repository Pattern Example
-interface ToiletRepository {
-    suspend fun findNearest(lat: Double, lon: Double, radiusMeters: Double): List<ToiletDTO>
+## Repository Pattern with jOOQ
+
+### **jOOQ Usage Guidelines**
+- ✅ **ALWAYS** use generated table classes from `yayauheny.by.tables.references.*`
+- ✅ **ALWAYS** use `DSLContext` for queries (injected via Koin)
+- ✅ **ALWAYS** wrap queries in `transactionSuspend {}` extension for coroutines
+- ✅ **ALWAYS** use type-safe jOOQ DSL instead of raw SQL
+- ✅ **ALWAYS** map `Record` to DTOs using mappers (don't expose `Record`)
+- ✅ **ALWAYS** use extensions from `GeoDsl.kt` for spatial queries
+- ❌ **NEVER** use raw SQL strings - use jOOQ DSL
+- ❌ **NEVER** expose `Record` objects - always map to DTOs
+- ❌ **NEVER** use `selectFrom()` when you only need specific columns
+
+### **Example Repository Pattern**
+```kotlin
+interface RestroomRepository {
+    suspend fun findNearest(
+        lat: Double, 
+        lon: Double, 
+        radiusMeters: Double,
+        limit: Int
+    ): List<NearestRestroomSlimDto>
 }
 
-class ToiletRepositoryImpl : ToiletRepository {
-    override suspend fun findNearest(lat: Double, lon: Double, radiusMeters: Double): List<ToiletDTO> =
-        newSuspendedTransaction {
-            Toilets
-                .select {
-                    ST_DWithin(Toilets.location, ST_MakePoint(lat, lon), radiusMeters)
-                }
-                .map { it.toToiletDTO() }
-        }
+class RestroomRepositoryImpl(
+    private val ctx: DSLContext
+) : RestroomRepository {
+    override suspend fun findNearest(
+        lat: Double,
+        lon: Double,
+        radiusMeters: Double,
+        limit: Int
+    ): List<NearestRestroomSlimDto> = ctx.transactionSuspend {
+        val distanceField = RESTROOMS.COORDINATES.distanceGeographyTo(lat, lon)
+        
+        ctx.select(
+            RESTROOMS.ID,
+            RESTROOMS.NAME,
+            RESTROOMS.FEE_TYPE,
+            RESTROOMS.COORDINATES.latAlias(),
+            RESTROOMS.COORDINATES.lonAlias(),
+            distanceField.`as`("distance")
+        )
+        .from(RESTROOMS)
+        .where(
+            RESTROOMS.COORDINATES.withinDistanceOf(lat, lon, radiusMeters)
+            .and(RESTROOMS.IS_DELETED.isFalse)
+        )
+        .orderBy(RESTROOMS.COORDINATES.knnOrderTo(lat, lon))
+        .limit(limit)
+        .fetch()
+        .map { RestroomMapper.mapToSlimDto(it) }
+    }
 }
+```
 
 ## Service Layer
 - Services must not contain SQL, only business logic
@@ -97,10 +264,52 @@ class ToiletRepositoryImpl : ToiletRepository {
 - Always set security headers (X-Frame-Options, CSP, HSTS, etc.)
 - Avoid exposing stack traces to clients
 
-## Configuration Management
-- Use type-safe configuration via HOCON/YAML
-- Expose configs via DI
-- Keep secrets in environment variables, not in code
+## Configuration & Environment Variables
+
+### **Environment Variables Management**
+
+#### **Backend Configuration**
+- **Database**: Configured via `DatabaseConfig` data class
+  - Reads from environment variables: `DB_HOST`, `DB_PORT`, `DB_NAME`, `DB_USER`, `DB_PASSWORD`
+  - Connection pool settings: `DB_MAX_POOL_SIZE`, `DB_MIN_IDLE`, etc.
+  - Uses `EnvironmentExtensions.kt` for safe env variable access
+- **Application**: `APP_PORT`, `APP_ENV` (defaults: 8080, production)
+- **Configuration Files**: None - all via environment variables
+
+#### **Bot Configuration**
+- **Spring Boot**: Uses `application.yml` and `application-prod.yml`
+- **Environment Variables**:
+  - `TELEGRAM_BOT_TOKEN` - Bot token from @BotFather
+  - `TELEGRAM_BOT_USERNAME` - Bot username (without @)
+  - `BOT_WEBHOOK_PUBLIC_URL` - Public HTTPS URL for webhook
+  - `BOT_WEBHOOK_PATH` - Webhook path (default: `/telegram/webhook`)
+  - `BOT_ASYNC_PROCESSING` - Enable async update processing (default: `true`)
+  - `BOT_ADMIN_IDS` - Comma-separated admin user IDs
+  - `BACKEND_BASE_URL` - Backend API URL (for Docker: `http://backend:8080/api/v1`)
+  - `PORT` - Server port (default: 8081)
+  - `SPRING_PROFILES_ACTIVE` - Spring profile (default: `prod`)
+
+#### **Docker Configuration**
+- **Location**: `docker/.env` (created from `docker/env.template` or `docker/env.minimal`)
+- **Required Variables**:
+  - Backend: `DB_HOST`, `DB_NAME`, `DB_USER`, `DB_PASSWORD`
+  - Bot: `TELEGRAM_BOT_TOKEN`, `TELEGRAM_BOT_USERNAME`, `BOT_WEBHOOK_PUBLIC_URL`, `BACKEND_BASE_URL`
+- **Optional Variables**: All have defaults in `docker-compose.yml` using `${VAR:-default}` syntax
+- **Security**:
+  - ✅ **ALWAYS** use `.env` file for secrets (never commit to git)
+  - ✅ **ALWAYS** use `docker/env.template` as reference
+  - ✅ **ALWAYS** verify `.env` is in `.gitignore`
+  - ❌ **NEVER** hardcode secrets in code or config files
+  - ❌ **NEVER** commit `.env` files to repository
+
+### **Configuration Best Practices**
+- ✅ **ALWAYS** use environment variables for secrets
+- ✅ **ALWAYS** provide sensible defaults for optional values
+- ✅ **ALWAYS** validate configuration on startup (see `DatabaseConfig.init {}`)
+- ✅ **ALWAYS** use type-safe configuration classes (`DatabaseConfig`, Spring `@ConfigurationProperties`)
+- ✅ **ALWAYS** document required vs optional variables
+- ❌ **NEVER** store secrets in code or version control
+- ❌ **NEVER** use hardcoded values for environment-specific configs
 
 ## Coroutines & Kotlin Best Practices
 - Use suspend functions for DB and service methods
@@ -116,51 +325,316 @@ class ToiletRepositoryImpl : ToiletRepository {
 - Use inline reified functions for generic helpers
 - Prefer sealed classes for error handling
 
-## Exposed ORM Guidelines
-- Use Exposed DSL instead of raw SQL where possible
-- Always wrap DB calls in transaction {} or newSuspendedTransaction {} for coroutines
-- Use batchInsert and batchUpdate for bulk operations
-- Fetch only required columns (avoid SELECT *)
-- Map query results to DTOs; do not expose ResultRow
-- Keep transactions short and focused
-- Use aliases for subqueries
-- Use Liquibase for schema migrations, not Exposed DDL
+## jOOQ Query Guidelines
 
-## Geospatial Data (PostGIS)
-- Use built-in PostGIS functions:
-  - ST_DWithin for radius queries
-  - ST_Intersects, ST_Contains for spatial relations
-  - ST_Distance for measuring distances
-- Always use GiST or SP-GiST indexes on geometry/geography
-- Prefer ST_DWithin with geography type for Earth distances
-- Use bounding boxes (ST_MakeEnvelope) for rough filters
-- Avoid fetching all geometries into memory; filter in SQL
-- Add partial indexes for common query conditions
-- Use EXPLAIN ANALYZE to optimize queries
+### **Code Generation**
+- jOOQ code is generated from database schema via Liquibase migrations
+- Generated code is in `backend/src/generated/kotlin/yayauheny/by/tables/`
+- Table references are in `yayauheny.by.tables.references.*` (e.g., `RESTROOMS`, `BUILDINGS`)
+- After schema changes, regenerate jOOQ code: `./gradlew :backend:generateJooq`
+
+### **Query Patterns**
+- ✅ **ALWAYS** use jOOQ DSL instead of raw SQL
+- ✅ **ALWAYS** wrap DB calls in `transactionSuspend {}` extension from `TransactionExtensions.kt`
+- ✅ **ALWAYS** use `batch()` for bulk operations (insert/update/delete)
+- ✅ **ALWAYS** select only required columns - avoid `selectFrom()`
+- ✅ **ALWAYS** map `Record` to DTOs using mapper functions
+- ✅ **ALWAYS** use table references from `yayauheny.by.tables.references.*`
+- ✅ **ALWAYS** use `GeoDsl.kt` extensions for spatial queries
+- ✅ **ALWAYS** use `CommonExtensions.kt` utilities (e.g., `toJSONBOrEmpty()`)
+- ✅ **ALWAYS** keep transactions short and focused
+- ✅ **ALWAYS** use aliases for JOINs and subqueries
+- ✅ **ALWAYS** use Liquibase for schema migrations (jOOQ generates code from schema)
+- ❌ **NEVER** use raw SQL strings - use jOOQ DSL
+- ❌ **NEVER** expose `Record` objects - always map to DTOs
+- ❌ **NEVER** use `selectFrom()` when you only need specific columns
+- ❌ **NEVER** write DDL in code - use Liquibase migrations
+- ❌ **NEVER** manually edit generated jOOQ code - regenerate after schema changes
+
+## Geospatial Data (PostGIS) & Query Optimization
+
+### **Available Indexes**
+- **GIST indexes** on geometry columns:
+  - `idx_restrooms_coordinates` on `restrooms.coordinates`
+  - `idx_buildings_coordinates` on `buildings.coordinates`
+  - `idx_subway_stations_coordinates` on `subway_stations.coordinates`
+  - `idx_cities_coordinates` on `cities.coordinates`
+  - `idx_cities_bounds` on `cities.city_bounds`
+- **GIN indexes** on JSONB columns:
+  - `idx_buildings_external_ids` on `buildings.external_ids`
+  - `idx_restrooms_external_maps` on `restrooms.external_maps`
+- **B-tree indexes** for filters:
+  - `idx_restrooms_filters` on `(fee_type, accessibility_type, place_type)` WHERE `is_deleted = false`
+  - Partial indexes on `is_deleted` and `status` fields
+
+### **Geospatial Query Optimization Rules**
+- ✅ **ALWAYS** use `ST_DWithin` for radius queries - it uses GIST index efficiently
+- ✅ **ALWAYS** use `withinDistanceOf()` extension from `GeoDsl.kt` for radius filtering
+- ✅ **ALWAYS** use `knnOrderTo()` with `<->` operator for KNN sorting (uses GIST index)
+- ✅ **ALWAYS** use `distanceGeographyTo()` for accurate Earth distances (geography type)
+- ✅ **ALWAYS** filter by `is_deleted = false` to use partial indexes
+- ✅ **ALWAYS** combine spatial filters with attribute filters to leverage composite indexes
+- ❌ **NEVER** use `ST_Distance` in WHERE clause without `ST_DWithin` first
+- ❌ **NEVER** fetch all geometries and filter in application code
+- ❌ **NEVER** use `ST_Contains` or `ST_Intersects` without GIST index on geometry column
+
+### **JSONB Query Optimization Rules**
+- ✅ **ALWAYS** use GIN index operators for JSONB queries in jOOQ:
+  - Use `DSL.condition()` for JSONB operators:
+    - `@>` for containment: `DSL.condition("{0} @> {1}::jsonb", field, jsonValue)`
+    - `?` for key existence: `DSL.condition("{0} ? {1}", field, key)`
+    - `?&` for all keys exist: `DSL.condition("{0} ?& array[{1}]", field, keys)`
+    - `?|` for any key exists: `DSL.condition("{0} ?| array[{1}]", field, keys)`
+- ✅ **ALWAYS** use `toJSONBOrEmpty()` extension from `CommonExtensions.kt` for safe JSONB conversion
+- ✅ **ALWAYS** use `toJsonObjectOrEmpty()` extension to convert JSONB to `JsonObject`
+- ✅ **ALWAYS** use GIN indexes on JSONB columns that are queried:
+  - `idx_buildings_external_ids` on `buildings.external_ids`
+  - `idx_restrooms_external_maps` on `restrooms.external_maps`
+- ✅ **ALWAYS** cast to JSONB explicitly: `DSL.cast(value, SQLDataType.JSONB)` or `JSONB.jsonb(jsonString)`
+- ✅ **ALWAYS** use `JSONB.jsonb()` constructor for creating JSONB values
+- ❌ **NEVER** use `jsonb_extract_path_text()` in WHERE clause without GIN index
+- ❌ **NEVER** parse JSONB in application code when you can filter in SQL
+- ❌ **NEVER** query JSONB fields without using GIN index operators
+- ❌ **NEVER** use string concatenation for JSONB - use proper JSONB constructors
+
+### **JSONB Field Usage**
+- **JSONB columns in schema**:
+  - `buildings.external_ids` - external service IDs (e.g., `{"2gis_building_id": "..."}`)
+  - `buildings.work_time` - working hours schedule
+  - `restrooms.external_maps` - external map links (e.g., `{"2gis": {"branch_id": "..."}}`)
+  - `restrooms.phones` - phone numbers array
+  - `restrooms.work_time` - working hours schedule
+  - `restrooms.amenities` - amenities and features
+  - `subway_stations.external_ids` - external service IDs
+
+### **CRUD Query Optimization**
+- ✅ **ALWAYS** select only required columns - avoid `SELECT *`
+- ✅ **ALWAYS** use projections for list endpoints (e.g., `NearestRestroomSlimDto`)
+- ✅ **ALWAYS** use enriched queries with JOINs only when needed (detail endpoints)
+- ✅ **ALWAYS** apply `is_deleted = false` filter early to use partial indexes
+- ✅ **ALWAYS** combine multiple filters in single WHERE clause to leverage composite indexes
+- ✅ **ALWAYS** use `LIMIT` with spatial queries to reduce result set
+- ✅ **ALWAYS** order by distance (`knnOrderTo`) before applying LIMIT for nearest queries
+- ❌ **NEVER** fetch full entities when only IDs or slim DTOs are needed
+- ❌ **NEVER** use N+1 queries - use JOINs or batch queries
+- ❌ **NEVER** filter by JSONB fields without GIN index
+
+### **Example Optimized Query Patterns**
+
+#### **Spatial Query with Indexes**
+```kotlin
+// ✅ GOOD: Uses GIST index, partial index, and projection
+val distanceField = RESTROOMS.COORDINATES.distanceGeographyTo(lat, lon)
+val results = ctx.select(
+    RESTROOMS.ID,
+    RESTROOMS.NAME,
+    RESTROOMS.FEE_TYPE,
+    RESTROOMS.COORDINATES.latAlias(),
+    RESTROOMS.COORDINATES.lonAlias(),
+    distanceField.`as`("distance")
+)
+.from(RESTROOMS)
+.where(
+    RESTROOMS.COORDINATES.withinDistanceOf(lat, lon, radiusMeters)
+    .and(RESTROOMS.IS_DELETED.isFalse)
+)
+.orderBy(RESTROOMS.COORDINATES.knnOrderTo(lat, lon))
+.limit(limit)
+.fetch()
+.map { RestroomMapper.mapToSlimDto(it) }
+
+// ❌ BAD: Fetches all columns, no spatial index usage
+val results = ctx.selectFrom(RESTROOMS)
+.where(RESTROOMS.IS_DELETED.isFalse)
+.fetch()
+.filter { calculateDistance(it.coordinates, point) < radius }
+```
+
+#### **JSONB Query with GIN Index**
+```kotlin
+// ✅ GOOD: Uses GIN index operator
+val jsonbValue = JSONB.jsonb("""{"2gis_building_id": "12345"}""")
+val results = ctx.selectFrom(BUILDINGS)
+.where(
+    BUILDINGS.EXTERNAL_IDS.contains(jsonbValue)
+    .and(BUILDINGS.IS_DELETED.isFalse)
+)
+.fetch()
+
+// ✅ GOOD: Key existence check with GIN index
+val results = ctx.selectFrom(RESTROOMS)
+.where(
+    DSL.condition("{0} ? {1}", RESTROOMS.EXTERNAL_MAPS, "2gis")
+    .and(RESTROOMS.IS_DELETED.isFalse)
+)
+.fetch()
+
+// ❌ BAD: No index usage, parses JSONB in application
+val results = ctx.selectFrom(RESTROOMS)
+.where(RESTROOMS.IS_DELETED.isFalse)
+.fetch()
+.filter { it.externalMaps?.containsKey("2gis") == true }
+```
+
+#### **Combined Filters with Composite Index**
+```kotlin
+// ✅ GOOD: Uses composite index idx_restrooms_filters + GIST index
+val results = ctx.select(
+    RESTROOMS.ID,
+    RESTROOMS.NAME,
+    RESTROOMS.FEE_TYPE
+)
+.from(RESTROOMS)
+.where(
+    RESTROOMS.COORDINATES.withinDistanceOf(lat, lon, radiusMeters)
+    .and(RESTROOMS.FEE_TYPE.eq("FREE"))
+    .and(RESTROOMS.ACCESSIBILITY_TYPE.eq("DISABLED"))
+    .and(RESTROOMS.IS_DELETED.isFalse)
+)
+.orderBy(RESTROOMS.COORDINATES.knnOrderTo(lat, lon))
+.limit(limit)
+.fetch()
+```
+
+## Docker & Deployment
+
+### **Docker Setup**
+- **Multi-stage Builds**: Used for both backend and bot modules
+  - Stage 1: Build with Gradle (includes dependencies download)
+  - Stage 2: Runtime with JRE only (smaller image)
+- **Image Optimization**:
+  - Use `eclipse-temurin:21-jre-jammy` for runtime (smaller than JDK)
+  - Install only required packages (curl for healthchecks)
+  - Run as non-root user (`appuser:appgroup`)
+  - Set memory limits in `docker-compose.yml`
+
+### **Docker Compose Services**
+- **Caddy**: Reverse proxy with automatic HTTPS (Let's Encrypt)
+- **Backend**: Ktor application on port 8080
+- **Bot**: Spring Boot application on port 8081
+- **Network**: Isolated bridge network (`tutochka_net`)
+- **Health Checks**: Configured for all services
+- **Dependencies**: Bot depends on backend health
+
+### **Deployment Checklist**
+- ✅ Create `docker/.env` from template
+- ✅ Fill all required environment variables
+- ✅ Verify `.env` is not committed to git
+- ✅ Configure domain DNS to point to server
+- ✅ Ensure ports 80/443 are open
+- ✅ Run `docker compose up --build` to start services
+- ✅ Verify health checks: `curl http://localhost:8080/health`
+
+### **Environment Variables in Docker**
+- **Source**: `docker/.env` file (not committed to git)
+- **Template**: `docker/env.template` (committed, with examples)
+- **Minimal**: `docker/env.minimal` (committed, required vars only)
+- **Usage**: Docker Compose automatically loads `.env` from `docker/` directory
+- **Validation**: Check with `docker compose config` before starting
 
 ## Testing Guidelines
-- Unit Tests:
-  - Use JUnit 5 + MockK
-  - Use runTest {} for suspend functions
-  - Test both happy-path and error cases
 
-- Integration Tests:
-  - Use Testcontainers with PostgreSQL
-  - Run Liquibase migrations before tests
-  - Test repositories and services directly (no mocks)
-  - Reset DB state between tests
+### **Test Structure & Organization**
 
-- Separation:
-  - Keep unit tests in src/test/kotlin
-  - Keep integration tests in src/integrationTest/kotlin if possible
-  - Do not mix unit and integration tests in the same package
+#### **Backend Module (Kotlin)**
+- **Unit Tests**: `src/test/kotlin/yayauheny/by/unit/`
+  - Test individual classes in isolation
+  - Use MockK for mocking dependencies
+  - Use `runTest {}` for suspend functions
+  - Tag: no tag (default)
+- **Integration Tests**: `src/test/kotlin/yayauheny/by/integrationTest/kotlin/`
+  - Test with real database (Testcontainers)
+  - Extend `BaseIntegrationTest` for database setup
+  - Use `@Tag("integration")` annotation
+  - Run Liquibase migrations via `BaseIntegrationTest`
+  - Reset DB state between tests using `DatabaseTestHelper.truncateAllTables()`
+- **Test Execution**:
+  - Unit tests: `./gradlew :backend:test`
+  - Integration tests: `./gradlew :backend:integrationTest`
+  - Integration tests run sequentially (parallel disabled)
 
-- Route tests:
-  - Use ktor-server-test-host for endpoints
-  - Cover positive and negative test cases
+#### **Bot Module (Java)**
+- **Unit Tests**: `src/test/java/by/yayauheny/tutochkatgbot/`
+  - Test individual classes with Mockito
+  - Mock external dependencies (MessageSender, WebBackendClient)
+- **Integration Tests**: `src/test/java/by/yayauheny/tutochkatgbot/integration/`
+  - Use `@SpringBootTest` with `TutochkaTgBotApplication.class`
+  - Use `@MockitoBean` to mock Telegram API and backend client
+  - Use `@TestPropertySource` to override configuration:
+    - Set `bot.webhook-public-url=` to skip webhook registration
+    - Set `bot.async-processing=false` for synchronous tests
+    - Provide test values for required properties
 
-- General rules:
-  - Minimum 80% coverage overall, 90%+ for repositories and services
-  - Test edge cases: empty collections, null values, boundaries
-  - Test failure paths: exceptions, validation errors, timeouts
-  - All public APIs must have integration tests
+### **Testing Patterns**
+
+#### **Backend Integration Tests**
+```kotlin
+@Tag("integration")
+class RestroomRepositoryTest : BaseIntegrationTest() {
+    @Test
+    fun `test repository method`() = runTest {
+        val testEnv = DatabaseTestHelper.createTestEnvironment(dslContext)
+        // Test implementation
+    }
+}
+```
+
+**Key Points:**
+- ✅ **ALWAYS** extend `BaseIntegrationTest` for database tests
+- ✅ **ALWAYS** use `DatabaseTestHelper` for test data setup
+- ✅ **ALWAYS** use `runTest {}` for suspend functions
+- ✅ **ALWAYS** tag integration tests with `@Tag("integration")`
+- ✅ **ALWAYS** reset DB state in `@BeforeEach` (handled by `BaseIntegrationTest`)
+- ❌ **NEVER** use mocks in integration tests - use real database
+- ❌ **NEVER** mix unit and integration tests in same package
+
+#### **Bot Integration Tests**
+```java
+@SpringBootTest(classes = TutochkaTgBotApplication.class)
+@TestPropertySource(properties = {
+    "telegram.bot.username=test_bot",
+    "telegram.bot.token=test_token",
+    "backend.base-url=http://localhost:9999",
+    "bot.async-processing=false",
+    "bot.webhook-public-url="  // Skip webhook registration
+})
+class StartCommandIntegrationTest {
+    @MockitoBean
+    private MessageSender messageSender;
+    
+    @MockitoBean
+    private WebBackendClient backendClient;
+    
+    @Autowired
+    private UpdateRouter updateRouter;
+}
+```
+
+**Key Points:**
+- ✅ **ALWAYS** use `@SpringBootTest` with application class
+- ✅ **ALWAYS** mock `MessageSender` and `WebBackendClient` with `@MockitoBean`
+- ✅ **ALWAYS** set `bot.webhook-public-url=` to prevent Telegram API calls
+- ✅ **ALWAYS** set `bot.async-processing=false` for predictable test execution
+- ✅ **ALWAYS** use `ArgumentCaptor` to verify method calls
+- ❌ **NEVER** try to connect to real Telegram API in tests
+- ❌ **NEVER** use real backend URL - mock `WebBackendClient` instead
+
+### **Test Coverage Requirements**
+- **Minimum 80%** overall coverage
+- **90%+** for repositories and services
+- **100%** for critical business logic
+- **All public APIs** must have integration tests
+- **All error paths** must be tested
+
+### **Test Data Management**
+- Use `DatabaseTestHelper` for creating test data
+- Use `DatabaseTestHelper.createTestEnvironment()` for full test setup
+- Use `DatabaseTestHelper.insertTestRestroom()` for restroom test data
+- Reset database between tests (automatic in `BaseIntegrationTest`)
+
+### **Test Execution Best Practices**
+- Run unit tests frequently during development
+- Run integration tests before commits
+- Use `./gradlew check` to run all tests and checks
+- Integration tests are slower - run separately when needed
+- Use test tags to filter: `./gradlew test --tests "*IntegrationTest"`

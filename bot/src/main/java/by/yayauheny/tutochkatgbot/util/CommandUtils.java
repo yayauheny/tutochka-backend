@@ -67,7 +67,6 @@ public class CommandUtils {
             return false;
         }
         
-        // Check entities in message text
         if (message.getEntities() != null) {
             for (MessageEntity entity : message.getEntities()) {
                 if ("bot_command".equals(entity.getType())) {
@@ -76,7 +75,6 @@ public class CommandUtils {
             }
         }
         
-        // Check entities in caption (for photos, documents, etc.)
         if (message.getCaptionEntities() != null) {
             for (MessageEntity entity : message.getCaptionEntities()) {
                 if ("bot_command".equals(entity.getType())) {

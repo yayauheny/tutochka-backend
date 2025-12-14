@@ -13,9 +13,9 @@ ENV GRADLE_OPTS="-Dorg.gradle.jvmargs=-Xmx2g -Dorg.gradle.workers.max=1"
 
 RUN ./gradlew dependencies --no-daemon
 
-COPY bot/src bot/src
+COPY backend/src backend/src
 
-RUN ./gradlew :bot:bootJar --no-daemon -x test
+RUN ./gradlew :backend:build --no-daemon -x test -x check
 
 FROM eclipse-temurin:21-jre-jammy
 WORKDIR /app
@@ -23,14 +23,14 @@ WORKDIR /app
 RUN apt-get update && apt-get install -y curl && rm -rf /var/lib/apt/lists/*
 
 RUN groupadd -g 1001 appgroup && useradd -u 1001 -g appgroup -s /bin/bash -m appuser
-COPY --from=builder /app/bot/build/libs/bot-*.jar app.jar
+COPY --from=builder /app/backend/build/libs/backend-all.jar app.jar
 RUN mkdir -p /app/logs && chown -R appuser:appgroup /app
 
 USER appuser
-EXPOSE 8081
+EXPOSE 8080
 
-HEALTHCHECK --interval=30s --timeout=10s --start-period=60s --retries=3 \
-    CMD curl -f http://localhost:8081/actuator/health || exit 1
+HEALTHCHECK --interval=30s --timeout=10s --start-period=30s --retries=3 \
+    CMD curl -f http://localhost:8080/health || exit 1
 
 ENV JAVA_OPTS="-XX:+UseContainerSupport -XX:MaxRAMPercentage=75.0 -XX:+UseG1GC"
 ENTRYPOINT ["sh", "-c", "java $JAVA_OPTS -jar app.jar"]

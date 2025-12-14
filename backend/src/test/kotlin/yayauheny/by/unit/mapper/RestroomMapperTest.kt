@@ -11,11 +11,11 @@ import org.junit.jupiter.api.DisplayName
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
 import yayauheny.by.common.mapper.RestroomMapper
-import by.yayauheny.shared.dto.LatLon
-import by.yayauheny.shared.enums.AccessibilityType
-import by.yayauheny.shared.enums.DataSourceType
-import by.yayauheny.shared.enums.FeeType
-import by.yayauheny.shared.enums.RestroomStatus
+import yayauheny.by.model.dto.LatLon
+import yayauheny.by.model.enums.AccessibilityType
+import yayauheny.by.model.enums.DataSourceType
+import yayauheny.by.model.enums.FeeType
+import yayauheny.by.model.enums.RestroomStatus
 import yayauheny.by.tables.references.RESTROOMS
 import java.time.Instant
 import java.util.UUID

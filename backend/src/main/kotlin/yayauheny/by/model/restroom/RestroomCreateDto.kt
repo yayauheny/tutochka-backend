@@ -5,12 +5,12 @@ import java.util.UUID
 import kotlinx.serialization.Contextual
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.JsonObject
-import by.yayauheny.shared.dto.LatLon
-import by.yayauheny.shared.enums.AccessibilityType
-import by.yayauheny.shared.enums.DataSourceType
-import by.yayauheny.shared.enums.FeeType
-import by.yayauheny.shared.enums.PlaceType
-import by.yayauheny.shared.enums.RestroomStatus
+import yayauheny.by.model.dto.LatLon
+import yayauheny.by.model.enums.AccessibilityType
+import yayauheny.by.model.enums.DataSourceType
+import yayauheny.by.model.enums.FeeType
+import yayauheny.by.model.enums.PlaceType
+import yayauheny.by.model.enums.RestroomStatus
 
 @Serializable
 @Schema(description = "Data for creating a new restroom")

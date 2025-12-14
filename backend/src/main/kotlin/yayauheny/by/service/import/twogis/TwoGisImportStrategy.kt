@@ -1,11 +1,11 @@
 package yayauheny.by.service.import.twogis
 
-import by.yayauheny.shared.dto.LatLon
-import by.yayauheny.shared.enums.AccessibilityType
-import by.yayauheny.shared.enums.DataSourceType
-import by.yayauheny.shared.enums.FeeType
-import by.yayauheny.shared.enums.PlaceType
-import by.yayauheny.shared.enums.RestroomStatus
+import yayauheny.by.model.dto.LatLon
+import yayauheny.by.model.enums.AccessibilityType
+import yayauheny.by.model.enums.DataSourceType
+import yayauheny.by.model.enums.FeeType
+import yayauheny.by.model.enums.PlaceType
+import yayauheny.by.model.enums.RestroomStatus
 import java.util.UUID
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
@@ -141,8 +141,6 @@ class TwoGisImportStrategy(
             )
 
         return if (existingBuilding != null) {
-            // Обновляем существующее здание (если нужно)
-            // Пока просто возвращаем ID существующего
             existingBuilding.id
         } else {
             val createDto =
@@ -180,7 +178,6 @@ class TwoGisImportStrategy(
                 lon = place.point.lon
             )
 
-        // Маппинг полей из 2ГИС
         val feeType = mapFeeType(tags)
         val accessibilityType = mapAccessibilityType(tags)
         val amenities = mapAmenities(tags)
@@ -213,7 +210,6 @@ class TwoGisImportStrategy(
             )
 
         return if (existingRestroom != null) {
-            // Обновляем существующий туалет
             val updateDto =
                 RestroomUpdateDto(
                     cityId = createDto.cityId,

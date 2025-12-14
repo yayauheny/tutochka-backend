@@ -70,8 +70,6 @@ val validateRestroomOnCreate =
         RestroomCreateDto::coordinates {
             run(validateLatLon)
         }
-        // name, phones, workTime, amenities, externalMaps, accessNote, directionGuide - nullable поля
-        // Валидация выполняется через validateRestroomFields() функцию
     }
 
 /**
@@ -86,8 +84,6 @@ val validateRestroomOnUpdate =
         RestroomUpdateDto::coordinates {
             run(validateLatLon)
         }
-        // name, phones, workTime, amenities, externalMaps, accessNote, directionGuide - nullable поля
-        // Валидация выполняется через validateRestroomFields() функцию
     }
 
 /**

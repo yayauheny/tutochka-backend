@@ -4,7 +4,7 @@ import io.swagger.v3.oas.annotations.media.Schema
 import java.util.UUID
 import kotlinx.serialization.Contextual
 import kotlinx.serialization.Serializable
-import by.yayauheny.shared.dto.LatLon
+import yayauheny.by.model.dto.LatLon
 
 @Serializable
 @Schema(description = "City response data")

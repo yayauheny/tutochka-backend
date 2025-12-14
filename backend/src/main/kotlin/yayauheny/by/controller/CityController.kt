@@ -62,9 +62,7 @@ class CityController(
 
             post {
                 val createDto = call.receive<CityCreateDto>()
-                // Валидация через konform
                 createDto.validateOrThrow(validateCityOnCreate)
-                // Дополнительная валидация nullable полей
                 val additionalErrors = validateRegion(createDto.region)
                 if (additionalErrors.isNotEmpty()) {
                     throw ValidationException(additionalErrors)
@@ -76,9 +74,7 @@ class CityController(
             put("/{id}") {
                 val id = call.getUuidFromPath("id")
                 val updateDto = call.receive<CityUpdateDto>()
-                // Валидация через konform
                 updateDto.validateOrThrow(validateCityOnUpdate)
-                // Дополнительная валидация nullable полей
                 val additionalErrors = validateRegion(updateDto.region)
                 if (additionalErrors.isNotEmpty()) {
                     throw ValidationException(additionalErrors)
