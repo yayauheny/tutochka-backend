@@ -375,9 +375,9 @@ docker/.env.*
 docker/env.local
 docker/env.production
 docker/env.staging
-!docker/env.template
-!docker/env.minimal
-!docker/README.env.md
+docker/env.template
+docker/env.minimal
+docker/README.env.md
 
 # =============================================================================
 # Credentials & API Keys
