@@ -6,7 +6,6 @@ package by.yayauheny.tutochkatgbot.dto.backend;
 public enum DataSourceType {
     MANUAL,
     USER,
-    API,
     IMPORT
 }
 

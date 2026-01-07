@@ -271,9 +271,10 @@ public class FormatterService {
     private String formatAccessibility(AccessibilityType type) {
         if (type == null) return "Не указано";
         return switch (type) {
-            case DISABLED -> "Для МГН";
+            case WHEELCHAIR -> "Для МГН";
+            case LIMITED -> "Ограниченная доступность";
             case NONE -> "Не указано";
-            default -> "Доступность: " + type.name();
+            case UNKNOWN -> "Не указано";
         };
     }
 
@@ -399,8 +400,9 @@ public class FormatterService {
             return null;
         }
         return switch (accessibilityType) {
-            case DISABLED -> "МГН";
-            case NONE, MEN, WOMEN, UNISEX, FAMILY -> null;
+            case WHEELCHAIR -> "МГН";
+            case LIMITED -> "Ограниченная";
+            case NONE, UNKNOWN -> null;
         };
     }
 

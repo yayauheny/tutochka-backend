@@ -19,6 +19,7 @@ public record RestroomResponseDto(
     @JsonProperty("phones") Map<String, Object> phones,
     @JsonProperty("workTime") Map<String, Object> workTime,
     @JsonProperty("feeType") FeeType feeType,
+    @JsonProperty("genderType") GenderType genderType,
     @JsonProperty("accessibilityType") AccessibilityType accessibilityType,
     @JsonProperty("placeType") PlaceType placeType,
     @JsonProperty("coordinates") LatLon coordinates,

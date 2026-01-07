@@ -12,7 +12,7 @@ class ScheduleMappingService(
 ) {
     /**
      * Convert provider-specific schedule to our canonical format
-     * @param provider data provider (2ГИС, Yandex, Google, etc.)
+     * @param provider data provider (2ГИС, Yandex, Google Maps, OSM, etc.)
      * @param rawSchedule raw schedule JSON from provider
      * @return Schedule in our canonical format
      * @throws IllegalArgumentException if no adapter found for the provider

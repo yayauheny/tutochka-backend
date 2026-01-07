@@ -8,6 +8,7 @@ import kotlinx.serialization.json.JsonObject
 import yayauheny.by.model.dto.LatLon
 import yayauheny.by.model.enums.AccessibilityType
 import yayauheny.by.model.enums.FeeType
+import yayauheny.by.model.enums.GenderType
 import yayauheny.by.model.enums.PlaceType
 import yayauheny.by.model.enums.RestroomStatus
 
@@ -42,8 +43,10 @@ data class RestroomUpdateDto(
     val workTime: JsonObject?,
     @field:Schema(description = "Fee type", example = "FREE")
     val feeType: FeeType,
-    @field:Schema(description = "Accessibility type", example = "UNISEX")
-    val accessibilityType: AccessibilityType,
+    @field:Schema(description = "Gender type", example = "UNISEX")
+    val genderType: GenderType?,
+    @field:Schema(description = "Accessibility type", example = "WHEELCHAIR")
+    val accessibilityType: AccessibilityType?,
     @field:Schema(description = "Place type", example = "public_toilet")
     val placeType: PlaceType?,
     @field:Schema(description = "Coordinates", example = "55.7558, 37.6176", required = true)

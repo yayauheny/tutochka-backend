@@ -21,7 +21,7 @@ class ImportService(
     /**
      * Импортирует объект из внешнего источника данных.
      *
-     * @param provider провайдер данных (2ГИС, Яндекс.Карты и т.д.)
+     * @param provider провайдер данных (2ГИС, Яндекс.Карты, Google Maps, OSM и т.д.)
      * @param payloadType тип формата payload
      * @param cityId ID города для импорта
      * @param payload JSON payload от провайдера

@@ -1,6 +1,7 @@
 package yayauheny.by.helpers
 
 import yayauheny.by.model.enums.AccessibilityType
+import yayauheny.by.model.enums.GenderType
 import yayauheny.by.model.enums.DataSourceType
 import yayauheny.by.model.enums.FeeType
 import yayauheny.by.model.enums.PlaceType
@@ -37,7 +38,8 @@ data class TestRestroomData(
     val phones: JsonObject? = buildJsonObject { put("main", JsonPrimitive("+1234567890")) },
     val workTime: JsonObject? = buildJsonObject { put("monday", JsonPrimitive("09:00-18:00")) },
     val feeType: FeeType = FeeType.FREE,
-    val accessibilityType: AccessibilityType = AccessibilityType.UNISEX,
+    val genderType: GenderType = GenderType.UNISEX,
+    val accessibilityType: AccessibilityType = AccessibilityType.NONE,
     val placeType: PlaceType = PlaceType.OTHER,
     val lat: Double = 55.7558 + (Math.random() * 0.1 - 0.05),
     val lon: Double = 37.6176 + (Math.random() * 0.1 - 0.05),
@@ -188,6 +190,7 @@ object DatabaseTestHelper {
                 .set(RESTROOMS.PHONES, data.phones.toJSONBOrEmpty())
                 .set(RESTROOMS.WORK_TIME, data.workTime.toJSONBOrEmpty())
                 .set(RESTROOMS.FEE_TYPE, data.feeType.name)
+                .set(DSL.field("gender_type", org.jooq.impl.SQLDataType.VARCHAR(20)), data.genderType.name)
                 .set(RESTROOMS.ACCESSIBILITY_TYPE, data.accessibilityType.name)
                 .set(RESTROOMS.PLACE_TYPE, data.placeType.id)
                 .set(

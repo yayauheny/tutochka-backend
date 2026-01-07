@@ -9,12 +9,15 @@ import yayauheny.by.model.dto.SubwayStationSlimDto
 import yayauheny.by.model.enums.AccessibilityType
 import yayauheny.by.model.enums.DataSourceType
 import yayauheny.by.model.enums.FeeType
+import yayauheny.by.model.enums.GenderType
 import yayauheny.by.model.enums.PlaceType
 import yayauheny.by.model.enums.RestroomStatus
 import java.time.Instant
 import org.jooq.Record
 import org.jooq.UpdateSetFirstStep
 import org.jooq.UpdateSetMoreStep
+import org.jooq.impl.DSL
+import org.jooq.impl.SQLDataType
 import yayauheny.by.model.restroom.NearestRestroomResponseDto
 import yayauheny.by.model.restroom.RestroomResponseDto
 import yayauheny.by.model.restroom.RestroomUpdateDto
@@ -27,6 +30,7 @@ object RestroomMapper {
     fun mapFromRecord(record: Record): RestroomResponseDto {
         val lat = record.reqDouble("lat")
         val lon = record.reqDouble("lon")
+        val genderTypeStr = record[DSL.field("gender_type", SQLDataType.VARCHAR(20))]?.toString() ?: "UNKNOWN"
         return RestroomResponseDto(
             id = record[RESTROOMS.ID]!!,
             cityId = record[RESTROOMS.CITY_ID],
@@ -37,6 +41,7 @@ object RestroomMapper {
             phones = record[RESTROOMS.PHONES].toJsonObjectOrEmpty(),
             workTime = record[RESTROOMS.WORK_TIME].toJsonObjectOrEmpty(),
             feeType = FeeType.valueOf(record[RESTROOMS.FEE_TYPE]!!),
+            genderType = GenderType.valueOf(genderTypeStr),
             accessibilityType = AccessibilityType.valueOf(record[RESTROOMS.ACCESSIBILITY_TYPE]!!),
             placeType = PlaceType.fromString(record[RESTROOMS.PLACE_TYPE]),
             coordinates = LatLon(lat = lat, lon = lon),
@@ -118,6 +123,7 @@ object RestroomMapper {
                 )
             }
 
+        val genderTypeStr = record[DSL.field("gender_type", SQLDataType.VARCHAR(20))]?.toString() ?: "UNKNOWN"
         return RestroomResponseDto(
             id = record[RESTROOMS.ID]!!,
             cityId = record[RESTROOMS.CITY_ID],
@@ -128,6 +134,7 @@ object RestroomMapper {
             phones = record[RESTROOMS.PHONES].toJsonObjectOrEmpty(),
             workTime = record[RESTROOMS.WORK_TIME].toJsonObjectOrEmpty(),
             feeType = FeeType.valueOf(record[RESTROOMS.FEE_TYPE]!!),
+            genderType = GenderType.valueOf(genderTypeStr),
             accessibilityType = AccessibilityType.valueOf(record[RESTROOMS.ACCESSIBILITY_TYPE]!!),
             placeType = PlaceType.fromString(record[RESTROOMS.PLACE_TYPE]),
             coordinates = LatLon(lat = lat, lon = lon),
@@ -155,13 +162,14 @@ object RestroomMapper {
                 .set(RESTROOMS.ADDRESS, dto.address)
                 .set(RESTROOMS.INHERIT_BUILDING_SCHEDULE, dto.inheritBuildingSchedule)
                 .set(RESTROOMS.FEE_TYPE, dto.feeType.name)
-                .set(RESTROOMS.ACCESSIBILITY_TYPE, dto.accessibilityType.name)
                 .set(RESTROOMS.PLACE_TYPE, dto.placeType?.id)
                 .set(RESTROOMS.STATUS, dto.status.name)
                 .set(RESTROOMS.BUILDING_ID, dto.buildingId)
                 .set(RESTROOMS.SUBWAY_STATION_ID, dto.subwayStationId)
                 .set(RESTROOMS.UPDATED_AT, Instant.now())
 
+        dto.genderType?.let { q = q.set(DSL.field("gender_type", SQLDataType.VARCHAR(20)), it.name) }
+        dto.accessibilityType?.let { q = q.set(RESTROOMS.ACCESSIBILITY_TYPE, it.name) }
         dto.name?.let { q = q.set(RESTROOMS.NAME, it) }
         dto.phones?.let { q = q.set(RESTROOMS.PHONES, it.toJSONBOrEmpty()) }
         dto.workTime?.let { q = q.set(RESTROOMS.WORK_TIME, it.toJSONBOrEmpty()) }

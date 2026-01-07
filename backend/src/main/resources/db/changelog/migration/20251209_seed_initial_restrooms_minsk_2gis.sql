@@ -57,6 +57,7 @@ INSERT INTO restrooms (
     access_note,
 
     fee_type,
+    gender_type,
     accessibility_type,
     status,
 
@@ -89,7 +90,8 @@ VALUES (
     'Туалет для маломобильных людей; доступный вход для людей с инвалидностью',
 
     'PAID',
-    'DISABLED',
+    'MEN',
+    'WHEELCHAIR',
     'ACTIVE',
 
     NULL,
@@ -127,6 +129,7 @@ INSERT INTO restrooms (
     access_note,
 
     fee_type,
+    gender_type,
     accessibility_type,
     status,
 
@@ -159,7 +162,8 @@ VALUES (
     'Туалет для маломобильных людей; доступный вход для людей с инвалидностью',
 
     'PAID',
-    'DISABLED',
+    'WOMEN',
+    'WHEELCHAIR',
     'ACTIVE',
 
     NULL,

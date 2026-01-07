@@ -27,3 +27,10 @@ databaseChangeLog:
         - sqlFile:
             path: migration/20251210_update_subway_stations_for_restrooms.sql
             relativeToChangelogFile: true
+  - changeSet:
+      id: upsert-subway-stations-for-restrooms-minsk
+      author: yayauheny
+      changes:
+        - sqlFile:
+            path: migration/20251210_upsert_subway_stations_for_restrooms_minsk.sql
+            relativeToChangelogFile: true

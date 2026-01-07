@@ -10,7 +10,7 @@ import kotlinx.serialization.json.JsonObject
 @Schema(description = "Request DTO for importing restroom data from external providers")
 data class ImportRequestDto(
     @field:Schema(
-        description = "Import provider (2GIS, Yandex Maps, Google Maps)",
+        description = "Import provider (2GIS, Yandex Maps, Google Maps, OSM)",
         example = "TWO_GIS",
         required = true
     )

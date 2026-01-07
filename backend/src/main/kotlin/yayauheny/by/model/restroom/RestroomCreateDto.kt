@@ -9,6 +9,7 @@ import yayauheny.by.model.dto.LatLon
 import yayauheny.by.model.enums.AccessibilityType
 import yayauheny.by.model.enums.DataSourceType
 import yayauheny.by.model.enums.FeeType
+import yayauheny.by.model.enums.GenderType
 import yayauheny.by.model.enums.PlaceType
 import yayauheny.by.model.enums.RestroomStatus
 
@@ -49,7 +50,9 @@ data class RestroomCreateDto(
     val workTime: JsonObject? = null,
     @field:Schema(description = "Fee type", example = "FREE", required = true)
     val feeType: FeeType,
-    @field:Schema(description = "Accessibility type", example = "UNISEX", required = true)
+    @field:Schema(description = "Gender type", example = "UNISEX", required = true)
+    val genderType: GenderType,
+    @field:Schema(description = "Accessibility type", example = "WHEELCHAIR", required = true)
     val accessibilityType: AccessibilityType,
     @field:Schema(description = "Place type", example = "other")
     val placeType: PlaceType = PlaceType.OTHER,

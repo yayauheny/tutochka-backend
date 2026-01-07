@@ -6,6 +6,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import org.jooq.DSLContext
 import org.jooq.impl.DSL
+import org.jooq.impl.SQLDataType
 import yayauheny.by.common.errors.EntityNotFoundException
 import yayauheny.by.common.mapper.RestroomMapper
 import yayauheny.by.common.query.FieldMeta
@@ -97,6 +98,13 @@ class RestroomRepositoryImpl(
                     sortable = true,
                     allowedOps = setOf(FilterOperator.EQ, FilterOperator.IN)
                 ),
+            "genderType" to
+                FieldMeta(
+                    field = DSL.field("gender_type", SQLDataType.VARCHAR(20)),
+                    parser = FieldParsers.string,
+                    sortable = true,
+                    allowedOps = setOf(FilterOperator.EQ, FilterOperator.IN)
+                ),
             "accessibilityType" to
                 FieldMeta(
                     field = RESTROOMS.ACCESSIBILITY_TYPE,
@@ -172,6 +180,7 @@ class RestroomRepositoryImpl(
             r.PHONES,
             r.WORK_TIME,
             r.FEE_TYPE,
+            DSL.field("gender_type", SQLDataType.VARCHAR(20)),
             r.ACCESSIBILITY_TYPE,
             r.PLACE_TYPE,
             r.DATA_SOURCE,
@@ -311,6 +320,7 @@ class RestroomRepositoryImpl(
         .set(RESTROOMS.PHONES, createDto.phones.toJSONBOrEmpty())
         .set(RESTROOMS.WORK_TIME, createDto.workTime.toJSONBOrEmpty())
         .set(RESTROOMS.FEE_TYPE, createDto.feeType.name)
+        .set(DSL.field("gender_type", SQLDataType.VARCHAR(20)), createDto.genderType.name)
         .set(RESTROOMS.ACCESSIBILITY_TYPE, createDto.accessibilityType.name)
         .set(RESTROOMS.PLACE_TYPE, createDto.placeType.id)
         .set(
