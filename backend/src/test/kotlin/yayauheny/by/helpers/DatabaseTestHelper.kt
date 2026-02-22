@@ -13,6 +13,7 @@ import yayauheny.by.model.enums.FeeType
 import yayauheny.by.model.enums.GenderType
 import yayauheny.by.model.enums.PlaceType
 import yayauheny.by.model.enums.RestroomStatus
+import yayauheny.by.tables.references.BUILDINGS
 import yayauheny.by.tables.references.CITIES
 import yayauheny.by.tables.references.COUNTRIES
 import yayauheny.by.tables.references.RESTROOM_IMPORTS
@@ -232,6 +233,7 @@ object DatabaseTestHelper {
             val ctx = DSL.using(configuration)
             ctx.deleteFrom(RESTROOM_IMPORTS).execute()
             ctx.deleteFrom(RESTROOMS).execute()
+            ctx.deleteFrom(BUILDINGS).execute()
             ctx.deleteFrom(CITIES).execute()
             ctx.deleteFrom(COUNTRIES).execute()
         }

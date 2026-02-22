@@ -1,16 +1,19 @@
 package yayauheny.by.service.import.twogis
 
-import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonNull
 import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.JsonPrimitive
-import kotlinx.serialization.json.jsonArray
 import kotlinx.serialization.json.jsonObject
 import kotlinx.serialization.json.jsonPrimitive
 import org.slf4j.LoggerFactory
 import yayauheny.by.model.import.twogis.TwoGisScrapedLocation
 import yayauheny.by.model.import.twogis.TwoGisScrapedPlace
 import yayauheny.by.service.import.Parser
+import yayauheny.by.service.import.requireObject
+import yayauheny.by.service.import.requireString
+import yayauheny.by.service.import.InvalidImportPayload
+import yayauheny.by.service.import.optionalArray
+import yayauheny.by.service.import.optionalString
 
 /**
  * Парсер для scraped формата 2ГИС.
@@ -18,37 +21,25 @@ import yayauheny.by.service.import.Parser
  */
 class TwoGisScrapedParser : Parser<TwoGisScrapedPlace> {
     private val logger = LoggerFactory.getLogger(TwoGisScrapedParser::class.java)
-    private val json =
-        Json {
-            ignoreUnknownKeys = true
-            isLenient = true
-        }
 
     override fun parse(jsonObject: JsonObject): TwoGisScrapedPlace {
         return try {
-            val id =
-                jsonObject["id"]?.jsonPrimitive?.content
-                    ?: throw IllegalArgumentException("Missing required field: id")
-
+            val id = jsonObject.requireString("id")
             val title =
                 resolveTitle(
-                    jsonObject["title"]?.jsonPrimitive?.content,
-                    jsonObject["rubrics"]?.jsonArray,
+                    jsonObject.optionalString("title"),
+                    jsonObject.optionalArray("rubrics"),
                     id
                 )
-
-            val category = jsonObject["category"]?.jsonPrimitive?.content
-
+            val category = jsonObject.optionalString("category")
             val address =
                 resolveAddress(
                     jsonObject["address"],
-                    jsonObject["street"]?.jsonPrimitive?.content,
-                    jsonObject["houseNumber"]?.jsonPrimitive?.content
+                    jsonObject.optionalString("street"),
+                    jsonObject.optionalString("houseNumber")
                 )
-
-            val location =
-                parseLocation(jsonObject["location"]?.jsonObject)
-                    ?: throw IllegalArgumentException("Missing required field: location")
+            val locationObj = jsonObject.requireObject("location")
+            val location = parseLocation(locationObj)
 
             val workingHours =
                 when (val wh = jsonObject["working_hours"]) {
@@ -57,12 +48,12 @@ class TwoGisScrapedParser : Parser<TwoGisScrapedPlace> {
                 }
 
             val attributeGroups =
-                jsonObject["attributeGroups"]?.jsonArray?.mapNotNull { element ->
+                jsonObject.optionalArray("attributeGroups")?.mapNotNull { element ->
                     (element as? JsonPrimitive)?.content
                 } ?: emptyList()
 
             val rubrics =
-                jsonObject["rubrics"]?.jsonArray?.mapNotNull { element ->
+                jsonObject.optionalArray("rubrics")?.mapNotNull { element ->
                     (element as? JsonPrimitive)?.content
                 } ?: emptyList()
 
@@ -76,23 +67,22 @@ class TwoGisScrapedParser : Parser<TwoGisScrapedPlace> {
                 attributeGroups = attributeGroups,
                 rubrics = rubrics
             )
+        } catch (e: InvalidImportPayload) {
+            throw e
         } catch (e: Exception) {
             logger.error("Failed to parse TwoGisScrapedPlace from JSON", e)
-            throw IllegalArgumentException("Failed to parse scraped place: ${e.message}", e)
+            throw InvalidImportPayload("Failed to parse scraped place: ${e.message ?: e.javaClass.simpleName}")
         }
     }
 
-    private fun parseLocation(locationObj: JsonObject?): TwoGisScrapedLocation? {
-        if (locationObj == null) return null
-
-        val lat = locationObj["lat"]?.jsonPrimitive?.content?.toDoubleOrNull()
-        val lng = locationObj["lng"]?.jsonPrimitive?.content?.toDoubleOrNull()
-
-        return if (lat != null && lng != null) {
-            TwoGisScrapedLocation(lat = lat, lng = lng)
-        } else {
-            null
-        }
+    private fun parseLocation(locationObj: JsonObject): TwoGisScrapedLocation {
+        val lat =
+            locationObj["lat"]?.jsonPrimitive?.content?.toDoubleOrNull()
+                ?: throw InvalidImportPayload("Missing or invalid 'location.lat'")
+        val lng =
+            locationObj["lng"]?.jsonPrimitive?.content?.toDoubleOrNull()
+                ?: throw InvalidImportPayload("Missing or invalid 'location.lng'")
+        return TwoGisScrapedLocation(lat = lat, lng = lng)
     }
 
     private fun resolveTitle(

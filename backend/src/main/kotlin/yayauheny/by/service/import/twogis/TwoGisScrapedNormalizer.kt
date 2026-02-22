@@ -22,6 +22,10 @@ import yayauheny.by.service.import.Normalizer
 /**
  * Нормализует данные из scraped формата 2ГИС в каноническую модель NormalizedRestroomCandidate.
  * Тип размещения (отдельный туалет или внутри здания) определяется по TwoGisCategory, при пустом category — по первому совпадению в TwoGisRubric.
+ *
+ * Неизвестные значения (category, rubrics, attributeGroups) не маппятся в enum и не сохраняются:
+ * — если category/rubric не найден в маппинге — используется fallback (PlaceType.OTHER, LocationType.UNKNOWN), ошибка не выбрасывается;
+ * — атрибуты из attributeGroups, для которых нет маппинга, не попадают в amenities и не вызывают ошибку.
  */
 class TwoGisScrapedNormalizer : Normalizer<TwoGisScrapedPlace> {
     override fun normalize(

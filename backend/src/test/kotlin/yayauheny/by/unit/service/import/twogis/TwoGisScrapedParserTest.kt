@@ -11,6 +11,7 @@ import kotlinx.serialization.json.buildJsonObject
 import kotlinx.serialization.json.put
 import org.junit.jupiter.api.DisplayName
 import org.junit.jupiter.api.Test
+import yayauheny.by.service.import.InvalidImportPayload
 import yayauheny.by.service.import.twogis.TwoGisScrapedParser
 
 @DisplayName("TwoGisScrapedParser Tests")
@@ -124,7 +125,7 @@ class TwoGisScrapedParserTest {
                 )
             }
 
-        assertFailsWith<IllegalArgumentException> {
+        assertFailsWith<InvalidImportPayload> {
             parser.parse(json)
         }
     }
@@ -220,7 +221,7 @@ class TwoGisScrapedParserTest {
                 put("address", "Test Street")
             }
 
-        assertFailsWith<IllegalArgumentException> {
+        assertFailsWith<InvalidImportPayload> {
             parser.parse(json)
         }
     }

@@ -22,7 +22,9 @@ import yayauheny.by.service.import.ArrayOrSingleExtractor
 import yayauheny.by.service.import.ImportObjectResult
 import yayauheny.by.service.import.ImportStrategy
 import yayauheny.by.service.import.PayloadExtractor
+import yayauheny.by.service.import.InvalidImportPayload
 import yayauheny.by.service.import.RestroomCandidateMapper
+import yayauheny.by.service.import.UnsupportedPayloadType
 import yayauheny.by.util.transactionSuspend
 
 /**
@@ -48,7 +50,7 @@ class TwoGisScrapedImportStrategy(
     ): ImportObjectResult {
         val results = importBatch(cityId, payloadType, payload)
         return results.firstOrNull()
-            ?: throw IllegalArgumentException("No items found in payload")
+            ?: throw InvalidImportPayload("No items found in payload")
     }
 
     override suspend fun importBatch(
@@ -57,12 +59,12 @@ class TwoGisScrapedImportStrategy(
         payload: JsonObject
     ): List<ImportObjectResult> {
         if (payloadType != ImportPayloadType.TWO_GIS_SCRAPED_PLACE_JSON) {
-            throw IllegalArgumentException("Unsupported payload type: $payloadType")
+            throw UnsupportedPayloadType(provider(), payloadType)
         }
 
         val items = extractor.extractItems(payload)
         if (items.isEmpty()) {
-            throw IllegalArgumentException("No items found in payload")
+            throw InvalidImportPayload("No items found in payload")
         }
 
         logger.info("Processing batch import: ${items.size} items")
@@ -77,10 +79,14 @@ class TwoGisScrapedImportStrategy(
                     val place = parser.parse(item)
                     val candidate = normalizer.normalize(cityId, place, payloadType)
                     val (createDto, buildingId) = resolveBuildingAndCreateDto(candidate, txBuildingRepo)
+                    val originId =
+                        requireNotNull(createDto.originId) {
+                            "originId is required for provider=${candidate.provider}"
+                        }
                     val existingRestroom =
                         txRestroomRepo.findByOrigin(
                             originProvider = createDto.originProvider,
-                            originId = createDto.originId!!
+                            originId = originId
                         )
 
                     val restroomId =

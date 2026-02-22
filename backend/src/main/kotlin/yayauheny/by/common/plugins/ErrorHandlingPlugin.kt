@@ -10,17 +10,42 @@ import io.ktor.server.response.respond
 import kotlinx.serialization.SerializationException
 import org.slf4j.LoggerFactory
 import org.postgresql.util.PSQLException
+import yayauheny.by.common.errors.ApiError
 import yayauheny.by.common.errors.ConflictException
 import yayauheny.by.common.errors.EntityNotFoundException
 import yayauheny.by.common.errors.ErrorResponse
 import yayauheny.by.common.errors.RepositoryException
 import yayauheny.by.common.errors.RestException
 import yayauheny.by.common.errors.ValidationException
+import yayauheny.by.service.import.CityNotFound
+import yayauheny.by.service.import.InvalidImportPayload
+import yayauheny.by.service.import.UnsupportedImportProvider
+import yayauheny.by.service.import.UnsupportedPayloadType
 
 private val logger = LoggerFactory.getLogger("ErrorHandling")
 
 fun Application.configureErrorHandling() {
     install(StatusPages) {
+        exception<UnsupportedImportProvider> { call, cause ->
+            logger.warn("Import: unsupported provider: ${cause.message}")
+            call.respond(HttpStatusCode.BadRequest, ApiError("UNSUPPORTED_PROVIDER", cause.message ?: ""))
+        }
+
+        exception<UnsupportedPayloadType> { call, cause ->
+            logger.warn("Import: unsupported payload type: ${cause.message}")
+            call.respond(HttpStatusCode.BadRequest, ApiError("UNSUPPORTED_PAYLOAD_TYPE", cause.message ?: ""))
+        }
+
+        exception<CityNotFound> { call, cause ->
+            logger.warn("Import: city not found: ${cause.message}")
+            call.respond(HttpStatusCode.NotFound, ApiError("CITY_NOT_FOUND", cause.message ?: ""))
+        }
+
+        exception<InvalidImportPayload> { call, cause ->
+            logger.warn("Import: invalid payload: ${cause.message}")
+            call.respond(HttpStatusCode.BadRequest, ApiError("INVALID_PAYLOAD", cause.message ?: ""))
+        }
+
         exception<RestException> { call, cause ->
             logger.warn("REST exception occurred: ${cause.message}", cause)
 

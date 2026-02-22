@@ -8,38 +8,27 @@ import yayauheny.by.model.import.ImportItemResult
 import yayauheny.by.model.enums.ImportJobStatus
 import yayauheny.by.model.enums.ImportPayloadType
 import yayauheny.by.model.enums.ImportProvider
+import yayauheny.by.repository.CityRepository
 import yayauheny.by.repository.RestroomImportRepository
 
 /**
  * Сервис для координации импорта данных из внешних источников.
- * Использует стратегии (ImportStrategy) для различных провайдеров.
+ * Использует реестр стратегий (ImportStrategyRegistry) и проверяет допустимые пары provider/payloadType (ImportCapabilities).
  */
 class ImportService(
-    strategies: List<ImportStrategy>,
+    private val registry: ImportStrategyRegistry,
+    private val cityRepository: CityRepository,
     private val restroomImportRepository: RestroomImportRepository
 ) {
-    private val strategiesByProvider = strategies.associateBy { it.provider() }
-
-    /**
-     * Импортирует объект из внешнего источника данных.
-     *
-     * @param provider провайдер данных (2ГИС, Яндекс.Карты, Google Maps, OSM и т.д.)
-     * @param payloadType тип формата payload
-     * @param cityId ID города для импорта
-     * @param payload JSON payload от провайдера
-     * @return результат импорта с ID созданных сущностей
-     * @throws IllegalArgumentException если провайдер не поддерживается
-     * @throws Exception если произошла ошибка при импорте (запись будет помечена как FAILED)
-     */
     suspend fun import(
         provider: ImportProvider,
         payloadType: ImportPayloadType,
         cityId: UUID,
         payload: JsonObject
     ): ImportExecutionResult {
-        val strategy =
-            strategiesByProvider[provider]
-                ?: error("Unsupported import provider: $provider")
+        ImportCapabilities.requireSupported(provider, payloadType)
+        requireCityExists(cityId)
+        val strategy = registry.get(provider)
 
         val importId =
             restroomImportRepository.createPending(
@@ -73,25 +62,15 @@ class ImportService(
         }
     }
 
-    /**
-     * Импортирует batch объектов из внешнего источника данных.
-     *
-     * @param provider провайдер данных (2ГИС, Яндекс.Карты, Google Maps, OSM и т.д.)
-     * @param payloadType тип формата payload
-     * @param cityId ID города для импорта
-     * @param payload JSON payload от провайдера с массивом items
-     * @return результат batch импорта с информацией о всех обработанных объектах
-     * @throws IllegalArgumentException если провайдер не поддерживается
-     */
     suspend fun importBatch(
         provider: ImportProvider,
         payloadType: ImportPayloadType,
         cityId: UUID,
         payload: JsonObject
     ): ImportBatchResult {
-        val strategy =
-            strategiesByProvider[provider]
-                ?: error("Unsupported import provider: $provider")
+        ImportCapabilities.requireSupported(provider, payloadType)
+        requireCityExists(cityId)
+        val strategy = registry.get(provider)
 
         val importId =
             restroomImportRepository.createPending(
@@ -146,5 +125,9 @@ class ImportService(
             )
             throw t
         }
+    }
+
+    private suspend fun requireCityExists(cityId: UUID) {
+        if (cityRepository.findById(cityId) == null) throw CityNotFound(cityId)
     }
 }
