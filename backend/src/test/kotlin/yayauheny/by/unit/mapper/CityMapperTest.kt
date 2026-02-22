@@ -11,7 +11,7 @@ import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertThrows
 import yayauheny.by.common.mapper.CityMapper
-import yayauheny.by.model.dto.LatLon
+import yayauheny.by.model.dto.Coordinates
 import yayauheny.by.tables.references.CITIES
 import java.util.UUID
 
@@ -48,7 +48,7 @@ class CityMapperTest {
             assertEquals(testNameRu, result.nameRu)
             assertEquals(testNameEn, result.nameEn)
             assertEquals(testRegion, result.region)
-            assertEquals(LatLon(lat = testLat, lon = testLon), result.coordinates)
+            assertEquals(Coordinates(lat = testLat, lon = testLon), result.coordinates)
         }
 
         @Test

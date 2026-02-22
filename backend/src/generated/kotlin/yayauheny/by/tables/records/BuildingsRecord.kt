@@ -71,6 +71,10 @@ open class BuildingsRecord() : UpdatableRecordImpl<BuildingsRecord>(Buildings.BU
         set(value): Unit = set(11, value)
         get(): Instant? = get(11) as Instant?
 
+    open var deletedAt: Instant?
+        set(value): Unit = set(12, value)
+        get(): Instant? = get(12) as Instant?
+
     // -------------------------------------------------------------------------
     // Primary key information
     // -------------------------------------------------------------------------
@@ -80,7 +84,7 @@ open class BuildingsRecord() : UpdatableRecordImpl<BuildingsRecord>(Buildings.BU
     /**
      * Create a detached, initialised BuildingsRecord
      */
-    constructor(id: UUID? = null, cityId: UUID? = null, name: String? = null, address: String? = null, buildingType: String? = null, workTime: JSONB? = null, coordinates: Geometry? = null, externalIds: JSONB? = null, importStatus: String? = null, isDeleted: Boolean? = null, createdAt: Instant? = null, updatedAt: Instant? = null): this() {
+    constructor(id: UUID? = null, cityId: UUID? = null, name: String? = null, address: String? = null, buildingType: String? = null, workTime: JSONB? = null, coordinates: Geometry? = null, externalIds: JSONB? = null, importStatus: String? = null, isDeleted: Boolean? = null, createdAt: Instant? = null, updatedAt: Instant? = null, deletedAt: Instant? = null): this() {
         this.id = id
         this.cityId = cityId
         this.name = name
@@ -93,6 +97,7 @@ open class BuildingsRecord() : UpdatableRecordImpl<BuildingsRecord>(Buildings.BU
         this.isDeleted = isDeleted
         this.createdAt = createdAt
         this.updatedAt = updatedAt
+        this.deletedAt = deletedAt
         resetTouchedOnNotNull()
     }
 }

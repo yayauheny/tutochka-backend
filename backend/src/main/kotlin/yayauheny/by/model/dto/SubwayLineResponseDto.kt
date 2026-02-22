@@ -1,9 +1,9 @@
 package yayauheny.by.model.dto
 
-import kotlinx.serialization.Contextual
-import kotlinx.serialization.Serializable
 import java.time.Instant
 import java.util.UUID
+import kotlinx.serialization.Contextual
+import kotlinx.serialization.Serializable
 
 @Serializable
 data class SubwayLineResponseDto(
@@ -11,8 +11,6 @@ data class SubwayLineResponseDto(
     @Contextual val cityId: UUID,
     val nameRu: String,
     val nameEn: String,
-    val nameLocal: String? = null,
-    val nameLocalLang: String? = null,
     val shortCode: String? = null,
     val hexColor: String,
     val isDeleted: Boolean,

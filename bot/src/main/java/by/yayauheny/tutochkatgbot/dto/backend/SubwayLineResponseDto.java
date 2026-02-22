@@ -13,8 +13,6 @@ public record SubwayLineResponseDto(
     @JsonProperty("cityId") UUID cityId,
     @JsonProperty("nameRu") String nameRu,
     @JsonProperty("nameEn") String nameEn,
-    @JsonProperty("nameLocal") String nameLocal,
-    @JsonProperty("nameLocalLang") String nameLocalLang,
     @JsonProperty("shortCode") String shortCode,
     @JsonProperty("hexColor") String hexColor,
     @JsonProperty("isDeleted") Boolean isDeleted,

@@ -15,7 +15,7 @@ data class BuildingResponseDto(
     val address: String,
     val buildingType: PlaceType?,
     val workTime: JsonObject?,
-    val coordinates: LatLon,
+    val coordinates: Coordinates,
     val externalIds: JsonObject?,
     val isDeleted: Boolean,
     @Contextual val createdAt: Instant,

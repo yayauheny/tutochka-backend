@@ -2,7 +2,6 @@ package yayauheny.by.controller
 
 import io.ktor.http.HttpStatusCode
 import io.ktor.server.response.respond
-import io.ktor.server.response.respondText
 import io.ktor.server.routing.Route
 import io.ktor.server.routing.get
 import io.ktor.server.routing.route
@@ -45,7 +44,12 @@ class HealthController(
             }
 
             get("/live") {
-                call.respondText("OK")
+                call.respond(
+                    mapOf(
+                        "status" to "alive",
+                        "service" to "TuTochka API"
+                    )
+                )
             }
         }
     }

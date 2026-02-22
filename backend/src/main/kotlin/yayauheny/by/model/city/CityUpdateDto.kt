@@ -4,7 +4,7 @@ import io.swagger.v3.oas.annotations.media.Schema
 import java.util.UUID
 import kotlinx.serialization.Contextual
 import kotlinx.serialization.Serializable
-import yayauheny.by.model.dto.LatLon
+import yayauheny.by.model.dto.Coordinates
 
 @Serializable
 @Schema(description = "Data for updating an existing city")
@@ -17,7 +17,7 @@ data class CityUpdateDto(
     @Contextual
     val countryId: UUID,
     @field:Schema(description = "Coordinates", example = "55.7558, 37.6176", required = true)
-    val coordinates: LatLon,
+    val coordinates: Coordinates,
     @field:Schema(description = "City name in Russian", example = "Москва", required = true)
     val nameRu: String,
     @field:Schema(description = "City name in English", example = "Moscow", required = true)

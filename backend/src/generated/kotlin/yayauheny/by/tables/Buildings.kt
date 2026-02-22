@@ -10,6 +10,7 @@ import java.util.UUID
 import kotlin.collections.Collection
 import kotlin.collections.List
 
+import org.jooq.Check
 import org.jooq.Condition
 import org.jooq.Field
 import org.jooq.ForeignKey
@@ -128,12 +129,12 @@ open class Buildings(
     /**
      * The column <code>public.buildings.import_status</code>.
      */
-    val IMPORT_STATUS: TableField<BuildingsRecord, String?> = createField(DSL.name("import_status"), SQLDataType.VARCHAR(20).nullable(false).defaultValue(DSL.field(DSL.raw("'completed'::character varying"), SQLDataType.VARCHAR)), this, "")
+    val IMPORT_STATUS: TableField<BuildingsRecord, String?> = createField(DSL.name("import_status"), SQLDataType.VARCHAR(20).nullable(false).defaultValue(DSL.field(DSL.raw("'COMPLETED'::character varying"), SQLDataType.VARCHAR)), this, "")
 
     /**
      * The column <code>public.buildings.is_deleted</code>.
      */
-    val IS_DELETED: TableField<BuildingsRecord, Boolean?> = createField(DSL.name("is_deleted"), SQLDataType.BOOLEAN.defaultValue(DSL.field(DSL.raw("false"), SQLDataType.BOOLEAN)), this, "")
+    val IS_DELETED: TableField<BuildingsRecord, Boolean?> = createField(DSL.name("is_deleted"), SQLDataType.BOOLEAN.nullable(false).defaultValue(DSL.field(DSL.raw("false"), SQLDataType.BOOLEAN)), this, "")
 
     /**
      * The column <code>public.buildings.created_at</code>.
@@ -144,6 +145,11 @@ open class Buildings(
      * The column <code>public.buildings.updated_at</code>.
      */
     val UPDATED_AT: TableField<BuildingsRecord, Instant?> = createField(DSL.name("updated_at"), SQLDataType.INSTANT.nullable(false).defaultValue(DSL.field(DSL.raw("CURRENT_TIMESTAMP"), SQLDataType.INSTANT)), this, "")
+
+    /**
+     * The column <code>public.buildings.deleted_at</code>.
+     */
+    val DELETED_AT: TableField<BuildingsRecord, Instant?> = createField(DSL.name("deleted_at"), SQLDataType.INSTANT, this, "")
 
     private constructor(alias: Name, aliased: Table<BuildingsRecord>?): this(alias, null, null, null, aliased, null, null)
     private constructor(alias: Name, aliased: Table<BuildingsRecord>?, parameters: Array<Field<*>?>?): this(alias, null, null, null, aliased, parameters, null)
@@ -218,6 +224,9 @@ open class Buildings(
 
     val restrooms: RestroomsPath
         get(): RestroomsPath = restrooms()
+    override fun getChecks(): List<Check<BuildingsRecord>> = listOf(
+        Internal.createCheck(this, DSL.name("buildings_import_status_chk"), "(((import_status)::text = ANY ((ARRAY['COMPLETED'::character varying, 'PENDING'::character varying])::text[])))", true)
+    )
     override fun `as`(alias: String): Buildings = Buildings(DSL.name(alias), this)
     override fun `as`(alias: Name): Buildings = Buildings(alias, this)
     override fun `as`(alias: Table<*>): Buildings = Buildings(alias.qualifiedName, this)

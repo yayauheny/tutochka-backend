@@ -131,10 +131,11 @@ docker/volumes/
 *_backup_*
 
 # =============================================================================
-# Task Master sensitive files
+# Task Master
 # =============================================================================
-.taskmaster/docs/*.txt
-.taskmaster/docs/*.md
+# Allow PRDs and lightweight docs in `.taskmaster/docs/` (needed for workflow),
+# but ignore potentially large research dumps.
+.taskmaster/docs/research/
 !.taskmaster/README.md
 !.taskmaster/templates/
 

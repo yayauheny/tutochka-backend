@@ -99,16 +99,6 @@ open class SubwayLines(
     val NAME_EN: TableField<SubwayLinesRecord, String?> = createField(DSL.name("name_en"), SQLDataType.VARCHAR(100).nullable(false), this, "")
 
     /**
-     * The column <code>public.subway_lines.name_local</code>.
-     */
-    val NAME_LOCAL: TableField<SubwayLinesRecord, String?> = createField(DSL.name("name_local"), SQLDataType.VARCHAR(255), this, "")
-
-    /**
-     * The column <code>public.subway_lines.name_local_lang</code>.
-     */
-    val NAME_LOCAL_LANG: TableField<SubwayLinesRecord, String?> = createField(DSL.name("name_local_lang"), SQLDataType.VARCHAR(10), this, "")
-
-    /**
      * The column <code>public.subway_lines.short_code</code>.
      */
     val SHORT_CODE: TableField<SubwayLinesRecord, String?> = createField(DSL.name("short_code"), SQLDataType.VARCHAR(20), this, "")
@@ -127,6 +117,16 @@ open class SubwayLines(
      * The column <code>public.subway_lines.created_at</code>.
      */
     val CREATED_AT: TableField<SubwayLinesRecord, Instant?> = createField(DSL.name("created_at"), SQLDataType.INSTANT.nullable(false).defaultValue(DSL.field(DSL.raw("CURRENT_TIMESTAMP"), SQLDataType.INSTANT)), this, "")
+
+    /**
+     * The column <code>public.subway_lines.updated_at</code>.
+     */
+    val UPDATED_AT: TableField<SubwayLinesRecord, Instant?> = createField(DSL.name("updated_at"), SQLDataType.INSTANT.nullable(false).defaultValue(DSL.field(DSL.raw("CURRENT_TIMESTAMP"), SQLDataType.INSTANT)), this, "")
+
+    /**
+     * The column <code>public.subway_lines.deleted_at</code>.
+     */
+    val DELETED_AT: TableField<SubwayLinesRecord, Instant?> = createField(DSL.name("deleted_at"), SQLDataType.INSTANT, this, "")
 
     private constructor(alias: Name, aliased: Table<SubwayLinesRecord>?): this(alias, null, null, null, aliased, null, null)
     private constructor(alias: Name, aliased: Table<SubwayLinesRecord>?, parameters: Array<Field<*>?>?): this(alias, null, null, null, aliased, parameters, null)

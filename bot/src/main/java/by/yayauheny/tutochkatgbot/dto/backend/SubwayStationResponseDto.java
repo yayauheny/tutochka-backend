@@ -13,8 +13,6 @@ public record SubwayStationResponseDto(
     @JsonProperty("subwayLineId") UUID subwayLineId,
     @JsonProperty("nameRu") String nameRu,
     @JsonProperty("nameEn") String nameEn,
-    @JsonProperty("nameLocal") String nameLocal,
-    @JsonProperty("nameLocalLang") String nameLocalLang,
     @JsonProperty("isTransfer") Boolean isTransfer,
     @JsonProperty("coordinates") LatLon coordinates,
     @JsonProperty("isDeleted") Boolean isDeleted,
@@ -22,26 +20,10 @@ public record SubwayStationResponseDto(
     @JsonProperty("line") SubwayLineResponseDto line
 ) {
     public String displayName(String preferredLang) {
-        String lang = preferredLang != null ? preferredLang.toLowerCase().trim() : null;
-        String normalizedLocalLang = nameLocalLang != null ? nameLocalLang.toLowerCase().trim() : null;
-
-        String[] candidates;
-        if (lang != null && lang.equals(normalizedLocalLang)) {
-            candidates = new String[]{nameLocal, nameRu, nameEn};
-        } else if ("ru".equalsIgnoreCase(lang)) {
-            candidates = new String[]{nameRu, nameLocal, nameEn};
-        } else if ("en".equalsIgnoreCase(lang)) {
-            candidates = new String[]{nameEn, nameLocal, nameRu};
-        } else {
-            candidates = new String[]{nameLocal, nameEn, nameRu};
+        if ("en".equalsIgnoreCase(preferredLang) && nameEn != null && !nameEn.isBlank()) {
+            return nameEn.trim();
         }
-
-        for (String candidate : candidates) {
-            if (candidate != null && !candidate.isBlank()) {
-                return candidate.trim();
-            }
-        }
-        return "Unknown";
+        return nameRu != null && !nameRu.isBlank() ? nameRu.trim() : (nameEn != null ? nameEn.trim() : "Unknown");
     }
 
     public String lineColor() {

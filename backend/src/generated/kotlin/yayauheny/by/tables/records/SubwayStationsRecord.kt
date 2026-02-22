@@ -37,35 +37,35 @@ open class SubwayStationsRecord() : UpdatableRecordImpl<SubwayStationsRecord>(Su
         set(value): Unit = set(3, value)
         get(): String? = get(3) as String?
 
-    open var nameLocal: String?
-        set(value): Unit = set(4, value)
-        get(): String? = get(4) as String?
-
-    open var nameLocalLang: String?
-        set(value): Unit = set(5, value)
-        get(): String? = get(5) as String?
-
     @Suppress("INAPPLICABLE_JVM_NAME")
     @set:JvmName("setIsTransfer")
     open var isTransfer: Boolean?
-        set(value): Unit = set(6, value)
-        get(): Boolean? = get(6) as Boolean?
+        set(value): Unit = set(4, value)
+        get(): Boolean? = get(4) as Boolean?
 
     open var externalIds: JSONB?
-        set(value): Unit = set(7, value)
-        get(): JSONB? = get(7) as JSONB?
+        set(value): Unit = set(5, value)
+        get(): JSONB? = get(5) as JSONB?
 
     open var coordinates: Geometry?
-        set(value): Unit = set(8, value)
-        get(): Geometry? = get(8) as Geometry?
+        set(value): Unit = set(6, value)
+        get(): Geometry? = get(6) as Geometry?
 
     @Suppress("INAPPLICABLE_JVM_NAME")
     @set:JvmName("setIsDeleted")
     open var isDeleted: Boolean?
-        set(value): Unit = set(9, value)
-        get(): Boolean? = get(9) as Boolean?
+        set(value): Unit = set(7, value)
+        get(): Boolean? = get(7) as Boolean?
 
     open var createdAt: Instant?
+        set(value): Unit = set(8, value)
+        get(): Instant? = get(8) as Instant?
+
+    open var updatedAt: Instant?
+        set(value): Unit = set(9, value)
+        get(): Instant? = get(9) as Instant?
+
+    open var deletedAt: Instant?
         set(value): Unit = set(10, value)
         get(): Instant? = get(10) as Instant?
 
@@ -78,18 +78,18 @@ open class SubwayStationsRecord() : UpdatableRecordImpl<SubwayStationsRecord>(Su
     /**
      * Create a detached, initialised SubwayStationsRecord
      */
-    constructor(id: UUID? = null, subwayLineId: UUID? = null, nameRu: String? = null, nameEn: String? = null, nameLocal: String? = null, nameLocalLang: String? = null, isTransfer: Boolean? = null, externalIds: JSONB? = null, coordinates: Geometry? = null, isDeleted: Boolean? = null, createdAt: Instant? = null): this() {
+    constructor(id: UUID? = null, subwayLineId: UUID? = null, nameRu: String? = null, nameEn: String? = null, isTransfer: Boolean? = null, externalIds: JSONB? = null, coordinates: Geometry? = null, isDeleted: Boolean? = null, createdAt: Instant? = null, updatedAt: Instant? = null, deletedAt: Instant? = null): this() {
         this.id = id
         this.subwayLineId = subwayLineId
         this.nameRu = nameRu
         this.nameEn = nameEn
-        this.nameLocal = nameLocal
-        this.nameLocalLang = nameLocalLang
         this.isTransfer = isTransfer
         this.externalIds = externalIds
         this.coordinates = coordinates
         this.isDeleted = isDeleted
         this.createdAt = createdAt
+        this.updatedAt = updatedAt
+        this.deletedAt = deletedAt
         resetTouchedOnNotNull()
     }
 }

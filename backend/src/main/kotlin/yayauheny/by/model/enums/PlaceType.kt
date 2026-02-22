@@ -5,7 +5,7 @@ import kotlinx.serialization.Serializable
 
 @Serializable
 enum class PlaceType(
-    val id: String,
+    val code: String,
     val ruName: String,
     val enName: String
 ) {
@@ -55,7 +55,7 @@ enum class PlaceType(
     OTHER("other", "Прочее", "Other");
 
     companion object {
-        fun fromString(value: String?): PlaceType = entries.find { it.id == value } ?: OTHER
+        fun fromCode(value: String?): PlaceType = entries.find { it.code == value } ?: OTHER
     }
 
     fun getLocalizedName(locale: String): String = if (locale.equals("ru", ignoreCase = true)) ruName else enName

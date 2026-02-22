@@ -13,7 +13,6 @@ import kotlin.collections.List
 import org.jooq.Condition
 import org.jooq.Field
 import org.jooq.ForeignKey
-import org.jooq.Index
 import org.jooq.InverseForeignKey
 import org.jooq.Name
 import org.jooq.Path
@@ -34,7 +33,6 @@ import org.jooq.impl.SQLDataType
 import org.jooq.impl.TableImpl
 
 import yayauheny.by.Public
-import yayauheny.by.indexes.IDX_COUNTRIES_IS_DELETED
 import yayauheny.by.keys.CITIES__CITIES_COUNTRY_ID_FKEY
 import yayauheny.by.keys.COUNTRIES_CODE_KEY
 import yayauheny.by.keys.COUNTRIES_PKEY
@@ -151,7 +149,6 @@ open class Countries(
         override fun `as`(alias: Table<*>): CountriesPath = CountriesPath(alias.qualifiedName, this)
     }
     override fun getSchema(): Schema? = if (aliased()) null else Public.PUBLIC
-    override fun getIndexes(): List<Index> = listOf(IDX_COUNTRIES_IS_DELETED)
     override fun getPrimaryKey(): UniqueKey<CountriesRecord> = COUNTRIES_PKEY
     override fun getUniqueKeys(): List<UniqueKey<CountriesRecord>> = listOf(COUNTRIES_CODE_KEY)
 

@@ -234,6 +234,8 @@ class BuildingRepositoryImpl(
                     .update(BUILDINGS)
                     .set(BUILDINGS.IS_DELETED, true)
                     .set(BUILDINGS.UPDATED_AT, Instant.now())
+                    .set(BUILDINGS.DELETED_AT, Instant.now())
+                    .where(BUILDINGS.ID.eq(id))
                     .execute()
             deleted > 0
         }

@@ -105,7 +105,6 @@ ktorServerBundle = [
 ]
 koinBundle = ["koinKtor", "koinLogger"]
 jooqBundle = ["jooqKotlin"]
-exposedBundle = ["exposedCore", "exposedDao", "exposedJdbc", "exposedJavaDateTime", "exposedJson"]
 liquibaseBundle = ["liquibaseCore", "postgresql", "picocli"]
 validationBundle = ["konform"]
 swaggerBundle = ["swaggerCore", "swaggerAnnotations", "swaggerModels", "swaggerJaxrs2"]

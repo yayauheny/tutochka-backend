@@ -33,7 +33,7 @@ val validateCityOnCreate =
                 "Название города на английском языке слишком длинное (максимум ${ApiConstants.MAX_NAME_LENGTH} символов)"
         }
         CityCreateDto::coordinates {
-            run(validateLatLon)
+            run(validateCoordinates)
         }
     }
 
@@ -53,7 +53,7 @@ val validateCityOnUpdate =
                 "Название города на английском языке слишком длинное (максимум ${ApiConstants.MAX_NAME_LENGTH} символов)"
         }
         CityUpdateDto::coordinates {
-            run(validateLatLon)
+            run(validateCoordinates)
         }
     }
 

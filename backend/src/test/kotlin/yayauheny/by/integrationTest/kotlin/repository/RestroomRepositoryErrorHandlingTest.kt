@@ -42,7 +42,7 @@ class RestroomRepositoryErrorHandlingTest : BaseIntegrationTest() {
                 val testEnv = DatabaseTestHelper.createTestEnvironment(dslContext)
                 val sameCoordinates =
                     yayauheny.by.model.dto
-                        .LatLon(lat = 55.7558, lon = 37.6176)
+                        .Coordinates(lat = 55.7558, lon = 37.6176)
                 val firstRestroomDto =
                     TestDataHelpers.createRestroomCreateDto(
                         cityId = testEnv.cityId,

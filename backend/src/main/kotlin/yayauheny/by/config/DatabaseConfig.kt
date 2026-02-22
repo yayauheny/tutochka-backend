@@ -18,6 +18,7 @@ data class DatabaseConfig(
     val name: String = "DB_NAME".env("postgres"),
     val user: String = "DB_USER".env("admin"),
     val password: String = "DB_PASSWORD".env("admin"),
+    val schema: String = "DB_SCHEMA".env("public"),
     val sslMode: String = "DB_SSL_MODE".env("disable"),
     val maxPoolSize: Int = "DB_MAX_POOL_SIZE".envInt(10),
     val minIdle: Int = "DB_MIN_IDLE".envInt(2),
@@ -31,6 +32,7 @@ data class DatabaseConfig(
         require(name.isNotBlank()) { "Database name cannot be blank" }
         require(user.isNotBlank()) { "Database user cannot be blank" }
         require(password.isNotBlank()) { "Database password cannot be blank" }
+        require(schema.isNotBlank()) { "Database schema cannot be blank" }
         require(maxPoolSize > 0) { "maxPoolSize must be positive, got: $maxPoolSize" }
         require(minIdle >= 0) { "minIdle must be non-negative, got: $minIdle" }
         require(minIdle <= maxPoolSize) { "minIdle ($minIdle) must be <= maxPoolSize ($maxPoolSize)" }
@@ -40,11 +42,11 @@ data class DatabaseConfig(
         require(idleTimeout <= maxLifetime) { "idleTimeout ($idleTimeout) must be <= maxLifetime ($maxLifetime)" }
     }
 
-    fun createDataSource(): HikariDataSource =
-        HikariDataSource(
+    fun createDataSource(): HikariDataSource {
+        return HikariDataSource(
             HikariConfig().apply {
                 addDataSourceProperty("sslmode", sslMode)
-                jdbcUrl = "jdbc:postgresql://$host:$port/$name"
+                jdbcUrl = "jdbc:postgresql://$host:$port/$name?currentSchema=$schema"
                 username = user
                 password = this@DatabaseConfig.password
                 driverClassName = "org.postgresql.Driver"
@@ -56,15 +58,19 @@ data class DatabaseConfig(
                 connectionTestQuery = "SELECT 1"
                 validationTimeout = 5000L
                 leakDetectionThreshold = 60000L
-                isAutoCommit = false // Отключено для явного управления транзакциями
+                isAutoCommit = false
                 poolName = "TutochkaPool"
             }
         )
+    }
 
     fun createJooqConfiguration(dataSource: DataSource): Configuration {
         return DefaultConfiguration().apply {
             set(dataSource)
             set(SQLDialect.POSTGRES)
+            settings().apply {
+                isRenderSchema = true
+            }
         }
     }
 

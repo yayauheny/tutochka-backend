@@ -103,16 +103,6 @@ open class SubwayStations(
     val NAME_EN: TableField<SubwayStationsRecord, String?> = createField(DSL.name("name_en"), SQLDataType.VARCHAR(255).nullable(false), this, "")
 
     /**
-     * The column <code>public.subway_stations.name_local</code>.
-     */
-    val NAME_LOCAL: TableField<SubwayStationsRecord, String?> = createField(DSL.name("name_local"), SQLDataType.VARCHAR(255), this, "")
-
-    /**
-     * The column <code>public.subway_stations.name_local_lang</code>.
-     */
-    val NAME_LOCAL_LANG: TableField<SubwayStationsRecord, String?> = createField(DSL.name("name_local_lang"), SQLDataType.VARCHAR(10), this, "")
-
-    /**
      * The column <code>public.subway_stations.is_transfer</code>.
      */
     val IS_TRANSFER: TableField<SubwayStationsRecord, Boolean?> = createField(DSL.name("is_transfer"), SQLDataType.BOOLEAN.nullable(false).defaultValue(DSL.field(DSL.raw("false"), SQLDataType.BOOLEAN)), this, "")
@@ -136,6 +126,16 @@ open class SubwayStations(
      * The column <code>public.subway_stations.created_at</code>.
      */
     val CREATED_AT: TableField<SubwayStationsRecord, Instant?> = createField(DSL.name("created_at"), SQLDataType.INSTANT.nullable(false).defaultValue(DSL.field(DSL.raw("CURRENT_TIMESTAMP"), SQLDataType.INSTANT)), this, "")
+
+    /**
+     * The column <code>public.subway_stations.updated_at</code>.
+     */
+    val UPDATED_AT: TableField<SubwayStationsRecord, Instant?> = createField(DSL.name("updated_at"), SQLDataType.INSTANT.nullable(false).defaultValue(DSL.field(DSL.raw("CURRENT_TIMESTAMP"), SQLDataType.INSTANT)), this, "")
+
+    /**
+     * The column <code>public.subway_stations.deleted_at</code>.
+     */
+    val DELETED_AT: TableField<SubwayStationsRecord, Instant?> = createField(DSL.name("deleted_at"), SQLDataType.INSTANT, this, "")
 
     private constructor(alias: Name, aliased: Table<SubwayStationsRecord>?): this(alias, null, null, null, aliased, null, null)
     private constructor(alias: Name, aliased: Table<SubwayStationsRecord>?, parameters: Array<Field<*>?>?): this(alias, null, null, null, aliased, parameters, null)

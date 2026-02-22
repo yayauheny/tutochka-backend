@@ -35,29 +35,29 @@ open class SubwayLinesRecord() : UpdatableRecordImpl<SubwayLinesRecord>(SubwayLi
         set(value): Unit = set(3, value)
         get(): String? = get(3) as String?
 
-    open var nameLocal: String?
+    open var shortCode: String?
         set(value): Unit = set(4, value)
         get(): String? = get(4) as String?
 
-    open var nameLocalLang: String?
+    open var hexColor: String?
         set(value): Unit = set(5, value)
         get(): String? = get(5) as String?
-
-    open var shortCode: String?
-        set(value): Unit = set(6, value)
-        get(): String? = get(6) as String?
-
-    open var hexColor: String?
-        set(value): Unit = set(7, value)
-        get(): String? = get(7) as String?
 
     @Suppress("INAPPLICABLE_JVM_NAME")
     @set:JvmName("setIsDeleted")
     open var isDeleted: Boolean?
-        set(value): Unit = set(8, value)
-        get(): Boolean? = get(8) as Boolean?
+        set(value): Unit = set(6, value)
+        get(): Boolean? = get(6) as Boolean?
 
     open var createdAt: Instant?
+        set(value): Unit = set(7, value)
+        get(): Instant? = get(7) as Instant?
+
+    open var updatedAt: Instant?
+        set(value): Unit = set(8, value)
+        get(): Instant? = get(8) as Instant?
+
+    open var deletedAt: Instant?
         set(value): Unit = set(9, value)
         get(): Instant? = get(9) as Instant?
 
@@ -70,17 +70,17 @@ open class SubwayLinesRecord() : UpdatableRecordImpl<SubwayLinesRecord>(SubwayLi
     /**
      * Create a detached, initialised SubwayLinesRecord
      */
-    constructor(id: UUID? = null, cityId: UUID? = null, nameRu: String? = null, nameEn: String? = null, nameLocal: String? = null, nameLocalLang: String? = null, shortCode: String? = null, hexColor: String? = null, isDeleted: Boolean? = null, createdAt: Instant? = null): this() {
+    constructor(id: UUID? = null, cityId: UUID? = null, nameRu: String? = null, nameEn: String? = null, shortCode: String? = null, hexColor: String? = null, isDeleted: Boolean? = null, createdAt: Instant? = null, updatedAt: Instant? = null, deletedAt: Instant? = null): this() {
         this.id = id
         this.cityId = cityId
         this.nameRu = nameRu
         this.nameEn = nameEn
-        this.nameLocal = nameLocal
-        this.nameLocalLang = nameLocalLang
         this.shortCode = shortCode
         this.hexColor = hexColor
         this.isDeleted = isDeleted
         this.createdAt = createdAt
+        this.updatedAt = updatedAt
+        this.deletedAt = deletedAt
         resetTouchedOnNotNull()
     }
 }

@@ -6,5 +6,6 @@ import kotlinx.serialization.Serializable
 enum class DataSourceType {
     MANUAL,
     USER,
-    IMPORT
+    IMPORT,
+    UNKNOWN
 }

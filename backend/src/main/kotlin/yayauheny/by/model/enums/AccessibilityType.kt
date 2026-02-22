@@ -4,9 +4,8 @@ import kotlinx.serialization.Serializable
 
 @Serializable
 enum class AccessibilityType {
+    INACCESSIBLE,
     WHEELCHAIR,
-    LIMITED,
-    NONE,
+    CHANGING_PLACES,
     UNKNOWN
 }
-

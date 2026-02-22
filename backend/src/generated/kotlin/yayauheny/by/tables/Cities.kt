@@ -38,9 +38,7 @@ import yayauheny.by.Public
 import yayauheny.by.indexes.IDX_CITIES_BOUNDS
 import yayauheny.by.indexes.IDX_CITIES_COORDINATES
 import yayauheny.by.indexes.IDX_CITIES_COUNTRY_ID
-import yayauheny.by.indexes.IDX_CITIES_IS_DELETED
 import yayauheny.by.keys.BUILDINGS__BUILDINGS_CITY_ID_FKEY
-import yayauheny.by.keys.CITIES_COORDINATES_KEY
 import yayauheny.by.keys.CITIES_PKEY
 import yayauheny.by.keys.CITIES_UNIQUE_COUNTRY_NAME_EN
 import yayauheny.by.keys.CITIES_UNIQUE_COUNTRY_NAME_RU
@@ -180,9 +178,9 @@ open class Cities(
         override fun `as`(alias: Table<*>): CitiesPath = CitiesPath(alias.qualifiedName, this)
     }
     override fun getSchema(): Schema? = if (aliased()) null else Public.PUBLIC
-    override fun getIndexes(): List<Index> = listOf(IDX_CITIES_BOUNDS, IDX_CITIES_COORDINATES, IDX_CITIES_COUNTRY_ID, IDX_CITIES_IS_DELETED)
+    override fun getIndexes(): List<Index> = listOf(IDX_CITIES_BOUNDS, IDX_CITIES_COORDINATES, IDX_CITIES_COUNTRY_ID)
     override fun getPrimaryKey(): UniqueKey<CitiesRecord> = CITIES_PKEY
-    override fun getUniqueKeys(): List<UniqueKey<CitiesRecord>> = listOf(CITIES_COORDINATES_KEY, CITIES_UNIQUE_COUNTRY_NAME_EN, CITIES_UNIQUE_COUNTRY_NAME_RU)
+    override fun getUniqueKeys(): List<UniqueKey<CitiesRecord>> = listOf(CITIES_UNIQUE_COUNTRY_NAME_EN, CITIES_UNIQUE_COUNTRY_NAME_RU)
     override fun getReferences(): List<ForeignKey<CitiesRecord, *>> = listOf(CITIES__CITIES_COUNTRY_ID_FKEY)
 
     /**

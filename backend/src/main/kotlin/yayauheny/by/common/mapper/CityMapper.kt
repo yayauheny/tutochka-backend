@@ -3,7 +3,7 @@ package yayauheny.by.common.mapper
 import org.jooq.Record
 import org.jooq.UpdateSetFirstStep
 import org.jooq.UpdateSetMoreStep
-import yayauheny.by.model.dto.LatLon
+import yayauheny.by.model.dto.Coordinates
 import yayauheny.by.model.city.CityResponseDto
 import yayauheny.by.model.city.CityUpdateDto
 import yayauheny.by.tables.references.CITIES
@@ -29,7 +29,7 @@ object CityMapper {
             nameRu = nameRu,
             nameEn = nameEn,
             region = region,
-            coordinates = LatLon(lat = lat, lon = lon)
+            coordinates = Coordinates(lat = lat, lon = lon)
         )
     }
 

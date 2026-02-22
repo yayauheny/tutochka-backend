@@ -1,6 +1,9 @@
 package integration.repository
 
 import integration.base.BaseIntegrationTest
+import java.util.Locale
+import java.util.UUID
+import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
 import kotlin.test.assertNotNull
 import kotlin.test.assertNull
@@ -17,7 +20,6 @@ import org.postgresql.util.PSQLException
 import yayauheny.by.helpers.DatabaseTestHelper
 import yayauheny.by.helpers.TestDataHelpers
 import yayauheny.by.repository.impl.SubwayRepositoryImpl
-import java.util.UUID
 
 @Tag("integration")
 @DisplayName("SubwayRepository Tests")
@@ -216,8 +218,9 @@ class SubwayRepositoryTest : BaseIntegrationTest() {
                 val foundNearest = repository.findNearestStation(53.9006, 27.5590)
 
                 assertNotNull(foundNearest, "Nearest station should be found")
-                assertTrue(
-                    foundNearest?.id == nearestStation.id,
+                assertEquals(
+                    foundNearest.id,
+                    nearestStation.id,
                     "Should return the nearest station"
                 )
             }
@@ -274,8 +277,9 @@ class SubwayRepositoryTest : BaseIntegrationTest() {
 
                 val updatedRestroom = restroomRepository.findById(savedRestroom.id)
                 assertNotNull(updatedRestroom, "Restroom should still exist")
-                assertTrue(
-                    updatedRestroom?.subwayStationId == station.id,
+                assertEquals(
+                    updatedRestroom.subwayStationId,
+                    station.id,
                     "Restroom should have nearest station set"
                 )
             }
@@ -296,8 +300,9 @@ class SubwayRepositoryTest : BaseIntegrationTest() {
                         repository.createLine(lineDto)
                     }
 
-                assertTrue(
-                    exception.sqlState == "23503",
+                assertEquals(
+                    exception.sqlState,
+                    "23503",
                     "Expected foreign key violation (23503), got ${exception.sqlState}"
                 )
             }
@@ -328,27 +333,6 @@ class SubwayRepositoryTest : BaseIntegrationTest() {
     @DisplayName("Subway Line Local Names Tests")
     inner class SubwayLineLocalNamesTests {
         @Test
-        @DisplayName("GIVEN line with local name WHEN createLine THEN save local name and language")
-        fun given_line_with_local_name_when_create_line_then_save_local_name_and_language() =
-            runTest {
-                val testEnv = DatabaseTestHelper.createTestEnvironment(dslContext)
-                val lineDto =
-                    TestDataHelpers.createSubwayLineCreateDto(
-                        cityId = testEnv.cityId,
-                        nameLocal = "Маскоўская лінія",
-                        nameLocalLang = "be",
-                        shortCode = "1"
-                    )
-
-                val savedLine = repository.createLine(lineDto)
-
-                assertNotNull(savedLine, "Saved line should not be null")
-                assertTrue(savedLine.nameLocal == "Маскоўская лінія", "Local name should match")
-                assertTrue(savedLine.nameLocalLang == "be", "Local language should match")
-                assertTrue(savedLine.shortCode == "1", "Short code should match")
-            }
-
-        @Test
         @DisplayName("GIVEN line without local name WHEN createLine THEN save with null local fields")
         fun given_line_without_local_name_when_create_line_then_save_with_null_local_fields() =
             runTest {
@@ -356,16 +340,12 @@ class SubwayRepositoryTest : BaseIntegrationTest() {
                 val lineDto =
                     TestDataHelpers.createSubwayLineCreateDto(
                         cityId = testEnv.cityId,
-                        nameLocal = null,
-                        nameLocalLang = null,
                         shortCode = null
                     )
 
                 val savedLine = repository.createLine(lineDto)
 
                 assertNotNull(savedLine, "Saved line should not be null")
-                assertNull(savedLine.nameLocal, "Local name should be null")
-                assertNull(savedLine.nameLocalLang, "Local language should be null")
                 assertNull(savedLine.shortCode, "Short code should be null")
             }
     }
@@ -373,29 +353,6 @@ class SubwayRepositoryTest : BaseIntegrationTest() {
     @Nested
     @DisplayName("Subway Station Local Names and Transfer Tests")
     inner class SubwayStationLocalNamesAndTransferTests {
-        @Test
-        @DisplayName("GIVEN station with local name WHEN createStation THEN save local name and language")
-        fun given_station_with_local_name_when_create_station_then_save_local_name_and_language() =
-            runTest {
-                val testEnv = DatabaseTestHelper.createTestEnvironment(dslContext)
-                val line =
-                    repository.createLine(
-                        TestDataHelpers.createSubwayLineCreateDto(cityId = testEnv.cityId)
-                    )
-                val stationDto =
-                    TestDataHelpers.createSubwayStationCreateDto(
-                        subwayLineId = line.id,
-                        nameLocal = "Плошча Перамогі",
-                        nameLocalLang = "be"
-                    )
-
-                val savedStation = repository.createStation(stationDto)
-
-                assertNotNull(savedStation, "Saved station should not be null")
-                assertTrue(savedStation.nameLocal == "Плошча Перамогі", "Local name should match")
-                assertTrue(savedStation.nameLocalLang == "be", "Local language should match")
-            }
-
         @Test
         @DisplayName("GIVEN transfer station WHEN createStation THEN save isTransfer flag")
         fun given_transfer_station_when_create_station_then_save_is_transfer_flag() =
@@ -449,33 +406,15 @@ class SubwayRepositoryTest : BaseIntegrationTest() {
     @DisplayName("SubwayStationResponseDto displayName Tests")
     inner class DisplayNameTests {
         @Test
-        @DisplayName("GIVEN station with local name WHEN displayName with matching lang THEN return local name")
-        fun given_station_with_local_name_when_display_name_with_matching_lang_then_return_local_name() {
-            val station =
-                TestDataHelpers.createSubwayStationResponseDto(
-                    nameRu = "Площадь Победы",
-                    nameEn = "Victory Square",
-                    nameLocal = "Плошча Перамогі",
-                    nameLocalLang = "be"
-                )
-
-            val displayName = station.displayName("be")
-
-            assertTrue(displayName == "Плошча Перамогі", "Should return local name for matching language")
-        }
-
-        @Test
-        @DisplayName("GIVEN station WHEN displayName with 'ru' THEN return Russian name")
+        @DisplayName("GIVEN station WHEN displayName default THEN return Russian name")
         fun given_station_when_display_name_with_ru_then_return_russian_name() {
             val station =
                 TestDataHelpers.createSubwayStationResponseDto(
                     nameRu = "Площадь Победы",
-                    nameEn = "Victory Square",
-                    nameLocal = "Плошча Перамогі",
-                    nameLocalLang = "be"
+                    nameEn = "Victory Square"
                 )
 
-            val displayName = station.displayName("ru")
+            val displayName = station.displayName()
 
             assertTrue(displayName == "Площадь Победы", "Should return Russian name")
         }
@@ -486,52 +425,12 @@ class SubwayRepositoryTest : BaseIntegrationTest() {
             val station =
                 TestDataHelpers.createSubwayStationResponseDto(
                     nameRu = "Площадь Победы",
-                    nameEn = "Victory Square",
-                    nameLocal = "Плошча Перамогі",
-                    nameLocalLang = "be"
+                    nameEn = "Victory Square"
                 )
 
-            val displayName = station.displayName("en")
+            val displayName = station.displayName(Locale.ENGLISH)
 
             assertTrue(displayName == "Victory Square", "Should return English name")
-        }
-
-        @Test
-        @DisplayName("GIVEN station WHEN displayName without preference THEN return local or Russian name")
-        fun given_station_when_display_name_without_preference_then_return_local_or_russian_name() {
-            val station =
-                TestDataHelpers.createSubwayStationResponseDto(
-                    nameRu = "Площадь Победы",
-                    nameEn = "Victory Square",
-                    nameLocal = "Плошча Перамогі",
-                    nameLocalLang = "be"
-                )
-
-            val displayName = station.displayName(null)
-
-            assertTrue(
-                displayName == "Плошча Перамогі" || displayName == "Площадь Победы",
-                "Should return local name or Russian name as fallback"
-            )
-        }
-
-        @Test
-        @DisplayName("GIVEN station without local name WHEN displayName THEN return Russian or English name")
-        fun given_station_without_local_name_when_display_name_then_return_russian_or_english_name() {
-            val station =
-                TestDataHelpers.createSubwayStationResponseDto(
-                    nameRu = "Площадь Победы",
-                    nameEn = "Victory Square",
-                    nameLocal = null,
-                    nameLocalLang = null
-                )
-
-            val displayName = station.displayName(null)
-
-            assertTrue(
-                displayName == "Площадь Победы" || displayName == "Victory Square",
-                "Should return Russian or English name when local name is missing"
-            )
         }
     }
 }

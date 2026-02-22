@@ -36,6 +36,6 @@ val validateSubwayStationOnCreate =
             maxLength(255) hint "Название на английском языке слишком длинное (максимум 255 символов)"
         }
         SubwayStationCreateDto::coordinates {
-            run(validateLatLon)
+            run(validateCoordinates)
         }
     }

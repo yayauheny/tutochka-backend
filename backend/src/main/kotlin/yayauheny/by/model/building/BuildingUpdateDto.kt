@@ -5,7 +5,7 @@ import java.util.UUID
 import kotlinx.serialization.Contextual
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.JsonObject
-import yayauheny.by.model.dto.LatLon
+import yayauheny.by.model.dto.Coordinates
 import yayauheny.by.model.enums.PlaceType
 import yayauheny.by.model.import.BuildingImportStatus
 
@@ -24,7 +24,7 @@ data class BuildingUpdateDto(
     @field:Schema(description = "Working hours JSONB")
     val workTime: JsonObject?,
     @field:Schema(description = "Coordinates")
-    val coordinates: LatLon?,
+    val coordinates: Coordinates?,
     @field:Schema(description = "External IDs JSONB map")
     val externalIds: JsonObject?,
     @field:Schema(description = "Import status", example = "COMPLETED")

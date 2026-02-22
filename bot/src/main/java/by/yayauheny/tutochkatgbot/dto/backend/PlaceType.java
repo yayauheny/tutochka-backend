@@ -23,19 +23,19 @@ public enum PlaceType {
     RESIDENTIAL("residential", "Жилой дом", "Residential Building"),
     OTHER("other", "Прочее", "Other");
 
-    private final String id;
+    private final String code;
     private final String ruName;
     private final String enName;
 
-    PlaceType(String id, String ruName, String enName) {
-        this.id = id;
+    PlaceType(String code, String ruName, String enName) {
+        this.code = code;
         this.ruName = ruName;
         this.enName = enName;
     }
 
     @JsonValue
-    public String getId() {
-        return id;
+    public String getCode() {
+        return code;
     }
 
     public String getRuName() {
@@ -52,7 +52,7 @@ public enum PlaceType {
             return OTHER;
         }
         for (PlaceType type : values()) {
-            if (type.id.equals(value)) {
+            if (type.code.equals(value)) {
                 return type;
             }
         }

@@ -25,6 +25,7 @@ import yayauheny.by.tables.references.CITIES
 import yayauheny.by.util.latAlias
 import yayauheny.by.util.lonAlias
 import yayauheny.by.util.pointExpr
+import yayauheny.by.util.setIfNotNullCoordinates
 import yayauheny.by.util.transactionSuspend
 
 class CityRepositoryImpl(
@@ -233,10 +234,8 @@ class CityRepositoryImpl(
         id: UUID
     ) = CityMapper
         .applyUpdateDto(txCtx.update(CITIES), updateDto)
-        .set(
-            CITIES.COORDINATES,
-            pointExpr(updateDto.coordinates.lon, updateDto.coordinates.lat, CITIES.COORDINATES)
-        ).set(CITIES.UPDATED_AT, Instant.now())
+        .setIfNotNullCoordinates(updateDto.coordinates, CITIES.COORDINATES)
+        .set(CITIES.UPDATED_AT, Instant.now())
         .where(CITIES.ID.eq(id))
 
     override suspend fun update(
