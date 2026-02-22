@@ -2,12 +2,20 @@ package yayauheny.by.service.import.twogis
 
 import java.util.UUID
 import kotlinx.serialization.json.JsonObject
+import kotlinx.serialization.json.JsonPrimitive
+import kotlinx.serialization.json.buildJsonObject
+import kotlinx.serialization.json.put
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
+import yayauheny.by.model.building.BuildingCreateDto
+import yayauheny.by.model.dto.Coordinates
 import yayauheny.by.model.enums.ImportPayloadType
 import yayauheny.by.model.enums.ImportProvider
+import yayauheny.by.model.import.NormalizedRestroomCandidate
+import yayauheny.by.model.restroom.RestroomCreateDto
 import yayauheny.by.model.restroom.RestroomUpdateDto
 import yayauheny.by.repository.RestroomRepository
+import yayauheny.by.repository.impl.BuildingRepositoryImpl
 import yayauheny.by.repository.impl.RestroomRepositoryImpl
 import yayauheny.by.repository.impl.SubwayRepositoryImpl
 import yayauheny.by.service.import.ArrayOrSingleExtractor
@@ -19,7 +27,8 @@ import yayauheny.by.util.transactionSuspend
 
 /**
  * Стратегия импорта данных из 2ГИС scraped формата.
- * Использует pipeline: extract -> parse -> normalize -> map -> upsert
+ * Pipeline: extract -> parse -> normalize -> [resolve building] -> map -> upsert.
+ * При locationType == INSIDE_BUILDING сначала создаётся/находится здание по external_id 2ГИС, затем туалет привязывается к зданию с наследованием расписания.
  */
 class TwoGisScrapedImportStrategy(
     private val dsl: DSLContext,
@@ -59,6 +68,7 @@ class TwoGisScrapedImportStrategy(
         logger.info("Processing batch import: ${items.size} items")
 
         return dsl.transactionSuspend { txCtx ->
+            val txBuildingRepo = BuildingRepositoryImpl(txCtx)
             val txRestroomRepo = RestroomRepositoryImpl(txCtx)
             val txSubwayRepo = SubwayRepositoryImpl(txCtx)
 
@@ -66,8 +76,7 @@ class TwoGisScrapedImportStrategy(
                 try {
                     val place = parser.parse(item)
                     val candidate = normalizer.normalize(cityId, place, payloadType)
-                    val createDto = RestroomCandidateMapper.toCreateDto(candidate)
-
+                    val (createDto, buildingId) = resolveBuildingAndCreateDto(candidate, txBuildingRepo)
                     val existingRestroom =
                         txRestroomRepo.findByOrigin(
                             originProvider = createDto.originProvider,
@@ -76,7 +85,6 @@ class TwoGisScrapedImportStrategy(
 
                     val restroomId =
                         if (existingRestroom != null) {
-                            // Обновляем существующий
                             val updateDto =
                                 RestroomUpdateDto(
                                     cityId = createDto.cityId,
@@ -105,27 +113,58 @@ class TwoGisScrapedImportStrategy(
                                 )
                             txRestroomRepo.update(existingRestroom.id, updateDto).id
                         } else {
-                            // Создаем новый
                             txRestroomRepo.save(createDto).id
                         }
 
-                    // Устанавливаем ближайшую станцию метро
                     txSubwayRepo.setNearestStationForRestroom(
                         restroomId = restroomId,
                         lat = place.location.lat,
                         lon = place.location.lng
                     )
 
-                    logger.debug("Successfully imported item {}: restroomId={}", index, restroomId)
+                    logger.debug("Successfully imported item {}: restroomId={}, buildingId={}", index, restroomId, buildingId)
                     ImportObjectResult(
                         restroomId = restroomId,
-                        buildingId = null
+                        buildingId = buildingId
                     )
                 } catch (e: Exception) {
                     logger.error("Failed to import item $index: ${e.message}", e)
-                    throw e // Пробрасываем ошибку для обработки в сервисе
+                    throw e
                 }
             }
         }
+    }
+
+    private suspend fun resolveBuildingAndCreateDto(
+        candidate: NormalizedRestroomCandidate,
+        buildingRepo: BuildingRepositoryImpl
+    ): Pair<RestroomCreateDto, UUID?> {
+        val ctx = candidate.buildingContext
+        if (ctx == null) {
+            return RestroomCandidateMapper.toCreateDto(candidate) to null
+        }
+
+        val existing = buildingRepo.findByExternalId(provider = "2gis", externalId = ctx.externalId)
+        val building =
+            existing
+                ?: buildingRepo.save(
+                    BuildingCreateDto(
+                        cityId = candidate.cityId,
+                        name = ctx.name,
+                        address = ctx.address,
+                        buildingType = candidate.placeType,
+                        workTime = ctx.workTime,
+                        coordinates = Coordinates(lat = candidate.lat, lon = candidate.lng),
+                        externalIds = buildJsonObject { put("2gis", JsonPrimitive(ctx.externalId)) }
+                    )
+                )
+
+        val createDto =
+            RestroomCandidateMapper.toCreateDto(
+                candidate,
+                buildingId = building.id,
+                inheritBuildingSchedule = true
+            )
+        return createDto to building.id
     }
 }

@@ -46,10 +46,12 @@ suspend fun HttpClient.testGet(
 
 suspend fun HttpClient.testPost(
     path: String,
-    jsonBody: String
+    jsonBody: String,
+    headers: Map<String, String> = emptyMap()
 ): HttpResponse =
     post(path) {
         contentType(ContentType.Application.Json)
+        headers.forEach { (k, v) -> this.headers.append(k, v) }
         setBody(jsonBody)
     }
 

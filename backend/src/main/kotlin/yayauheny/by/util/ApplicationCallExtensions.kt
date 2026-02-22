@@ -1,12 +1,55 @@
 package yayauheny.by.util
 
 import io.ktor.server.application.ApplicationCall
+import io.ktor.server.request.header
 import java.util.UUID
+import yayauheny.by.common.errors.FieldError
+import yayauheny.by.common.errors.ValidationException
 import yayauheny.by.common.query.FilterCriteria
 import yayauheny.by.common.query.FilterOperator
 import yayauheny.by.common.query.PaginationRequest
 import yayauheny.by.common.query.SortDirection
 import yayauheny.by.config.ApiConstants
+import yayauheny.by.model.enums.ImportPayloadType
+import yayauheny.by.model.enums.ImportProvider
+
+const val HEADER_IMPORT_PROVIDER = "X-Import-Provider"
+const val HEADER_IMPORT_PAYLOAD_TYPE = "X-Import-Payload-Type"
+const val HEADER_IMPORT_CITY_ID = "X-Import-City-Id"
+
+data class ImportHeaders(
+    val provider: ImportProvider,
+    val payloadType: ImportPayloadType,
+    val cityId: UUID?
+)
+
+fun ApplicationCall.getImportHeaders(): ImportHeaders {
+    val providerRaw =
+        request.header(HEADER_IMPORT_PROVIDER)
+            ?: throw ValidationException(listOf(FieldError(HEADER_IMPORT_PROVIDER, "Header is required")))
+    val payloadTypeRaw =
+        request.header(HEADER_IMPORT_PAYLOAD_TYPE)
+            ?: throw ValidationException(listOf(FieldError(HEADER_IMPORT_PAYLOAD_TYPE, "Header is required")))
+    val cityIdRaw = request.header(HEADER_IMPORT_CITY_ID)
+
+    val provider =
+        runCatching { ImportProvider.valueOf(providerRaw) }.getOrElse {
+            throw ValidationException(listOf(FieldError(HEADER_IMPORT_PROVIDER, "Invalid value: $providerRaw")))
+        }
+    val payloadType =
+        runCatching { ImportPayloadType.valueOf(payloadTypeRaw) }.getOrElse {
+            throw ValidationException(listOf(FieldError(HEADER_IMPORT_PAYLOAD_TYPE, "Invalid value: $payloadTypeRaw")))
+        }
+    val cityId =
+        when {
+            cityIdRaw.isNullOrBlank() -> null
+            else ->
+                runCatching { UUID.fromString(cityIdRaw) }.getOrElse {
+                    throw ValidationException(listOf(FieldError(HEADER_IMPORT_CITY_ID, "Invalid UUID: $cityIdRaw")))
+                }
+        }
+    return ImportHeaders(provider, payloadType, cityId)
+}
 
 fun ApplicationCall.toPaginationRequest(
     defaultSize: Int = ApiConstants.DEFAULT_PAGE_SIZE,

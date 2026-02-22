@@ -6,21 +6,28 @@ import io.ktor.server.response.respond
 import io.ktor.server.routing.Route
 import io.ktor.server.routing.post
 import io.ktor.server.routing.route
-import kotlinx.serialization.json.JsonNull
+import kotlinx.serialization.json.JsonArray
 import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.jsonArray
-import kotlinx.serialization.json.jsonObject
+import kotlinx.serialization.json.jsonPrimitive
+import java.util.UUID
 import org.slf4j.LoggerFactory
 import yayauheny.by.common.errors.FieldError
 import yayauheny.by.common.errors.ValidationException
-import yayauheny.by.model.enums.ImportPayloadType
+import yayauheny.by.common.query.PaginationRequest
 import yayauheny.by.model.import.ImportBatchResponseDto
 import yayauheny.by.model.import.ImportRequestDto
 import yayauheny.by.model.import.ImportResponseDto
+import yayauheny.by.repository.CityRepository
 import yayauheny.by.service.import.ImportService
+import yayauheny.by.service.validation.ImportItemsParams
+import yayauheny.by.service.validation.validateImportItemsParams
+import yayauheny.by.service.validation.validateOrThrow
+import yayauheny.by.util.getImportHeaders
 
 class ImportController(
-    private val importService: ImportService
+    private val importService: ImportService,
+    private val cityRepository: CityRepository
 ) {
     private val logger = LoggerFactory.getLogger(ImportController::class.java)
 
@@ -28,23 +35,25 @@ class ImportController(
         route("/import") {
             post {
                 try {
-                    val request = call.receive<ImportRequestDto>()
-
-                    validatePayload(request)
+                    val headers = call.getImportHeaders()
+                    val request = parseImportBody(call.receive())
+                    ImportItemsParams(request.items, isBatch = false).validateOrThrow(validateImportItemsParams)
+                    val cityId = resolveCityId(headers, request.items)
 
                     logger.info(
                         "Import request received: provider={}, payloadType={}, cityId={}",
-                        request.provider,
-                        request.payloadType,
-                        request.cityId
+                        headers.provider,
+                        headers.payloadType,
+                        cityId
                     )
 
+                    val payload = request.items.single()
                     val result =
                         importService.import(
-                            provider = request.provider,
-                            payloadType = request.payloadType,
-                            cityId = request.cityId,
-                            payload = request.payload
+                            provider = headers.provider,
+                            payloadType = headers.payloadType,
+                            cityId = cityId,
+                            payload = payload
                         )
 
                     val response =
@@ -75,23 +84,25 @@ class ImportController(
 
             post("/batch") {
                 try {
-                    val request = call.receive<ImportRequestDto>()
-
-                    validatePayload(request)
+                    val headers = call.getImportHeaders()
+                    val request = parseImportBody(call.receive())
+                    ImportItemsParams(request.items, isBatch = true).validateOrThrow(validateImportItemsParams)
+                    val cityId = resolveCityId(headers, request.items)
 
                     logger.info(
                         "Batch import request received: provider={}, payloadType={}, cityId={}",
-                        request.provider,
-                        request.payloadType,
-                        request.cityId
+                        headers.provider,
+                        headers.payloadType,
+                        cityId
                     )
 
+                    val payload = buildJsonObjectWithItems(request.items)
                     val result =
                         importService.importBatch(
-                            provider = request.provider,
-                            payloadType = request.payloadType,
-                            cityId = request.cityId,
-                            payload = request.payload
+                            provider = headers.provider,
+                            payloadType = headers.payloadType,
+                            cityId = cityId,
+                            payload = payload
                         )
 
                     val response =
@@ -122,83 +133,37 @@ class ImportController(
         }
     }
 
-    private fun validatePayload(request: ImportRequestDto) {
-        if (request.payload.isEmpty()) {
-            throw ValidationException(listOf(FieldError("payload", "Payload cannot be empty")))
-        }
-
-        when (request.payloadType) {
-            ImportPayloadType.TWO_GIS_SCRAPED_PLACE_JSON -> {
-                validateScrapedPayload(request.payload)
-            }
-            else -> {
-                throw IllegalArgumentException("Unacceptable payload type: ${request.payloadType}")
-            }
-        }
+    private suspend fun resolveCityId(
+        headers: yayauheny.by.util.ImportHeaders,
+        items: List<JsonObject>
+    ): UUID {
+        if (headers.cityId != null) return headers.cityId
+        val cityName =
+            items
+                .firstOrNull()
+                ?.get("city")
+                ?.jsonPrimitive
+                ?.content
+                ?.takeIf { it.isNotBlank() }
+                ?: throw ValidationException(listOf(FieldError("items", "cityId is missing and items do not contain 'city' to resolve")))
+        val page = cityRepository.findByName(cityName, PaginationRequest(page = 0, size = 1))
+        val found =
+            page.content.firstOrNull()
+                ?: throw ValidationException(listOf(FieldError("city", "City not found by name: $cityName")))
+        return found.id
     }
 
-    private fun validateScrapedPayload(payload: JsonObject) {
-        // Проверяем формат scraped: либо {"items": [...]}, либо одиночный объект с обязательными полями
-        val hasItemsArray = payload["items"]?.jsonArray?.isNotEmpty() == true
-
-        if (hasItemsArray) {
-            // Проверяем, что элементы массива валидны
-            val items = payload["items"]?.jsonArray ?: return
-            items.forEachIndexed { index, element ->
-                if (element !is JsonObject) {
-                    throw ValidationException(
-                        listOf(FieldError("payload.items[$index]", "Item must be a JSON object"))
-                    )
-                }
-                validateScrapedItem(element, "items[$index]")
-            }
-        } else {
-            // Проверяем одиночный объект
-            validateScrapedItem(payload, "payload")
+    private fun parseImportBody(body: JsonObject): ImportRequestDto {
+        val itemsElement =
+            body["items"]
+                ?: throw ValidationException(listOf(FieldError("items", "Items are required")))
+        val itemsArray = itemsElement.jsonArray
+        val items = itemsArray.mapNotNull { it as? JsonObject }
+        if (items.size != itemsArray.size) {
+            throw ValidationException(listOf(FieldError("items", "Each item must be a JSON object")))
         }
+        return ImportRequestDto(items = items)
     }
 
-    private fun validateScrapedItem(
-        item: JsonObject,
-        fieldPath: String
-    ) {
-        val requiredFields = listOf("id", "location")
-        val missingFields =
-            requiredFields.filter { fieldName ->
-                val value = item[fieldName]
-                value == null || value is JsonNull
-            }
-
-        if (missingFields.isNotEmpty()) {
-            throw ValidationException(
-                listOf(
-                    FieldError(
-                        fieldPath,
-                        "Missing required fields: ${missingFields.joinToString(", ")}"
-                    )
-                )
-            )
-        }
-
-        // Проверяем структуру location
-        val location = item["location"]?.jsonObject
-        if (location != null) {
-            val locationFields = listOf("lat", "lng")
-            val missingLocationFields =
-                locationFields.filter { fieldName ->
-                    val value = location[fieldName]
-                    value == null || value is JsonNull
-                }
-            if (missingLocationFields.isNotEmpty()) {
-                throw ValidationException(
-                    listOf(
-                        FieldError(
-                            "$fieldPath.location",
-                            "Missing required fields: ${missingLocationFields.joinToString(", ")}"
-                        )
-                    )
-                )
-            }
-        }
-    }
+    private fun buildJsonObjectWithItems(items: List<JsonObject>): JsonObject = JsonObject(mapOf("items" to JsonArray(items)))
 }

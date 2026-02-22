@@ -3,6 +3,7 @@ package yayauheny.by.unit.service.import.twogis
 import java.util.UUID
 import kotlin.test.assertEquals
 import kotlin.test.assertNotNull
+import kotlin.test.assertNull
 import org.junit.jupiter.api.DisplayName
 import org.junit.jupiter.api.Test
 import yayauheny.by.model.enums.FeeType
@@ -46,7 +47,7 @@ class TwoGisScrapedNormalizerTest {
     }
 
     @Test
-    fun `should normalize place inside venue`() {
+    fun `should normalize place inside venue and set buildingContext`() {
         val place =
             TwoGisScrapedPlace(
                 id = "12345",
@@ -63,6 +64,53 @@ class TwoGisScrapedNormalizerTest {
 
         assertEquals(LocationType.INSIDE_BUILDING, candidate.locationType)
         assertEquals(PlaceType.MALL, candidate.placeType)
+        assertNotNull(candidate.buildingContext)
+        assertEquals("Mall Toilet", candidate.buildingContext!!.name)
+        assertEquals("Mall Street 1", candidate.buildingContext!!.address)
+        assertEquals("12345", candidate.buildingContext!!.externalId)
+    }
+
+    @Test
+    fun `should resolve location from rubrics when category is empty`() {
+        val place =
+            TwoGisScrapedPlace(
+                id = "id1",
+                title = "Cafe Toilet",
+                category = null,
+                address = "Cafe St 1",
+                location = TwoGisScrapedLocation(lat = 53.9, lng = 27.5),
+                workingHours = null,
+                attributeGroups = emptyList(),
+                rubrics = listOf("Кафе")
+            )
+
+        val candidate = normalizer.normalize(cityId, place, ImportPayloadType.TWO_GIS_SCRAPED_PLACE_JSON)
+
+        assertEquals(LocationType.INSIDE_BUILDING, candidate.locationType)
+        assertEquals(PlaceType.RESTAURANT, candidate.placeType)
+        assertNotNull(candidate.buildingContext)
+        assertEquals("id1", candidate.buildingContext!!.externalId)
+    }
+
+    @Test
+    fun `should resolve standalone from rubrics when category is empty`() {
+        val place =
+            TwoGisScrapedPlace(
+                id = "id2",
+                title = "Public Toilet",
+                category = null,
+                address = "Street 2",
+                location = TwoGisScrapedLocation(lat = 53.9, lng = 27.5),
+                workingHours = null,
+                attributeGroups = emptyList(),
+                rubrics = listOf("Туалеты")
+            )
+
+        val candidate = normalizer.normalize(cityId, place, ImportPayloadType.TWO_GIS_SCRAPED_PLACE_JSON)
+
+        assertEquals(LocationType.STANDALONE, candidate.locationType)
+        assertEquals(PlaceType.PUBLIC, candidate.placeType)
+        assertNull(candidate.buildingContext)
     }
 
     @Test

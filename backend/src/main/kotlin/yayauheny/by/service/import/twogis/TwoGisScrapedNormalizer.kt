@@ -7,17 +7,21 @@ import kotlinx.serialization.json.buildJsonArray
 import kotlinx.serialization.json.buildJsonObject
 import yayauheny.by.model.enums.AccessibilityType
 import yayauheny.by.model.enums.FeeType
-import yayauheny.by.model.enums.PlaceType
-import yayauheny.by.model.enums.RestroomStatus
-import yayauheny.by.model.enums.LocationType
 import yayauheny.by.model.enums.ImportPayloadType
 import yayauheny.by.model.enums.ImportProvider
+import yayauheny.by.model.enums.LocationType
+import yayauheny.by.model.enums.PlaceType
+import yayauheny.by.model.enums.RestroomStatus
+import yayauheny.by.model.enums.TwoGisCategory
+import yayauheny.by.model.enums.TwoGisRubric
+import yayauheny.by.model.import.BuildingContext
 import yayauheny.by.model.import.NormalizedRestroomCandidate
 import yayauheny.by.model.import.twogis.TwoGisScrapedPlace
 import yayauheny.by.service.import.Normalizer
 
 /**
  * Нормализует данные из scraped формата 2ГИС в каноническую модель NormalizedRestroomCandidate.
+ * Тип размещения (отдельный туалет или внутри здания) определяется по TwoGisCategory, при пустом category — по первому совпадению в TwoGisRubric.
  */
 class TwoGisScrapedNormalizer : Normalizer<TwoGisScrapedPlace> {
     override fun normalize(
@@ -27,37 +31,54 @@ class TwoGisScrapedNormalizer : Normalizer<TwoGisScrapedPlace> {
     ): NormalizedRestroomCandidate {
         val attrs = place.attributeGroups.map { it.trim().lowercase() }.toSet()
 
-        val toiletContext = determineToiletContext(place.category)
+        val locationType = resolveLocationType(place.category, place.rubrics)
+        val twoGisCategory = TwoGisCategory.fromValue(place.category)
+        val placeType = twoGisCategory?.placeType ?: resolvePlaceTypeFromRubrics(place.rubrics) ?: PlaceType.OTHER
         val feeType = determineFeeType(attrs)
-        val placeType = mapCategoryToPlaceType(place.category)
-        val amenities = buildAmenities(attrs, toiletContext)
+        val amenities = buildAmenities(attrs, locationType)
         val status = determineStatus(attrs)
+
+        val buildingContext =
+            if (locationType == LocationType.INSIDE_BUILDING) {
+                BuildingContext(
+                    name = place.title.takeIf { it.isNotBlank() },
+                    address = place.address.ifBlank { place.title?.takeIf { it.isNotBlank() } ?: "" },
+                    workTime = place.workingHours,
+                    externalId = place.id
+                )
+            } else {
+                null
+            }
 
         return NormalizedRestroomCandidate(
             provider = ImportProvider.fromPayloadType(payloadType),
             providerObjectId = place.id,
             cityId = cityId,
-            name = place.title,
+            name = place.title.takeIf { it.isNotBlank() },
             address = place.address.takeIf { it.isNotBlank() },
             lat = place.location.lat,
             lng = place.location.lng,
             placeType = placeType,
-            locationType = toiletContext,
+            locationType = locationType,
             feeType = feeType,
             accessibilityType = AccessibilityType.UNKNOWN,
             status = status,
             amenities = amenities,
-            rawSchedule = place.workingHours
+            rawSchedule = place.workingHours,
+            buildingContext = buildingContext
         )
     }
 
-    private fun determineToiletContext(category: String?): LocationType {
-        return when (category?.lowercase()) {
-            "toilet" -> LocationType.STANDALONE
-            null -> LocationType.UNKNOWN
-            else -> LocationType.INSIDE_BUILDING
-        }
-    }
+    private fun resolveLocationType(
+        category: String?,
+        rubrics: List<String>
+    ): LocationType =
+        TwoGisCategory.fromValue(category)?.locationType
+            ?: TwoGisRubric.resolveLocationTypeFromRubrics(rubrics)
+            ?: LocationType.UNKNOWN
+
+    private fun resolvePlaceTypeFromRubrics(rubrics: List<String>): PlaceType? =
+        rubrics.firstNotNullOfOrNull { TwoGisRubric.fromValue(it)?.placeType }
 
     private fun determineFeeType(attrs: Set<String>): FeeType {
         // Проверяем "бесплатный" первым, так как "бесплатный туалет" содержит слово "платный"
@@ -65,22 +86,6 @@ class TwoGisScrapedNormalizer : Normalizer<TwoGisScrapedPlace> {
             attrs.any { it.contains("бесплатный туалет") || it == "бесплатный туалет" } -> FeeType.FREE
             attrs.any { it.contains("платный туалет") || it == "платный туалет" } -> FeeType.PAID
             else -> FeeType.UNKNOWN
-        }
-    }
-
-    private fun mapCategoryToPlaceType(category: String?): PlaceType {
-        return when (category?.lowercase()) {
-            "toilet" -> PlaceType.PUBLIC
-            "mall" -> PlaceType.MALL
-            "mart", "market", "construction_hypermarket" -> PlaceType.MARKET
-            "gas_station" -> PlaceType.GAS_STATION
-            "food_service" -> PlaceType.FAST_FOOD
-            "coffee_shop", "food_restaurant", "bar" -> PlaceType.RESTAURANT
-            "bus_station", "railway_station" -> PlaceType.TRANSPORT
-            "business_center" -> PlaceType.OFFICE
-            "karaoke" -> PlaceType.CULTURE
-            "hotel" -> PlaceType.OTHER
-            else -> PlaceType.OTHER
         }
     }
 

@@ -12,9 +12,18 @@ import yayauheny.by.model.enums.LocationType
 import yayauheny.by.model.enums.PlaceType
 import yayauheny.by.model.enums.RestroomStatus
 
+@Serializable
+data class BuildingContext(
+    val name: String?,
+    val address: String,
+    val workTime: JsonObject?,
+    val externalId: String
+)
+
 /**
  * Каноническая модель для нормализованных данных о туалете перед записью в БД.
  * Используется для унификации данных от разных провайдеров (2ГИС, Яндекс и т.д.).
+ * При locationType == INSIDE_BUILDING поле buildingContext заполняется данными здания (название, адрес, расписание, внешний ID) для последующего создания/поиска здания при импорте.
  */
 @Serializable
 data class NormalizedRestroomCandidate(
@@ -31,7 +40,8 @@ data class NormalizedRestroomCandidate(
     val accessibilityType: AccessibilityType,
     val status: RestroomStatus,
     val amenities: JsonObject,
-    val rawSchedule: JsonObject? = null
+    val rawSchedule: JsonObject? = null,
+    val buildingContext: BuildingContext? = null
 ) {
     fun toCoordinates(): Coordinates = Coordinates(lat = lat, lon = lng)
 }

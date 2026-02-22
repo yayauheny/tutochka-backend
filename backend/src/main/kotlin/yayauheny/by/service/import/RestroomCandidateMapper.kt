@@ -1,5 +1,6 @@
 package yayauheny.by.service.import
 
+import java.util.UUID
 import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.JsonPrimitive
 import kotlinx.serialization.json.buildJsonObject
@@ -15,23 +16,32 @@ import yayauheny.by.model.restroom.RestroomCreateDto
 
 /**
  * Маппер для преобразования NormalizedRestroomCandidate в RestroomCreateDto.
+ * При привязке к зданию (buildingId != null) расписание туалета не задаётся — наследуется от здания (inheritBuildingSchedule = true).
  */
 object RestroomCandidateMapper {
     fun toCreateDto(
         candidate: NormalizedRestroomCandidate,
-        genderType: GenderType = GenderType.UNKNOWN
+        genderType: GenderType = GenderType.UNKNOWN,
+        buildingId: UUID? = null,
+        inheritBuildingSchedule: Boolean = false
     ): RestroomCreateDto {
         val externalMaps = buildExternalMaps(candidate.provider, candidate.providerObjectId)
+        val workTime =
+            if (inheritBuildingSchedule) {
+                null
+            } else {
+                candidate.rawSchedule
+            }
 
         return RestroomCreateDto(
             cityId = candidate.cityId,
-            buildingId = null,
+            buildingId = buildingId,
             subwayStationId = null,
             status = candidate.status,
             name = candidate.name,
             address = candidate.address,
             phones = null,
-            workTime = candidate.rawSchedule,
+            workTime = workTime,
             feeType = candidate.feeType,
             genderType = genderType,
             accessibilityType = candidate.accessibilityType,
@@ -42,7 +52,7 @@ object RestroomCandidateMapper {
             externalMaps = externalMaps,
             accessNote = null,
             directionGuide = null,
-            inheritBuildingSchedule = false,
+            inheritBuildingSchedule = inheritBuildingSchedule,
             hasPhotos = false,
             locationType = candidate.locationType,
             originProvider = candidate.provider,
