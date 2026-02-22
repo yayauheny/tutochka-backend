@@ -194,25 +194,25 @@ class EdgeCaseValidationTest {
         }
 
         @Test
-        @DisplayName("Empty strings for required fields should fail validation")
-        fun empty_strings_for_required_fields_should_fail() {
+        @DisplayName("Restroom with null address and valid coordinates should pass validation")
+        fun restroom_with_null_address_should_pass() {
             val dto =
                 TestDataHelpers.createRestroomCreateDto(
                     cityId = UUID.randomUUID(),
-                    name = "",
-                    address = "",
+                    name = "Test",
+                    address = null,
                     phones = buildJsonObject {},
                     workTime = buildJsonObject {},
                     lat = 53.9,
                     lon = 27.5,
                     amenities = buildJsonObject {},
-                    accessNote = "",
+                    accessNote = null,
                     directionGuide = null
                 )
 
             val result = dto.validateWith(validateRestroomOnCreate)
 
-            assertFalse(result.isSuccess, "Empty address should be invalid")
+            assertTrue(result.isSuccess, "Null address is optional and should pass")
         }
 
         @Test

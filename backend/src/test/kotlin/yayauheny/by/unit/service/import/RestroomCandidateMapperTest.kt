@@ -56,7 +56,7 @@ class RestroomCandidateMapperTest {
         assertEquals(FeeType.FREE, dto.feeType)
         assertEquals(AccessibilityType.WHEELCHAIR, dto.accessibilityType)
         assertEquals(RestroomStatus.ACTIVE, dto.status)
-        assertEquals("TWO_GIS", dto.originProvider)
+        assertEquals(ImportProvider.TWO_GIS, dto.originProvider)
         assertEquals("12345", dto.originId)
         assertEquals(false, dto.isHidden)
         assertNotNull(dto.externalMaps)

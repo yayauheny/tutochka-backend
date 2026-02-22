@@ -127,7 +127,7 @@ open class Restrooms(
     /**
      * The column <code>public.restrooms.address</code>.
      */
-    val ADDRESS: TableField<RestroomsRecord, String?> = createField(DSL.name("address"), SQLDataType.VARCHAR(255).nullable(false), this, "")
+    val ADDRESS: TableField<RestroomsRecord, String?> = createField(DSL.name("address"), SQLDataType.VARCHAR(255), this, "")
 
     /**
      * The column <code>public.restrooms.direction_guide</code>.

@@ -17,15 +17,18 @@ data class NearestRestroomsParams(
 /**
  * Валидатор для координат LatLon.
  * Проверяет, что широта находится в диапазоне [-90, 90],
- * а долгота в диапазоне [-180, 180]
+ * а долгота в диапазоне [-180, 180].
+ * Также проверяет на NaN и Infinity.
  */
 val validateCoordinates =
     Validation<Coordinates> {
         Coordinates::lat {
+            constrain("Широта должна быть конечным числом") { it.isFinite() }
             minimum(-90.0) hint "Широта должна быть не менее -90 градусов"
             maximum(90.0) hint "Широта должна быть не более 90 градусов"
         }
         Coordinates::lon {
+            constrain("Долгота должна быть конечным числом") { it.isFinite() }
             minimum(-180.0) hint "Долгота должна быть не менее -180 градусов"
             maximum(180.0) hint "Долгота должна быть не более 180 градусов"
         }

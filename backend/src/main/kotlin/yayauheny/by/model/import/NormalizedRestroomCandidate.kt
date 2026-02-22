@@ -8,9 +8,9 @@ import yayauheny.by.model.dto.Coordinates
 import yayauheny.by.model.enums.AccessibilityType
 import yayauheny.by.model.enums.FeeType
 import yayauheny.by.model.enums.ImportProvider
+import yayauheny.by.model.enums.LocationType
 import yayauheny.by.model.enums.PlaceType
 import yayauheny.by.model.enums.RestroomStatus
-import yayauheny.by.model.enums.LocationType
 
 /**
  * Каноническая модель для нормализованных данных о туалете перед записью в БД.
@@ -22,7 +22,7 @@ data class NormalizedRestroomCandidate(
     @Contextual val providerObjectId: String,
     @Contextual val cityId: UUID,
     val name: String?,
-    val address: String,
+    val address: String?,
     val lat: Double,
     val lng: Double,
     val placeType: PlaceType,

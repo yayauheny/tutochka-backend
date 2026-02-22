@@ -11,6 +11,7 @@ import yayauheny.by.model.enums.DataSourceType
 import yayauheny.by.model.enums.FeeType
 import yayauheny.by.model.enums.GenderType
 import yayauheny.by.model.enums.PlaceType
+import yayauheny.by.model.enums.ImportProvider
 import yayauheny.by.model.enums.RestroomStatus
 import yayauheny.by.model.enums.LocationType
 
@@ -33,12 +34,8 @@ data class RestroomCreateDto(
     val status: RestroomStatus,
     @field:Schema(description = "Restroom name", example = "Public Restroom at Central Park")
     val name: String? = null,
-    @field:Schema(
-        description = "Street address",
-        example = "123 Main Street, Downtown",
-        required = true
-    )
-    val address: String,
+    @field:Schema(description = "Street address", example = "123 Main Street, Downtown")
+    val address: String? = null,
     @field:Schema(
         description = "Contact phone numbers in JSON format",
         example = """{"main": "+1-234-567-8900", "emergency": "+1-234-567-8901"}"""
@@ -49,10 +46,10 @@ data class RestroomCreateDto(
         example = """{"monday": "08:0-22:00", "tuesday": "08:00-22:00", "weekend": "09:00-21:00"}"""
     )
     val workTime: JsonObject? = null,
-    @field:Schema(description = "Fee type", example = "FREE", required = true)
-    val feeType: FeeType,
-    @field:Schema(description = "Gender type", example = "UNISEX", required = true)
-    val genderType: GenderType,
+    @field:Schema(description = "Fee type", example = "FREE")
+    val feeType: FeeType? = null,
+    @field:Schema(description = "Gender type", example = "UNISEX")
+    val genderType: GenderType? = null,
     @field:Schema(description = "Accessibility type", example = "WHEELCHAIR", required = true)
     val accessibilityType: AccessibilityType,
     @field:Schema(description = "Place type", example = "other")
@@ -80,7 +77,7 @@ data class RestroomCreateDto(
     @field:Schema(description = "Toilet context", example = "STANDALONE")
     val locationType: LocationType = LocationType.UNKNOWN,
     @field:Schema(description = "Origin provider", example = "MANUAL")
-    val originProvider: String = "MANUAL",
+    val originProvider: ImportProvider = ImportProvider.MANUAL,
     @field:Schema(description = "Origin ID from provider", example = "2gis_12345")
     val originId: String? = null,
     @field:Schema(description = "Is hidden from search", example = "false")

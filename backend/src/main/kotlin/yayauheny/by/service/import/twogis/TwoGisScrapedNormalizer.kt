@@ -10,6 +10,7 @@ import yayauheny.by.model.enums.FeeType
 import yayauheny.by.model.enums.PlaceType
 import yayauheny.by.model.enums.RestroomStatus
 import yayauheny.by.model.enums.LocationType
+import yayauheny.by.model.enums.ImportPayloadType
 import yayauheny.by.model.enums.ImportProvider
 import yayauheny.by.model.import.NormalizedRestroomCandidate
 import yayauheny.by.model.import.twogis.TwoGisScrapedPlace
@@ -21,7 +22,8 @@ import yayauheny.by.service.import.Normalizer
 class TwoGisScrapedNormalizer : Normalizer<TwoGisScrapedPlace> {
     override fun normalize(
         cityId: UUID,
-        place: TwoGisScrapedPlace
+        place: TwoGisScrapedPlace,
+        payloadType: ImportPayloadType
     ): NormalizedRestroomCandidate {
         val attrs = place.attributeGroups.map { it.trim().lowercase() }.toSet()
 
@@ -32,11 +34,11 @@ class TwoGisScrapedNormalizer : Normalizer<TwoGisScrapedPlace> {
         val status = determineStatus(attrs)
 
         return NormalizedRestroomCandidate(
-            provider = ImportProvider.TWO_GIS,
+            provider = ImportProvider.fromPayloadType(payloadType),
             providerObjectId = place.id,
             cityId = cityId,
             name = place.title,
-            address = place.address,
+            address = place.address.takeIf { it.isNotBlank() },
             lat = place.location.lat,
             lng = place.location.lng,
             placeType = placeType,

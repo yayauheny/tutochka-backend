@@ -18,6 +18,7 @@ import yayauheny.by.model.dto.Coordinates
 import yayauheny.by.model.dto.NearestRestroomSlimDto
 import yayauheny.by.model.enums.AccessibilityType
 import yayauheny.by.model.enums.DataSourceType
+import yayauheny.by.model.enums.ImportProvider
 import yayauheny.by.model.enums.FeeType
 import yayauheny.by.model.enums.GenderType
 import yayauheny.by.model.enums.LocationType
@@ -140,7 +141,7 @@ object TestDataHelpers {
         buildingId: UUID? = null,
         subwayStationId: UUID? = null,
         name: String = "Minsk Central Restroom",
-        address: String = "123 Independence Avenue, Minsk, Belarus",
+        address: String? = "123 Independence Avenue, Minsk, Belarus",
         phones: JsonObject? = createBasicPhones(),
         workTime: JsonObject? = createBasicWorkTime(),
         feeType: FeeType = FeeType.FREE,
@@ -190,7 +191,7 @@ object TestDataHelpers {
         buildingId: UUID? = null,
         subwayStationId: UUID? = null,
         name: String? = "Updated Restroom",
-        address: String = "Updated Address",
+        address: String? = "Updated Address",
         phones: JsonObject? = createBasicPhones(),
         workTime: JsonObject? = createBasicWorkTime(),
         feeType: FeeType = FeeType.FREE,
@@ -260,7 +261,7 @@ object TestDataHelpers {
         inheritBuildingSchedule: Boolean = false,
         hasPhotos: Boolean = true,
         locationType: LocationType = LocationType.UNKNOWN,
-        originProvider: String = "MANUAL",
+        originProvider: ImportProvider = ImportProvider.MANUAL,
         originId: String? = null,
         isHidden: Boolean = false,
         createdAt: Instant = Instant.now(),

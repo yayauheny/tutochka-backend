@@ -45,7 +45,7 @@ object RestroomCandidateMapper {
             inheritBuildingSchedule = false,
             hasPhotos = false,
             locationType = candidate.locationType,
-            originProvider = candidate.provider.name,
+            originProvider = candidate.provider,
             originId = candidate.providerObjectId,
             isHidden = false
         )
@@ -61,9 +61,12 @@ object RestroomCandidateMapper {
                 YANDEX_MAPS -> "yandex"
                 GOOGLE_MAPS -> "google"
                 OSM -> "osm"
+                ImportProvider.USER, ImportProvider.MANUAL -> null
             }
-        return buildJsonObject {
-            put(providerKey, JsonPrimitive(providerObjectId))
+        return if (providerKey != null) {
+            buildJsonObject { put(providerKey, JsonPrimitive(providerObjectId)) }
+        } else {
+            buildJsonObject { }
         }
     }
 }

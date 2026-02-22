@@ -6,6 +6,7 @@ import kotlin.test.assertNotNull
 import org.junit.jupiter.api.DisplayName
 import org.junit.jupiter.api.Test
 import yayauheny.by.model.enums.FeeType
+import yayauheny.by.model.enums.ImportPayloadType
 import yayauheny.by.model.enums.PlaceType
 import yayauheny.by.model.enums.RestroomStatus
 import yayauheny.by.model.enums.LocationType
@@ -32,7 +33,7 @@ class TwoGisScrapedNormalizerTest {
                 rubrics = emptyList()
             )
 
-        val candidate = normalizer.normalize(cityId, place)
+        val candidate = normalizer.normalize(cityId, place, ImportPayloadType.TWO_GIS_SCRAPED_PLACE_JSON)
 
         assertEquals(LocationType.STANDALONE, candidate.locationType)
         assertEquals(PlaceType.PUBLIC, candidate.placeType)
@@ -58,7 +59,7 @@ class TwoGisScrapedNormalizerTest {
                 rubrics = emptyList()
             )
 
-        val candidate = normalizer.normalize(cityId, place)
+        val candidate = normalizer.normalize(cityId, place, ImportPayloadType.TWO_GIS_SCRAPED_PLACE_JSON)
 
         assertEquals(LocationType.INSIDE_BUILDING, candidate.locationType)
         assertEquals(PlaceType.MALL, candidate.placeType)
@@ -78,7 +79,7 @@ class TwoGisScrapedNormalizerTest {
                 rubrics = emptyList()
             )
 
-        val candidate = normalizer.normalize(cityId, place)
+        val candidate = normalizer.normalize(cityId, place, ImportPayloadType.TWO_GIS_SCRAPED_PLACE_JSON)
 
         assertEquals(LocationType.UNKNOWN, candidate.locationType)
         assertEquals(PlaceType.OTHER, candidate.placeType)
@@ -98,7 +99,7 @@ class TwoGisScrapedNormalizerTest {
                 rubrics = emptyList()
             )
 
-        val candidate = normalizer.normalize(cityId, place)
+        val candidate = normalizer.normalize(cityId, place, ImportPayloadType.TWO_GIS_SCRAPED_PLACE_JSON)
 
         assertEquals(FeeType.PAID, candidate.feeType)
     }
@@ -117,7 +118,7 @@ class TwoGisScrapedNormalizerTest {
                 rubrics = emptyList()
             )
 
-        val candidate = normalizer.normalize(cityId, place)
+        val candidate = normalizer.normalize(cityId, place, ImportPayloadType.TWO_GIS_SCRAPED_PLACE_JSON)
 
         assertEquals(FeeType.FREE, candidate.feeType)
     }
@@ -136,7 +137,7 @@ class TwoGisScrapedNormalizerTest {
                 rubrics = emptyList()
             )
 
-        val candidate = normalizer.normalize(cityId, place)
+        val candidate = normalizer.normalize(cityId, place, ImportPayloadType.TWO_GIS_SCRAPED_PLACE_JSON)
 
         assertEquals(FeeType.UNKNOWN, candidate.feeType)
     }
@@ -155,7 +156,7 @@ class TwoGisScrapedNormalizerTest {
                 rubrics = emptyList()
             )
 
-        val candidate = normalizer.normalize(cityId, place)
+        val candidate = normalizer.normalize(cityId, place, ImportPayloadType.TWO_GIS_SCRAPED_PLACE_JSON)
 
         assertEquals(RestroomStatus.INACTIVE, candidate.status)
     }
@@ -179,7 +180,7 @@ class TwoGisScrapedNormalizerTest {
                 rubrics = emptyList()
             )
 
-        val candidate = normalizer.normalize(cityId, place)
+        val candidate = normalizer.normalize(cityId, place, ImportPayloadType.TWO_GIS_SCRAPED_PLACE_JSON)
 
         assertNotNull(candidate.amenities)
         val amenities = candidate.amenities

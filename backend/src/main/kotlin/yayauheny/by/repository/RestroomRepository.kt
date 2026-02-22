@@ -1,6 +1,7 @@
 package yayauheny.by.repository
 
 import yayauheny.by.model.dto.NearestRestroomSlimDto
+import yayauheny.by.model.enums.ImportProvider
 import java.util.UUID
 import yayauheny.by.config.ApiConstants
 import yayauheny.by.model.restroom.RestroomCreateDto
@@ -36,12 +37,12 @@ interface RestroomRepository : BaseRepository<RestroomResponseDto, RestroomCreat
     /**
      * Находит туалет по origin_provider и origin_id.
      * Используется для upsert логики при импорте.
-     * @param originProvider провайдер (например, "TWO_GIS")
+     * @param originProvider провайдер (например, ImportProvider.TWO_GIS)
      * @param originId ID от провайдера
      * @return найденный туалет или null
      */
     suspend fun findByOrigin(
-        originProvider: String,
+        originProvider: ImportProvider,
         originId: String
     ): RestroomResponseDto?
 }

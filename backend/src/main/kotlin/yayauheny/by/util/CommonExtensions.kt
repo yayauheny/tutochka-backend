@@ -20,6 +20,3 @@ fun JSONB?.toJsonObjectOrEmpty(): JsonObject =
         ?: buildJsonObject { }
 
 fun JsonObject?.toJSONBOrEmpty(): JSONB = this?.let { JSONB.jsonb(it.toString()) } ?: JSONB.jsonb("{}")
-
-inline fun <reified E : Enum<E>> String?.toEnumOrDefault(default: E): E =
-    this?.let { runCatching { java.lang.Enum.valueOf(E::class.java, it) }.getOrElse { default } } ?: default

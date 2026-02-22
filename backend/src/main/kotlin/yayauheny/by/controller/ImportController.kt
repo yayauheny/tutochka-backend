@@ -13,9 +13,8 @@ import kotlinx.serialization.json.jsonObject
 import org.slf4j.LoggerFactory
 import yayauheny.by.common.errors.FieldError
 import yayauheny.by.common.errors.ValidationException
+import yayauheny.by.model.enums.ImportPayloadType
 import yayauheny.by.model.import.ImportBatchResponseDto
-import yayauheny.by.model.import.ImportItemResultDto
-import yayauheny.by.model.import.ImportPayloadType
 import yayauheny.by.model.import.ImportRequestDto
 import yayauheny.by.model.import.ImportResponseDto
 import yayauheny.by.service.import.ImportService
@@ -101,16 +100,6 @@ class ImportController(
                             totalProcessed = result.totalProcessed,
                             successful = result.successful,
                             failed = result.failed,
-                            results =
-                                result.results.map { itemResult ->
-                                    ImportItemResultDto(
-                                        index = itemResult.index,
-                                        restroomId = itemResult.restroomId,
-                                        buildingId = itemResult.buildingId,
-                                        success = itemResult.success,
-                                        errorMessage = itemResult.errorMessage
-                                    )
-                                }
                         )
 
                     logger.info(
@@ -173,7 +162,7 @@ class ImportController(
         item: JsonObject,
         fieldPath: String
     ) {
-        val requiredFields = listOf("id", "title", "location")
+        val requiredFields = listOf("id", "location")
         val missingFields =
             requiredFields.filter { fieldName ->
                 val value = item[fieldName]

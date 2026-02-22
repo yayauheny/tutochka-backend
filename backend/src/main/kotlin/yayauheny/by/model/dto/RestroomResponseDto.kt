@@ -10,6 +10,7 @@ import yayauheny.by.model.enums.DataSourceType
 import yayauheny.by.model.enums.FeeType
 import yayauheny.by.model.enums.GenderType
 import yayauheny.by.model.enums.LocationType
+import yayauheny.by.model.enums.ImportProvider
 import yayauheny.by.model.enums.PlaceType
 import yayauheny.by.model.enums.RestroomStatus
 
@@ -20,7 +21,7 @@ data class RestroomResponseDto(
     @Contextual val buildingId: UUID?,
     @Contextual val subwayStationId: UUID?,
     val name: String?,
-    val address: String,
+    val address: String?,
     val phones: JsonObject?,
     val workTime: JsonObject?,
     val feeType: FeeType?,
@@ -37,7 +38,7 @@ data class RestroomResponseDto(
     val inheritBuildingSchedule: Boolean,
     val hasPhotos: Boolean,
     val locationType: LocationType,
-    val originProvider: String,
+    val originProvider: ImportProvider,
     val originId: String?,
     val isHidden: Boolean,
     @Contextual val createdAt: Instant,

@@ -7,7 +7,7 @@ import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.JsonObject
 import yayauheny.by.model.dto.Coordinates
 import yayauheny.by.model.enums.PlaceType
-import yayauheny.by.model.import.BuildingImportStatus
+import yayauheny.by.model.enums.BuildingImportStatus
 
 @Serializable
 @Schema(description = "Data for creating a new building")

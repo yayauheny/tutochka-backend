@@ -1,6 +1,7 @@
 package yayauheny.by.model.import
 
 import java.util.UUID
+import yayauheny.by.model.enums.ImportJobStatus
 
 /**
  * Результат выполнения импорта с информацией о созданных сущностях и статусе.

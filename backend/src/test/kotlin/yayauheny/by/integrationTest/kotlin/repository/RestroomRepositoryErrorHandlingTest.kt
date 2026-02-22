@@ -110,8 +110,8 @@ class RestroomRepositoryErrorHandlingTest : BaseIntegrationTest() {
             }
 
         @Test
-        @DisplayName("GIVEN empty address WHEN save restroom THEN validation should prevent save")
-        fun given_empty_address_when_save_restroom_then_validation_should_prevent_save() =
+        @DisplayName("GIVEN null or empty address WHEN save restroom THEN save with address=NULL")
+        fun given_empty_address_when_save_restroom_then_saves_with_null_address() =
             runTest {
                 val testEnv = DatabaseTestHelper.createTestEnvironment(dslContext)
                 val restroomDtoWithEmptyAddress =
@@ -120,33 +120,18 @@ class RestroomRepositoryErrorHandlingTest : BaseIntegrationTest() {
                         address = ""
                     )
 
-                // Пустой адрес технически валиден для NOT NULL (пустая строка != NULL)
-                // Но тест проверяет, что либо валидация предотвращает сохранение, либо БД отклоняет
-                try {
-                    repository.save(restroomDtoWithEmptyAddress)
-                    // Если сохранение прошло успешно, проверяем, что пустой адрес действительно сохранен
-                    val restroomsWithEmptyAddress =
-                        dslContext
-                            .selectCount()
-                            .from(RESTROOMS)
-                            .where(RESTROOMS.ADDRESS.eq(""))
-                            .fetchOne()
-                            ?.value1() ?: 0
-                    // Если валидация не работает, пустой адрес может быть сохранен
-                    // Это не ошибка теста, а особенность реализации
-                    // Тест просто проверяет, что система работает предсказуемо
-                    assertTrue(
-                        restroomsWithEmptyAddress >= 0,
-                        "System should handle empty address consistently"
-                    )
-                } catch (e: Exception) {
-                    // Если валидация работает, должно быть выброшено исключение
-                    assertTrue(
-                        e is yayauheny.by.common.errors.ValidationException ||
-                            (e is PSQLException && e.sqlState == "23502"),
-                        "Expected ValidationException or PSQLException (23502), got ${e::class.simpleName}"
-                    )
-                }
+                val saved = repository.save(restroomDtoWithEmptyAddress)
+                assertNotNull(saved)
+
+                val addressValue =
+                    dslContext
+                        .select(RESTROOMS.ADDRESS)
+                        .from(RESTROOMS)
+                        .where(RESTROOMS.ID.eq(saved.id))
+                        .fetchOne()
+                        ?.get(RESTROOMS.ADDRESS)
+
+                assertNull(addressValue, "Empty address should be stored as NULL")
             }
     }
 

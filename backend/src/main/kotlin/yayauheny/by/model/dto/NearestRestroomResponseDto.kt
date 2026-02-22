@@ -10,7 +10,7 @@ import yayauheny.by.model.enums.PlaceType
 data class NearestRestroomResponseDto(
     @Contextual val id: UUID,
     val name: String?,
-    val address: String,
+    val address: String?,
     val coordinates: Coordinates,
     val distanceMeters: Double,
     val feeType: FeeType,

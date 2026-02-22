@@ -72,7 +72,7 @@ object BuildingMapper {
             .setIfNotNull(BUILDINGS.BUILDING_TYPE, dto.buildingType?.code)
             .setIfNotNull(BUILDINGS.WORK_TIME, dto.workTime?.toJSONBOrEmpty())
             .setIfNotNull(BUILDINGS.EXTERNAL_IDS, dto.externalIds?.toJSONBOrEmpty())
-            .setIfNotNullCoordinates(dto.coordinates, BUILDINGS.COORDINATES)
+            .setIfNotNullCoordinates(BUILDINGS.COORDINATES, dto.coordinates)
             .setIfNotNull(BUILDINGS.IMPORT_STATUS, dto.importStatus?.name)
     }
 }

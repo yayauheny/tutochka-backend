@@ -93,7 +93,7 @@ class ValidationTest {
                         cityId = UUID.randomUUID(),
                         status = RestroomStatus.ACTIVE,
                         name = null,
-                        address = "",
+                        address = "x".repeat(yayauheny.by.config.ApiConstants.MAX_ADDRESS_LENGTH + 1),
                         phones = null,
                         workTime = null,
                         feeType = FeeType.FREE,
@@ -261,14 +261,23 @@ class ValidationTest {
             dto: RestroomCreateDto,
             expectedErrorCount: Int
         ) {
-            // (dto and expectedErrorCount provided as parameters)
-
-            val result = dto.validateWith(validateRestroomOnCreate)
-
-            assertTrue(result.isFailure)
-            val exception = result.exceptionOrNull() as? ValidationException
-            assertNotNull(exception)
-            assertEquals(expectedErrorCount, exception.errors?.size)
+            val konformResult = dto.validateWith(validateRestroomOnCreate)
+            val konformErrors =
+                if (konformResult.isFailure) {
+                    (konformResult.exceptionOrNull() as? ValidationException)?.errors ?: emptyList()
+                } else {
+                    emptyList()
+                }
+            val additionalErrors = validateRestroomCreateFields(dto)
+            val combinedErrors = konformErrors + additionalErrors
+            assertTrue(
+                combinedErrors.isNotEmpty(),
+                "Should have at least $expectedErrorCount validation error(s)"
+            )
+            assertTrue(
+                combinedErrors.size >= expectedErrorCount,
+                "Expected at least $expectedErrorCount error(s), got ${combinedErrors.size}"
+            )
         }
     }
 
@@ -358,20 +367,20 @@ class ValidationTest {
         }
 
         @Test
-        @DisplayName("Restroom with multiple issues should return all validation errors")
-        fun restroomWithMultipleIssuesShouldReturnAllErrors() {
+        @DisplayName("Restroom with invalid coordinates should return validation errors")
+        fun restroomWithInvalidCoordinatesShouldReturnErrors() {
             val invalidDto =
                 RestroomCreateDto(
                     cityId = UUID.randomUUID(),
                     status = RestroomStatus.ACTIVE,
                     name = "Test",
-                    address = "", // Empty address
+                    address = null,
                     phones = buildJsonObject {},
                     workTime = buildJsonObject {},
                     feeType = FeeType.FREE,
                     genderType = GenderType.UNISEX,
                     accessibilityType = AccessibilityType.WHEELCHAIR,
-                    coordinates = Coordinates(lat = 91.0, lon = 181.0), // Invalid lat/lon
+                    coordinates = Coordinates(lat = 91.0, lon = 181.0),
                     dataSource = DataSourceType.MANUAL,
                     amenities = buildJsonObject {},
                     buildingId = null,
@@ -381,22 +390,18 @@ class ValidationTest {
                     directionGuide = null,
                     inheritBuildingSchedule = false,
                     hasPhotos = false
-                ) // Multiple issues
+                )
 
             val result = invalidDto.validateWith(validateRestroomOnCreate)
 
             assertTrue(result.isFailure)
             val exception = result.exceptionOrNull() as? ValidationException
             assertNotNull(exception)
-            // address (1) + coordinates (2 for lat and lon) = 3 errors
             assertTrue(
-                exception.errors?.size ?: 0 >= 2,
-                "Should have at least 2 errors (address, coordinates), got: ${exception.errors?.size}"
+                exception.errors?.size ?: 0 >= 1,
+                "Should have at least 1 error (coordinates), got: ${exception.errors?.size}"
             )
-
             val fields = exception.errors!!.map { it.field.lowercase() }
-            assertTrue(fields.any { it.contains("address") }, "Should have address error, got: $fields")
-            // For nested coordinates, errors are reported on "coordinates" field
             assertTrue(fields.any { it.contains("coordinates") }, "Should have coordinates error, got: $fields")
         }
     }

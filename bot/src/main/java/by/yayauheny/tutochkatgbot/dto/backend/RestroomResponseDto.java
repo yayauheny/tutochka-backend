@@ -7,7 +7,8 @@ import java.util.Map;
 import java.util.UUID;
 
 /**
- * Restroom response DTO
+ * Restroom response DTO.
+ * feeType and genderType may be null (backend stores them as optional).
  */
 public record RestroomResponseDto(
     @JsonProperty("id") UUID id,

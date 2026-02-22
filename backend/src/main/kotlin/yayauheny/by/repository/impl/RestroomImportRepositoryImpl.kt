@@ -7,8 +7,8 @@ import kotlinx.coroutines.withContext
 import kotlinx.serialization.json.JsonObject
 import org.jooq.DSLContext
 import yayauheny.by.model.enums.ImportProvider
-import yayauheny.by.model.import.ImportJobStatus
-import yayauheny.by.model.import.ImportPayloadType
+import yayauheny.by.model.enums.ImportJobStatus
+import yayauheny.by.model.enums.ImportPayloadType
 import yayauheny.by.repository.RestroomImportRepository
 import yayauheny.by.tables.references.RESTROOM_IMPORTS
 import yayauheny.by.util.toJSONBOrEmpty

@@ -9,9 +9,10 @@ import kotlin.test.assertNotNull
 import kotlin.test.assertTrue
 import kotlinx.coroutines.test.runTest
 import kotlinx.serialization.json.Json
+import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.buildJsonArray
 import kotlinx.serialization.json.buildJsonObject
-import kotlinx.serialization.json.JsonPrimitive
+import kotlinx.serialization.json.jsonArray
 import kotlinx.serialization.json.jsonObject
 import kotlinx.serialization.json.jsonPrimitive
 import kotlinx.serialization.json.put
@@ -27,12 +28,26 @@ import yayauheny.by.tables.references.RESTROOMS
 
 @Tag("integration")
 class ImportApiIntegrationTest : BaseIntegrationTest() {
+    private val sampleRestrooms: List<JsonObject> by lazy {
+        val items =
+            javaClass.classLoader
+                .getResourceAsStream("import/restrooms_2gis_sample.json")
+                ?.reader(Charsets.UTF_8)
+                ?.use { reader ->
+                    val array = Json.parseToJsonElement(reader.readText()).jsonArray
+                    array.mapNotNull { if (it is JsonObject) it else null }
+                }
+                ?: emptyList()
+        require(items.isNotEmpty()) { "Test resource import/restrooms_2gis_sample.json not found or empty" }
+        items
+    }
+
     @Test
     @DisplayName("GIVEN valid 2GIS payload and existing city WHEN POST /import THEN restroom and import record created")
     fun given_valid_payload_when_import_single_then_creates_restroom_and_import_record() =
         runTest {
             val env = DatabaseTestHelper.createTestEnvironment(dslContext)
-            val payload = build2GisItem(id = "2gis-001", title = "ТЦ GreenTime", address = "Рудобельская, 3", lat = 53.861, lon = 27.638)
+            val payload = sampleRestrooms.first()
             val body = buildImportRequest(env.cityId, payload)
 
             KtorTestApplication.withApp(dslContext) { client ->
@@ -61,9 +76,9 @@ class ImportApiIntegrationTest : BaseIntegrationTest() {
                         .where(RESTROOMS.ID.eq(restroomId!!))
                         .fetchOne()
                 assertNotNull(restroom)
-                assertEquals("2gis-001", restroom!!.get(RESTROOMS.ORIGIN_ID))
+                assertEquals(payload["id"]!!.jsonPrimitive.content, restroom!!.get(RESTROOMS.ORIGIN_ID))
                 assertEquals("TWO_GIS", restroom.get(RESTROOMS.ORIGIN_PROVIDER))
-                assertEquals("ТЦ GreenTime", restroom.get(RESTROOMS.NAME))
+                assertEquals(payload["title"]!!.jsonPrimitive.content, restroom.get(RESTROOMS.NAME))
             }
         }
 
@@ -72,11 +87,7 @@ class ImportApiIntegrationTest : BaseIntegrationTest() {
     fun given_batch_payload_when_import_batch_then_creates_restrooms_and_import_record() =
         runTest {
             val env = DatabaseTestHelper.createTestEnvironment(dslContext)
-            val items =
-                buildJsonArray {
-                    add(build2GisItem("2gis-batch-1", "Гиппо ТЦ", "Максима Горецкого, 2", 53.876, 27.465))
-                    add(build2GisItem("2gis-batch-2", "Юго-западная", "Железнодорожная, 41", 53.872, 27.500))
-                }
+            val items = buildJsonArray { sampleRestrooms.take(2).forEach { add(it) } }
             val body = buildImportRequest(env.cityId, buildJsonObject { put("items", items) })
 
             KtorTestApplication.withApp(dslContext) { client ->
@@ -156,30 +167,9 @@ class ImportApiIntegrationTest : BaseIntegrationTest() {
             }
         }
 
-    private fun build2GisItem(
-        id: String,
-        title: String,
-        address: String,
-        lat: Double,
-        lon: Double
-    ) = buildJsonObject {
-        put("id", id)
-        put("title", title)
-        put("address", address)
-        put("category", "mall")
-        put(
-            "location",
-            buildJsonObject {
-                put("lat", lat)
-                put("lng", lon)
-            }
-        )
-        put("attributeGroups", buildJsonArray { add(JsonPrimitive("Туалет")) })
-    }
-
     private fun buildImportRequest(
         cityId: java.util.UUID,
-        payload: kotlinx.serialization.json.JsonObject
+        payload: JsonObject
     ): String =
         buildJsonObject {
             put("provider", "TWO_GIS")

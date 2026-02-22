@@ -2,7 +2,7 @@ package yayauheny.by.service.import
 
 import java.util.UUID
 import kotlinx.serialization.json.JsonObject
-import yayauheny.by.model.import.ImportPayloadType
+import yayauheny.by.model.enums.ImportPayloadType
 import yayauheny.by.model.enums.ImportProvider
 
 /**

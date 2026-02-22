@@ -79,7 +79,16 @@ class CityMapperTest {
         @Test
         @DisplayName("GIVEN record with null lat WHEN mapFromRecord THEN throw IllegalArgumentException")
         fun mapFromRecord_with_null_lat_throws_exception() {
+            val testId = UUID.randomUUID()
+            val testCountryId = UUID.randomUUID()
+            val testNameRu = "Москва"
+            val testNameEn = "Moscow"
             val mockRecord = mockk<Record>(relaxed = true)
+            every { mockRecord[CITIES.ID] } returns testId
+            every { mockRecord[CITIES.COUNTRY_ID] } returns testCountryId
+            every { mockRecord[CITIES.NAME_RU] } returns testNameRu
+            every { mockRecord[CITIES.NAME_EN] } returns testNameEn
+            every { mockRecord[CITIES.REGION] } returns null
             every { mockRecord.get("lat", Double::class.javaObjectType) } returns null
             every { mockRecord.get("lon", Double::class.javaObjectType) } returns 37.6176
 
@@ -91,7 +100,16 @@ class CityMapperTest {
         @Test
         @DisplayName("GIVEN record with null lon WHEN mapFromRecord THEN throw IllegalArgumentException")
         fun mapFromRecord_with_null_lon_throws_exception() {
+            val testId = UUID.randomUUID()
+            val testCountryId = UUID.randomUUID()
+            val testNameRu = "Москва"
+            val testNameEn = "Moscow"
             val mockRecord = mockk<Record>(relaxed = true)
+            every { mockRecord[CITIES.ID] } returns testId
+            every { mockRecord[CITIES.COUNTRY_ID] } returns testCountryId
+            every { mockRecord[CITIES.NAME_RU] } returns testNameRu
+            every { mockRecord[CITIES.NAME_EN] } returns testNameEn
+            every { mockRecord[CITIES.REGION] } returns null
             every { mockRecord.get("lat", Double::class.javaObjectType) } returns 55.7558
             every { mockRecord.get("lon", Double::class.javaObjectType) } returns null
 

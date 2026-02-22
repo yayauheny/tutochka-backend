@@ -130,7 +130,30 @@ class TwoGisScrapedParserTest {
     }
 
     @Test
-    fun `should fail on missing required field title`() {
+    fun `should use fallback when title is missing`() {
+        val json =
+            buildJsonObject {
+                put("id", "12345")
+                put("address", "Test Street")
+                put(
+                    "rubrics",
+                    buildJsonArray { add(JsonPrimitive("Туалеты")) }
+                )
+                put(
+                    "location",
+                    buildJsonObject {
+                        put("lat", 53.9)
+                        put("lng", 27.5)
+                    }
+                )
+            }
+
+        val place = parser.parse(json)
+        assertEquals("Туалеты", place.title)
+    }
+
+    @Test
+    fun `should use default Туалет when title and rubrics are missing`() {
         val json =
             buildJsonObject {
                 put("id", "12345")
@@ -144,13 +167,12 @@ class TwoGisScrapedParserTest {
                 )
             }
 
-        assertFailsWith<IllegalArgumentException> {
-            parser.parse(json)
-        }
+        val place = parser.parse(json)
+        assertEquals("Туалет", place.title)
     }
 
     @Test
-    fun `should return empty address when address is missing`() {
+    fun `should return empty address when address street houseNumber all missing`() {
         val json =
             buildJsonObject {
                 put("id", "12345")
@@ -166,6 +188,27 @@ class TwoGisScrapedParserTest {
 
         val place = parser.parse(json)
         assertEquals("", place.address)
+    }
+
+    @Test
+    fun `should build address from street and houseNumber when address is missing`() {
+        val json =
+            buildJsonObject {
+                put("id", "12345")
+                put("title", "Test")
+                put("street", "Рудобельская")
+                put("houseNumber", "3")
+                put(
+                    "location",
+                    buildJsonObject {
+                        put("lat", 53.9)
+                        put("lng", 27.5)
+                    }
+                )
+            }
+
+        val place = parser.parse(json)
+        assertEquals("Рудобельская, 3", place.address)
     }
 
     @Test

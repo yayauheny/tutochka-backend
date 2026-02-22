@@ -4,6 +4,7 @@ import io.swagger.v3.oas.annotations.media.Schema
 import java.util.UUID
 import kotlinx.serialization.Contextual
 import kotlinx.serialization.Serializable
+import yayauheny.by.model.enums.ImportJobStatus
 
 @Serializable
 @Schema(description = "Response DTO for import operation")

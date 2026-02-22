@@ -1,8 +1,6 @@
 package yayauheny.by.service.validation
 
 import io.konform.validation.Validation
-import io.konform.validation.constraints.maxLength
-import io.konform.validation.constraints.minLength
 import kotlinx.serialization.json.JsonObject
 import yayauheny.by.common.errors.FieldError
 import yayauheny.by.config.ApiConstants
@@ -63,10 +61,6 @@ fun validateNullableJsonObjectSize(
  */
 val validateRestroomOnCreate =
     Validation<RestroomCreateDto> {
-        RestroomCreateDto::address {
-            minLength(ApiConstants.MIN_NAME_LENGTH_REQUIRED) hint "Адрес обязателен"
-            maxLength(ApiConstants.MAX_ADDRESS_LENGTH) hint "Адрес слишком длинный (максимум ${ApiConstants.MAX_ADDRESS_LENGTH} символов)"
-        }
         RestroomCreateDto::coordinates {
             run(validateCoordinates)
         }
@@ -77,10 +71,6 @@ val validateRestroomOnCreate =
  */
 val validateRestroomOnUpdate =
     Validation<RestroomUpdateDto> {
-        RestroomUpdateDto::address {
-            minLength(ApiConstants.MIN_NAME_LENGTH_REQUIRED) hint "Адрес обязателен"
-            maxLength(ApiConstants.MAX_ADDRESS_LENGTH) hint "Адрес слишком длинный (максимум ${ApiConstants.MAX_ADDRESS_LENGTH} символов)"
-        }
         RestroomUpdateDto::coordinates {
             run(validateCoordinates)
         }
@@ -93,6 +83,11 @@ val validateRestroomOnUpdate =
 fun validateRestroomCreateFields(dto: RestroomCreateDto): List<FieldError> {
     val errors = mutableListOf<FieldError>()
     errors.addAll(validateNullableStringLength("name", dto.name))
+    dto.address?.let {
+        if (it.length > ApiConstants.MAX_ADDRESS_LENGTH) {
+            errors.add(FieldError("address", "Адрес слишком длинный (максимум ${ApiConstants.MAX_ADDRESS_LENGTH} символов)"))
+        }
+    }
     errors.addAll(validateNullableJsonObjectSize("phones", dto.phones))
     errors.addAll(validateNullableJsonObjectSize("workTime", dto.workTime))
     errors.addAll(validateNullableJsonObjectSize("amenities", dto.amenities))
@@ -108,6 +103,11 @@ fun validateRestroomCreateFields(dto: RestroomCreateDto): List<FieldError> {
 fun validateRestroomUpdateFields(dto: RestroomUpdateDto): List<FieldError> {
     val errors = mutableListOf<FieldError>()
     errors.addAll(validateNullableStringLength("name", dto.name))
+    dto.address?.let {
+        if (it.length > ApiConstants.MAX_ADDRESS_LENGTH) {
+            errors.add(FieldError("address", "Адрес слишком длинный (максимум ${ApiConstants.MAX_ADDRESS_LENGTH} символов)"))
+        }
+    }
     errors.addAll(validateNullableJsonObjectSize("phones", dto.phones))
     errors.addAll(validateNullableJsonObjectSize("workTime", dto.workTime))
     errors.addAll(validateNullableJsonObjectSize("amenities", dto.amenities))

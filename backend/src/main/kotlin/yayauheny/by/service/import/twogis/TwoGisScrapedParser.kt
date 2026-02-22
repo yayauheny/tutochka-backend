@@ -31,16 +31,20 @@ class TwoGisScrapedParser : Parser<TwoGisScrapedPlace> {
                     ?: throw IllegalArgumentException("Missing required field: id")
 
             val title =
-                jsonObject["title"]?.jsonPrimitive?.content
-                    ?: throw IllegalArgumentException("Missing required field: title")
+                resolveTitle(
+                    jsonObject["title"]?.jsonPrimitive?.content,
+                    jsonObject["rubrics"]?.jsonArray,
+                    id
+                )
 
             val category = jsonObject["category"]?.jsonPrimitive?.content
 
             val address =
-                when (val addr = jsonObject["address"]) {
-                    null, is JsonNull -> ""
-                    else -> (addr as? JsonPrimitive)?.content.orEmpty()
-                }
+                resolveAddress(
+                    jsonObject["address"],
+                    jsonObject["street"]?.jsonPrimitive?.content,
+                    jsonObject["houseNumber"]?.jsonPrimitive?.content
+                )
 
             val location =
                 parseLocation(jsonObject["location"]?.jsonObject)
@@ -88,6 +92,39 @@ class TwoGisScrapedParser : Parser<TwoGisScrapedPlace> {
             TwoGisScrapedLocation(lat = lat, lng = lng)
         } else {
             null
+        }
+    }
+
+    private fun resolveTitle(
+        title: String?,
+        rubrics: kotlinx.serialization.json.JsonArray?,
+        id: String
+    ): String {
+        if (!title.isNullOrBlank()) return title.trim()
+        val firstRubric = rubrics?.firstOrNull()?.let { (it as? JsonPrimitive)?.content }?.trim()
+        if (!firstRubric.isNullOrBlank()) return firstRubric
+        return "Туалет"
+    }
+
+    private fun resolveAddress(
+        addressElem: kotlinx.serialization.json.JsonElement?,
+        street: String?,
+        houseNumber: String?
+    ): String {
+        val addr =
+            when (addressElem) {
+                null, is JsonNull -> null
+                is JsonPrimitive -> addressElem.content.takeIf { it.isNotBlank() }
+                else -> null
+            }
+        if (!addr.isNullOrBlank()) return addr.trim()
+        val streetTrim = street?.trim()
+        val houseTrim = houseNumber?.trim()
+        return when {
+            !streetTrim.isNullOrBlank() && !houseTrim.isNullOrBlank() -> "$streetTrim, $houseTrim"
+            !streetTrim.isNullOrBlank() -> streetTrim
+            !houseTrim.isNullOrBlank() -> houseTrim
+            else -> ""
         }
     }
 }

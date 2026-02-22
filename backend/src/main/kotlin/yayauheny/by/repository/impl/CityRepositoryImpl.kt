@@ -234,7 +234,7 @@ class CityRepositoryImpl(
         id: UUID
     ) = CityMapper
         .applyUpdateDto(txCtx.update(CITIES), updateDto)
-        .setIfNotNullCoordinates(updateDto.coordinates, CITIES.COORDINATES)
+        .setIfNotNullCoordinates(CITIES.COORDINATES, updateDto.coordinates)
         .set(CITIES.UPDATED_AT, Instant.now())
         .where(CITIES.ID.eq(id))
 

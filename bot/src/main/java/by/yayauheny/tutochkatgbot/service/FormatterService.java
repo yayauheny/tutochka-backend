@@ -189,7 +189,9 @@ public class FormatterService {
     }
 
     public String toiletListItem(NearestRestroomSlimDto toilet) {
-        String name = toilet.displayName();
+        String name = (toilet.displayName() != null && !toilet.displayName().isBlank())
+            ? toilet.displayName().trim()
+            : "Туалет";
         String distance = DistanceFormat.meters(toilet.distanceMeters());
         FeeType feeType = toilet.feeType();
         String feeIcon = getFeeIcon(feeType);

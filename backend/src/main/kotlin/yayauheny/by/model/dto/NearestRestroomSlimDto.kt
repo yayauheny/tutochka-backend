@@ -13,8 +13,7 @@ import yayauheny.by.model.enums.FeeType
 data class NearestRestroomSlimDto(
     @Contextual val id: UUID,
     /**
-     * Display name for the restroom.
-     * Computed as: restroom.name ?: building.displayName ?: "Туалет"
+     * Restroom name from DB. May be empty; client (e.g. bot) should show fallback (e.g. "Туалет") when blank.
      */
     val displayName: String,
     val distanceMeters: Double,

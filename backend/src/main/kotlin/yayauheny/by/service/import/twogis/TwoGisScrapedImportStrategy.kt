@@ -4,7 +4,7 @@ import java.util.UUID
 import kotlinx.serialization.json.JsonObject
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
-import yayauheny.by.model.import.ImportPayloadType
+import yayauheny.by.model.enums.ImportPayloadType
 import yayauheny.by.model.enums.ImportProvider
 import yayauheny.by.model.restroom.RestroomUpdateDto
 import yayauheny.by.repository.RestroomRepository
@@ -65,14 +65,13 @@ class TwoGisScrapedImportStrategy(
             items.mapIndexed { index, item ->
                 try {
                     val place = parser.parse(item)
-                    val candidate = normalizer.normalize(cityId, place)
+                    val candidate = normalizer.normalize(cityId, place, payloadType)
                     val createDto = RestroomCandidateMapper.toCreateDto(candidate)
 
-                    // Проверяем существование по origin_provider и origin_id
                     val existingRestroom =
                         txRestroomRepo.findByOrigin(
-                            originProvider = candidate.provider.name,
-                            originId = candidate.providerObjectId
+                            originProvider = createDto.originProvider,
+                            originId = createDto.originId!!
                         )
 
                     val restroomId =

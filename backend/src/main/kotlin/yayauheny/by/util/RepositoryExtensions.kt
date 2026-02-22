@@ -14,6 +14,6 @@ fun <T> UpdateSetMoreStep<*>.setIfNotNull(
 ) = value?.let { set(field, it) } ?: this
 
 fun <T> UpdateSetMoreStep<*>.setIfNotNullCoordinates(
+    coordinatesField: Field<T>,
     coords: Coordinates?,
-    coordinatesField: Field<T>
 ) = coords?.let { set(coordinatesField, pointExpr(it.lon, it.lat, coordinatesField)) } ?: this

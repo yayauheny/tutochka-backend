@@ -10,6 +10,7 @@ import yayauheny.by.model.enums.AccessibilityType
 import yayauheny.by.model.enums.FeeType
 import yayauheny.by.model.enums.GenderType
 import yayauheny.by.model.enums.PlaceType
+import yayauheny.by.model.enums.ImportProvider
 import yayauheny.by.model.enums.RestroomStatus
 import yayauheny.by.model.enums.LocationType
 
@@ -31,7 +32,7 @@ data class RestroomUpdateDto(
     @field:Schema(description = "Restroom name", example = "Public Restroom at Central Park")
     val name: String?,
     @field:Schema(description = "Street address", example = "123 Main Street, Downtown")
-    val address: String,
+    val address: String? = null,
     @field:Schema(
         description = "Contact phone numbers in JSON format",
         example = """{"main": "+1-234-567-8900", "emergency": "+1-234-567-8901"}"""
@@ -43,9 +44,9 @@ data class RestroomUpdateDto(
     )
     val workTime: JsonObject?,
     @field:Schema(description = "Fee type", example = "FREE")
-    val feeType: FeeType,
+    val feeType: FeeType? = null,
     @field:Schema(description = "Gender type", example = "UNISEX")
-    val genderType: GenderType?,
+    val genderType: GenderType? = null,
     @field:Schema(description = "Accessibility type", example = "WHEELCHAIR")
     val accessibilityType: AccessibilityType?,
     @field:Schema(description = "Place type", example = "public_toilet")
@@ -72,7 +73,7 @@ data class RestroomUpdateDto(
     @field:Schema(description = "Toilet context", example = "STANDALONE")
     val locationType: LocationType? = null,
     @field:Schema(description = "Origin provider", example = "MANUAL")
-    val originProvider: String? = null,
+    val originProvider: ImportProvider? = null,
     @field:Schema(description = "Origin ID from provider", example = "2gis_12345")
     val originId: String? = null,
     @field:Schema(description = "Is hidden from search", example = "false")

@@ -5,8 +5,8 @@ import kotlinx.serialization.json.JsonObject
 import yayauheny.by.model.import.ImportBatchResult
 import yayauheny.by.model.import.ImportExecutionResult
 import yayauheny.by.model.import.ImportItemResult
-import yayauheny.by.model.import.ImportJobStatus
-import yayauheny.by.model.import.ImportPayloadType
+import yayauheny.by.model.enums.ImportJobStatus
+import yayauheny.by.model.enums.ImportPayloadType
 import yayauheny.by.model.enums.ImportProvider
 import yayauheny.by.repository.RestroomImportRepository
 

@@ -47,33 +47,33 @@ CREATE TABLE cities
 -- changeset yayauheny:init-subway-lines
 CREATE TABLE subway_lines
 (
-    id              UUID PRIMARY KEY      DEFAULT gen_random_uuid(),
-    city_id         UUID         NOT NULL REFERENCES cities (id) ON DELETE CASCADE,
-    name_ru         VARCHAR(100) NOT NULL,
-    name_en         VARCHAR(100) NOT NULL,
-    short_code      VARCHAR(20),
-    hex_color       VARCHAR(7)   NOT NULL,
-    is_deleted      BOOLEAN               DEFAULT false,
-    created_at      TIMESTAMP    NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    updated_at      TIMESTAMP    NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    deleted_at      TIMESTAMP             DEFAULT NULL
+    id         UUID PRIMARY KEY      DEFAULT gen_random_uuid(),
+    city_id    UUID         NOT NULL REFERENCES cities (id) ON DELETE CASCADE,
+    name_ru    VARCHAR(100) NOT NULL,
+    name_en    VARCHAR(100) NOT NULL,
+    short_code VARCHAR(20),
+    hex_color  VARCHAR(7)   NOT NULL,
+    is_deleted BOOLEAN               DEFAULT false,
+    created_at TIMESTAMP    NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP    NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    deleted_at TIMESTAMP             DEFAULT NULL
 );
 -- rollback DROP TABLE subway_lines;
 
 -- changeset yayauheny:init-subway-stations
 CREATE TABLE subway_stations
 (
-    id              UUID PRIMARY KEY      DEFAULT gen_random_uuid(),
-    subway_line_id  UUID         NOT NULL REFERENCES subway_lines (id) ON DELETE CASCADE,
-    name_ru         VARCHAR(255) NOT NULL,
-    name_en         VARCHAR(255) NOT NULL,
-    is_transfer     BOOLEAN      NOT NULL DEFAULT false,
-    external_ids    JSONB                 DEFAULT '{}'::jsonb,
-    coordinates     GEOMETRY(POINT, 4326) NOT NULL,
-    is_deleted      BOOLEAN               DEFAULT false,
-    created_at      TIMESTAMP    NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    updated_at      TIMESTAMP    NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    deleted_at      TIMESTAMP             DEFAULT NULL
+    id             UUID PRIMARY KEY      DEFAULT gen_random_uuid(),
+    subway_line_id UUID         NOT NULL REFERENCES subway_lines (id) ON DELETE CASCADE,
+    name_ru        VARCHAR(255) NOT NULL,
+    name_en        VARCHAR(255) NOT NULL,
+    is_transfer    BOOLEAN      NOT NULL DEFAULT false,
+    external_ids   JSONB                 DEFAULT '{}'::jsonb,
+    coordinates    GEOMETRY(POINT, 4326) NOT NULL,
+    is_deleted     BOOLEAN               DEFAULT false,
+    created_at     TIMESTAMP    NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at     TIMESTAMP    NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    deleted_at     TIMESTAMP             DEFAULT NULL
 );
 CREATE INDEX idx_subway_stations_coordinates ON subway_stations USING GIST (coordinates);
 -- rollback DROP TABLE subway_stations;
@@ -103,37 +103,37 @@ CREATE INDEX idx_buildings_external_ids ON buildings USING GIN (external_ids);
 -- changeset yayauheny:init-restrooms-release-v1
 CREATE TABLE restrooms
 (
-    id                        UUID PRIMARY KEY      DEFAULT gen_random_uuid(),
-    city_id                   UUID         REFERENCES cities (id) ON DELETE SET NULL,
-    building_id               UUID         REFERENCES buildings (id) ON DELETE SET NULL,
-    subway_station_id         UUID         REFERENCES subway_stations (id) ON DELETE SET NULL,
+    id                        UUID PRIMARY KEY     DEFAULT gen_random_uuid(),
+    city_id                   UUID        REFERENCES cities (id) ON DELETE SET NULL,
+    building_id               UUID        REFERENCES buildings (id) ON DELETE SET NULL,
+    subway_station_id         UUID        REFERENCES subway_stations (id) ON DELETE SET NULL,
     name                      VARCHAR(255),
-    place_type                VARCHAR(50)  NOT NULL DEFAULT 'OTHER',
-    address                   VARCHAR(255) NOT NULL,
+    place_type                VARCHAR(50) NOT NULL DEFAULT 'OTHER',
+    address                   VARCHAR(255),
     direction_guide           TEXT,
     access_note               TEXT,
-    fee_type                  VARCHAR(20)  NOT NULL DEFAULT 'UNKNOWN',
-    gender_type               VARCHAR(20)  NOT NULL DEFAULT 'UNKNOWN',
-    accessibility_type        VARCHAR(20)  NOT NULL DEFAULT 'UNKNOWN',
-    status                    VARCHAR(20)  NOT NULL DEFAULT 'ACTIVE',
+    fee_type                  VARCHAR(20) NOT NULL DEFAULT 'UNKNOWN',
+    gender_type               VARCHAR(20) NOT NULL DEFAULT 'UNKNOWN',
+    accessibility_type        VARCHAR(20) NOT NULL DEFAULT 'UNKNOWN',
+    status                    VARCHAR(20) NOT NULL DEFAULT 'ACTIVE',
     phones                    JSONB,
     work_time                 JSONB,
-    inherit_building_schedule BOOLEAN               DEFAULT false,
-    amenities                 JSONB                 DEFAULT '{}'::jsonb,
-    has_photos                BOOLEAN               DEFAULT false,
+    inherit_building_schedule BOOLEAN              DEFAULT false,
+    amenities                 JSONB                DEFAULT '{}'::jsonb,
+    has_photos                BOOLEAN              DEFAULT false,
     coordinates               GEOMETRY(POINT, 4326) NOT NULL,
-    external_maps             JSONB                 DEFAULT '{}'::jsonb,
-    data_source               VARCHAR(50)  NOT NULL DEFAULT 'MANUAL',
-    location_type             VARCHAR(20)  NOT NULL DEFAULT 'UNKNOWN',
-    is_hidden                 BOOLEAN      NOT NULL DEFAULT false,
+    external_maps             JSONB                DEFAULT '{}'::jsonb,
+    data_source               VARCHAR(50) NOT NULL DEFAULT 'MANUAL',
+    location_type             VARCHAR(20) NOT NULL DEFAULT 'UNKNOWN',
+    is_hidden                 BOOLEAN     NOT NULL DEFAULT false,
     hidden_reason             TEXT,
-    hidden_at                 TIMESTAMP             DEFAULT NULL,
-    origin_provider           VARCHAR(50)  NOT NULL DEFAULT 'MANUAL',
+    hidden_at                 TIMESTAMP            DEFAULT NULL,
+    origin_provider           VARCHAR(50) NOT NULL DEFAULT 'MANUAL',
     origin_id                 VARCHAR(100),
-    is_deleted                BOOLEAN               DEFAULT false,
-    created_at                TIMESTAMP    NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    updated_at                TIMESTAMP    NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    deleted_at                TIMESTAMP             DEFAULT NULL
+    is_deleted                BOOLEAN              DEFAULT false,
+    created_at                TIMESTAMP   NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at                TIMESTAMP   NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    deleted_at                TIMESTAMP            DEFAULT NULL
 );
 
 CREATE INDEX idx_restrooms_coordinates ON restrooms USING GIST (coordinates);

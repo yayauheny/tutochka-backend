@@ -1,4 +1,4 @@
-package yayauheny.by.model.import
+package yayauheny.by.model.enums
 
 /**
  * Статус импорта здания.

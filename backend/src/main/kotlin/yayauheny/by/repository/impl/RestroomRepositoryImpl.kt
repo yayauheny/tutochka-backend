@@ -20,8 +20,8 @@ import yayauheny.by.common.query.builder.QueryBuilder
 import yayauheny.by.common.query.builder.QueryExecutor
 import yayauheny.by.config.ApiConstants
 import yayauheny.by.model.dto.NearestRestroomSlimDto
-import yayauheny.by.model.enums.RestroomStatus
 import yayauheny.by.model.enums.ImportProvider
+import yayauheny.by.model.enums.RestroomStatus
 import yayauheny.by.model.restroom.RestroomCreateDto
 import yayauheny.by.model.restroom.RestroomResponseDto
 import yayauheny.by.model.restroom.RestroomUpdateDto
@@ -37,8 +37,8 @@ import yayauheny.by.util.knnOrderTo
 import yayauheny.by.util.latAlias
 import yayauheny.by.util.lonAlias
 import yayauheny.by.util.pointExpr
-import yayauheny.by.util.setIfNotNullCoordinates
 import yayauheny.by.util.reqDouble
+import yayauheny.by.util.setIfNotNullCoordinates
 import yayauheny.by.util.toJSONBOrEmpty
 import yayauheny.by.util.transactionSuspend
 import yayauheny.by.util.withinDistanceOf
@@ -319,11 +319,11 @@ class RestroomRepositoryImpl(
         .set(RESTROOMS.BUILDING_ID, createDto.buildingId)
         .set(RESTROOMS.SUBWAY_STATION_ID, createDto.subwayStationId)
         .set(RESTROOMS.NAME, createDto.name)
-        .set(RESTROOMS.ADDRESS, createDto.address)
+        .set(RESTROOMS.ADDRESS, createDto.address.takeIf { !it.isNullOrBlank() })
         .set(RESTROOMS.PHONES, createDto.phones.toJSONBOrEmpty())
         .set(RESTROOMS.WORK_TIME, createDto.workTime.toJSONBOrEmpty())
-        .set(RESTROOMS.FEE_TYPE, createDto.feeType.name)
-        .set(DSL.field("gender_type", SQLDataType.VARCHAR(20)), createDto.genderType.name)
+        .set(RESTROOMS.FEE_TYPE, createDto.feeType?.name)
+        .set(RESTROOMS.GENDER_TYPE, createDto.genderType?.name)
         .set(RESTROOMS.ACCESSIBILITY_TYPE, createDto.accessibilityType.name)
         .set(RESTROOMS.PLACE_TYPE, createDto.placeType.code)
         .set(
@@ -338,7 +338,7 @@ class RestroomRepositoryImpl(
         .set(RESTROOMS.INHERIT_BUILDING_SCHEDULE, createDto.inheritBuildingSchedule)
         .set(RESTROOMS.HAS_PHOTOS, createDto.hasPhotos)
         .set(RESTROOMS.LOCATION_TYPE, createDto.locationType.name)
-        .set(RESTROOMS.ORIGIN_PROVIDER, createDto.originProvider)
+        .set(RESTROOMS.ORIGIN_PROVIDER, createDto.originProvider.name)
         .set(RESTROOMS.ORIGIN_ID, createDto.originId)
         .set(RESTROOMS.IS_HIDDEN, createDto.isHidden)
         .set(RESTROOMS.CREATED_AT, now)
@@ -364,7 +364,7 @@ class RestroomRepositoryImpl(
         id: UUID
     ) = RestroomMapper
         .applyUpdateDto(txCtx.update(RESTROOMS), updateDto)
-        .setIfNotNullCoordinates(updateDto.coordinates, RESTROOMS.COORDINATES)
+        .setIfNotNullCoordinates(RESTROOMS.COORDINATES, updateDto.coordinates)
         .set(RESTROOMS.UPDATED_AT, Instant.now())
         .where(RESTROOMS.ID.eq(id))
 
@@ -520,7 +520,7 @@ class RestroomRepositoryImpl(
         }
 
     override suspend fun findByOrigin(
-        originProvider: String,
+        originProvider: ImportProvider,
         originId: String
     ): RestroomResponseDto? =
         withContext(Dispatchers.IO) {
@@ -529,7 +529,7 @@ class RestroomRepositoryImpl(
                 .from(RESTROOMS)
                 .where(
                     RESTROOMS.IS_DELETED.isFalse
-                        .and(RESTROOMS.ORIGIN_PROVIDER.eq(originProvider))
+                        .and(RESTROOMS.ORIGIN_PROVIDER.eq(originProvider.name))
                         .and(RESTROOMS.ORIGIN_ID.eq(originId))
                 ).fetchOne()
                 ?.let { RestroomMapper.mapFromRecord(it) }
