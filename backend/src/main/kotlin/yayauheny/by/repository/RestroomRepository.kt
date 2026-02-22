@@ -12,7 +12,9 @@ interface RestroomRepository : BaseRepository<RestroomResponseDto, RestroomCreat
         latitude: Double,
         longitude: Double,
         limit: Int? = 5,
-        distanceMeters: Int? = ApiConstants.DEFAULT_MAX_DISTANCE_METERS
+        distanceMeters: Int? = ApiConstants.DEFAULT_MAX_DISTANCE_METERS,
+        preferStandalone: Boolean = true,
+        onlyStandalone: Boolean = false
     ): List<NearestRestroomSlimDto>
 
     suspend fun findByCityId(
@@ -29,5 +31,17 @@ interface RestroomRepository : BaseRepository<RestroomResponseDto, RestroomCreat
     suspend fun findByExternalMap(
         provider: String,
         externalId: String
+    ): RestroomResponseDto?
+
+    /**
+     * Находит туалет по origin_provider и origin_id.
+     * Используется для upsert логики при импорте.
+     * @param originProvider провайдер (например, "TWO_GIS")
+     * @param originId ID от провайдера
+     * @return найденный туалет или null
+     */
+    suspend fun findByOrigin(
+        originProvider: String,
+        originId: String
     ): RestroomResponseDto?
 }

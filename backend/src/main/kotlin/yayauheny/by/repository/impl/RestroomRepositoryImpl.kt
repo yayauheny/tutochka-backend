@@ -7,6 +7,7 @@ import kotlinx.coroutines.withContext
 import org.jooq.DSLContext
 import org.jooq.impl.DSL
 import org.jooq.impl.SQLDataType
+import org.slf4j.LoggerFactory
 import yayauheny.by.common.errors.EntityNotFoundException
 import yayauheny.by.common.mapper.RestroomMapper
 import yayauheny.by.common.query.FieldMeta
@@ -17,30 +18,30 @@ import yayauheny.by.common.query.PageResponse
 import yayauheny.by.common.query.PaginationRequest
 import yayauheny.by.common.query.builder.QueryBuilder
 import yayauheny.by.common.query.builder.QueryExecutor
-import yayauheny.by.model.enums.RestroomStatus
+import yayauheny.by.config.ApiConstants
 import yayauheny.by.model.dto.NearestRestroomSlimDto
+import yayauheny.by.model.enums.RestroomStatus
+import yayauheny.by.model.enums.ImportProvider
 import yayauheny.by.model.restroom.RestroomCreateDto
 import yayauheny.by.model.restroom.RestroomResponseDto
 import yayauheny.by.model.restroom.RestroomUpdateDto
+import yayauheny.by.model.schedule.ScheduleUtils
 import yayauheny.by.repository.RestroomRepository
-import yayauheny.by.tables.references.RESTROOMS
+import yayauheny.by.service.import.schedule.ScheduleMappingService
 import yayauheny.by.tables.references.BUILDINGS
-import yayauheny.by.tables.references.SUBWAY_STATIONS
+import yayauheny.by.tables.references.RESTROOMS
 import yayauheny.by.tables.references.SUBWAY_LINES
+import yayauheny.by.tables.references.SUBWAY_STATIONS
 import yayauheny.by.util.distanceGeographyTo
 import yayauheny.by.util.knnOrderTo
 import yayauheny.by.util.latAlias
 import yayauheny.by.util.lonAlias
 import yayauheny.by.util.pointExpr
+import yayauheny.by.util.setIfNotNullCoordinates
 import yayauheny.by.util.reqDouble
 import yayauheny.by.util.toJSONBOrEmpty
 import yayauheny.by.util.transactionSuspend
 import yayauheny.by.util.withinDistanceOf
-import yayauheny.by.config.ApiConstants
-import yayauheny.by.service.import.schedule.ScheduleMappingService
-import yayauheny.by.model.import.ImportProvider
-import yayauheny.by.model.schedule.ScheduleUtils
-import org.slf4j.LoggerFactory
 
 class RestroomRepositoryImpl(
     private val ctx: DSLContext,
@@ -191,6 +192,10 @@ class RestroomRepositoryImpl(
             r.DIRECTION_GUIDE,
             r.INHERIT_BUILDING_SCHEDULE,
             r.HAS_PHOTOS,
+            r.LOCATION_TYPE,
+            r.ORIGIN_PROVIDER,
+            r.ORIGIN_ID,
+            r.IS_HIDDEN,
             r.IS_DELETED,
             r.CREATED_AT,
             r.UPDATED_AT,
@@ -269,8 +274,6 @@ class RestroomRepositoryImpl(
                         s.ID.`as`("s_id"),
                         s.NAME_RU.`as`("s_name_ru"),
                         s.NAME_EN.`as`("s_name_en"),
-                        s.NAME_LOCAL.`as`("s_name_local"),
-                        s.NAME_LOCAL_LANG.`as`("s_name_local_lang"),
                         s.IS_TRANSFER.`as`("s_is_transfer"),
                         s.COORDINATES.latAlias().`as`("s_lat"),
                         s.COORDINATES.lonAlias().`as`("s_lon"),
@@ -322,7 +325,7 @@ class RestroomRepositoryImpl(
         .set(RESTROOMS.FEE_TYPE, createDto.feeType.name)
         .set(DSL.field("gender_type", SQLDataType.VARCHAR(20)), createDto.genderType.name)
         .set(RESTROOMS.ACCESSIBILITY_TYPE, createDto.accessibilityType.name)
-        .set(RESTROOMS.PLACE_TYPE, createDto.placeType.id)
+        .set(RESTROOMS.PLACE_TYPE, createDto.placeType.code)
         .set(
             RESTROOMS.COORDINATES,
             pointExpr(createDto.coordinates.lon, createDto.coordinates.lat, RESTROOMS.COORDINATES)
@@ -334,6 +337,10 @@ class RestroomRepositoryImpl(
         .set(RESTROOMS.DIRECTION_GUIDE, createDto.directionGuide)
         .set(RESTROOMS.INHERIT_BUILDING_SCHEDULE, createDto.inheritBuildingSchedule)
         .set(RESTROOMS.HAS_PHOTOS, createDto.hasPhotos)
+        .set(RESTROOMS.LOCATION_TYPE, createDto.locationType.name)
+        .set(RESTROOMS.ORIGIN_PROVIDER, createDto.originProvider)
+        .set(RESTROOMS.ORIGIN_ID, createDto.originId)
+        .set(RESTROOMS.IS_HIDDEN, createDto.isHidden)
         .set(RESTROOMS.CREATED_AT, now)
         .set(RESTROOMS.UPDATED_AT, now)
 
@@ -357,10 +364,8 @@ class RestroomRepositoryImpl(
         id: UUID
     ) = RestroomMapper
         .applyUpdateDto(txCtx.update(RESTROOMS), updateDto)
-        .set(
-            RESTROOMS.COORDINATES,
-            pointExpr(updateDto.coordinates.lon, updateDto.coordinates.lat, RESTROOMS.COORDINATES)
-        ).set(RESTROOMS.UPDATED_AT, Instant.now())
+        .setIfNotNullCoordinates(updateDto.coordinates, RESTROOMS.COORDINATES)
+        .set(RESTROOMS.UPDATED_AT, Instant.now())
         .where(RESTROOMS.ID.eq(id))
 
     override suspend fun update(
@@ -391,7 +396,9 @@ class RestroomRepositoryImpl(
         latitude: Double,
         longitude: Double,
         limit: Int?,
-        distanceMeters: Int?
+        distanceMeters: Int?,
+        preferStandalone: Boolean,
+        onlyStandalone: Boolean
     ): List<NearestRestroomSlimDto> =
         withContext(Dispatchers.IO) {
             val maxDistance = (distanceMeters ?: ApiConstants.DEFAULT_MAX_DISTANCE_METERS).toDouble()
@@ -416,8 +423,6 @@ class RestroomRepositoryImpl(
                         s.ID.`as`("s_id"),
                         s.NAME_RU.`as`("s_name_ru"),
                         s.NAME_EN.`as`("s_name_en"),
-                        s.NAME_LOCAL.`as`("s_name_local"),
-                        s.NAME_LOCAL_LANG.`as`("s_name_local_lang"),
                         l.HEX_COLOR.`as`("l_hex")
                     )
 
@@ -435,8 +440,34 @@ class RestroomRepositoryImpl(
                         .withinDistanceOf(latitude, longitude, maxDistance)
                         .and(RESTROOMS.STATUS.eq(RestroomStatus.ACTIVE.name))
                         .and(RESTROOMS.IS_DELETED.isFalse)
-                ).orderBy(knnField.asc())
-                .limit(limit ?: 5)
+                        .and(RESTROOMS.IS_HIDDEN.eq(false))
+                        .let { condition ->
+                            if (onlyStandalone) {
+                                condition.and(RESTROOMS.LOCATION_TYPE.eq("STANDALONE"))
+                            } else {
+                                condition
+                            }
+                        }
+                ).orderBy(
+                    *if (preferStandalone) {
+                        arrayOf(
+                            DSL
+                                .field(
+                                    """
+                                    CASE {0}
+                                        WHEN 'STANDALONE' THEN 0
+                                        WHEN 'INSIDE' THEN 1
+                                        ELSE 2
+                                    END
+                                    """.trimIndent(),
+                                    RESTROOMS.LOCATION_TYPE
+                                ).asc(),
+                            knnField.asc()
+                        )
+                    } else {
+                        arrayOf(knnField.asc())
+                    }
+                ).limit(limit ?: 5)
                 .fetch()
                 .map { record ->
                     val distance = record.reqDouble("distance")
@@ -485,6 +516,22 @@ class RestroomRepositoryImpl(
                 ).orderBy(RESTROOMS.CREATED_AT.desc(), RESTROOMS.ID.desc())
                 .limit(1)
                 .fetchOne()
+                ?.let { RestroomMapper.mapFromRecord(it) }
+        }
+
+    override suspend fun findByOrigin(
+        originProvider: String,
+        originId: String
+    ): RestroomResponseDto? =
+        withContext(Dispatchers.IO) {
+            ctx
+                .select(*getAllRestroomsFieldsWithCoordinates().toTypedArray())
+                .from(RESTROOMS)
+                .where(
+                    RESTROOMS.IS_DELETED.isFalse
+                        .and(RESTROOMS.ORIGIN_PROVIDER.eq(originProvider))
+                        .and(RESTROOMS.ORIGIN_ID.eq(originId))
+                ).fetchOne()
                 ?.let { RestroomMapper.mapFromRecord(it) }
         }
 

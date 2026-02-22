@@ -9,7 +9,7 @@ import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.CsvSource
 import org.junit.jupiter.params.provider.ValueSource
 import yayauheny.by.model.city.CityCreateDto
-import yayauheny.by.model.dto.LatLon
+import yayauheny.by.model.dto.Coordinates
 import yayauheny.by.common.errors.ValidationException
 import yayauheny.by.service.validation.validateCityOnCreate
 import yayauheny.by.service.validation.validateRestroomCreateFields
@@ -45,7 +45,7 @@ class EdgeCaseValidationTest {
                     nameRu = "Test",
                     nameEn = "Test",
                     region = null,
-                    coordinates = LatLon(lat = lat, lon = lon)
+                    coordinates = Coordinates(lat = lat, lon = lon)
                 )
 
             val result = dto.validateWith(validateCityOnCreate)
@@ -77,7 +77,7 @@ class EdgeCaseValidationTest {
                     nameRu = "Test",
                     nameEn = "Test",
                     region = null,
-                    coordinates = LatLon(lat = lat, lon = lon)
+                    coordinates = Coordinates(lat = lat, lon = lon)
                 )
 
             val result = dto.validateWith(validateCityOnCreate)
@@ -96,7 +96,7 @@ class EdgeCaseValidationTest {
                     nameRu = "Test",
                     nameEn = "Test",
                     region = null,
-                    coordinates = LatLon(lat = Double.NaN, lon = 0.0)
+                    coordinates = Coordinates(lat = Double.NaN, lon = 0.0)
                 )
 
             val result = dto.validateWith(validateCityOnCreate)
@@ -113,7 +113,7 @@ class EdgeCaseValidationTest {
                     nameRu = "Test",
                     nameEn = "Test",
                     region = null,
-                    coordinates = LatLon(lat = Double.POSITIVE_INFINITY, lon = 0.0)
+                    coordinates = Coordinates(lat = Double.POSITIVE_INFINITY, lon = 0.0)
                 )
 
             val result = dto.validateWith(validateCityOnCreate)
@@ -258,7 +258,7 @@ class EdgeCaseValidationTest {
                     nameRu = name,
                     nameEn = name,
                     region = null,
-                    coordinates = LatLon(lat = 53.9, lon = 27.5)
+                    coordinates = Coordinates(lat = 53.9, lon = 27.5)
                 )
 
             val result = dto.validateWith(validateCityOnCreate)
@@ -276,7 +276,7 @@ class EdgeCaseValidationTest {
                     nameRu = name,
                     nameEn = name,
                     region = null,
-                    coordinates = LatLon(lat = 53.9, lon = 27.5)
+                    coordinates = Coordinates(lat = 53.9, lon = 27.5)
                 )
 
             val result = dto.validateWith(validateCityOnCreate)
@@ -297,7 +297,7 @@ class EdgeCaseValidationTest {
                     nameRu = "Test",
                     nameEn = "Test",
                     region = null, // Optional field
-                    coordinates = LatLon(lat = 53.9, lon = 27.5)
+                    coordinates = Coordinates(lat = 53.9, lon = 27.5)
                 )
 
             val result = dto.validateWith(validateCityOnCreate)

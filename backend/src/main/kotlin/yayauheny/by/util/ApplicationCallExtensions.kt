@@ -81,6 +81,19 @@ fun ApplicationCall.getIntFromQuery(
     }
 }
 
+fun ApplicationCall.getBooleanFromQuery(
+    paramName: String,
+    default: Boolean = false
+): Boolean {
+    val value = request.queryParameters[paramName]
+    return if (value == null) {
+        default
+    } else {
+        value.toBooleanStrictOrNull()
+            ?: throw IllegalArgumentException("Неверный формат параметра $paramName: '$value' не является булевым значением (true/false)")
+    }
+}
+
 fun ApplicationCall.createPaginationFromQuery(
     defaultSize: Int = ApiConstants.DEFAULT_PAGE_SIZE,
     maxSize: Int = ApiConstants.MAX_PAGE_SIZE

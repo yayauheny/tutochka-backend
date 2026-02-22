@@ -1027,12 +1027,6 @@ components:
           type: string
         nameEn:
           type: string
-        nameLocal:
-          type: string
-          description: Local name (optional)
-        nameLocalLang:
-          type: string
-          description: Local name language (optional)
         isTransfer:
           type: boolean
         coordinates:

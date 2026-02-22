@@ -1,35 +1,22 @@
 package yayauheny.by.repository.impl
 
-import java.time.LocalDateTime
+import java.time.Instant
 import java.util.UUID
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import kotlinx.serialization.json.JsonObject
 import org.jooq.DSLContext
-import org.jooq.impl.DSL
-import org.jooq.impl.SQLDataType
-import yayauheny.by.util.toJSONBOrEmpty
+import yayauheny.by.model.enums.ImportProvider
 import yayauheny.by.model.import.ImportJobStatus
 import yayauheny.by.model.import.ImportPayloadType
-import yayauheny.by.model.import.ImportProvider
 import yayauheny.by.repository.RestroomImportRepository
+import yayauheny.by.tables.references.RESTROOM_IMPORTS
+import yayauheny.by.util.toJSONBOrEmpty
 import yayauheny.by.util.transactionSuspend
 
 class RestroomImportRepositoryImpl(
     private val ctx: DSLContext
 ) : RestroomImportRepository {
-    private val restroomImports = DSL.table("restroom_imports")
-    private val idField = DSL.field("id", SQLDataType.UUID)
-    private val providerField = DSL.field("provider", SQLDataType.VARCHAR(50))
-    private val payloadTypeField = DSL.field("payload_type", SQLDataType.VARCHAR(50))
-    private val cityIdField = DSL.field("city_id", SQLDataType.UUID)
-    private val rawPayloadField = DSL.field("raw_payload", SQLDataType.JSONB)
-    private val buildingIdField = DSL.field("building_id", SQLDataType.UUID)
-    private val restroomIdField = DSL.field("restroom_id", SQLDataType.UUID)
-    private val statusField = DSL.field("status", SQLDataType.VARCHAR(20))
-    private val errorMessageField = DSL.field("error_message", SQLDataType.CLOB)
-    private val processedAtField = DSL.field("processed_at", SQLDataType.LOCALDATETIME)
-
     override suspend fun createPending(
         provider: ImportProvider,
         payloadType: ImportPayloadType,
@@ -41,13 +28,13 @@ class RestroomImportRepositoryImpl(
                 val id = UUID.randomUUID()
 
                 txCtx
-                    .insertInto(restroomImports)
-                    .set(idField, id)
-                    .set(providerField, provider.name.lowercase())
-                    .set(payloadTypeField, payloadType.name)
-                    .set(cityIdField, cityId)
-                    .set(rawPayloadField, rawPayload.toJSONBOrEmpty())
-                    .set(statusField, ImportJobStatus.PENDING.name.lowercase())
+                    .insertInto(RESTROOM_IMPORTS)
+                    .set(RESTROOM_IMPORTS.ID, id)
+                    .set(RESTROOM_IMPORTS.PROVIDER, provider.name)
+                    .set(RESTROOM_IMPORTS.PAYLOAD_TYPE, payloadType.name)
+                    .set(RESTROOM_IMPORTS.CITY_ID, cityId)
+                    .set(RESTROOM_IMPORTS.RAW_PAYLOAD, rawPayload.toJSONBOrEmpty())
+                    .set(RESTROOM_IMPORTS.STATUS, ImportJobStatus.PENDING.name)
                     .execute()
 
                 id
@@ -62,12 +49,12 @@ class RestroomImportRepositoryImpl(
         withContext(Dispatchers.IO) {
             ctx.transactionSuspend { txCtx ->
                 txCtx
-                    .update(restroomImports)
-                    .set(statusField, ImportJobStatus.SUCCESS.name.lowercase())
-                    .set(buildingIdField, buildingId)
-                    .set(restroomIdField, restroomId)
-                    .set(processedAtField, LocalDateTime.now())
-                    .where(idField.eq(id))
+                    .update(RESTROOM_IMPORTS)
+                    .set(RESTROOM_IMPORTS.STATUS, ImportJobStatus.SUCCESS.name)
+                    .set(RESTROOM_IMPORTS.BUILDING_ID, buildingId)
+                    .set(RESTROOM_IMPORTS.RESTROOM_ID, restroomId)
+                    .set(RESTROOM_IMPORTS.PROCESSED_AT, Instant.now())
+                    .where(RESTROOM_IMPORTS.ID.eq(id))
                     .execute()
             }
         }
@@ -79,11 +66,11 @@ class RestroomImportRepositoryImpl(
         withContext(Dispatchers.IO) {
             ctx.transactionSuspend { txCtx ->
                 txCtx
-                    .update(restroomImports)
-                    .set(statusField, ImportJobStatus.FAILED.name.lowercase())
-                    .set(errorMessageField, errorMessage.take(2000))
-                    .set(processedAtField, LocalDateTime.now())
-                    .where(idField.eq(id))
+                    .update(RESTROOM_IMPORTS)
+                    .set(RESTROOM_IMPORTS.STATUS, ImportJobStatus.FAILED.name)
+                    .set(RESTROOM_IMPORTS.ERROR_MESSAGE, errorMessage)
+                    .set(RESTROOM_IMPORTS.PROCESSED_AT, Instant.now())
+                    .where(RESTROOM_IMPORTS.ID.eq(id))
                     .execute()
             }
         }

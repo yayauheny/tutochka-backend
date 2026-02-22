@@ -11,7 +11,7 @@ data class NearestRestroomResponseDto(
     @Contextual val id: UUID,
     val name: String?,
     val address: String,
-    val coordinates: LatLon,
+    val coordinates: Coordinates,
     val distanceMeters: Double,
     val feeType: FeeType,
     val isOpen: Boolean? = null,

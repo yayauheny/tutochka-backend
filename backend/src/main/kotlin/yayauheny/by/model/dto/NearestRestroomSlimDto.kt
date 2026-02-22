@@ -19,7 +19,7 @@ data class NearestRestroomSlimDto(
     val displayName: String,
     val distanceMeters: Double,
     val feeType: FeeType,
-    val coordinates: LatLon,
+    val coordinates: Coordinates,
     /**
      * Minimal subway station info for list display.
      * Contains only displayName and lineColor for emoji rendering.

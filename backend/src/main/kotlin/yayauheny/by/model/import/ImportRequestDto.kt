@@ -5,6 +5,7 @@ import java.util.UUID
 import kotlinx.serialization.Contextual
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.JsonObject
+import yayauheny.by.model.enums.ImportProvider
 
 @Serializable
 @Schema(description = "Request DTO for importing restroom data from external providers")
@@ -17,7 +18,7 @@ data class ImportRequestDto(
     val provider: ImportProvider,
     @field:Schema(
         description = "Type of payload format",
-        example = "TWO_GIS_PLACE_JSON",
+        example = "TWO_GIS_SCRAPED_PLACE_JSON",
         required = true
     )
     val payloadType: ImportPayloadType,

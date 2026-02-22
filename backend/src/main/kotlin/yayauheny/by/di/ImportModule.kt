@@ -7,13 +7,15 @@ import yayauheny.by.service.import.ImportStrategy
 import yayauheny.by.service.import.schedule.ScheduleAdapter
 import yayauheny.by.service.import.schedule.ScheduleMappingService
 import yayauheny.by.service.import.schedule.TwoGisScheduleAdapter
-import yayauheny.by.service.import.twogis.TwoGisImportStrategy
+import yayauheny.by.repository.RestroomRepository
+import yayauheny.by.service.import.twogis.TwoGisScrapedImportStrategy
 
 val importModule =
     module {
         single<ImportStrategy> {
-            TwoGisImportStrategy(
-                dsl = get<DSLContext>()
+            TwoGisScrapedImportStrategy(
+                dsl = get<DSLContext>(),
+                restroomRepository = get<RestroomRepository>()
             )
         }
 

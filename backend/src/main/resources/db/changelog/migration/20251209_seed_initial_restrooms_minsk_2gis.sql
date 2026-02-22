@@ -40,7 +40,7 @@ VALUES (
     NULL,
     ST_SetSRID(ST_MakePoint(27.55127, 53.890864), 4326),
     '{"2gis_building_id": "70030076195149995"}'::jsonb,
-    'completed'
+    'COMPLETED'
 );
 
 -- 4. Restroom #1: Мужской платный туалет
@@ -91,7 +91,7 @@ VALUES (
 
     'PAID',
     'MEN',
-    'WHEELCHAIR',
+    'DISABLED',
     'ACTIVE',
 
     NULL,
@@ -163,7 +163,7 @@ VALUES (
 
     'PAID',
     'WOMEN',
-    'WHEELCHAIR',
+    'DISABLED',
     'ACTIVE',
 
     NULL,

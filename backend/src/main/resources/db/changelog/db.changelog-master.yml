@@ -28,9 +28,9 @@ databaseChangeLog:
             path: migration/20251210_update_subway_stations_for_restrooms.sql
             relativeToChangelogFile: true
   - changeSet:
-      id: upsert-subway-stations-for-restrooms-minsk
+      id: extend-restroom-imports-v2
       author: yayauheny
       changes:
         - sqlFile:
-            path: migration/20251210_upsert_subway_stations_for_restrooms_minsk.sql
+            path: migration/20251206_update_restroom_imports_table.sql
             relativeToChangelogFile: true

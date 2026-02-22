@@ -263,7 +263,7 @@ fun createRestroomJson(
     lon: Double = 37.6176,
     status: String = "ACTIVE",
     feeType: String = "FREE",
-    accessibilityType: String = "UNISEX",
+    accessibilityType: String = "WHEELCHAIR",
     dataSource: String = "MANUAL",
     amenities: JsonObject = buildJsonObject {}
 ): String {

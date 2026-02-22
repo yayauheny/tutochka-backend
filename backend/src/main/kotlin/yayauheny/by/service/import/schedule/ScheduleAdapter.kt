@@ -1,8 +1,8 @@
 package yayauheny.by.service.import.schedule
 
-import yayauheny.by.model.import.ImportProvider
-import yayauheny.by.model.schedule.Schedule
 import kotlinx.serialization.json.JsonObject
+import yayauheny.by.model.enums.ImportProvider
+import yayauheny.by.model.schedule.Schedule
 
 /**
  * Interface for converting provider-specific schedule formats to our canonical Schedule format

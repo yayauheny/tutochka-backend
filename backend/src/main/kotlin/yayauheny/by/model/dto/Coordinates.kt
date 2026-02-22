@@ -3,7 +3,7 @@ package yayauheny.by.model.dto
 import kotlinx.serialization.Serializable
 
 @Serializable
-data class LatLon(
+data class Coordinates(
     val lat: Double,
     val lon: Double
 )

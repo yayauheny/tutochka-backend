@@ -5,12 +5,13 @@ import java.util.UUID
 import kotlinx.serialization.Contextual
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.JsonObject
-import yayauheny.by.model.dto.LatLon
+import yayauheny.by.model.dto.Coordinates
 import yayauheny.by.model.enums.AccessibilityType
 import yayauheny.by.model.enums.FeeType
 import yayauheny.by.model.enums.GenderType
 import yayauheny.by.model.enums.PlaceType
 import yayauheny.by.model.enums.RestroomStatus
+import yayauheny.by.model.enums.LocationType
 
 @Serializable
 @Schema(description = "Data for updating an existing restroom")
@@ -50,7 +51,7 @@ data class RestroomUpdateDto(
     @field:Schema(description = "Place type", example = "public_toilet")
     val placeType: PlaceType?,
     @field:Schema(description = "Coordinates", example = "55.7558, 37.6176", required = true)
-    val coordinates: LatLon,
+    val coordinates: Coordinates,
     @field:Schema(description = "Current status of the restroom", example = "ACTIVE")
     val status: RestroomStatus,
     @field:Schema(
@@ -67,5 +68,13 @@ data class RestroomUpdateDto(
     @field:Schema(description = "Inherit schedule from building", example = "false")
     val inheritBuildingSchedule: Boolean = false,
     @field:Schema(description = "Has photos", example = "false")
-    val hasPhotos: Boolean = false
+    val hasPhotos: Boolean = false,
+    @field:Schema(description = "Toilet context", example = "STANDALONE")
+    val locationType: LocationType? = null,
+    @field:Schema(description = "Origin provider", example = "MANUAL")
+    val originProvider: String? = null,
+    @field:Schema(description = "Origin ID from provider", example = "2gis_12345")
+    val originId: String? = null,
+    @field:Schema(description = "Is hidden from search", example = "false")
+    val isHidden: Boolean? = null
 )

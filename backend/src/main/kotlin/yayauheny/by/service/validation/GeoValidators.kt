@@ -3,13 +3,13 @@ package yayauheny.by.service.validation
 import io.konform.validation.Validation
 import io.konform.validation.constraints.maximum
 import io.konform.validation.constraints.minimum
-import yayauheny.by.model.dto.LatLon
+import yayauheny.by.model.dto.Coordinates
 
 /**
  * Параметры для поиска ближайших туалетов
  */
 data class NearestRestroomsParams(
-    val coordinates: LatLon,
+    val coordinates: Coordinates,
     val limit: Int,
     val distanceMeters: Int
 )
@@ -19,13 +19,13 @@ data class NearestRestroomsParams(
  * Проверяет, что широта находится в диапазоне [-90, 90],
  * а долгота в диапазоне [-180, 180]
  */
-val validateLatLon =
-    Validation<LatLon> {
-        LatLon::lat {
+val validateCoordinates =
+    Validation<Coordinates> {
+        Coordinates::lat {
             minimum(-90.0) hint "Широта должна быть не менее -90 градусов"
             maximum(90.0) hint "Широта должна быть не более 90 градусов"
         }
-        LatLon::lon {
+        Coordinates::lon {
             minimum(-180.0) hint "Долгота должна быть не менее -180 градусов"
             maximum(180.0) hint "Долгота должна быть не более 180 градусов"
         }
@@ -37,7 +37,7 @@ val validateLatLon =
 val validateNearestRestroomsParams =
     Validation<NearestRestroomsParams> {
         NearestRestroomsParams::coordinates {
-            run(validateLatLon)
+            run(validateCoordinates)
         }
         NearestRestroomsParams::limit {
             minimum(1) hint "Лимит должен быть не менее 1"

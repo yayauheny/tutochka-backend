@@ -267,7 +267,8 @@ class RestroomControllerTest : RoutingTestBase() {
                         "phones": {},
                         "workTime": {},
                         "feeType": "FREE",
-                        "accessibilityType": "UNISEX",
+                        "genderType": "UNISEX",
+                        "accessibilityType": "WHEELCHAIR",
                         "coordinates": {
                             "lat": 55.7558,
                             "lon": 37.6176

@@ -1,11 +1,5 @@
 package yayauheny.by.helpers
 
-import yayauheny.by.model.dto.LatLon
-import yayauheny.by.model.enums.AccessibilityType
-import yayauheny.by.model.enums.DataSourceType
-import yayauheny.by.model.enums.FeeType
-import yayauheny.by.model.enums.PlaceType
-import yayauheny.by.model.enums.RestroomStatus
 import java.time.Instant
 import java.util.UUID
 import kotlinx.serialization.json.JsonObject
@@ -20,7 +14,15 @@ import yayauheny.by.model.city.CityUpdateDto
 import yayauheny.by.model.country.CountryCreateDto
 import yayauheny.by.model.country.CountryResponseDto
 import yayauheny.by.model.country.CountryUpdateDto
+import yayauheny.by.model.dto.Coordinates
 import yayauheny.by.model.dto.NearestRestroomSlimDto
+import yayauheny.by.model.enums.AccessibilityType
+import yayauheny.by.model.enums.DataSourceType
+import yayauheny.by.model.enums.FeeType
+import yayauheny.by.model.enums.GenderType
+import yayauheny.by.model.enums.LocationType
+import yayauheny.by.model.enums.PlaceType
+import yayauheny.by.model.enums.RestroomStatus
 import yayauheny.by.model.restroom.RestroomCreateDto
 import yayauheny.by.model.restroom.RestroomResponseDto
 import yayauheny.by.model.restroom.RestroomUpdateDto
@@ -82,7 +84,7 @@ object TestDataHelpers {
         nameEn = nameEn,
         region = region,
         coordinates =
-            LatLon(lat = lat, lon = lon)
+            Coordinates(lat = lat, lon = lon)
     )
 
     fun createCityUpdateDto(
@@ -90,8 +92,8 @@ object TestDataHelpers {
         nameRu: String = "Минск",
         nameEn: String = "Minsk",
         region: String? = "Минская область",
-        coordinates: LatLon =
-            LatLon(lat = 53.9006, lon = 27.5590)
+        coordinates: Coordinates =
+            Coordinates(lat = 53.9006, lon = 27.5590)
     ) = CityUpdateDto(
         countryId = countryId,
         nameRu = nameRu,
@@ -115,7 +117,7 @@ object TestDataHelpers {
         nameEn = nameEn,
         region = region,
         coordinates =
-            LatLon(lat = lat, lon = lon)
+            Coordinates(lat = lat, lon = lon)
     )
 
     fun createCityList(
@@ -142,7 +144,8 @@ object TestDataHelpers {
         phones: JsonObject? = createBasicPhones(),
         workTime: JsonObject? = createBasicWorkTime(),
         feeType: FeeType = FeeType.FREE,
-        accessibilityType: AccessibilityType = AccessibilityType.DISABLED,
+        genderType: GenderType = GenderType.UNISEX,
+        accessibilityType: AccessibilityType = AccessibilityType.WHEELCHAIR,
         placeType: PlaceType = PlaceType.OTHER,
         lat: Double = 40.7829,
         lon: Double = -73.9654,
@@ -168,10 +171,11 @@ object TestDataHelpers {
         phones = phones,
         workTime = workTime,
         feeType = feeType,
+        genderType = genderType,
         accessibilityType = accessibilityType,
         placeType = placeType,
         coordinates =
-            LatLon(lat = lat, lon = lon),
+            Coordinates(lat = lat, lon = lon),
         dataSource = dataSource,
         amenities = amenities,
         externalMaps = externalMaps,
@@ -190,10 +194,11 @@ object TestDataHelpers {
         phones: JsonObject? = createBasicPhones(),
         workTime: JsonObject? = createBasicWorkTime(),
         feeType: FeeType = FeeType.FREE,
-        accessibilityType: AccessibilityType = AccessibilityType.DISABLED,
-        placeType: PlaceType = PlaceType.OTHER,
-        coordinates: LatLon =
-            LatLon(lat = 40.7829, lon = -73.9654),
+        genderType: GenderType? = GenderType.UNISEX,
+        accessibilityType: AccessibilityType? = AccessibilityType.WHEELCHAIR,
+        placeType: PlaceType? = PlaceType.OTHER,
+        coordinates: Coordinates =
+            Coordinates(lat = 40.7829, lon = -73.9654),
         status: RestroomStatus = RestroomStatus.ACTIVE,
         amenities: JsonObject? = createBasicAmenities(),
         externalMaps: JsonObject? =
@@ -214,6 +219,7 @@ object TestDataHelpers {
         phones = phones,
         workTime = workTime,
         feeType = feeType,
+        genderType = genderType,
         accessibilityType = accessibilityType,
         placeType = placeType,
         coordinates = coordinates,
@@ -236,7 +242,8 @@ object TestDataHelpers {
         phones: JsonObject? = createBasicPhones(),
         workTime: JsonObject? = createBasicWorkTime(),
         feeType: FeeType = FeeType.FREE,
-        accessibilityType: AccessibilityType = AccessibilityType.DISABLED,
+        genderType: GenderType = GenderType.UNISEX,
+        accessibilityType: AccessibilityType = AccessibilityType.WHEELCHAIR,
         placeType: PlaceType = PlaceType.OTHER,
         lat: Double = 40.7829,
         lon: Double = -73.9654,
@@ -252,6 +259,10 @@ object TestDataHelpers {
         directionGuide: String? = "Находится на первом этаже, рядом с главным входом",
         inheritBuildingSchedule: Boolean = false,
         hasPhotos: Boolean = true,
+        locationType: LocationType = LocationType.UNKNOWN,
+        originProvider: String = "MANUAL",
+        originId: String? = null,
+        isHidden: Boolean = false,
         createdAt: Instant = Instant.now(),
         updatedAt: Instant = Instant.now()
     ) = RestroomResponseDto(
@@ -264,10 +275,11 @@ object TestDataHelpers {
         phones = phones,
         workTime = workTime,
         feeType = feeType,
+        genderType = genderType,
         accessibilityType = accessibilityType,
         placeType = placeType,
         coordinates =
-            LatLon(lat = lat, lon = lon),
+            Coordinates(lat = lat, lon = lon),
         dataSource = dataSource,
         status = status,
         amenities = amenities,
@@ -276,6 +288,10 @@ object TestDataHelpers {
         directionGuide = directionGuide,
         inheritBuildingSchedule = inheritBuildingSchedule,
         hasPhotos = hasPhotos,
+        locationType = locationType,
+        originProvider = originProvider,
+        originId = originId,
+        isHidden = isHidden,
         createdAt = createdAt,
         updatedAt = updatedAt
     )
@@ -307,7 +323,7 @@ object TestDataHelpers {
         displayName = displayName,
         distanceMeters = distanceMeters,
         feeType = feeType,
-        coordinates = LatLon(lat = lat, lon = lon),
+        coordinates = Coordinates(lat = lat, lon = lon),
         subwayStation = subwayStation
     )
 
@@ -407,7 +423,7 @@ object TestDataHelpers {
         name = name,
         address = address,
         buildingType = buildingType,
-        coordinates = LatLon(lat = lat, lon = lon),
+        coordinates = Coordinates(lat = lat, lon = lon),
         workTime = workTime,
         externalIds = externalIds
     )
@@ -435,7 +451,7 @@ object TestDataHelpers {
         name = name,
         address = address,
         buildingType = buildingType,
-        coordinates = LatLon(lat = lat, lon = lon),
+        coordinates = Coordinates(lat = lat, lon = lon),
         workTime = workTime,
         externalIds = externalIds,
         isDeleted = isDeleted,
@@ -448,7 +464,7 @@ object TestDataHelpers {
         name: String? = "Updated Building",
         address: String? = "Updated Address",
         buildingType: PlaceType? = PlaceType.OFFICE,
-        coordinates: LatLon? = LatLon(lat = 53.9006, lon = 27.5590),
+        coordinates: Coordinates? = Coordinates(lat = 53.9006, lon = 27.5590),
         workTime: JsonObject? = createBasicWorkTime(),
         externalIds: JsonObject? =
             buildJsonObject {
@@ -468,16 +484,12 @@ object TestDataHelpers {
         cityId: UUID = UUID.randomUUID(),
         nameRu: String = "Автозаводская линия",
         nameEn: String = "Avtozavodskaya Line",
-        nameLocal: String? = "Аўтазаводская лінія",
-        nameLocalLang: String? = "be",
         shortCode: String? = "2",
         hexColor: String = "#EF161E"
     ) = SubwayLineCreateDto(
         cityId = cityId,
         nameRu = nameRu,
         nameEn = nameEn,
-        nameLocal = nameLocal,
-        nameLocalLang = nameLocalLang,
         shortCode = shortCode,
         hexColor = hexColor
     )
@@ -487,8 +499,6 @@ object TestDataHelpers {
         cityId: UUID = UUID.randomUUID(),
         nameRu: String = "Автозаводская линия",
         nameEn: String = "Avtozavodskaya Line",
-        nameLocal: String? = "Аўтазаводская лінія",
-        nameLocalLang: String? = "be",
         shortCode: String? = "2",
         hexColor: String = "#EF161E",
         isDeleted: Boolean = false,
@@ -498,8 +508,6 @@ object TestDataHelpers {
         cityId = cityId,
         nameRu = nameRu,
         nameEn = nameEn,
-        nameLocal = nameLocal,
-        nameLocalLang = nameLocalLang,
         shortCode = shortCode,
         hexColor = hexColor,
         isDeleted = isDeleted,
@@ -510,8 +518,6 @@ object TestDataHelpers {
         subwayLineId: UUID = UUID.randomUUID(),
         nameRu: String = "Площадь Победы",
         nameEn: String = "Victory Square",
-        nameLocal: String? = "Плошча Перамогі",
-        nameLocalLang: String? = "be",
         isTransfer: Boolean = false,
         externalIds: JsonObject? = null,
         lat: Double = 53.9006,
@@ -520,11 +526,9 @@ object TestDataHelpers {
         subwayLineId = subwayLineId,
         nameRu = nameRu,
         nameEn = nameEn,
-        nameLocal = nameLocal,
-        nameLocalLang = nameLocalLang,
         isTransfer = isTransfer,
         externalIds = externalIds,
-        coordinates = LatLon(lat = lat, lon = lon)
+        coordinates = Coordinates(lat = lat, lon = lon)
     )
 
     fun createSubwayStationResponseDto(
@@ -532,8 +536,6 @@ object TestDataHelpers {
         subwayLineId: UUID = UUID.randomUUID(),
         nameRu: String = "Площадь Победы",
         nameEn: String = "Victory Square",
-        nameLocal: String? = "Плошча Перамогі",
-        nameLocalLang: String? = "be",
         isTransfer: Boolean = false,
         lat: Double = 53.9006,
         lon: Double = 27.5590,
@@ -544,10 +546,8 @@ object TestDataHelpers {
         subwayLineId = subwayLineId,
         nameRu = nameRu,
         nameEn = nameEn,
-        nameLocal = nameLocal,
-        nameLocalLang = nameLocalLang,
         isTransfer = isTransfer,
-        coordinates = LatLon(lat = lat, lon = lon),
+        coordinates = Coordinates(lat = lat, lon = lon),
         isDeleted = isDeleted,
         createdAt = createdAt
     )

@@ -35,7 +35,6 @@ import yayauheny.by.tables.records.SubwayStationsRecord
 // -------------------------------------------------------------------------
 
 val BUILDINGS_PKEY: UniqueKey<BuildingsRecord> = Internal.createUniqueKey(Buildings.BUILDINGS, DSL.name("buildings_pkey"), arrayOf(Buildings.BUILDINGS.ID), true)
-val CITIES_COORDINATES_KEY: UniqueKey<CitiesRecord> = Internal.createUniqueKey(Cities.CITIES, DSL.name("cities_coordinates_key"), arrayOf(Cities.CITIES.COORDINATES), true)
 val CITIES_PKEY: UniqueKey<CitiesRecord> = Internal.createUniqueKey(Cities.CITIES, DSL.name("cities_pkey"), arrayOf(Cities.CITIES.ID), true)
 val CITIES_UNIQUE_COUNTRY_NAME_EN: UniqueKey<CitiesRecord> = Internal.createUniqueKey(Cities.CITIES, DSL.name("cities_unique_country_name_en"), arrayOf(Cities.CITIES.COUNTRY_ID, Cities.CITIES.NAME_EN), true)
 val CITIES_UNIQUE_COUNTRY_NAME_RU: UniqueKey<CitiesRecord> = Internal.createUniqueKey(Cities.CITIES, DSL.name("cities_unique_country_name_ru"), arrayOf(Cities.CITIES.COUNTRY_ID, Cities.CITIES.NAME_RU), true)

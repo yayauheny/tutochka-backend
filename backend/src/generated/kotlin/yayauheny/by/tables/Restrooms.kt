@@ -41,8 +41,10 @@ import yayauheny.by.indexes.IDX_RESTROOMS_CITY_ID
 import yayauheny.by.indexes.IDX_RESTROOMS_COORDINATES
 import yayauheny.by.indexes.IDX_RESTROOMS_EXTERNAL_MAPS
 import yayauheny.by.indexes.IDX_RESTROOMS_FILTERS
-import yayauheny.by.indexes.IDX_RESTROOMS_IS_DELETED
+import yayauheny.by.indexes.IDX_RESTROOMS_HIDDEN
+import yayauheny.by.indexes.IDX_RESTROOMS_LOCATION_TYPE
 import yayauheny.by.indexes.IDX_RESTROOMS_STATUS
+import yayauheny.by.indexes.UQ_RESTROOMS_ORIGIN
 import yayauheny.by.keys.RESTROOMS_PKEY
 import yayauheny.by.keys.RESTROOMS__RESTROOMS_BUILDING_ID_FKEY
 import yayauheny.by.keys.RESTROOMS__RESTROOMS_CITY_ID_FKEY
@@ -120,7 +122,7 @@ open class Restrooms(
     /**
      * The column <code>public.restrooms.place_type</code>.
      */
-    val PLACE_TYPE: TableField<RestroomsRecord, String?> = createField(DSL.name("place_type"), SQLDataType.VARCHAR(50), this, "")
+    val PLACE_TYPE: TableField<RestroomsRecord, String?> = createField(DSL.name("place_type"), SQLDataType.VARCHAR(50).nullable(false).defaultValue(DSL.field(DSL.raw("'OTHER'::character varying"), SQLDataType.VARCHAR)), this, "")
 
     /**
      * The column <code>public.restrooms.address</code>.
@@ -140,17 +142,22 @@ open class Restrooms(
     /**
      * The column <code>public.restrooms.fee_type</code>.
      */
-    val FEE_TYPE: TableField<RestroomsRecord, String?> = createField(DSL.name("fee_type"), SQLDataType.VARCHAR(20).nullable(false), this, "")
+    val FEE_TYPE: TableField<RestroomsRecord, String?> = createField(DSL.name("fee_type"), SQLDataType.VARCHAR(20).nullable(false).defaultValue(DSL.field(DSL.raw("'UNKNOWN'::character varying"), SQLDataType.VARCHAR)), this, "")
+
+    /**
+     * The column <code>public.restrooms.gender_type</code>.
+     */
+    val GENDER_TYPE: TableField<RestroomsRecord, String?> = createField(DSL.name("gender_type"), SQLDataType.VARCHAR(20).nullable(false).defaultValue(DSL.field(DSL.raw("'UNKNOWN'::character varying"), SQLDataType.VARCHAR)), this, "")
 
     /**
      * The column <code>public.restrooms.accessibility_type</code>.
      */
-    val ACCESSIBILITY_TYPE: TableField<RestroomsRecord, String?> = createField(DSL.name("accessibility_type"), SQLDataType.VARCHAR(20).nullable(false), this, "")
+    val ACCESSIBILITY_TYPE: TableField<RestroomsRecord, String?> = createField(DSL.name("accessibility_type"), SQLDataType.VARCHAR(20).nullable(false).defaultValue(DSL.field(DSL.raw("'UNKNOWN'::character varying"), SQLDataType.VARCHAR)), this, "")
 
     /**
      * The column <code>public.restrooms.status</code>.
      */
-    val STATUS: TableField<RestroomsRecord, String?> = createField(DSL.name("status"), SQLDataType.VARCHAR(20).nullable(false).defaultValue(DSL.field(DSL.raw("'active'::character varying"), SQLDataType.VARCHAR)), this, "")
+    val STATUS: TableField<RestroomsRecord, String?> = createField(DSL.name("status"), SQLDataType.VARCHAR(20).nullable(false).defaultValue(DSL.field(DSL.raw("'ACTIVE'::character varying"), SQLDataType.VARCHAR)), this, "")
 
     /**
      * The column <code>public.restrooms.phones</code>.
@@ -190,7 +197,37 @@ open class Restrooms(
     /**
      * The column <code>public.restrooms.data_source</code>.
      */
-    val DATA_SOURCE: TableField<RestroomsRecord, String?> = createField(DSL.name("data_source"), SQLDataType.VARCHAR(50).nullable(false), this, "")
+    val DATA_SOURCE: TableField<RestroomsRecord, String?> = createField(DSL.name("data_source"), SQLDataType.VARCHAR(50).nullable(false).defaultValue(DSL.field(DSL.raw("'MANUAL'::character varying"), SQLDataType.VARCHAR)), this, "")
+
+    /**
+     * The column <code>public.restrooms.location_type</code>.
+     */
+    val LOCATION_TYPE: TableField<RestroomsRecord, String?> = createField(DSL.name("location_type"), SQLDataType.VARCHAR(20).nullable(false).defaultValue(DSL.field(DSL.raw("'UNKNOWN'::character varying"), SQLDataType.VARCHAR)), this, "")
+
+    /**
+     * The column <code>public.restrooms.is_hidden</code>.
+     */
+    val IS_HIDDEN: TableField<RestroomsRecord, Boolean?> = createField(DSL.name("is_hidden"), SQLDataType.BOOLEAN.nullable(false).defaultValue(DSL.field(DSL.raw("false"), SQLDataType.BOOLEAN)), this, "")
+
+    /**
+     * The column <code>public.restrooms.hidden_reason</code>.
+     */
+    val HIDDEN_REASON: TableField<RestroomsRecord, String?> = createField(DSL.name("hidden_reason"), SQLDataType.CLOB, this, "")
+
+    /**
+     * The column <code>public.restrooms.hidden_at</code>.
+     */
+    val HIDDEN_AT: TableField<RestroomsRecord, Instant?> = createField(DSL.name("hidden_at"), SQLDataType.INSTANT, this, "")
+
+    /**
+     * The column <code>public.restrooms.origin_provider</code>.
+     */
+    val ORIGIN_PROVIDER: TableField<RestroomsRecord, String?> = createField(DSL.name("origin_provider"), SQLDataType.VARCHAR(50).nullable(false).defaultValue(DSL.field(DSL.raw("'MANUAL'::character varying"), SQLDataType.VARCHAR)), this, "")
+
+    /**
+     * The column <code>public.restrooms.origin_id</code>.
+     */
+    val ORIGIN_ID: TableField<RestroomsRecord, String?> = createField(DSL.name("origin_id"), SQLDataType.VARCHAR(100), this, "")
 
     /**
      * The column <code>public.restrooms.is_deleted</code>.
@@ -244,7 +281,7 @@ open class Restrooms(
         override fun `as`(alias: Table<*>): RestroomsPath = RestroomsPath(alias.qualifiedName, this)
     }
     override fun getSchema(): Schema? = if (aliased()) null else Public.PUBLIC
-    override fun getIndexes(): List<Index> = listOf(IDX_RESTROOMS_BUILDING_ID, IDX_RESTROOMS_CITY_ID, IDX_RESTROOMS_COORDINATES, IDX_RESTROOMS_EXTERNAL_MAPS, IDX_RESTROOMS_FILTERS, IDX_RESTROOMS_IS_DELETED, IDX_RESTROOMS_STATUS)
+    override fun getIndexes(): List<Index> = listOf(IDX_RESTROOMS_BUILDING_ID, IDX_RESTROOMS_CITY_ID, IDX_RESTROOMS_COORDINATES, IDX_RESTROOMS_EXTERNAL_MAPS, IDX_RESTROOMS_FILTERS, IDX_RESTROOMS_HIDDEN, IDX_RESTROOMS_LOCATION_TYPE, IDX_RESTROOMS_STATUS, UQ_RESTROOMS_ORIGIN)
     override fun getPrimaryKey(): UniqueKey<RestroomsRecord> = RESTROOMS_PKEY
     override fun getReferences(): List<ForeignKey<RestroomsRecord, *>> = listOf(RESTROOMS__RESTROOMS_BUILDING_ID_FKEY, RESTROOMS__RESTROOMS_CITY_ID_FKEY, RESTROOMS__RESTROOMS_SUBWAY_STATION_ID_FKEY)
 

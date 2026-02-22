@@ -11,7 +11,7 @@ import org.junit.jupiter.api.DisplayName
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
 import yayauheny.by.common.mapper.RestroomMapper
-import yayauheny.by.model.dto.LatLon
+import yayauheny.by.model.dto.Coordinates
 import yayauheny.by.model.enums.AccessibilityType
 import yayauheny.by.model.enums.DataSourceType
 import yayauheny.by.model.enums.FeeType
@@ -35,7 +35,7 @@ class RestroomMapperTest {
             val testLat = 55.7558
             val testLon = 37.6176
             val testFeeType = FeeType.FREE
-            val testAccessibilityType = AccessibilityType.DISABLED
+            val testAccessibilityType = AccessibilityType.WHEELCHAIR
             val testDataSource = DataSourceType.USER
             val testStatus = RestroomStatus.ACTIVE
             val testCreatedAt = Instant.now()
@@ -55,6 +55,7 @@ class RestroomMapperTest {
             every { mockRecord[RESTROOMS.PHONES] } returns null
             every { mockRecord[RESTROOMS.WORK_TIME] } returns null
             every { mockRecord[RESTROOMS.FEE_TYPE] } returns testFeeType.name
+            every { mockRecord[RESTROOMS.GENDER_TYPE] } returns "UNISEX"
             every { mockRecord[RESTROOMS.ACCESSIBILITY_TYPE] } returns testAccessibilityType.name
             every { mockRecord[RESTROOMS.PLACE_TYPE] } returns null
             every { mockRecord[RESTROOMS.DATA_SOURCE] } returns testDataSource.name
@@ -69,6 +70,10 @@ class RestroomMapperTest {
             every { mockRecord[RESTROOMS.DIRECTION_GUIDE] } returns "Находится на первом этаже, рядом с главным входом"
             every { mockRecord[RESTROOMS.INHERIT_BUILDING_SCHEDULE] } returns false
             every { mockRecord[RESTROOMS.HAS_PHOTOS] } returns true
+            every { mockRecord[RESTROOMS.LOCATION_TYPE] } returns "UNKNOWN"
+            every { mockRecord[RESTROOMS.ORIGIN_PROVIDER] } returns "MANUAL"
+            every { mockRecord[RESTROOMS.ORIGIN_ID] } returns null
+            every { mockRecord[RESTROOMS.IS_HIDDEN] } returns false
             every { mockRecord[RESTROOMS.CREATED_AT] } returns testCreatedAt
             every { mockRecord[RESTROOMS.UPDATED_AT] } returns testUpdatedAt
 
@@ -79,7 +84,7 @@ class RestroomMapperTest {
             assertEquals(testCityId, result.cityId)
             assertEquals(testName, result.name)
             assertEquals(testAddress, result.address)
-            assertEquals(LatLon(lat = testLat, lon = testLon), result.coordinates)
+            assertEquals(Coordinates(lat = testLat, lon = testLon), result.coordinates)
             assertEquals(testFeeType, result.feeType)
             assertEquals(testAccessibilityType, result.accessibilityType)
             assertEquals(testDataSource, result.dataSource)
@@ -103,7 +108,7 @@ class RestroomMapperTest {
             val testLat = 55.7558
             val testLon = 37.6176
             val testFeeType = FeeType.FREE
-            val testAccessibilityType = AccessibilityType.DISABLED
+            val testAccessibilityType = AccessibilityType.WHEELCHAIR
             val testDataSource = DataSourceType.USER
             val testStatus = RestroomStatus.ACTIVE
             val testCreatedAt = Instant.now()
@@ -121,6 +126,7 @@ class RestroomMapperTest {
             every { mockRecord[RESTROOMS.PHONES] } returns null
             every { mockRecord[RESTROOMS.WORK_TIME] } returns null
             every { mockRecord[RESTROOMS.FEE_TYPE] } returns testFeeType.name
+            every { mockRecord[RESTROOMS.GENDER_TYPE] } returns "UNISEX"
             every { mockRecord[RESTROOMS.ACCESSIBILITY_TYPE] } returns testAccessibilityType.name
             every { mockRecord[RESTROOMS.PLACE_TYPE] } returns null
             every { mockRecord[RESTROOMS.DATA_SOURCE] } returns testDataSource.name
@@ -131,6 +137,10 @@ class RestroomMapperTest {
             every { mockRecord[RESTROOMS.DIRECTION_GUIDE] } returns null
             every { mockRecord[RESTROOMS.INHERIT_BUILDING_SCHEDULE] } returns false
             every { mockRecord[RESTROOMS.HAS_PHOTOS] } returns false
+            every { mockRecord[RESTROOMS.LOCATION_TYPE] } returns "UNKNOWN"
+            every { mockRecord[RESTROOMS.ORIGIN_PROVIDER] } returns "MANUAL"
+            every { mockRecord[RESTROOMS.ORIGIN_ID] } returns null
+            every { mockRecord[RESTROOMS.IS_HIDDEN] } returns false
             every { mockRecord[RESTROOMS.CREATED_AT] } returns testCreatedAt
             every { mockRecord[RESTROOMS.UPDATED_AT] } returns testUpdatedAt
 
@@ -150,7 +160,7 @@ class RestroomMapperTest {
             val testLat = 55.7558
             val testLon = 37.6176
             val testFeeType = FeeType.FREE
-            val testAccessibilityType = AccessibilityType.DISABLED
+            val testAccessibilityType = AccessibilityType.WHEELCHAIR
             val testDataSource = DataSourceType.USER
             val testStatus = RestroomStatus.ACTIVE
             val testCreatedAt = Instant.now()
@@ -171,6 +181,7 @@ class RestroomMapperTest {
             every { mockRecord[RESTROOMS.PHONES] } returns testPhonesJson
             every { mockRecord[RESTROOMS.WORK_TIME] } returns testWorkTimeJson
             every { mockRecord[RESTROOMS.FEE_TYPE] } returns testFeeType.name
+            every { mockRecord[RESTROOMS.GENDER_TYPE] } returns "UNISEX"
             every { mockRecord[RESTROOMS.ACCESSIBILITY_TYPE] } returns testAccessibilityType.name
             every { mockRecord[RESTROOMS.PLACE_TYPE] } returns null
             every { mockRecord[RESTROOMS.DATA_SOURCE] } returns testDataSource.name
@@ -185,6 +196,10 @@ class RestroomMapperTest {
             every { mockRecord[RESTROOMS.DIRECTION_GUIDE] } returns "Находится на первом этаже, рядом с главным входом"
             every { mockRecord[RESTROOMS.INHERIT_BUILDING_SCHEDULE] } returns true
             every { mockRecord[RESTROOMS.HAS_PHOTOS] } returns true
+            every { mockRecord[RESTROOMS.LOCATION_TYPE] } returns "UNKNOWN"
+            every { mockRecord[RESTROOMS.ORIGIN_PROVIDER] } returns "MANUAL"
+            every { mockRecord[RESTROOMS.ORIGIN_ID] } returns null
+            every { mockRecord[RESTROOMS.IS_HIDDEN] } returns false
             every { mockRecord[RESTROOMS.CREATED_AT] } returns testCreatedAt
             every { mockRecord[RESTROOMS.UPDATED_AT] } returns testUpdatedAt
 
@@ -232,7 +247,7 @@ class RestroomMapperTest {
             assertEquals(testId, result.id)
             assertEquals(testName, result.name)
             assertEquals(testAddress, result.address)
-            assertEquals(LatLon(lat = testLat, lon = testLon), result.coordinates)
+            assertEquals(Coordinates(lat = testLat, lon = testLon), result.coordinates)
             assertEquals(testDistance, result.distanceMeters)
             assertEquals(testFeeType, result.feeType)
             assertNull(result.isOpen)

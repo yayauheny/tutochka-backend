@@ -3,7 +3,7 @@ package yayauheny.by.repository
 import java.util.UUID
 import kotlinx.serialization.json.JsonObject
 import yayauheny.by.model.import.ImportPayloadType
-import yayauheny.by.model.import.ImportProvider
+import yayauheny.by.model.enums.ImportProvider
 
 /**
  * Репозиторий для работы с таблицей restroom_imports.

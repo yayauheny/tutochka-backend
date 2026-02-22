@@ -36,8 +36,12 @@ import org.jooq.impl.TableImpl
 
 import yayauheny.by.Public
 import yayauheny.by.indexes.IDX_RESTROOM_IMPORTS_BUILDING_ID
+import yayauheny.by.indexes.IDX_RESTROOM_IMPORTS_CREATED_AT
+import yayauheny.by.indexes.IDX_RESTROOM_IMPORTS_PROVIDER_CITY_STATUS
 import yayauheny.by.indexes.IDX_RESTROOM_IMPORTS_PROVIDER_STATUS
+import yayauheny.by.indexes.IDX_RESTROOM_IMPORTS_QUEUE
 import yayauheny.by.indexes.IDX_RESTROOM_IMPORTS_RESTROOM_ID
+import yayauheny.by.indexes.UQ_RESTROOM_IMPORTS_PROVIDER_ENTITY_EXTERNAL
 import yayauheny.by.keys.RESTROOM_IMPORTS_PKEY
 import yayauheny.by.keys.RESTROOM_IMPORTS__RESTROOM_IMPORTS_BUILDING_ID_FKEY
 import yayauheny.by.keys.RESTROOM_IMPORTS__RESTROOM_IMPORTS_CITY_ID_FKEY
@@ -123,7 +127,7 @@ open class RestroomImports(
     /**
      * The column <code>public.restroom_imports.status</code>.
      */
-    val STATUS: TableField<RestroomImportsRecord, String?> = createField(DSL.name("status"), SQLDataType.VARCHAR(20).nullable(false).defaultValue(DSL.field(DSL.raw("'pending'::character varying"), SQLDataType.VARCHAR)), this, "")
+    val STATUS: TableField<RestroomImportsRecord, String?> = createField(DSL.name("status"), SQLDataType.VARCHAR(20).nullable(false).defaultValue(DSL.field(DSL.raw("'PENDING'::character varying"), SQLDataType.VARCHAR)), this, "")
 
     /**
      * The column <code>public.restroom_imports.error_message</code>.
@@ -139,6 +143,46 @@ open class RestroomImports(
      * The column <code>public.restroom_imports.processed_at</code>.
      */
     val PROCESSED_AT: TableField<RestroomImportsRecord, Instant?> = createField(DSL.name("processed_at"), SQLDataType.INSTANT, this, "")
+
+    /**
+     * The column <code>public.restroom_imports.entity_type</code>.
+     */
+    val ENTITY_TYPE: TableField<RestroomImportsRecord, String?> = createField(DSL.name("entity_type"), SQLDataType.VARCHAR(30).nullable(false).defaultValue(DSL.field(DSL.raw("'place'::character varying"), SQLDataType.VARCHAR)), this, "")
+
+    /**
+     * The column <code>public.restroom_imports.external_id</code>.
+     */
+    val EXTERNAL_ID: TableField<RestroomImportsRecord, String?> = createField(DSL.name("external_id"), SQLDataType.VARCHAR(128), this, "")
+
+    /**
+     * The column <code>public.restroom_imports.source_url</code>.
+     */
+    val SOURCE_URL: TableField<RestroomImportsRecord, String?> = createField(DSL.name("source_url"), SQLDataType.CLOB, this, "")
+
+    /**
+     * The column <code>public.restroom_imports.scraped_at</code>.
+     */
+    val SCRAPED_AT: TableField<RestroomImportsRecord, Instant?> = createField(DSL.name("scraped_at"), SQLDataType.INSTANT, this, "")
+
+    /**
+     * The column <code>public.restroom_imports.payload_hash</code>.
+     */
+    val PAYLOAD_HASH: TableField<RestroomImportsRecord, String?> = createField(DSL.name("payload_hash"), SQLDataType.CHAR(64), this, "")
+
+    /**
+     * The column <code>public.restroom_imports.attempts</code>.
+     */
+    val ATTEMPTS: TableField<RestroomImportsRecord, Int?> = createField(DSL.name("attempts"), SQLDataType.INTEGER.nullable(false).defaultValue(DSL.field(DSL.raw("0"), SQLDataType.INTEGER)), this, "")
+
+    /**
+     * The column <code>public.restroom_imports.last_attempt_at</code>.
+     */
+    val LAST_ATTEMPT_AT: TableField<RestroomImportsRecord, Instant?> = createField(DSL.name("last_attempt_at"), SQLDataType.INSTANT, this, "")
+
+    /**
+     * The column <code>public.restroom_imports.next_retry_at</code>.
+     */
+    val NEXT_RETRY_AT: TableField<RestroomImportsRecord, Instant?> = createField(DSL.name("next_retry_at"), SQLDataType.INSTANT, this, "")
 
     private constructor(alias: Name, aliased: Table<RestroomImportsRecord>?): this(alias, null, null, null, aliased, null, null)
     private constructor(alias: Name, aliased: Table<RestroomImportsRecord>?, parameters: Array<Field<*>?>?): this(alias, null, null, null, aliased, parameters, null)
@@ -172,7 +216,7 @@ open class RestroomImports(
         override fun `as`(alias: Table<*>): RestroomImportsPath = RestroomImportsPath(alias.qualifiedName, this)
     }
     override fun getSchema(): Schema? = if (aliased()) null else Public.PUBLIC
-    override fun getIndexes(): List<Index> = listOf(IDX_RESTROOM_IMPORTS_BUILDING_ID, IDX_RESTROOM_IMPORTS_PROVIDER_STATUS, IDX_RESTROOM_IMPORTS_RESTROOM_ID)
+    override fun getIndexes(): List<Index> = listOf(IDX_RESTROOM_IMPORTS_BUILDING_ID, IDX_RESTROOM_IMPORTS_CREATED_AT, IDX_RESTROOM_IMPORTS_PROVIDER_CITY_STATUS, IDX_RESTROOM_IMPORTS_PROVIDER_STATUS, IDX_RESTROOM_IMPORTS_QUEUE, IDX_RESTROOM_IMPORTS_RESTROOM_ID, UQ_RESTROOM_IMPORTS_PROVIDER_ENTITY_EXTERNAL)
     override fun getPrimaryKey(): UniqueKey<RestroomImportsRecord> = RESTROOM_IMPORTS_PKEY
     override fun getReferences(): List<ForeignKey<RestroomImportsRecord, *>> = listOf(RESTROOM_IMPORTS__RESTROOM_IMPORTS_BUILDING_ID_FKEY, RESTROOM_IMPORTS__RESTROOM_IMPORTS_CITY_ID_FKEY, RESTROOM_IMPORTS__RESTROOM_IMPORTS_RESTROOM_ID_FKEY)
 

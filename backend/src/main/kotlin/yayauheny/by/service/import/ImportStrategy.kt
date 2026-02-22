@@ -3,7 +3,7 @@ package yayauheny.by.service.import
 import java.util.UUID
 import kotlinx.serialization.json.JsonObject
 import yayauheny.by.model.import.ImportPayloadType
-import yayauheny.by.model.import.ImportProvider
+import yayauheny.by.model.enums.ImportProvider
 
 /**
  * Результат импорта одного объекта (туалет + при необходимости здание).
@@ -38,4 +38,23 @@ interface ImportStrategy {
         payloadType: ImportPayloadType,
         payload: JsonObject
     ): ImportObjectResult
+
+    /**
+     * Импортирует batch объектов из JSON-структуры провайдера.
+     * По умолчанию обрабатывает только первый элемент для обратной совместимости.
+     * Стратегии могут переопределить этот метод для эффективной batch обработки.
+     *
+     * @param cityId ID города, в котором происходит импорт
+     * @param payloadType тип формата payload
+     * @param payload JsonObject - payload с массивом items или одиночным объектом
+     * @return список результатов импорта для каждого элемента
+     */
+    suspend fun importBatch(
+        cityId: UUID,
+        payloadType: ImportPayloadType,
+        payload: JsonObject
+    ): List<ImportObjectResult> {
+        // По умолчанию обрабатываем только первый элемент
+        return listOf(importObject(cityId, payloadType, payload))
+    }
 }

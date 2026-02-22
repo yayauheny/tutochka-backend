@@ -18,13 +18,14 @@ import org.junit.jupiter.params.provider.MethodSource
 import yayauheny.by.service.validation.validateOrThrow
 import yayauheny.by.service.validation.validateWith
 import yayauheny.by.common.errors.ValidationException
-import yayauheny.by.model.dto.LatLon
+import yayauheny.by.model.dto.Coordinates
 import yayauheny.by.model.city.CityCreateDto
 import yayauheny.by.model.country.CountryCreateDto
 import yayauheny.by.model.restroom.RestroomCreateDto
 import yayauheny.by.model.enums.AccessibilityType
 import yayauheny.by.model.enums.DataSourceType
 import yayauheny.by.model.enums.FeeType
+import yayauheny.by.model.enums.GenderType
 import yayauheny.by.model.enums.PlaceType
 import yayauheny.by.model.enums.RestroomStatus
 import yayauheny.by.service.validation.NearestRestroomsParams
@@ -55,31 +56,31 @@ class ValidationTest {
         fun invalidCityData(): Stream<Arguments> =
             Stream.of(
                 Arguments.of(
-                    CityCreateDto(UUID.randomUUID(), "", "Minsk", null, LatLon(lat = 53.9006, lon = 27.5590)),
+                    CityCreateDto(UUID.randomUUID(), "", "Minsk", null, Coordinates(lat = 53.9006, lon = 27.5590)),
                     1
                 ), // Empty nameRu
                 Arguments.of(
-                    CityCreateDto(UUID.randomUUID(), "Минск", "", null, LatLon(lat = 53.9006, lon = 27.5590)),
+                    CityCreateDto(UUID.randomUUID(), "Минск", "", null, Coordinates(lat = 53.9006, lon = 27.5590)),
                     1
                 ), // Empty nameEn
                 Arguments.of(
-                    CityCreateDto(UUID.randomUUID(), "Минск", "Minsk", null, LatLon(lat = 91.0, lon = 27.5590)),
+                    CityCreateDto(UUID.randomUUID(), "Минск", "Minsk", null, Coordinates(lat = 91.0, lon = 27.5590)),
                     1
                 ), // lat > 90
                 Arguments.of(
-                    CityCreateDto(UUID.randomUUID(), "Минск", "Minsk", null, LatLon(lat = -91.0, lon = 27.5590)),
+                    CityCreateDto(UUID.randomUUID(), "Минск", "Minsk", null, Coordinates(lat = -91.0, lon = 27.5590)),
                     1
                 ), // lat < -90
                 Arguments.of(
-                    CityCreateDto(UUID.randomUUID(), "Минск", "Minsk", null, LatLon(lat = 53.9006, lon = 181.0)),
+                    CityCreateDto(UUID.randomUUID(), "Минск", "Minsk", null, Coordinates(lat = 53.9006, lon = 181.0)),
                     1
                 ), // lon > 180
                 Arguments.of(
-                    CityCreateDto(UUID.randomUUID(), "Минск", "Minsk", null, LatLon(lat = 53.9006, lon = -181.0)),
+                    CityCreateDto(UUID.randomUUID(), "Минск", "Minsk", null, Coordinates(lat = 53.9006, lon = -181.0)),
                     1
                 ), // lon < -180
                 Arguments.of(
-                    CityCreateDto(UUID.randomUUID(), "Минск", "Minsk", null, LatLon(lat = 53.9006, lon = 27.5590)),
+                    CityCreateDto(UUID.randomUUID(), "Минск", "Minsk", null, Coordinates(lat = 53.9006, lon = 27.5590)),
                     0
                 ) // Valid
             )
@@ -96,9 +97,10 @@ class ValidationTest {
                         phones = null,
                         workTime = null,
                         feeType = FeeType.FREE,
-                        accessibilityType = AccessibilityType.UNISEX,
+                        genderType = GenderType.UNISEX,
+                        accessibilityType = AccessibilityType.WHEELCHAIR,
                         placeType = PlaceType.OTHER,
-                        coordinates = LatLon(lat = 55.7558, lon = 37.6176),
+                        coordinates = Coordinates(lat = 55.7558, lon = 37.6176),
                         dataSource = DataSourceType.MANUAL,
                         amenities = buildJsonObject {},
                         inheritBuildingSchedule = false
@@ -110,14 +112,14 @@ class ValidationTest {
         @JvmStatic
         fun invalidNearestRestroomsParamsData(): Stream<Arguments> =
             Stream.of(
-                Arguments.of(NearestRestroomsParams(LatLon(lat = 91.0, lon = 37.6176), 10, 1000), 1), // lat > 90
-                Arguments.of(NearestRestroomsParams(LatLon(lat = -91.0, lon = 37.6176), 10, 1000), 1), // lat < -90
-                Arguments.of(NearestRestroomsParams(LatLon(lat = 55.7558, lon = 181.0), 10, 1000), 1), // lon > 180
-                Arguments.of(NearestRestroomsParams(LatLon(lat = 55.7558, lon = -181.0), 10, 1000), 1), // lon < -180
-                Arguments.of(NearestRestroomsParams(LatLon(lat = 55.7558, lon = 37.6176), 0, 1000), 1), // limit = 0
-                Arguments.of(NearestRestroomsParams(LatLon(lat = 55.7558, lon = 37.6176), -1, 1000), 1), // limit < 0
-                Arguments.of(NearestRestroomsParams(LatLon(lat = 55.7558, lon = 37.6176), 101, 1000), 1), // limit > 100
-                Arguments.of(NearestRestroomsParams(LatLon(lat = 91.0, lon = 181.0), 101, 1000), 3), // Multiple issues
+                Arguments.of(NearestRestroomsParams(Coordinates(lat = 91.0, lon = 37.6176), 10, 1000), 1), // lat > 90
+                Arguments.of(NearestRestroomsParams(Coordinates(lat = -91.0, lon = 37.6176), 10, 1000), 1), // lat < -90
+                Arguments.of(NearestRestroomsParams(Coordinates(lat = 55.7558, lon = 181.0), 10, 1000), 1), // lon > 180
+                Arguments.of(NearestRestroomsParams(Coordinates(lat = 55.7558, lon = -181.0), 10, 1000), 1), // lon < -180
+                Arguments.of(NearestRestroomsParams(Coordinates(lat = 55.7558, lon = 37.6176), 0, 1000), 1), // limit = 0
+                Arguments.of(NearestRestroomsParams(Coordinates(lat = 55.7558, lon = 37.6176), -1, 1000), 1), // limit < 0
+                Arguments.of(NearestRestroomsParams(Coordinates(lat = 55.7558, lon = 37.6176), 101, 1000), 1), // limit > 100
+                Arguments.of(NearestRestroomsParams(Coordinates(lat = 91.0, lon = 181.0), 101, 1000), 3), // Multiple issues
             )
     }
 
@@ -174,7 +176,7 @@ class ValidationTest {
                     nameRu = "Минск",
                     nameEn = "Minsk",
                     region = "Минская область",
-                    coordinates = LatLon(lat = 53.9006, lon = 27.5590)
+                    coordinates = Coordinates(lat = 53.9006, lon = 27.5590)
                 )
 
             val result = validDto.validateWith(validateCityOnCreate)
@@ -192,7 +194,7 @@ class ValidationTest {
                     nameRu = "Минск",
                     nameEn = "Minsk",
                     region = null,
-                    coordinates = LatLon(lat = 90.0, lon = 180.0)
+                    coordinates = Coordinates(lat = 90.0, lon = 180.0)
                 )
 
             val result = validDto.validateWith(validateCityOnCreate)
@@ -236,8 +238,9 @@ class ValidationTest {
                     phones = buildJsonObject { put("main", "+1234567890") },
                     workTime = buildJsonObject { put("monday", "08:00-22:00") },
                     feeType = FeeType.FREE,
-                    accessibilityType = AccessibilityType.UNISEX,
-                    coordinates = LatLon(lat = 55.7558, lon = 37.6176),
+                    genderType = GenderType.UNISEX,
+                    accessibilityType = AccessibilityType.WHEELCHAIR,
+                    coordinates = Coordinates(lat = 55.7558, lon = 37.6176),
                     dataSource = DataSourceType.MANUAL,
                     status = RestroomStatus.ACTIVE,
                     amenities = buildJsonObject { put("wifi", true) },
@@ -332,7 +335,7 @@ class ValidationTest {
                     nameRu = "",
                     nameEn = "",
                     region = null,
-                    coordinates = LatLon(lat = 91.0, lon = 181.0)
+                    coordinates = Coordinates(lat = 91.0, lon = 181.0)
                 ) // Multiple issues
 
             val result = invalidDto.validateWith(validateCityOnCreate)
@@ -366,8 +369,9 @@ class ValidationTest {
                     phones = buildJsonObject {},
                     workTime = buildJsonObject {},
                     feeType = FeeType.FREE,
-                    accessibilityType = AccessibilityType.UNISEX,
-                    coordinates = LatLon(lat = 91.0, lon = 181.0), // Invalid lat/lon
+                    genderType = GenderType.UNISEX,
+                    accessibilityType = AccessibilityType.WHEELCHAIR,
+                    coordinates = Coordinates(lat = 91.0, lon = 181.0), // Invalid lat/lon
                     dataSource = DataSourceType.MANUAL,
                     amenities = buildJsonObject {},
                     buildingId = null,
@@ -403,7 +407,7 @@ class ValidationTest {
         @Test
         @DisplayName("Valid parameters should pass validation")
         fun valid_params_should_pass() {
-            val params = NearestRestroomsParams(LatLon(lat = 55.7558, lon = 37.6176), 10, 1000)
+            val params = NearestRestroomsParams(Coordinates(lat = 55.7558, lon = 37.6176), 10, 1000)
 
             val result = params.validateWith(validateNearestRestroomsParams)
 
@@ -415,7 +419,7 @@ class ValidationTest {
         @DisplayName("Valid parameters should pass with validateOrThrow")
         fun valid_params_should_pass_with_validateOrThrow() =
             runTest {
-                val params = NearestRestroomsParams(LatLon(lat = 55.7558, lon = 37.6176), 10, 1000)
+                val params = NearestRestroomsParams(Coordinates(lat = 55.7558, lon = 37.6176), 10, 1000)
 
                 val result = params.validateOrThrow(validateNearestRestroomsParams)
 
@@ -555,7 +559,7 @@ class ValidationTest {
                         subwayLineId = UUID.randomUUID(),
                         nameRu = "Площадь Победы",
                         nameEn = "Victory Square",
-                        coordinates = LatLon(lat = 53.9006, lon = 27.5590)
+                        coordinates = Coordinates(lat = 53.9006, lon = 27.5590)
                     )
 
                 val result = dto.validateWith(validateSubwayStationOnCreate)
@@ -572,7 +576,7 @@ class ValidationTest {
                         subwayLineId = UUID.randomUUID(),
                         nameRu = "",
                         nameEn = "Victory Square",
-                        coordinates = LatLon(lat = 53.9006, lon = 27.5590)
+                        coordinates = Coordinates(lat = 53.9006, lon = 27.5590)
                     )
 
                 val result = dto.validateWith(validateSubwayStationOnCreate)
@@ -589,7 +593,7 @@ class ValidationTest {
                         subwayLineId = UUID.randomUUID(),
                         nameRu = "Площадь Победы",
                         nameEn = "Victory Square",
-                        coordinates = LatLon(lat = 200.0, lon = 200.0)
+                        coordinates = Coordinates(lat = 200.0, lon = 200.0)
                     )
 
                 val result = dto.validateWith(validateSubwayStationOnCreate)

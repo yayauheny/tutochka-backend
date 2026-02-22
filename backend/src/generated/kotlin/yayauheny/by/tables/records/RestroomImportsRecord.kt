@@ -64,6 +64,38 @@ open class RestroomImportsRecord() : UpdatableRecordImpl<RestroomImportsRecord>(
         set(value): Unit = set(10, value)
         get(): Instant? = get(10) as Instant?
 
+    open var entityType: String?
+        set(value): Unit = set(11, value)
+        get(): String? = get(11) as String?
+
+    open var externalId: String?
+        set(value): Unit = set(12, value)
+        get(): String? = get(12) as String?
+
+    open var sourceUrl: String?
+        set(value): Unit = set(13, value)
+        get(): String? = get(13) as String?
+
+    open var scrapedAt: Instant?
+        set(value): Unit = set(14, value)
+        get(): Instant? = get(14) as Instant?
+
+    open var payloadHash: String?
+        set(value): Unit = set(15, value)
+        get(): String? = get(15) as String?
+
+    open var attempts: Int?
+        set(value): Unit = set(16, value)
+        get(): Int? = get(16) as Int?
+
+    open var lastAttemptAt: Instant?
+        set(value): Unit = set(17, value)
+        get(): Instant? = get(17) as Instant?
+
+    open var nextRetryAt: Instant?
+        set(value): Unit = set(18, value)
+        get(): Instant? = get(18) as Instant?
+
     // -------------------------------------------------------------------------
     // Primary key information
     // -------------------------------------------------------------------------
@@ -73,7 +105,7 @@ open class RestroomImportsRecord() : UpdatableRecordImpl<RestroomImportsRecord>(
     /**
      * Create a detached, initialised RestroomImportsRecord
      */
-    constructor(id: UUID? = null, provider: String? = null, payloadType: String? = null, cityId: UUID? = null, rawPayload: JSONB? = null, buildingId: UUID? = null, restroomId: UUID? = null, status: String? = null, errorMessage: String? = null, createdAt: Instant? = null, processedAt: Instant? = null): this() {
+    constructor(id: UUID? = null, provider: String? = null, payloadType: String? = null, cityId: UUID? = null, rawPayload: JSONB? = null, buildingId: UUID? = null, restroomId: UUID? = null, status: String? = null, errorMessage: String? = null, createdAt: Instant? = null, processedAt: Instant? = null, entityType: String? = null, externalId: String? = null, sourceUrl: String? = null, scrapedAt: Instant? = null, payloadHash: String? = null, attempts: Int? = null, lastAttemptAt: Instant? = null, nextRetryAt: Instant? = null): this() {
         this.id = id
         this.provider = provider
         this.payloadType = payloadType
@@ -85,6 +117,14 @@ open class RestroomImportsRecord() : UpdatableRecordImpl<RestroomImportsRecord>(
         this.errorMessage = errorMessage
         this.createdAt = createdAt
         this.processedAt = processedAt
+        this.entityType = entityType
+        this.externalId = externalId
+        this.sourceUrl = sourceUrl
+        this.scrapedAt = scrapedAt
+        this.payloadHash = payloadHash
+        this.attempts = attempts
+        this.lastAttemptAt = lastAttemptAt
+        this.nextRetryAt = nextRetryAt
         resetTouchedOnNotNull()
     }
 }

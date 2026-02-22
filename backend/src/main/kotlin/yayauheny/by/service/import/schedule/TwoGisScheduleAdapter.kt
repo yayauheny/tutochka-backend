@@ -1,15 +1,15 @@
 package yayauheny.by.service.import.schedule
 
-import yayauheny.by.model.import.ImportProvider
+import java.time.LocalTime
+import java.util.EnumMap
+import kotlinx.serialization.json.JsonArray
+import kotlinx.serialization.json.JsonObject
+import kotlinx.serialization.json.JsonPrimitive
+import yayauheny.by.model.enums.ImportProvider
 import yayauheny.by.model.schedule.DaySchedule
 import yayauheny.by.model.schedule.Schedule
 import yayauheny.by.model.schedule.Weekday
 import yayauheny.by.model.schedule.WorkingInterval
-import kotlinx.serialization.json.JsonArray
-import kotlinx.serialization.json.JsonObject
-import kotlinx.serialization.json.JsonPrimitive
-import java.time.LocalTime
-import java.util.EnumMap
 
 /**
  * Adapter for converting 2ГИС schedule format to our canonical Schedule format

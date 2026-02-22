@@ -61,63 +61,93 @@ open class RestroomsRecord() : UpdatableRecordImpl<RestroomsRecord>(Restrooms.RE
         set(value): Unit = set(9, value)
         get(): String? = get(9) as String?
 
-    open var accessibilityType: String?
+    open var genderType: String?
         set(value): Unit = set(10, value)
         get(): String? = get(10) as String?
 
-    open var status: String?
+    open var accessibilityType: String?
         set(value): Unit = set(11, value)
         get(): String? = get(11) as String?
 
-    open var phones: JSONB?
+    open var status: String?
         set(value): Unit = set(12, value)
-        get(): JSONB? = get(12) as JSONB?
+        get(): String? = get(12) as String?
 
-    open var workTime: JSONB?
+    open var phones: JSONB?
         set(value): Unit = set(13, value)
         get(): JSONB? = get(13) as JSONB?
 
-    open var inheritBuildingSchedule: Boolean?
+    open var workTime: JSONB?
         set(value): Unit = set(14, value)
-        get(): Boolean? = get(14) as Boolean?
+        get(): JSONB? = get(14) as JSONB?
+
+    open var inheritBuildingSchedule: Boolean?
+        set(value): Unit = set(15, value)
+        get(): Boolean? = get(15) as Boolean?
 
     open var amenities: JSONB?
-        set(value): Unit = set(15, value)
-        get(): JSONB? = get(15) as JSONB?
+        set(value): Unit = set(16, value)
+        get(): JSONB? = get(16) as JSONB?
 
     open var hasPhotos: Boolean?
-        set(value): Unit = set(16, value)
-        get(): Boolean? = get(16) as Boolean?
+        set(value): Unit = set(17, value)
+        get(): Boolean? = get(17) as Boolean?
 
     open var coordinates: Geometry?
-        set(value): Unit = set(17, value)
-        get(): Geometry? = get(17) as Geometry?
+        set(value): Unit = set(18, value)
+        get(): Geometry? = get(18) as Geometry?
 
     open var externalMaps: JSONB?
-        set(value): Unit = set(18, value)
-        get(): JSONB? = get(18) as JSONB?
+        set(value): Unit = set(19, value)
+        get(): JSONB? = get(19) as JSONB?
 
     open var dataSource: String?
-        set(value): Unit = set(19, value)
-        get(): String? = get(19) as String?
+        set(value): Unit = set(20, value)
+        get(): String? = get(20) as String?
+
+    open var locationType: String?
+        set(value): Unit = set(21, value)
+        get(): String? = get(21) as String?
+
+    @Suppress("INAPPLICABLE_JVM_NAME")
+    @set:JvmName("setIsHidden")
+    open var isHidden: Boolean?
+        set(value): Unit = set(22, value)
+        get(): Boolean? = get(22) as Boolean?
+
+    open var hiddenReason: String?
+        set(value): Unit = set(23, value)
+        get(): String? = get(23) as String?
+
+    open var hiddenAt: Instant?
+        set(value): Unit = set(24, value)
+        get(): Instant? = get(24) as Instant?
+
+    open var originProvider: String?
+        set(value): Unit = set(25, value)
+        get(): String? = get(25) as String?
+
+    open var originId: String?
+        set(value): Unit = set(26, value)
+        get(): String? = get(26) as String?
 
     @Suppress("INAPPLICABLE_JVM_NAME")
     @set:JvmName("setIsDeleted")
     open var isDeleted: Boolean?
-        set(value): Unit = set(20, value)
-        get(): Boolean? = get(20) as Boolean?
+        set(value): Unit = set(27, value)
+        get(): Boolean? = get(27) as Boolean?
 
     open var createdAt: Instant?
-        set(value): Unit = set(21, value)
-        get(): Instant? = get(21) as Instant?
+        set(value): Unit = set(28, value)
+        get(): Instant? = get(28) as Instant?
 
     open var updatedAt: Instant?
-        set(value): Unit = set(22, value)
-        get(): Instant? = get(22) as Instant?
+        set(value): Unit = set(29, value)
+        get(): Instant? = get(29) as Instant?
 
     open var deletedAt: Instant?
-        set(value): Unit = set(23, value)
-        get(): Instant? = get(23) as Instant?
+        set(value): Unit = set(30, value)
+        get(): Instant? = get(30) as Instant?
 
     // -------------------------------------------------------------------------
     // Primary key information
@@ -128,7 +158,7 @@ open class RestroomsRecord() : UpdatableRecordImpl<RestroomsRecord>(Restrooms.RE
     /**
      * Create a detached, initialised RestroomsRecord
      */
-    constructor(id: UUID? = null, cityId: UUID? = null, buildingId: UUID? = null, subwayStationId: UUID? = null, name: String? = null, placeType: String? = null, address: String? = null, directionGuide: String? = null, accessNote: String? = null, feeType: String? = null, accessibilityType: String? = null, status: String? = null, phones: JSONB? = null, workTime: JSONB? = null, inheritBuildingSchedule: Boolean? = null, amenities: JSONB? = null, hasPhotos: Boolean? = null, coordinates: Geometry? = null, externalMaps: JSONB? = null, dataSource: String? = null, isDeleted: Boolean? = null, createdAt: Instant? = null, updatedAt: Instant? = null, deletedAt: Instant? = null): this() {
+    constructor(id: UUID? = null, cityId: UUID? = null, buildingId: UUID? = null, subwayStationId: UUID? = null, name: String? = null, placeType: String? = null, address: String? = null, directionGuide: String? = null, accessNote: String? = null, feeType: String? = null, genderType: String? = null, accessibilityType: String? = null, status: String? = null, phones: JSONB? = null, workTime: JSONB? = null, inheritBuildingSchedule: Boolean? = null, amenities: JSONB? = null, hasPhotos: Boolean? = null, coordinates: Geometry? = null, externalMaps: JSONB? = null, dataSource: String? = null, locationType: String? = null, isHidden: Boolean? = null, hiddenReason: String? = null, hiddenAt: Instant? = null, originProvider: String? = null, originId: String? = null, isDeleted: Boolean? = null, createdAt: Instant? = null, updatedAt: Instant? = null, deletedAt: Instant? = null): this() {
         this.id = id
         this.cityId = cityId
         this.buildingId = buildingId
@@ -139,6 +169,7 @@ open class RestroomsRecord() : UpdatableRecordImpl<RestroomsRecord>(Restrooms.RE
         this.directionGuide = directionGuide
         this.accessNote = accessNote
         this.feeType = feeType
+        this.genderType = genderType
         this.accessibilityType = accessibilityType
         this.status = status
         this.phones = phones
@@ -149,6 +180,12 @@ open class RestroomsRecord() : UpdatableRecordImpl<RestroomsRecord>(Restrooms.RE
         this.coordinates = coordinates
         this.externalMaps = externalMaps
         this.dataSource = dataSource
+        this.locationType = locationType
+        this.isHidden = isHidden
+        this.hiddenReason = hiddenReason
+        this.hiddenAt = hiddenAt
+        this.originProvider = originProvider
+        this.originId = originId
         this.isDeleted = isDeleted
         this.createdAt = createdAt
         this.updatedAt = updatedAt

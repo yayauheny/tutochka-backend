@@ -1,7 +1,11 @@
 package yayauheny.by.common.mapper
 
+import java.time.Instant
+import org.jooq.Record
+import org.jooq.UpdateSetFirstStep
+import org.jooq.UpdateSetMoreStep
 import yayauheny.by.model.dto.BuildingResponseDto
-import yayauheny.by.model.dto.LatLon
+import yayauheny.by.model.dto.Coordinates
 import yayauheny.by.model.dto.NearestRestroomSlimDto
 import yayauheny.by.model.dto.SubwayLineResponseDto
 import yayauheny.by.model.dto.SubwayStationResponseDto
@@ -10,19 +14,16 @@ import yayauheny.by.model.enums.AccessibilityType
 import yayauheny.by.model.enums.DataSourceType
 import yayauheny.by.model.enums.FeeType
 import yayauheny.by.model.enums.GenderType
+import yayauheny.by.model.enums.LocationType
 import yayauheny.by.model.enums.PlaceType
 import yayauheny.by.model.enums.RestroomStatus
-import java.time.Instant
-import org.jooq.Record
-import org.jooq.UpdateSetFirstStep
-import org.jooq.UpdateSetMoreStep
-import org.jooq.impl.DSL
-import org.jooq.impl.SQLDataType
 import yayauheny.by.model.restroom.NearestRestroomResponseDto
 import yayauheny.by.model.restroom.RestroomResponseDto
 import yayauheny.by.model.restroom.RestroomUpdateDto
 import yayauheny.by.tables.references.RESTROOMS
 import yayauheny.by.util.reqDouble
+import yayauheny.by.util.setIfNotNull
+import yayauheny.by.util.toEnumOrDefault
 import yayauheny.by.util.toJSONBOrEmpty
 import yayauheny.by.util.toJsonObjectOrEmpty
 
@@ -30,7 +31,7 @@ object RestroomMapper {
     fun mapFromRecord(record: Record): RestroomResponseDto {
         val lat = record.reqDouble("lat")
         val lon = record.reqDouble("lon")
-        val genderTypeStr = record[DSL.field("gender_type", SQLDataType.VARCHAR(20))]?.toString() ?: "UNKNOWN"
+
         return RestroomResponseDto(
             id = record[RESTROOMS.ID]!!,
             cityId = record[RESTROOMS.CITY_ID],
@@ -41,11 +42,11 @@ object RestroomMapper {
             phones = record[RESTROOMS.PHONES].toJsonObjectOrEmpty(),
             workTime = record[RESTROOMS.WORK_TIME].toJsonObjectOrEmpty(),
             feeType = FeeType.valueOf(record[RESTROOMS.FEE_TYPE]!!),
-            genderType = GenderType.valueOf(genderTypeStr),
+            genderType = GenderType.valueOf(record[RESTROOMS.GENDER_TYPE]!!),
             accessibilityType = AccessibilityType.valueOf(record[RESTROOMS.ACCESSIBILITY_TYPE]!!),
-            placeType = PlaceType.fromString(record[RESTROOMS.PLACE_TYPE]),
-            coordinates = LatLon(lat = lat, lon = lon),
-            dataSource = DataSourceType.valueOf(record[RESTROOMS.DATA_SOURCE]!!),
+            placeType = record[RESTROOMS.PLACE_TYPE]?.let { PlaceType.fromCode(it) },
+            coordinates = Coordinates(lat = lat, lon = lon),
+            dataSource = record[RESTROOMS.DATA_SOURCE].toEnumOrDefault(DataSourceType.UNKNOWN),
             status = RestroomStatus.valueOf(record[RESTROOMS.STATUS]!!),
             amenities = record[RESTROOMS.AMENITIES].toJsonObjectOrEmpty(),
             externalMaps = record[RESTROOMS.EXTERNAL_MAPS].toJsonObjectOrEmpty(),
@@ -53,6 +54,10 @@ object RestroomMapper {
             directionGuide = record[RESTROOMS.DIRECTION_GUIDE],
             inheritBuildingSchedule = record[RESTROOMS.INHERIT_BUILDING_SCHEDULE] ?: false,
             hasPhotos = record[RESTROOMS.HAS_PHOTOS] ?: false,
+            locationType = record[RESTROOMS.LOCATION_TYPE].toEnumOrDefault(LocationType.UNKNOWN),
+            originProvider = record[RESTROOMS.ORIGIN_PROVIDER] ?: "MANUAL",
+            originId = record[RESTROOMS.ORIGIN_ID],
+            isHidden = record[RESTROOMS.IS_HIDDEN] ?: false,
             createdAt = record[RESTROOMS.CREATED_AT]!!,
             updatedAt = record[RESTROOMS.UPDATED_AT]!!
         )
@@ -73,7 +78,7 @@ object RestroomMapper {
                 val bLon = record.get("b_lon", Double::class.java)
                 val bTypeRaw = record.get("b_type", String::class.java)
                 val bAddress: String = record.get("b_address", String::class.java) ?: ""
-                val bType = PlaceType.fromString(bTypeRaw)
+                val bType = PlaceType.fromCode(bTypeRaw)
 
                 BuildingResponseDto(
                     id = it,
@@ -82,11 +87,15 @@ object RestroomMapper {
                     address = bAddress,
                     buildingType = bType,
                     workTime = record.get("b_work_time", org.jooq.JSONB::class.java)?.toJsonObjectOrEmpty(),
-                    coordinates = if (bLat != null && bLon != null) LatLon(bLat, bLon) else LatLon(lat, lon),
+                    coordinates = if (bLat != null && bLon != null) Coordinates(bLat, bLon) else Coordinates(lat, lon),
                     externalIds = record.get("b_external_ids", org.jooq.JSONB::class.java)?.toJsonObjectOrEmpty(),
                     isDeleted = record.get("b_is_deleted", Boolean::class.java) ?: false,
-                    createdAt = record.get("b_created_at", java.time.Instant::class.java) ?: record[RESTROOMS.CREATED_AT]!!,
-                    updatedAt = record.get("b_updated_at", java.time.Instant::class.java) ?: record[RESTROOMS.UPDATED_AT]!!
+                    createdAt =
+                        record.get("b_created_at", Instant::class.java)
+                            ?: record[RESTROOMS.CREATED_AT]!!,
+                    updatedAt =
+                        record.get("b_updated_at", Instant::class.java)
+                            ?: record[RESTROOMS.UPDATED_AT]!!
                 )
             }
 
@@ -105,7 +114,9 @@ object RestroomMapper {
                             nameEn = record.get("l_name_en", String::class.java) ?: "",
                             hexColor = record.get("l_hex", String::class.java) ?: "",
                             isDeleted = record.get("l_is_deleted", Boolean::class.java) ?: false,
-                            createdAt = record.get("l_created_at", java.time.Instant::class.java) ?: record[RESTROOMS.CREATED_AT]!!
+                            createdAt =
+                                record.get("l_created_at", Instant::class.java)
+                                    ?: record[RESTROOMS.CREATED_AT]!!
                         )
                     }
                 SubwayStationResponseDto(
@@ -113,17 +124,17 @@ object RestroomMapper {
                     subwayLineId = lineId ?: stationId, // fallback just to keep non-null id
                     nameRu = record.get("s_name_ru", String::class.java) ?: "",
                     nameEn = record.get("s_name_en", String::class.java) ?: "",
-                    nameLocal = record.get("s_name_local", String::class.java),
-                    nameLocalLang = record.get("s_name_local_lang", String::class.java),
                     isTransfer = record.get("s_is_transfer", Boolean::class.java) ?: false,
-                    coordinates = if (sLat != null && sLon != null) LatLon(sLat, sLon) else LatLon(lat, lon),
+                    coordinates = if (sLat != null && sLon != null) Coordinates(sLat, sLon) else Coordinates(lat, lon),
                     isDeleted = record.get("s_is_deleted", Boolean::class.java) ?: false,
-                    createdAt = record.get("s_created_at", java.time.Instant::class.java) ?: record[RESTROOMS.CREATED_AT]!!,
+                    createdAt =
+                        record.get("s_created_at", Instant::class.java)
+                            ?: record[RESTROOMS.CREATED_AT]!!,
                     line = line
                 )
             }
 
-        val genderTypeStr = record[DSL.field("gender_type", SQLDataType.VARCHAR(20))]?.toString() ?: "UNKNOWN"
+        val genderTypeStr = record.get("gender_type", String::class.java) ?: "UNKNOWN"
         return RestroomResponseDto(
             id = record[RESTROOMS.ID]!!,
             cityId = record[RESTROOMS.CITY_ID],
@@ -136,8 +147,8 @@ object RestroomMapper {
             feeType = FeeType.valueOf(record[RESTROOMS.FEE_TYPE]!!),
             genderType = GenderType.valueOf(genderTypeStr),
             accessibilityType = AccessibilityType.valueOf(record[RESTROOMS.ACCESSIBILITY_TYPE]!!),
-            placeType = PlaceType.fromString(record[RESTROOMS.PLACE_TYPE]),
-            coordinates = LatLon(lat = lat, lon = lon),
+            placeType = PlaceType.fromCode(record[RESTROOMS.PLACE_TYPE]),
+            coordinates = Coordinates(lat = lat, lon = lon),
             dataSource = DataSourceType.valueOf(record[RESTROOMS.DATA_SOURCE]!!),
             status = RestroomStatus.valueOf(record[RESTROOMS.STATUS]!!),
             amenities = record[RESTROOMS.AMENITIES].toJsonObjectOrEmpty(),
@@ -146,6 +157,10 @@ object RestroomMapper {
             directionGuide = record[RESTROOMS.DIRECTION_GUIDE],
             inheritBuildingSchedule = record[RESTROOMS.INHERIT_BUILDING_SCHEDULE] ?: false,
             hasPhotos = record[RESTROOMS.HAS_PHOTOS] ?: false,
+            locationType = record[RESTROOMS.LOCATION_TYPE].toEnumOrDefault(LocationType.UNKNOWN),
+            originProvider = record[RESTROOMS.ORIGIN_PROVIDER] ?: "MANUAL",
+            originId = record[RESTROOMS.ORIGIN_ID]?.toString(),
+            isHidden = record[RESTROOMS.IS_HIDDEN] ?: false,
             createdAt = record[RESTROOMS.CREATED_AT]!!,
             updatedAt = record[RESTROOMS.UPDATED_AT]!!,
             building = building,
@@ -156,31 +171,30 @@ object RestroomMapper {
     fun applyUpdateDto(
         updateStep: UpdateSetFirstStep<*>,
         dto: RestroomUpdateDto
-    ): UpdateSetMoreStep<*> {
-        var q: UpdateSetMoreStep<*> =
-            updateStep
-                .set(RESTROOMS.ADDRESS, dto.address)
-                .set(RESTROOMS.INHERIT_BUILDING_SCHEDULE, dto.inheritBuildingSchedule)
-                .set(RESTROOMS.FEE_TYPE, dto.feeType.name)
-                .set(RESTROOMS.PLACE_TYPE, dto.placeType?.id)
-                .set(RESTROOMS.STATUS, dto.status.name)
-                .set(RESTROOMS.BUILDING_ID, dto.buildingId)
-                .set(RESTROOMS.SUBWAY_STATION_ID, dto.subwayStationId)
-                .set(RESTROOMS.UPDATED_AT, Instant.now())
-
-        dto.genderType?.let { q = q.set(DSL.field("gender_type", SQLDataType.VARCHAR(20)), it.name) }
-        dto.accessibilityType?.let { q = q.set(RESTROOMS.ACCESSIBILITY_TYPE, it.name) }
-        dto.name?.let { q = q.set(RESTROOMS.NAME, it) }
-        dto.phones?.let { q = q.set(RESTROOMS.PHONES, it.toJSONBOrEmpty()) }
-        dto.workTime?.let { q = q.set(RESTROOMS.WORK_TIME, it.toJSONBOrEmpty()) }
-        dto.amenities?.let { q = q.set(RESTROOMS.AMENITIES, it.toJSONBOrEmpty()) }
-        dto.externalMaps?.let { q = q.set(RESTROOMS.EXTERNAL_MAPS, it.toJSONBOrEmpty()) }
-        dto.accessNote?.let { q = q.set(RESTROOMS.ACCESS_NOTE, it) }
-        dto.directionGuide?.let { q = q.set(RESTROOMS.DIRECTION_GUIDE, it) }
-        q = q.set(RESTROOMS.HAS_PHOTOS, dto.hasPhotos)
-
-        return q
-    }
+    ): UpdateSetMoreStep<*> =
+        updateStep
+            .set(RESTROOMS.ADDRESS, dto.address)
+            .set(RESTROOMS.INHERIT_BUILDING_SCHEDULE, dto.inheritBuildingSchedule)
+            .set(RESTROOMS.FEE_TYPE, dto.feeType.name)
+            .set(RESTROOMS.STATUS, dto.status.name)
+            .set(RESTROOMS.UPDATED_AT, Instant.now())
+            .set(RESTROOMS.HAS_PHOTOS, dto.hasPhotos)
+            .setIfNotNull(RESTROOMS.PLACE_TYPE, dto.placeType?.code)
+            .setIfNotNull(RESTROOMS.BUILDING_ID, dto.buildingId)
+            .setIfNotNull(RESTROOMS.SUBWAY_STATION_ID, dto.subwayStationId)
+            .setIfNotNull(RESTROOMS.GENDER_TYPE, dto.genderType?.name)
+            .setIfNotNull(RESTROOMS.ACCESSIBILITY_TYPE, dto.accessibilityType?.name)
+            .setIfNotNull(RESTROOMS.NAME, dto.name)
+            .setIfNotNull(RESTROOMS.PHONES, dto.phones?.toJSONBOrEmpty())
+            .setIfNotNull(RESTROOMS.WORK_TIME, dto.workTime?.toJSONBOrEmpty())
+            .setIfNotNull(RESTROOMS.AMENITIES, dto.amenities?.toJSONBOrEmpty())
+            .setIfNotNull(RESTROOMS.EXTERNAL_MAPS, dto.externalMaps?.toJSONBOrEmpty())
+            .setIfNotNull(RESTROOMS.ACCESS_NOTE, dto.accessNote)
+            .setIfNotNull(RESTROOMS.DIRECTION_GUIDE, dto.directionGuide)
+            .setIfNotNull(RESTROOMS.LOCATION_TYPE, dto.locationType?.name)
+            .setIfNotNull(RESTROOMS.ORIGIN_PROVIDER, dto.originProvider)
+            .setIfNotNull(RESTROOMS.ORIGIN_ID, dto.originId)
+            .setIfNotNull(RESTROOMS.IS_HIDDEN, dto.isHidden)
 
     fun mapToNearestRestroom(
         record: Record,
@@ -197,7 +211,7 @@ object RestroomMapper {
                 val bLon = record.get("b_lon", Double::class.java)
                 val bTypeRaw = record.get("b_type", String::class.java)
                 val bAddress: String = record.get("b_address", String::class.java) ?: ""
-                val bType = PlaceType.fromString(bTypeRaw)
+                val bType = PlaceType.fromCode(bTypeRaw)
 
                 BuildingResponseDto(
                     id = it,
@@ -206,11 +220,15 @@ object RestroomMapper {
                     address = bAddress,
                     buildingType = bType,
                     workTime = record.get("b_work_time", org.jooq.JSONB::class.java)?.toJsonObjectOrEmpty(),
-                    coordinates = if (bLat != null && bLon != null) LatLon(bLat, bLon) else LatLon(lat, lon),
+                    coordinates = if (bLat != null && bLon != null) Coordinates(bLat, bLon) else Coordinates(lat, lon),
                     externalIds = record.get("b_external_ids", org.jooq.JSONB::class.java)?.toJsonObjectOrEmpty(),
                     isDeleted = record.get("b_is_deleted", Boolean::class.java) ?: false,
-                    createdAt = record.get("b_created_at", java.time.Instant::class.java) ?: record[RESTROOMS.CREATED_AT]!!,
-                    updatedAt = record.get("b_updated_at", java.time.Instant::class.java) ?: record[RESTROOMS.UPDATED_AT]!!
+                    createdAt =
+                        record.get("b_created_at", Instant::class.java)
+                            ?: record[RESTROOMS.CREATED_AT]!!,
+                    updatedAt =
+                        record.get("b_updated_at", Instant::class.java)
+                            ?: record[RESTROOMS.UPDATED_AT]!!
                 )
             }
 
@@ -229,7 +247,9 @@ object RestroomMapper {
                             nameEn = record.get("l_name_en", String::class.java) ?: "",
                             hexColor = record.get("l_hex", String::class.java) ?: "",
                             isDeleted = record.get("l_is_deleted", Boolean::class.java) ?: false,
-                            createdAt = record.get("l_created_at", java.time.Instant::class.java) ?: record[RESTROOMS.CREATED_AT]!!
+                            createdAt =
+                                record.get("l_created_at", Instant::class.java)
+                                    ?: record[RESTROOMS.CREATED_AT]!!
                         )
                     }
                 SubwayStationResponseDto(
@@ -237,12 +257,12 @@ object RestroomMapper {
                     subwayLineId = lineId ?: stationId, // fallback just to keep non-null id
                     nameRu = record.get("s_name_ru", String::class.java) ?: "",
                     nameEn = record.get("s_name_en", String::class.java) ?: "",
-                    nameLocal = record.get("s_name_local", String::class.java),
-                    nameLocalLang = record.get("s_name_local_lang", String::class.java),
                     isTransfer = record.get("s_is_transfer", Boolean::class.java) ?: false,
-                    coordinates = if (sLat != null && sLon != null) LatLon(sLat, sLon) else LatLon(lat, lon),
+                    coordinates = if (sLat != null && sLon != null) Coordinates(sLat, sLon) else Coordinates(lat, lon),
                     isDeleted = record.get("s_is_deleted", Boolean::class.java) ?: false,
-                    createdAt = record.get("s_created_at", java.time.Instant::class.java) ?: record[RESTROOMS.CREATED_AT]!!,
+                    createdAt =
+                        record.get("s_created_at", Instant::class.java)
+                            ?: record[RESTROOMS.CREATED_AT]!!,
                     line = line
                 )
             }
@@ -251,11 +271,11 @@ object RestroomMapper {
             id = record[RESTROOMS.ID]!!,
             name = record[RESTROOMS.NAME],
             address = record[RESTROOMS.ADDRESS]!!,
-            coordinates = LatLon(lat = lat, lon = lon),
+            coordinates = Coordinates(lat = lat, lon = lon),
             distanceMeters = distanceMeters,
             feeType = FeeType.valueOf(record[RESTROOMS.FEE_TYPE]!!),
             isOpen = isOpen,
-            placeType = PlaceType.entries.find { p -> p.id == record.get(RESTROOMS.PLACE_TYPE) } ?: PlaceType.OTHER,
+            placeType = PlaceType.entries.find { p -> p.code == record.get(RESTROOMS.PLACE_TYPE) } ?: PlaceType.OTHER,
             building = building,
             subwayStation = station
         )
@@ -294,14 +314,11 @@ object RestroomMapper {
             stationId?.let {
                 val sNameRu = record.get("s_name_ru", String::class.java) ?: ""
                 val sNameEn = record.get("s_name_en", String::class.java) ?: ""
-                val sNameLocal = record.get("s_name_local", String::class.java)
-                val sNameLocalLang = record.get("s_name_local_lang", String::class.java)
                 val lineColorHex = record.get("l_hex", String::class.java)?.takeIf { it.isNotBlank() }
 
                 val stationDisplayName =
                     when {
                         !sNameRu.isBlank() -> sNameRu
-                        !sNameLocal.isNullOrBlank() -> sNameLocal
                         !sNameEn.isBlank() -> sNameEn
                         else -> null
                     }
@@ -319,7 +336,7 @@ object RestroomMapper {
             displayName = displayName,
             distanceMeters = distanceMeters,
             feeType = FeeType.valueOf(record[RESTROOMS.FEE_TYPE]!!),
-            coordinates = LatLon(lat = lat, lon = lon),
+            coordinates = Coordinates(lat = lat, lon = lon),
             subwayStation = subwayStation
         )
     }

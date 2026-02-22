@@ -68,7 +68,7 @@ val validateRestroomOnCreate =
             maxLength(ApiConstants.MAX_ADDRESS_LENGTH) hint "Адрес слишком длинный (максимум ${ApiConstants.MAX_ADDRESS_LENGTH} символов)"
         }
         RestroomCreateDto::coordinates {
-            run(validateLatLon)
+            run(validateCoordinates)
         }
     }
 
@@ -82,7 +82,7 @@ val validateRestroomOnUpdate =
             maxLength(ApiConstants.MAX_ADDRESS_LENGTH) hint "Адрес слишком длинный (максимум ${ApiConstants.MAX_ADDRESS_LENGTH} символов)"
         }
         RestroomUpdateDto::coordinates {
-            run(validateLatLon)
+            run(validateCoordinates)
         }
     }
 

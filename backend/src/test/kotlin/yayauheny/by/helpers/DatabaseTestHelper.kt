@@ -1,11 +1,5 @@
 package yayauheny.by.helpers
 
-import yayauheny.by.model.enums.AccessibilityType
-import yayauheny.by.model.enums.GenderType
-import yayauheny.by.model.enums.DataSourceType
-import yayauheny.by.model.enums.FeeType
-import yayauheny.by.model.enums.PlaceType
-import yayauheny.by.model.enums.RestroomStatus
 import java.time.Instant
 import java.util.UUID
 import kotlinx.serialization.json.JsonObject
@@ -13,8 +7,15 @@ import kotlinx.serialization.json.JsonPrimitive
 import kotlinx.serialization.json.buildJsonObject
 import org.jooq.DSLContext
 import org.jooq.impl.DSL
+import yayauheny.by.model.enums.AccessibilityType
+import yayauheny.by.model.enums.DataSourceType
+import yayauheny.by.model.enums.FeeType
+import yayauheny.by.model.enums.GenderType
+import yayauheny.by.model.enums.PlaceType
+import yayauheny.by.model.enums.RestroomStatus
 import yayauheny.by.tables.references.CITIES
 import yayauheny.by.tables.references.COUNTRIES
+import yayauheny.by.tables.references.RESTROOM_IMPORTS
 import yayauheny.by.tables.references.RESTROOMS
 import yayauheny.by.util.pointExpr
 import yayauheny.by.util.toJSONBOrEmpty
@@ -39,7 +40,7 @@ data class TestRestroomData(
     val workTime: JsonObject? = buildJsonObject { put("monday", JsonPrimitive("09:00-18:00")) },
     val feeType: FeeType = FeeType.FREE,
     val genderType: GenderType = GenderType.UNISEX,
-    val accessibilityType: AccessibilityType = AccessibilityType.NONE,
+    val accessibilityType: AccessibilityType = AccessibilityType.UNKNOWN,
     val placeType: PlaceType = PlaceType.OTHER,
     val lat: Double = 55.7558 + (Math.random() * 0.1 - 0.05),
     val lon: Double = 37.6176 + (Math.random() * 0.1 - 0.05),
@@ -79,7 +80,8 @@ object DatabaseTestHelper {
         phones: JsonObject? = buildJsonObject { put("main", JsonPrimitive("+1234567890")) },
         workTime: JsonObject? = buildJsonObject { put("monday", JsonPrimitive("09:00-18:00")) },
         feeType: FeeType = FeeType.FREE,
-        accessibilityType: AccessibilityType = AccessibilityType.UNISEX,
+        genderType: GenderType = GenderType.UNISEX,
+        accessibilityType: AccessibilityType = AccessibilityType.WHEELCHAIR,
         placeType: PlaceType = PlaceType.OTHER,
         lat: Double = 55.7558 + (Math.random() * 0.1 - 0.05),
         lon: Double = 37.6176 + (Math.random() * 0.1 - 0.05),
@@ -103,6 +105,7 @@ object DatabaseTestHelper {
         phones,
         workTime,
         feeType,
+        genderType,
         accessibilityType,
         placeType,
         lat,
@@ -190,9 +193,15 @@ object DatabaseTestHelper {
                 .set(RESTROOMS.PHONES, data.phones.toJSONBOrEmpty())
                 .set(RESTROOMS.WORK_TIME, data.workTime.toJSONBOrEmpty())
                 .set(RESTROOMS.FEE_TYPE, data.feeType.name)
-                .set(DSL.field("gender_type", org.jooq.impl.SQLDataType.VARCHAR(20)), data.genderType.name)
-                .set(RESTROOMS.ACCESSIBILITY_TYPE, data.accessibilityType.name)
-                .set(RESTROOMS.PLACE_TYPE, data.placeType.id)
+                .set(
+                    DSL.field(
+                        "gender_type",
+                        org.jooq.impl.SQLDataType
+                            .VARCHAR(20)
+                    ),
+                    data.genderType.name
+                ).set(RESTROOMS.ACCESSIBILITY_TYPE, data.accessibilityType.name)
+                .set(RESTROOMS.PLACE_TYPE, data.placeType.code)
                 .set(
                     RESTROOMS.COORDINATES,
                     pointExpr(data.lon, data.lat, RESTROOMS.COORDINATES)
@@ -221,6 +230,7 @@ object DatabaseTestHelper {
     fun truncateAllTables(dslContext: DSLContext) {
         dslContext.transaction { configuration ->
             val ctx = DSL.using(configuration)
+            ctx.deleteFrom(RESTROOM_IMPORTS).execute()
             ctx.deleteFrom(RESTROOMS).execute()
             ctx.deleteFrom(CITIES).execute()
             ctx.deleteFrom(COUNTRIES).execute()

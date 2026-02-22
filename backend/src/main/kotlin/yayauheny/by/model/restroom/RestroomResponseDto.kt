@@ -5,4 +5,4 @@ import yayauheny.by.model.dto.RestroomResponseDto
 /**
  * Re-export RestroomResponseDto from dto package for backward compatibility.
  */
-typealias RestroomResponseDto = yayauheny.by.model.dto.RestroomResponseDto
+typealias RestroomResponseDto = RestroomResponseDto
