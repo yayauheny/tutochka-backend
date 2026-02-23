@@ -319,7 +319,7 @@ class RestroomRepositoryImpl(
         .set(RESTROOMS.BUILDING_ID, createDto.buildingId)
         .set(RESTROOMS.SUBWAY_STATION_ID, createDto.subwayStationId)
         .set(RESTROOMS.NAME, createDto.name)
-        .set(RESTROOMS.ADDRESS, createDto.address.takeIf { !it.isNullOrBlank() })
+        .set(RESTROOMS.ADDRESS, createDto.address.takeIf { !it.isNullOrBlank() && it != "null" })
         .set(RESTROOMS.PHONES, createDto.phones.toJSONB())
         .set(RESTROOMS.WORK_TIME, createDto.workTime.toJSONB())
         .set(RESTROOMS.FEE_TYPE, createDto.feeType?.name)

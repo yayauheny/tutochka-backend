@@ -90,7 +90,7 @@ public class Messages {
     public static final String TOILET_DETAILS_COMPACT = """
         <b>{name}</b>
         
-        {distancePart}📍 {address}
+        {addressLine}
         
         <b>{tags}</b>
         
@@ -102,7 +102,7 @@ public class Messages {
     public static final String TOILET_DETAILS_FULL = """
         <b>{name}</b>
         
-        {distancePart}📍 {address}
+        {addressLine}
         
         <b>{tags}</b>
         

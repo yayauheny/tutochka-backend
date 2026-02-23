@@ -8,7 +8,7 @@ import java.util.UUID;
 
 /**
  * Restroom response DTO.
- * feeType and genderType may be null (backend stores them as optional).
+ * feeType, genderType, accessibilityType, name, address may be null (backend stores them as optional).
  */
 public record RestroomResponseDto(
     @JsonProperty("id") UUID id,
@@ -32,6 +32,10 @@ public record RestroomResponseDto(
     @JsonProperty("directionGuide") String directionGuide,
     @JsonProperty("inheritBuildingSchedule") Boolean inheritBuildingSchedule,
     @JsonProperty("hasPhotos") Boolean hasPhotos,
+    @JsonProperty("locationType") LocationType locationType,
+    @JsonProperty("originProvider") ImportProvider originProvider,
+    @JsonProperty("originId") String originId,
+    @JsonProperty("isHidden") Boolean isHidden,
     @JsonProperty("createdAt") Instant createdAt,
     @JsonProperty("updatedAt") Instant updatedAt,
     @JsonProperty("distanceMeters") Integer distanceMeters,

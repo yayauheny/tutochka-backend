@@ -91,8 +91,6 @@ class TwoGisScrapedParser : Parser<TwoGisScrapedPlace> {
         id: String
     ): String {
         if (!title.isNullOrBlank()) return title.trim()
-        val firstRubric = rubrics?.firstOrNull()?.let { (it as? JsonPrimitive)?.content }?.trim()
-        if (!firstRubric.isNullOrBlank()) return firstRubric
         return "Туалет"
     }
 
@@ -104,12 +102,12 @@ class TwoGisScrapedParser : Parser<TwoGisScrapedPlace> {
         val addr =
             when (addressElem) {
                 null, is JsonNull -> null
-                is JsonPrimitive -> addressElem.content.takeIf { it.isNotBlank() }
+                is JsonPrimitive -> addressElem.content.takeIf { it.isNotBlank() && !it.equals("null", ignoreCase = true) }
                 else -> null
             }
         if (!addr.isNullOrBlank()) return addr.trim()
-        val streetTrim = street?.trim()
-        val houseTrim = houseNumber?.trim()
+        val streetTrim = street?.trim()?.takeIf { !it.equals("null", ignoreCase = true) }
+        val houseTrim = houseNumber?.trim()?.takeIf { !it.equals("null", ignoreCase = true) }
         return when {
             !streetTrim.isNullOrBlank() && !houseTrim.isNullOrBlank() -> "$streetTrim, $houseTrim"
             !streetTrim.isNullOrBlank() -> streetTrim

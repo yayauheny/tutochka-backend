@@ -1,12 +1,12 @@
 package by.yayauheny.tutochkatgbot.dto.backend;
 
 /**
- * Accessibility type enum
+ * Accessibility type enum. Matches backend.
  */
 public enum AccessibilityType {
+    INACCESSIBLE,
     WHEELCHAIR,
-    LIMITED,
-    NONE,
+    CHANGING_PLACES,
     UNKNOWN
 }
 

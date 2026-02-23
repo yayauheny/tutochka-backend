@@ -39,7 +39,7 @@ object RestroomCandidateMapper {
             buildingId = buildingId,
             subwayStationId = null,
             status = candidate.status,
-            name = candidate.name,
+            name = candidate.name?.trim().takeIf { !it.isNullOrBlank() && !it.equals("null", ignoreCase = true) } ?: "Туалет",
             address = candidate.address,
             phones = null,
             workTime = workTime,

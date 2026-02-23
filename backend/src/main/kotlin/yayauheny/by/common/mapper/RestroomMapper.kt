@@ -187,7 +187,7 @@ object RestroomMapper {
         dto: RestroomUpdateDto
     ): UpdateSetMoreStep<*> =
         updateStep
-            .set(RESTROOMS.ADDRESS, dto.address?.takeIf { it.isNotBlank() })
+            .set(RESTROOMS.ADDRESS, dto.address?.takeIf { it.isNotBlank() && it != "null" })
             .set(RESTROOMS.INHERIT_BUILDING_SCHEDULE, dto.inheritBuildingSchedule)
             .setIfNotNull(RESTROOMS.FEE_TYPE, dto.feeType?.name)
             .set(RESTROOMS.STATUS, dto.status.name)

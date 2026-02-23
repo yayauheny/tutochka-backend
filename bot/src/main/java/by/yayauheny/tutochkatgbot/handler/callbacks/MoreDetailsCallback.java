@@ -12,6 +12,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.core.annotation.Order;
 import org.springframework.stereotype.Component;
+import java.util.UUID;
 import org.telegram.telegrambots.meta.api.objects.Update;
 
 /**
@@ -58,9 +59,8 @@ public class MoreDetailsCallback implements CallbackHandler {
             var toilet = searchService.getById(toiletId)
                     .orElseThrow(() -> new IllegalArgumentException("Toilet not found: " + toiletId));
             
-            Double distanceMeters = toilet.distanceMeters() != null 
-                ? toilet.distanceMeters().doubleValue() 
-                : null;
+            Double distanceMeters = searchService.getDetailDistanceMeters(UUID.fromString(toiletId))
+                    .orElse(toilet.distanceMeters() != null ? toilet.distanceMeters().doubleValue() : null);
             
             String text = formatterService.toiletDetailsFull(toilet, distanceMeters);
             sender.editOrReply(ctx, text, inlineKeyboard.toiletDetailsFull(toilet));

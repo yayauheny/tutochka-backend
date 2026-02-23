@@ -108,42 +108,44 @@ public final class WorkTimeFormatter {
         Map<String, Object> dayMap = (Map<String, Object>) dayData;
         Object workingHoursObj = dayMap.get("working_hours");
         
-        if (!(workingHoursObj instanceof java.util.List)) {
-            return "не указано";
-        }
-        
-        java.util.List<?> workingHours = (java.util.List<?>) workingHoursObj;
-        if (workingHours.isEmpty()) {
-            return "не указано";
-        }
-        
-        StringBuilder dayResult = new StringBuilder();
-        boolean firstPeriod = true;
-        
-        for (Object period : workingHours) {
-            if (period instanceof Map) {
-                Map<String, Object> periodMap = (Map<String, Object>) period;
-                String from = safeToString(periodMap.get("from"));
-                String to = safeToString(periodMap.get("to"));
-                
-                if (from == null || to == null || from.isBlank() || to.isBlank()) {
-                    continue;
+        if (workingHoursObj instanceof java.util.List) {
+            java.util.List<?> workingHours = (java.util.List<?>) workingHoursObj;
+            if (!workingHours.isEmpty()) {
+                StringBuilder dayResult = new StringBuilder();
+                boolean firstPeriod = true;
+                for (Object period : workingHours) {
+                    if (period instanceof Map) {
+                        Map<String, Object> periodMap = (Map<String, Object>) period;
+                        String from = safeToString(periodMap.get("from"));
+                        String to = safeToString(periodMap.get("to"));
+                        if (from == null || to == null || from.isBlank() || to.isBlank()) {
+                            continue;
+                        }
+                        if (!firstPeriod) {
+                            dayResult.append(", ");
+                        }
+                        if (is24x7(from, to)) {
+                            dayResult.append("00:00-24:00");
+                        } else {
+                            dayResult.append(from).append("-").append(to);
+                        }
+                        firstPeriod = false;
+                    }
                 }
-                
-                if (!firstPeriod) {
-                    dayResult.append(", ");
+                if (dayResult.length() > 0) {
+                    return dayResult.toString();
                 }
-                
-                if (is24x7(from, to)) {
-                    dayResult.append("00:00-24:00");
-                } else {
-                    dayResult.append(from).append("-").append(to);
-                }
-                firstPeriod = false;
             }
         }
         
-        return dayResult.length() > 0 ? dayResult.toString() : "не указано";
+        if (dayMap.containsKey("from") && dayMap.containsKey("to")) {
+            String from = safeToString(dayMap.get("from"));
+            String to = safeToString(dayMap.get("to"));
+            if (from != null && !from.isBlank() && to != null && !to.isBlank()) {
+                return is24x7(from, to) ? "00:00-24:00" : from + "-" + to;
+            }
+        }
+        return "не указано";
     }
     
     private static String safeToString(Object value) {

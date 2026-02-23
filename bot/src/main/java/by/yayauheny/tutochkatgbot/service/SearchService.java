@@ -64,6 +64,15 @@ public class SearchService {
     }
 
     /**
+     * Get distance for detail card from slim cache (filled after /restrooms/nearest).
+     * @param restroomId restroom UUID
+     * @return distance in meters if present in cache
+     */
+    public Optional<Double> getDetailDistanceMeters(UUID restroomId) {
+        return cacheService.getRestroomInfo(restroomId).map(NearestRestroomSlimDto::distanceMeters);
+    }
+
+    /**
      * Get restroom by ID
      * @param id restroom ID
      * @return restroom details

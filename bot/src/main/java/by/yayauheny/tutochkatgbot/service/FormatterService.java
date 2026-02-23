@@ -12,6 +12,7 @@ import by.yayauheny.tutochkatgbot.util.DistanceFormat;
 import by.yayauheny.tutochkatgbot.util.EmojiConstants;
 import by.yayauheny.tutochkatgbot.util.Links;
 import by.yayauheny.tutochkatgbot.util.Text;
+import by.yayauheny.tutochkatgbot.util.TextUtil;
 import by.yayauheny.tutochkatgbot.util.WorkTimeFormatter;
 import java.util.HashMap;
 import java.util.Map;
@@ -32,8 +33,8 @@ public class FormatterService {
                 .orElse("Не указано");
         
         FeeType feeType = toilet.feeType();
-        String feeIcon = getFeeIcon(feeType);
-        String feeText = feeText(feeType);
+        String feeIcon = feeType != null ? getFeeIcon(feeType) : "";
+        String feeText = feeType != null ? feeText(feeType) : "";
         String accessibility = formatAccessibility(toilet.accessibilityType());
         
         String accessNote =
@@ -53,13 +54,13 @@ public class FormatterService {
 
         Map<String, String> params = new HashMap<>();
         params.put("name", name);
-        params.put("address", address);
+        params.put("address", address != null ? address : "");
         params.put("workTime", workTime);
         params.put("placeType", placeType);
         params.put("feeIcon", feeIcon);
         params.put("feeText", feeText);
         params.put("paymentMethods", paymentMethods);
-        params.put("accessibility", accessibility);
+        params.put("accessibility", accessibility != null ? accessibility : "—");
         params.put("accessNote", accessNote != null ? accessNote : "—");
         params.put("directionGuide", directionGuide != null ? directionGuide : "—");
         params.put("subwayInfo", subwayInfo);
@@ -68,40 +69,39 @@ public class FormatterService {
         
         String result = Text.substitute(Messages.TOILET_DETAILS, params);
         
+        if (address == null || address.isBlank()) {
+            result = result.replaceAll("(?m)^.*📍.*$\\n?", "");
+        }
         if (buildingInfo == null) {
             result = result.replaceAll("(?m)^.*Здание:.*$", "");
+        }
+        if (accessibility == null) {
+            result = result.replaceAll("(?m)^.*Доступность:.*$\\n?", "");
+        }
+        if (feeType == null || feeType == FeeType.UNKNOWN) {
+            result = result.replaceAll("(?m)^.*Оплата:.*$\\n?", "");
         }
         
         return result.trim();
     }
     
     private String selectDisplayNameForDetails(RestroomResponseDto toilet) {
-        String name = Optional.ofNullable(toilet.name())
-            .map(String::trim)
-            .orElse("");
-        
-        if (name.isBlank() || name.equalsIgnoreCase("Туалет")) {
+        String name = TextUtil.normalizeNullableText(toilet.name());
+        if (name == null || name.isBlank() || "Туалет".equalsIgnoreCase(name)) {
             return Optional.ofNullable(toilet.building())
                 .map(b -> b.displayName())
                 .filter(str -> str != null && !str.isBlank())
                 .orElse("Туалет");
         }
-        
         return name;
     }
     
     private String selectAddress(RestroomResponseDto toilet) {
-        String address = Optional.ofNullable(toilet.address())
-            .map(String::trim)
-            .orElse("");
-        
-        if (address.isBlank() && toilet.building() != null) {
-            address = Optional.ofNullable(toilet.building().address())
-                .map(String::trim)
-                .orElse("");
+        String address = TextUtil.normalizeNullableText(toilet.address());
+        if ((address == null || address.isBlank()) && toilet.building() != null) {
+            address = TextUtil.normalizeNullableText(toilet.building().address());
         }
-        
-        return address.isBlank() ? "Адрес не указан" : address;
+        return (address == null || address.isBlank()) ? null : address;
     }
     
     private String selectWorkTime(RestroomResponseDto toilet) {
@@ -189,24 +189,20 @@ public class FormatterService {
     }
 
     public String toiletListItem(NearestRestroomSlimDto toilet) {
-        String name = (toilet.displayName() != null && !toilet.displayName().isBlank())
-            ? toilet.displayName().trim()
-            : "Туалет";
+        String normalized = TextUtil.normalizeNullableText(toilet.displayName());
+        String name = (normalized != null && !normalized.isBlank()) ? normalized : "Туалет";
         String distance = DistanceFormat.meters(toilet.distanceMeters());
         FeeType feeType = toilet.feeType();
         String feeIcon = getFeeIcon(feeType);
-        String feeText = feeText(feeType);
         String subwayInfo = formatSubwayInfoSlim(toilet.subwayStation());
         
-        StringBuilder details = new StringBuilder();
-        details.append(EmojiConstants.PIN).append(" ").append(distance);
-        details.append(" • ").append(feeIcon).append(" ").append(feeText);
-        
+        StringBuilder header = new StringBuilder();
+        header.append(EmojiConstants.PIN).append(" ").append(distance);
+        header.append(" • ").append(feeIcon);
         if (!subwayInfo.isBlank()) {
-            details.append(" • ").append(subwayInfo);
+            header.append(" • ").append(subwayInfo);
         }
-        
-        return name + "\n" + details.toString();
+        return header.toString() + "\n" + name;
     }
     
     private String formatSubwayInfoSlim(SubwayStationSlimDto station) {
@@ -249,14 +245,20 @@ public class FormatterService {
     }
     
     private String getFeeIcon(FeeType feeType) {
-        if (feeType == null || feeType == FeeType.FREE) {
+        if (feeType == null || feeType == FeeType.UNKNOWN) {
+            return "";
+        }
+        if (feeType == FeeType.FREE) {
             return EmojiConstants.FREE;
         }
         return EmojiConstants.PAID;
     }
     
     private String feeText(FeeType feeType) {
-        if (feeType == null || feeType == FeeType.FREE) {
+        if (feeType == null || feeType == FeeType.UNKNOWN) {
+            return "";
+        }
+        if (feeType == FeeType.FREE) {
             return "Бесплатно";
         }
         return "Платно";
@@ -271,12 +273,12 @@ public class FormatterService {
     }
 
     private String formatAccessibility(AccessibilityType type) {
-        if (type == null) return "Не указано";
+        if (type == null || type == AccessibilityType.UNKNOWN) return null;
         return switch (type) {
             case WHEELCHAIR -> "Для МГН";
-            case LIMITED -> "Ограниченная доступность";
-            case NONE -> "Не указано";
-            case UNKNOWN -> "Не указано";
+            case INACCESSIBLE -> "Ограниченная доступность";
+            case CHANGING_PLACES -> "Площадка для переодевания";
+            case UNKNOWN -> null;
         };
     }
 
@@ -292,17 +294,18 @@ public class FormatterService {
             .map(pt -> pt.getLocalizedName("ru"))
             .orElse("Не указано");
         
-        String distancePart = distanceMeters != null 
-            ? "🚶 " + DistanceFormat.meters(distanceMeters) + "   •   " 
-            : "";
+        boolean hasAddress = address != null && !address.isBlank();
+        String distancePart = distanceMeters != null ? "🚶 " + DistanceFormat.meters(distanceMeters) : "";
+        String addressLine = hasAddress
+            ? (distancePart.isEmpty() ? "📍 " + address : distancePart + "   •   📍 " + address)
+            : distancePart;
         
         String howToFindLine = formatHowToFindLine(toilet.directionGuide());
         String landmarkLine = formatLandmarkLine(toilet.building(), toilet.subwayStation());
         
         Map<String, String> params = new HashMap<>();
         params.put("name", name);
-        params.put("distancePart", distancePart);
-        params.put("address", address);
+        params.put("addressLine", addressLine);
         params.put("tags", tags);
         params.put("placeType", placeType);
         params.put("howToFindLine", howToFindLine);
@@ -319,9 +322,11 @@ public class FormatterService {
             .map(pt -> pt.getLocalizedName("ru"))
             .orElse("Не указано");
         
-        String distancePart = distanceMeters != null 
-            ? "🚶 " + DistanceFormat.meters(distanceMeters) + "   •   " 
-            : "";
+        boolean hasAddress = address != null && !address.isBlank();
+        String distancePart = distanceMeters != null ? "🚶 " + DistanceFormat.meters(distanceMeters) : "";
+        String addressLine = hasAddress
+            ? (distancePart.isEmpty() ? "📍 " + address : distancePart + "   •   📍 " + address)
+            : distancePart;
         
         String buildingLine = formatBuildingLine(toilet.building());
         String subwayLine = formatSubwayLine(toilet.subwayStation());
@@ -331,8 +336,7 @@ public class FormatterService {
         
         Map<String, String> params = new HashMap<>();
         params.put("name", name);
-        params.put("distancePart", distancePart);
-        params.put("address", address);
+        params.put("addressLine", addressLine);
         params.put("tags", tags);
         params.put("placeType", placeType);
         params.put("buildingLine", buildingLine);
@@ -388,23 +392,24 @@ public class FormatterService {
     }
 
     private String formatFeeTag(FeeType feeType) {
-        if (feeType == null) {
+        if (feeType == null || feeType == FeeType.UNKNOWN) {
             return null;
         }
         return switch (feeType) {
             case FREE -> "Бесплатно";
             case PAID -> "Платно";
+            case UNKNOWN -> null;
         };
     }
 
     private String formatAccessibilityTag(AccessibilityType accessibilityType) {
-        if (accessibilityType == null) {
+        if (accessibilityType == null || accessibilityType == AccessibilityType.UNKNOWN) {
             return null;
         }
         return switch (accessibilityType) {
             case WHEELCHAIR -> "МГН";
-            case LIMITED -> "Ограниченная";
-            case NONE, UNKNOWN -> null;
+            case INACCESSIBLE -> "Ограниченная";
+            case CHANGING_PLACES, UNKNOWN -> null;
         };
     }
 

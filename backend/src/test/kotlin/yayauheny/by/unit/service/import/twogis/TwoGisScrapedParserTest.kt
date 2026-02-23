@@ -131,7 +131,7 @@ class TwoGisScrapedParserTest {
     }
 
     @Test
-    fun `should use fallback when title is missing`() {
+    fun `should use Туалет when title is missing even if rubrics present`() {
         val json =
             buildJsonObject {
                 put("id", "12345")
@@ -150,7 +150,7 @@ class TwoGisScrapedParserTest {
             }
 
         val place = parser.parse(json)
-        assertEquals("Туалеты", place.title)
+        assertEquals("Туалет", place.title)
     }
 
     @Test
