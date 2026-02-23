@@ -23,7 +23,7 @@ public final class EmojiConstants {
     public static final String ROUTE = "🧭";
     public static final String MAP = "🗺";
     public static final String FREE = "🆓";
-    public static final String PAID = "💸";
+    public static final String PAID = "💰";
 
     public static String getEmojiForColor(String hex) {
         if (hex == null) {

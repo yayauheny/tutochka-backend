@@ -22,69 +22,6 @@ import org.springframework.stereotype.Service;
 @Service
 public class FormatterService {
 
-    public String toiletDetails(RestroomResponseDto toilet) {
-        String name = selectDisplayNameForDetails(toilet);
-        String address = selectAddress(toilet);
-        String workTime = selectWorkTime(toilet);
-        
-        String placeType =
-            Optional.ofNullable(toilet.placeType())
-                .map(pt -> pt.getLocalizedName("ru"))
-                .orElse("Не указано");
-        
-        FeeType feeType = toilet.feeType();
-        String feeIcon = feeType != null ? getFeeIcon(feeType) : "";
-        String feeText = feeType != null ? feeText(feeType) : "";
-        String accessibility = formatAccessibility(toilet.accessibilityType());
-        
-        String accessNote =
-            Optional.ofNullable(toilet.accessNote())
-                .filter(note -> !note.trim().isEmpty())
-                .orElse(null);
-        
-        String directionGuide =
-            Optional.ofNullable(toilet.directionGuide())
-                .filter(note -> !note.trim().isEmpty())
-                .orElse(null);
-        
-        String subwayInfo = formatSubwayInfoForDetails(toilet.subwayStation());
-        String buildingInfo = formatBuildingInfo(toilet.building());
-        String paymentMethods = formatPaymentMethods(toilet.amenities());
-        String externalMap = Links.getDefaultMapsLink(toilet.coordinates().lat(), toilet.coordinates().lon());
-
-        Map<String, String> params = new HashMap<>();
-        params.put("name", name);
-        params.put("address", address != null ? address : "");
-        params.put("workTime", workTime);
-        params.put("placeType", placeType);
-        params.put("feeIcon", feeIcon);
-        params.put("feeText", feeText);
-        params.put("paymentMethods", paymentMethods);
-        params.put("accessibility", accessibility != null ? accessibility : "—");
-        params.put("accessNote", accessNote != null ? accessNote : "—");
-        params.put("directionGuide", directionGuide != null ? directionGuide : "—");
-        params.put("subwayInfo", subwayInfo);
-        params.put("buildingInfo", buildingInfo != null ? buildingInfo : "—");
-        params.put("mapsLink", externalMap);
-        
-        String result = Text.substitute(Messages.TOILET_DETAILS, params);
-        
-        if (address == null || address.isBlank()) {
-            result = result.replaceAll("(?m)^.*📍.*$\\n?", "");
-        }
-        if (buildingInfo == null) {
-            result = result.replaceAll("(?m)^.*Здание:.*$", "");
-        }
-        if (accessibility == null) {
-            result = result.replaceAll("(?m)^.*Доступность:.*$\\n?", "");
-        }
-        if (feeType == null || feeType == FeeType.UNKNOWN) {
-            result = result.replaceAll("(?m)^.*Оплата:.*$\\n?", "");
-        }
-        
-        return result.trim();
-    }
-    
     private String selectDisplayNameForDetails(RestroomResponseDto toilet) {
         String name = TextUtil.normalizeNullableText(toilet.name());
         if (name == null || name.isBlank() || "Туалет".equalsIgnoreCase(name)) {
@@ -119,74 +56,6 @@ public class FormatterService {
         
         return "Время работы не указано";
     }
-    
-    @SuppressWarnings("unchecked")
-    private java.util.Map<String, Object> extractWorkTimeMapViaReflection(Object dto) {
-        try {
-            java.lang.reflect.Method workTimeMethod = dto.getClass().getMethod("workTime");
-            Object workTimeObj = workTimeMethod.invoke(dto);
-            
-            if (workTimeObj == null) {
-                return null;
-            }
-            
-            if (workTimeObj instanceof java.util.Map) {
-                return (java.util.Map<String, Object>) workTimeObj;
-            }
-            
-            try {
-                java.lang.reflect.Method contentMethod = workTimeObj.getClass().getMethod("getContent");
-                Object content = contentMethod.invoke(workTimeObj);
-                if (content instanceof java.util.Map) {
-                    return (java.util.Map<String, Object>) content;
-                }
-            } catch (NoSuchMethodException e) {
-                try {
-                    java.lang.reflect.Method contentMethod = workTimeObj.getClass().getMethod("content");
-                    Object content = contentMethod.invoke(workTimeObj);
-                    if (content instanceof java.util.Map) {
-                        return (java.util.Map<String, Object>) content;
-                    }
-                } catch (NoSuchMethodException e2) {
-                }
-            }
-        } catch (Exception e) {
-        }
-        
-        return null;
-    }
-    
-    private String formatSubwayInfoForDetails(SubwayStationResponseDto station) {
-        if (station == null) {
-            return "—";
-        }
-        
-        String emoji = Optional.ofNullable(station.lineColor())
-            .map(EmojiConstants::getEmojiForColor)
-            .orElse(EmojiConstants.METRO);
-        
-        String stationName = Optional.ofNullable(station.displayName("ru"))
-            .orElse("");
-        
-        if (stationName.isBlank()) {
-            return "—";
-        }
-        
-        return emoji + " " + stationName;
-    }
-    
-    private String formatBuildingInfo(BuildingResponseDto building) {
-        if (building == null) {
-            return null;
-        }
-
-        String buildingName = building.displayName();
-        if (buildingName == null || buildingName.isBlank()) {
-            return null;
-        }
-
-        return buildingName;
-    }
 
     public String toiletListItem(NearestRestroomSlimDto toilet) {
         String normalized = TextUtil.normalizeNullableText(toilet.displayName());
@@ -195,14 +64,13 @@ public class FormatterService {
         FeeType feeType = toilet.feeType();
         String feeIcon = getFeeIcon(feeType);
         String subwayInfo = formatSubwayInfoSlim(toilet.subwayStation());
-        
-        StringBuilder header = new StringBuilder();
-        header.append(EmojiConstants.PIN).append(" ").append(distance);
-        header.append(" • ").append(feeIcon);
+
+        StringBuilder line1 = new StringBuilder();
+        line1.append(distance).append("  ").append(feeIcon);
         if (!subwayInfo.isBlank()) {
-            header.append(" • ").append(subwayInfo);
+            line1.append("  ").append(subwayInfo);
         }
-        return header.toString() + "\n" + name;
+        return line1.toString() + "\n" + name;
     }
     
     private String formatSubwayInfoSlim(SubwayStationSlimDto station) {
@@ -253,16 +121,6 @@ public class FormatterService {
         }
         return EmojiConstants.PAID;
     }
-    
-    private String feeText(FeeType feeType) {
-        if (feeType == null || feeType == FeeType.UNKNOWN) {
-            return "";
-        }
-        if (feeType == FeeType.FREE) {
-            return "Бесплатно";
-        }
-        return "Платно";
-    }
 
     public String toiletsFound(int count) {
         return Text.replace(Messages.TOILETS_FOUND, "count", String.valueOf(count));
@@ -270,16 +128,6 @@ public class FormatterService {
 
     public String generateMapsLink(RestroomResponseDto toilet) {
         return Links.getDefaultMapsLink(toilet.coordinates().lat(), toilet.coordinates().lon());
-    }
-
-    private String formatAccessibility(AccessibilityType type) {
-        if (type == null || type == AccessibilityType.UNKNOWN) return null;
-        return switch (type) {
-            case WHEELCHAIR -> "Для МГН";
-            case INACCESSIBLE -> "Ограниченная доступность";
-            case CHANGING_PLACES -> "Площадка для переодевания";
-            case UNKNOWN -> null;
-        };
     }
 
     public String colorToEmoji(String hexColor) {
@@ -507,44 +355,5 @@ public class FormatterService {
         }
         
         return "<b>Маршрут:</b>\n" + directionGuide.trim() + "\n";
-    }
-
-    /**
-     * Format payment methods from amenities.
-     * Returns formatted string like " (Картой, Наличными)" or empty string if no payment methods.
-     */
-    private String formatPaymentMethods(Map<String, Object> amenities) {
-        if (amenities == null) {
-            return "";
-        }
-        
-        Object paymentMethodsObj = amenities.get("payment_methods");
-        if (!(paymentMethodsObj instanceof java.util.List)) {
-            return "";
-        }
-        
-        @SuppressWarnings("unchecked")
-        java.util.List<String> paymentMethods = (java.util.List<String>) paymentMethodsObj;
-        if (paymentMethods == null || paymentMethods.isEmpty()) {
-            return "";
-        }
-        
-        java.util.List<String> localized = paymentMethods.stream()
-            .map(method -> {
-                return switch (method != null ? method.toLowerCase() : "") {
-                    case "card" -> "Картой";
-                    case "cash" -> "Наличными";
-                    case "mobile" -> "Мобильным";
-                    default -> method != null ? method : "";
-                };
-            })
-            .filter(s -> !s.isBlank())
-            .toList();
-        
-        if (localized.isEmpty()) {
-            return "";
-        }
-        
-        return " (" + String.join(", ", localized) + ")";
     }
 }

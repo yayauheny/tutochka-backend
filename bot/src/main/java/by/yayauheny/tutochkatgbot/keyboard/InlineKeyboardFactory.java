@@ -90,11 +90,6 @@ public class InlineKeyboardFactory {
                 .build();
     }
 
-    @Deprecated
-    public InlineKeyboardMarkup toiletDetails(RestroomResponseDto toilet) {
-        return toiletDetailsCompact(toilet);
-    }
-
     public InlineKeyboardMarkup radiusSelection() {
         InlineKeyboardButton radius500 = InlineKeyboardButton.builder()
                 .text(Messages.RADIUS_500M)
