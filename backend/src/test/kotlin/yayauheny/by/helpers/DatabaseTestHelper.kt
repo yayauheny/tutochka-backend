@@ -19,7 +19,7 @@ import yayauheny.by.tables.references.COUNTRIES
 import yayauheny.by.tables.references.RESTROOM_IMPORTS
 import yayauheny.by.tables.references.RESTROOMS
 import yayauheny.by.util.pointExpr
-import yayauheny.by.util.toJSONBOrEmpty
+import yayauheny.by.util.toJSONB
 
 data class TestCountryData(
     val nameRu: String = "Test Country RU",
@@ -191,8 +191,8 @@ object DatabaseTestHelper {
                 .set(RESTROOMS.SUBWAY_STATION_ID, data.subwayStationId)
                 .set(RESTROOMS.NAME, data.name)
                 .set(RESTROOMS.ADDRESS, data.address)
-                .set(RESTROOMS.PHONES, data.phones.toJSONBOrEmpty())
-                .set(RESTROOMS.WORK_TIME, data.workTime.toJSONBOrEmpty())
+                .set(RESTROOMS.PHONES, data.phones.toJSONB())
+                .set(RESTROOMS.WORK_TIME, data.workTime.toJSONB())
                 .set(RESTROOMS.FEE_TYPE, data.feeType.name)
                 .set(
                     DSL.field(
@@ -208,8 +208,8 @@ object DatabaseTestHelper {
                     pointExpr(data.lon, data.lat, RESTROOMS.COORDINATES)
                 ).set(RESTROOMS.DATA_SOURCE, data.dataSource.name)
                 .set(RESTROOMS.STATUS, data.status.name)
-                .set(RESTROOMS.AMENITIES, data.amenities.toJSONBOrEmpty())
-                .set(RESTROOMS.EXTERNAL_MAPS, data.externalMaps.toJSONBOrEmpty())
+                .set(RESTROOMS.AMENITIES, data.amenities.toJSONB())
+                .set(RESTROOMS.EXTERNAL_MAPS, data.externalMaps.toJSONB())
                 .set(RESTROOMS.ACCESS_NOTE, data.accessNote)
                 .set(RESTROOMS.DIRECTION_GUIDE, data.directionGuide)
                 .set(RESTROOMS.INHERIT_BUILDING_SCHEDULE, data.inheritBuildingSchedule)

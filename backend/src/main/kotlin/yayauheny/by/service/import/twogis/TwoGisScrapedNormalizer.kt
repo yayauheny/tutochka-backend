@@ -40,7 +40,9 @@ class TwoGisScrapedNormalizer : Normalizer<TwoGisScrapedPlace> {
         val placeType = twoGisCategory?.placeType ?: resolvePlaceTypeFromRubrics(place.rubrics) ?: PlaceType.OTHER
         val feeType = determineFeeType(attrs)
         val amenities = buildAmenities(attrs, locationType)
+        val accessibilityType = determineAccessibilityType(attrs)
         val status = determineStatus(attrs)
+        val genderType = TwoGisGenderFromTitleResolver.resolve(place.title)
 
         val buildingContext =
             if (locationType == LocationType.INSIDE_BUILDING) {
@@ -65,11 +67,12 @@ class TwoGisScrapedNormalizer : Normalizer<TwoGisScrapedPlace> {
             placeType = placeType,
             locationType = locationType,
             feeType = feeType,
-            accessibilityType = AccessibilityType.UNKNOWN,
+            accessibilityType = accessibilityType,
             status = status,
             amenities = amenities,
             rawSchedule = place.workingHours,
-            buildingContext = buildingContext
+            buildingContext = buildingContext,
+            genderType = genderType
         )
     }
 
@@ -90,6 +93,24 @@ class TwoGisScrapedNormalizer : Normalizer<TwoGisScrapedPlace> {
             attrs.any { it.contains("бесплатный туалет") || it == "бесплатный туалет" } -> FeeType.FREE
             attrs.any { it.contains("платный туалет") || it == "платный туалет" } -> FeeType.PAID
             else -> FeeType.UNKNOWN
+        }
+    }
+
+    private fun determineAccessibilityType(attrs: Set<String>): AccessibilityType {
+        val hasWheelchairToilet = attrs.any { it.contains("туалет для маломобильных людей") }
+        val hasAccessibleEntrance =
+            attrs.any { it.contains("доступный вход") } ||
+                attrs.any { it.contains("пандус") } ||
+                attrs.any { it.contains("подъёмник") } ||
+                attrs.any { it.contains("широкий лифт") } ||
+                attrs.any { it.contains("автоматическая дверь") } ||
+                attrs.any { it.contains("нет двери") } ||
+                attrs.any { it.contains("доступно") }
+        val hasAccessLimited = attrs.any { it.contains("доступ ограничен") }
+        return when {
+            hasWheelchairToilet || hasAccessibleEntrance -> AccessibilityType.WHEELCHAIR
+            hasAccessLimited -> AccessibilityType.INACCESSIBLE
+            else -> AccessibilityType.UNKNOWN
         }
     }
 

@@ -2,6 +2,7 @@ package yayauheny.by.service.import
 
 import java.util.UUID
 import kotlinx.serialization.json.JsonObject
+import org.jooq.DSLContext
 import yayauheny.by.model.enums.ImportPayloadType
 import yayauheny.by.model.enums.ImportProvider
 
@@ -47,14 +48,15 @@ interface ImportStrategy {
      * @param cityId ID города, в котором происходит импорт
      * @param payloadType тип формата payload
      * @param payload JsonObject - payload с массивом items или одиночным объектом
+     * @param tx контекст транзакции; при tx != null стратегия использует его и не открывает свою транзакцию
      * @return список результатов импорта для каждого элемента
      */
     suspend fun importBatch(
         cityId: UUID,
         payloadType: ImportPayloadType,
-        payload: JsonObject
+        payload: JsonObject,
+        tx: DSLContext? = null
     ): List<ImportObjectResult> {
-        // По умолчанию обрабатываем только первый элемент
         return listOf(importObject(cityId, payloadType, payload))
     }
 }

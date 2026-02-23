@@ -2,6 +2,7 @@ package yayauheny.by.repository
 
 import java.util.UUID
 import kotlinx.serialization.json.JsonObject
+import org.jooq.DSLContext
 import yayauheny.by.model.enums.ImportPayloadType
 import yayauheny.by.model.enums.ImportProvider
 
@@ -33,6 +34,27 @@ interface RestroomImportRepository {
      * Обновляет запись импорта на статус FAILED с сообщением об ошибке.
      */
     suspend fun markFailed(
+        id: UUID,
+        errorMessage: String
+    )
+
+    suspend fun createPendingInTx(
+        txCtx: DSLContext,
+        provider: ImportProvider,
+        payloadType: ImportPayloadType,
+        cityId: UUID?,
+        rawPayload: JsonObject
+    ): UUID
+
+    suspend fun markSuccessInTx(
+        txCtx: DSLContext,
+        id: UUID,
+        buildingId: UUID?,
+        restroomId: UUID
+    )
+
+    suspend fun markFailedInTx(
+        txCtx: DSLContext,
         id: UUID,
         errorMessage: String
     )

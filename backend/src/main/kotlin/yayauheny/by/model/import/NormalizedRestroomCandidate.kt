@@ -7,6 +7,7 @@ import kotlinx.serialization.json.JsonObject
 import yayauheny.by.model.dto.Coordinates
 import yayauheny.by.model.enums.AccessibilityType
 import yayauheny.by.model.enums.FeeType
+import yayauheny.by.model.enums.GenderType
 import yayauheny.by.model.enums.ImportProvider
 import yayauheny.by.model.enums.LocationType
 import yayauheny.by.model.enums.PlaceType
@@ -41,7 +42,8 @@ data class NormalizedRestroomCandidate(
     val status: RestroomStatus,
     val amenities: JsonObject,
     val rawSchedule: JsonObject? = null,
-    val buildingContext: BuildingContext? = null
+    val buildingContext: BuildingContext? = null,
+    val genderType: GenderType? = null
 ) {
     fun toCoordinates(): Coordinates = Coordinates(lat = lat, lon = lng)
 }

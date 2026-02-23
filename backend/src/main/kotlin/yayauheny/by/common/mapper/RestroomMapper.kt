@@ -24,8 +24,8 @@ import yayauheny.by.model.restroom.RestroomUpdateDto
 import yayauheny.by.tables.references.RESTROOMS
 import yayauheny.by.util.reqDouble
 import yayauheny.by.util.setIfNotNull
-import yayauheny.by.util.toJSONBOrEmpty
-import yayauheny.by.util.toJsonObjectOrEmpty
+import yayauheny.by.util.toJSONB
+import yayauheny.by.util.toJsonObject
 
 object RestroomMapper {
     fun mapFromRecord(record: Record): RestroomResponseDto {
@@ -39,8 +39,8 @@ object RestroomMapper {
             subwayStationId = record[RESTROOMS.SUBWAY_STATION_ID],
             name = record[RESTROOMS.NAME],
             address = record[RESTROOMS.ADDRESS],
-            phones = record[RESTROOMS.PHONES].toJsonObjectOrEmpty(),
-            workTime = record[RESTROOMS.WORK_TIME].toJsonObjectOrEmpty(),
+            phones = record[RESTROOMS.PHONES].toJsonObject(),
+            workTime = record[RESTROOMS.WORK_TIME].toJsonObject(),
             feeType = record[RESTROOMS.FEE_TYPE]?.let { FeeType.valueOf(it) },
             genderType = record[RESTROOMS.GENDER_TYPE]?.let { GenderType.valueOf(it) },
             accessibilityType = record[RESTROOMS.ACCESSIBILITY_TYPE]?.let { AccessibilityType.valueOf(it) },
@@ -51,8 +51,8 @@ object RestroomMapper {
                     ?.let { DataSourceType.valueOf(it) }
                     ?: DataSourceType.UNKNOWN,
             status = RestroomStatus.valueOf(record[RESTROOMS.STATUS]!!),
-            amenities = record[RESTROOMS.AMENITIES].toJsonObjectOrEmpty(),
-            externalMaps = record[RESTROOMS.EXTERNAL_MAPS].toJsonObjectOrEmpty(),
+            amenities = record[RESTROOMS.AMENITIES].toJsonObject(),
+            externalMaps = record[RESTROOMS.EXTERNAL_MAPS].toJsonObject(),
             accessNote = record[RESTROOMS.ACCESS_NOTE],
             directionGuide = record[RESTROOMS.DIRECTION_GUIDE],
             inheritBuildingSchedule = record[RESTROOMS.INHERIT_BUILDING_SCHEDULE] ?: false,
@@ -95,9 +95,9 @@ object RestroomMapper {
                     name = record.get("b_name", String::class.java),
                     address = bAddress,
                     buildingType = bType,
-                    workTime = record.get("b_work_time", org.jooq.JSONB::class.java)?.toJsonObjectOrEmpty(),
+                    workTime = record.get("b_work_time", org.jooq.JSONB::class.java)?.toJsonObject(),
                     coordinates = if (bLat != null && bLon != null) Coordinates(bLat, bLon) else Coordinates(lat, lon),
-                    externalIds = record.get("b_external_ids", org.jooq.JSONB::class.java)?.toJsonObjectOrEmpty(),
+                    externalIds = record.get("b_external_ids", org.jooq.JSONB::class.java)?.toJsonObject(),
                     isDeleted = record.get("b_is_deleted", Boolean::class.java) ?: false,
                     createdAt =
                         record.get("b_created_at", Instant::class.java)
@@ -150,8 +150,8 @@ object RestroomMapper {
             subwayStationId = record[RESTROOMS.SUBWAY_STATION_ID],
             name = record[RESTROOMS.NAME],
             address = record[RESTROOMS.ADDRESS],
-            phones = record[RESTROOMS.PHONES].toJsonObjectOrEmpty(),
-            workTime = record[RESTROOMS.WORK_TIME].toJsonObjectOrEmpty(),
+            phones = record[RESTROOMS.PHONES].toJsonObject(),
+            workTime = record[RESTROOMS.WORK_TIME].toJsonObject(),
             feeType = record[RESTROOMS.FEE_TYPE]?.let { FeeType.valueOf(it) },
             genderType = record[RESTROOMS.GENDER_TYPE]?.let { GenderType.valueOf(it) },
             accessibilityType = AccessibilityType.valueOf(record[RESTROOMS.ACCESSIBILITY_TYPE]!!),
@@ -159,8 +159,8 @@ object RestroomMapper {
             coordinates = Coordinates(lat = lat, lon = lon),
             dataSource = DataSourceType.valueOf(record[RESTROOMS.DATA_SOURCE]!!),
             status = RestroomStatus.valueOf(record[RESTROOMS.STATUS]!!),
-            amenities = record[RESTROOMS.AMENITIES].toJsonObjectOrEmpty(),
-            externalMaps = record[RESTROOMS.EXTERNAL_MAPS].toJsonObjectOrEmpty(),
+            amenities = record[RESTROOMS.AMENITIES].toJsonObject(),
+            externalMaps = record[RESTROOMS.EXTERNAL_MAPS].toJsonObject(),
             accessNote = record[RESTROOMS.ACCESS_NOTE],
             directionGuide = record[RESTROOMS.DIRECTION_GUIDE],
             inheritBuildingSchedule = record[RESTROOMS.INHERIT_BUILDING_SCHEDULE] ?: false,
@@ -171,7 +171,8 @@ object RestroomMapper {
                     ?: LocationType.UNKNOWN,
             originProvider =
                 record[RESTROOMS.ORIGIN_PROVIDER]
-                    ?.let { ImportProvider.valueOf(it) } ?: ImportProvider.MANUAL,
+                    ?.let { ImportProvider.valueOf(it) }
+                    ?: ImportProvider.MANUAL,
             originId = record[RESTROOMS.ORIGIN_ID],
             isHidden = record[RESTROOMS.IS_HIDDEN] ?: false,
             createdAt = record[RESTROOMS.CREATED_AT]!!,
@@ -198,10 +199,10 @@ object RestroomMapper {
             .setIfNotNull(RESTROOMS.GENDER_TYPE, dto.genderType?.name)
             .setIfNotNull(RESTROOMS.ACCESSIBILITY_TYPE, dto.accessibilityType?.name)
             .setIfNotNull(RESTROOMS.NAME, dto.name)
-            .setIfNotNull(RESTROOMS.PHONES, dto.phones?.toJSONBOrEmpty())
-            .setIfNotNull(RESTROOMS.WORK_TIME, dto.workTime?.toJSONBOrEmpty())
-            .setIfNotNull(RESTROOMS.AMENITIES, dto.amenities?.toJSONBOrEmpty())
-            .setIfNotNull(RESTROOMS.EXTERNAL_MAPS, dto.externalMaps?.toJSONBOrEmpty())
+            .setIfNotNull(RESTROOMS.PHONES, dto.phones.toJSONB())
+            .setIfNotNull(RESTROOMS.WORK_TIME, dto.workTime.toJSONB())
+            .setIfNotNull(RESTROOMS.AMENITIES, dto.amenities.toJSONB())
+            .setIfNotNull(RESTROOMS.EXTERNAL_MAPS, dto.externalMaps.toJSONB())
             .setIfNotNull(RESTROOMS.ACCESS_NOTE, dto.accessNote)
             .setIfNotNull(RESTROOMS.DIRECTION_GUIDE, dto.directionGuide)
             .setIfNotNull(RESTROOMS.LOCATION_TYPE, dto.locationType?.name)
@@ -232,9 +233,9 @@ object RestroomMapper {
                     name = record.get("b_name", String::class.java),
                     address = bAddress,
                     buildingType = bType,
-                    workTime = record.get("b_work_time", org.jooq.JSONB::class.java)?.toJsonObjectOrEmpty(),
+                    workTime = record.get("b_work_time", org.jooq.JSONB::class.java)?.toJsonObject(),
                     coordinates = if (bLat != null && bLon != null) Coordinates(bLat, bLon) else Coordinates(lat, lon),
-                    externalIds = record.get("b_external_ids", org.jooq.JSONB::class.java)?.toJsonObjectOrEmpty(),
+                    externalIds = record.get("b_external_ids", org.jooq.JSONB::class.java)?.toJsonObject(),
                     isDeleted = record.get("b_is_deleted", Boolean::class.java) ?: false,
                     createdAt =
                         record.get("b_created_at", Instant::class.java)
@@ -286,7 +287,10 @@ object RestroomMapper {
             address = record[RESTROOMS.ADDRESS],
             coordinates = Coordinates(lat = lat, lon = lon),
             distanceMeters = distanceMeters,
-            feeType = record[RESTROOMS.FEE_TYPE]?.let { FeeType.valueOf(it) } ?: FeeType.UNKNOWN,
+            feeType =
+                record[RESTROOMS.FEE_TYPE]
+                    ?.let { FeeType.valueOf(it) }
+                    ?: FeeType.UNKNOWN,
             isOpen = isOpen,
             placeType = PlaceType.entries.find { p -> p.code == record.get(RESTROOMS.PLACE_TYPE) } ?: PlaceType.OTHER,
             building = building,

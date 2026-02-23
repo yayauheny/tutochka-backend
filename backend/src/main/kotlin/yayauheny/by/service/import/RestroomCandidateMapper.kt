@@ -21,10 +21,11 @@ import yayauheny.by.model.restroom.RestroomCreateDto
 object RestroomCandidateMapper {
     fun toCreateDto(
         candidate: NormalizedRestroomCandidate,
-        genderType: GenderType = GenderType.UNKNOWN,
+        genderType: GenderType? = null,
         buildingId: UUID? = null,
         inheritBuildingSchedule: Boolean = false
     ): RestroomCreateDto {
+        val resolvedGender = candidate.genderType ?: genderType ?: GenderType.UNKNOWN
         val externalMaps = buildExternalMaps(candidate.provider, candidate.providerObjectId)
         val workTime =
             if (inheritBuildingSchedule) {
@@ -43,7 +44,7 @@ object RestroomCandidateMapper {
             phones = null,
             workTime = workTime,
             feeType = candidate.feeType,
-            genderType = genderType,
+            genderType = resolvedGender,
             accessibilityType = candidate.accessibilityType,
             placeType = candidate.placeType,
             coordinates = candidate.toCoordinates(),

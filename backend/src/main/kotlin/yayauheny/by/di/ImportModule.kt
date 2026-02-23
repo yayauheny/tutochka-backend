@@ -30,6 +30,7 @@ val importModule =
 
         single<ImportService> {
             ImportService(
+                ctx = get<DSLContext>(),
                 registry = get(),
                 cityRepository = get(),
                 restroomImportRepository = get()

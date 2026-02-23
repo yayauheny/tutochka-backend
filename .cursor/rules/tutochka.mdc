@@ -341,7 +341,7 @@ class RestroomRepositoryImpl(
 - ✅ **ALWAYS** map `Record` to DTOs using mapper functions
 - ✅ **ALWAYS** use table references from `yayauheny.by.tables.references.*`
 - ✅ **ALWAYS** use `GeoDsl.kt` extensions for spatial queries
-- ✅ **ALWAYS** use `CommonExtensions.kt` utilities (e.g., `toJSONBOrEmpty()`)
+- ✅ **ALWAYS** use `CommonExtensions.kt` utilities (e.g., `toJSONB()`, `toJsonObject()`); optional JSON fields: store NULL when no value, not empty `{}`
 - ✅ **ALWAYS** keep transactions short and focused
 - ✅ **ALWAYS** use aliases for JOINs and subqueries
 - ✅ **ALWAYS** use Liquibase for schema migrations (jOOQ generates code from schema)
@@ -385,8 +385,7 @@ class RestroomRepositoryImpl(
     - `?` for key existence: `DSL.condition("{0} ? {1}", field, key)`
     - `?&` for all keys exist: `DSL.condition("{0} ?& array[{1}]", field, keys)`
     - `?|` for any key exists: `DSL.condition("{0} ?| array[{1}]", field, keys)`
-- ✅ **ALWAYS** use `toJSONBOrEmpty()` extension from `CommonExtensions.kt` for safe JSONB conversion
-- ✅ **ALWAYS** use `toJsonObjectOrEmpty()` extension to convert JSONB to `JsonObject`
+- ✅ **ALWAYS** use `toJSONB()` (returns `JSONB?`; null → NULL in DB) and `toJsonObject()` (returns `JsonObject?`; NULL in DB → null in DTO) from `CommonExtensions.kt`; do not substitute empty `{}` for optional fields (work_time, phones, access_note, direction_guide)
 - ✅ **ALWAYS** use GIN indexes on JSONB columns that are queried:
   - `idx_buildings_external_ids` on `buildings.external_ids`
   - `idx_restrooms_external_maps` on `restrooms.external_maps`

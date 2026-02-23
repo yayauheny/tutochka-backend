@@ -15,8 +15,8 @@ import yayauheny.by.util.pointExpr
 import yayauheny.by.util.reqDouble
 import yayauheny.by.util.setIfNotNull
 import yayauheny.by.util.setIfNotNullCoordinates
-import yayauheny.by.util.toJSONBOrEmpty
-import yayauheny.by.util.toJsonObjectOrEmpty
+import yayauheny.by.util.toJSONB
+import yayauheny.by.util.toJsonObject
 
 object BuildingMapper {
     fun mapFromRecord(record: Record): BuildingResponseDto {
@@ -28,9 +28,9 @@ object BuildingMapper {
             name = record[BUILDINGS.NAME],
             address = record[BUILDINGS.ADDRESS]!!,
             buildingType = PlaceType.fromCode(record[BUILDINGS.BUILDING_TYPE]),
-            workTime = record[BUILDINGS.WORK_TIME].toJsonObjectOrEmpty(),
+            workTime = record[BUILDINGS.WORK_TIME].toJsonObject(),
             coordinates = Coordinates(lat = lat, lon = lon),
-            externalIds = record[BUILDINGS.EXTERNAL_IDS].toJsonObjectOrEmpty(),
+            externalIds = record[BUILDINGS.EXTERNAL_IDS].toJsonObject(),
             isDeleted = record[BUILDINGS.IS_DELETED] ?: false,
             createdAt = record[BUILDINGS.CREATED_AT]!!,
             updatedAt = record[BUILDINGS.UPDATED_AT]!!
@@ -50,11 +50,11 @@ object BuildingMapper {
             .set(BUILDINGS.NAME, dto.name)
             .set(BUILDINGS.ADDRESS, dto.address.takeIf { it.isNotBlank() })
             .set(BUILDINGS.BUILDING_TYPE, dto.buildingType?.code)
-            .set(BUILDINGS.WORK_TIME, dto.workTime.toJSONBOrEmpty())
+            .set(BUILDINGS.WORK_TIME, dto.workTime.toJSONB())
             .set(
                 BUILDINGS.COORDINATES,
                 pointExpr(dto.coordinates.lon, dto.coordinates.lat, BUILDINGS.COORDINATES)
-            ).set(BUILDINGS.EXTERNAL_IDS, dto.externalIds.toJSONBOrEmpty())
+            ).set(BUILDINGS.EXTERNAL_IDS, dto.externalIds.toJSONB())
             .set(BUILDINGS.IMPORT_STATUS, dto.importStatus.name)
             .set(BUILDINGS.CREATED_AT, now)
             .set(BUILDINGS.UPDATED_AT, now)
@@ -70,8 +70,8 @@ object BuildingMapper {
             .setIfNotNull(BUILDINGS.NAME, dto.name)
             .setIfNotNull(BUILDINGS.ADDRESS, dto.address)
             .setIfNotNull(BUILDINGS.BUILDING_TYPE, dto.buildingType?.code)
-            .setIfNotNull(BUILDINGS.WORK_TIME, dto.workTime?.toJSONBOrEmpty())
-            .setIfNotNull(BUILDINGS.EXTERNAL_IDS, dto.externalIds?.toJSONBOrEmpty())
+            .setIfNotNull(BUILDINGS.WORK_TIME, dto.workTime.toJSONB())
+            .setIfNotNull(BUILDINGS.EXTERNAL_IDS, dto.externalIds.toJSONB())
             .setIfNotNullCoordinates(BUILDINGS.COORDINATES, dto.coordinates)
             .setIfNotNull(BUILDINGS.IMPORT_STATUS, dto.importStatus?.name)
     }

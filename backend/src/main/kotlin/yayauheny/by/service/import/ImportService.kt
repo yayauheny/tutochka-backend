@@ -2,6 +2,8 @@ package yayauheny.by.service.import
 
 import java.util.UUID
 import kotlinx.serialization.json.JsonObject
+import kotlinx.serialization.json.jsonArray
+import org.jooq.DSLContext
 import yayauheny.by.model.import.ImportBatchResult
 import yayauheny.by.model.import.ImportExecutionResult
 import yayauheny.by.model.import.ImportItemResult
@@ -10,12 +12,14 @@ import yayauheny.by.model.enums.ImportPayloadType
 import yayauheny.by.model.enums.ImportProvider
 import yayauheny.by.repository.CityRepository
 import yayauheny.by.repository.RestroomImportRepository
+import yayauheny.by.util.transactionSuspend
 
 /**
  * Сервис для координации импорта данных из внешних источников.
  * Использует реестр стратегий (ImportStrategyRegistry) и проверяет допустимые пары provider/payloadType (ImportCapabilities).
  */
 class ImportService(
+    private val ctx: DSLContext,
     private val registry: ImportStrategyRegistry,
     private val cityRepository: CityRepository,
     private val restroomImportRepository: RestroomImportRepository
@@ -72,58 +76,51 @@ class ImportService(
         requireCityExists(cityId)
         val strategy = registry.get(provider)
 
-        val importId =
-            restroomImportRepository.createPending(
-                provider = provider,
-                payloadType = payloadType,
-                cityId = cityId,
-                rawPayload = payload
-            )
+        val items = payload["items"]?.jsonArray?.mapNotNull { it as? JsonObject } ?: emptyList()
+        if (items.isEmpty()) {
+            throw InvalidImportPayload("No items found in payload")
+        }
 
-        val results = mutableListOf<ImportItemResult>()
-        var successful = 0
-        var failed = 0
-
-        try {
-            val batchResults = strategy.importBatch(cityId, payloadType, payload)
-
-            batchResults.forEachIndexed { index, result ->
-                results.add(
-                    ImportItemResult(
-                        index = index,
-                        restroomId = result.restroomId,
-                        buildingId = result.buildingId,
-                        success = true
-                    )
-                )
-                successful++
-
-                // Помечаем первый успешный импорт в репозитории
-                if (index == 0) {
-                    restroomImportRepository.markSuccess(
-                        id = importId,
-                        buildingId = result.buildingId,
-                        restroomId = result.restroomId
+        return ctx.transactionSuspend { tx ->
+            val importIds =
+                items.map { item ->
+                    restroomImportRepository.createPendingInTx(
+                        txCtx = tx,
+                        provider = provider,
+                        payloadType = payloadType,
+                        cityId = cityId,
+                        rawPayload = item
                     )
                 }
+
+            val batchResults = strategy.importBatch(cityId, payloadType, payload, tx)
+
+            batchResults.forEachIndexed { i, result ->
+                restroomImportRepository.markSuccessInTx(
+                    txCtx = tx,
+                    id = importIds[i],
+                    buildingId = result.buildingId,
+                    restroomId = result.restroomId
+                )
             }
 
-            return ImportBatchResult(
-                importId = importId,
+            val results =
+                batchResults.mapIndexed { index, r ->
+                    ImportItemResult(
+                        index = index,
+                        restroomId = r.restroomId,
+                        buildingId = r.buildingId,
+                        success = true
+                    )
+                }
+
+            ImportBatchResult(
+                importId = importIds.first(),
                 totalProcessed = batchResults.size,
-                successful = successful,
-                failed = failed,
+                successful = batchResults.size,
+                failed = 0,
                 results = results
             )
-        } catch (t: Throwable) {
-            // Если batch полностью провалился, помечаем как failed
-            // Но если часть элементов обработалась успешно, это уже не сработает
-            // В реальной реализации нужно обрабатывать ошибки на уровне стратегии
-            restroomImportRepository.markFailed(
-                id = importId,
-                errorMessage = t.message ?: "Unknown error"
-            )
-            throw t
         }
     }
 

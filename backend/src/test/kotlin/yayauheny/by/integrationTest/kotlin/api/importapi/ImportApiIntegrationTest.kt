@@ -29,6 +29,7 @@ import yayauheny.by.tables.references.BUILDINGS
 import yayauheny.by.tables.references.RESTROOMS
 import yayauheny.by.tables.references.RESTROOM_IMPORTS
 import yayauheny.by.util.HEADER_IMPORT_CITY_ID
+import yayauheny.by.util.toJsonObject
 import yayauheny.by.util.HEADER_IMPORT_PAYLOAD_TYPE
 import yayauheny.by.util.HEADER_IMPORT_PROVIDER
 
@@ -90,7 +91,7 @@ class ImportApiIntegrationTest : BaseIntegrationTest() {
         }
 
     @Test
-    @DisplayName("GIVEN batch of 2 items WHEN POST /import/batch THEN both restrooms and import record created")
+    @DisplayName("GIVEN batch of 2 items WHEN POST /import/batch THEN both restrooms and 2 import records created")
     fun given_batch_payload_when_import_batch_then_creates_restrooms_and_import_record() =
         runTest {
             val env = DatabaseTestHelper.createTestEnvironment(dslContext)
@@ -108,13 +109,31 @@ class ImportApiIntegrationTest : BaseIntegrationTest() {
                 val importId = json["importId"]?.jsonPrimitive?.content?.let { UUID.fromString(it) }
                 assertNotNull(importId)
 
-                val importRecord =
+                val successImportCount =
+                    dslContext
+                        .selectCount()
+                        .from(RESTROOM_IMPORTS)
+                        .where(RESTROOM_IMPORTS.STATUS.eq("SUCCESS"))
+                        .and(RESTROOM_IMPORTS.CITY_ID.eq(env.cityId))
+                        .fetchOne()
+                        ?.value1() ?: 0
+                assertEquals(2, successImportCount)
+
+                val importRecords =
                     dslContext
                         .selectFrom(RESTROOM_IMPORTS)
-                        .where(RESTROOM_IMPORTS.ID.eq(importId!!))
-                        .fetchOne()
-                assertNotNull(importRecord)
-                assertEquals("SUCCESS", importRecord!!.status)
+                        .where(RESTROOM_IMPORTS.STATUS.eq("SUCCESS"))
+                        .and(RESTROOM_IMPORTS.CITY_ID.eq(env.cityId))
+                        .fetch()
+
+                assertEquals(2, importRecords.size)
+                val restroomIds = importRecords.map { it[RESTROOM_IMPORTS.RESTROOM_ID] }.toSet()
+                assertEquals(2, restroomIds.size)
+
+                importRecords.forEach { record ->
+                    val payloadObj = record[RESTROOM_IMPORTS.RAW_PAYLOAD].toJsonObject()!!
+                    assertTrue("items" !in payloadObj, "raw_payload must be single item, not {\"items\": [...]}")
+                }
 
                 val restroomCount =
                     dslContext
@@ -237,13 +256,15 @@ class ImportApiIntegrationTest : BaseIntegrationTest() {
                 val importId = json["importId"]?.jsonPrimitive?.content?.let { UUID.fromString(it) }
                 assertNotNull(importId)
 
-                val importRecord =
+                val successImportCount =
                     dslContext
-                        .selectFrom(RESTROOM_IMPORTS)
-                        .where(RESTROOM_IMPORTS.ID.eq(importId!!))
+                        .selectCount()
+                        .from(RESTROOM_IMPORTS)
+                        .where(RESTROOM_IMPORTS.STATUS.eq("SUCCESS"))
+                        .and(RESTROOM_IMPORTS.CITY_ID.eq(env.cityId))
                         .fetchOne()
-                assertNotNull(importRecord)
-                assertEquals("SUCCESS", importRecord!!.status)
+                        ?.value1() ?: 0
+                assertEquals(n, successImportCount)
 
                 val restroomCount =
                     dslContext

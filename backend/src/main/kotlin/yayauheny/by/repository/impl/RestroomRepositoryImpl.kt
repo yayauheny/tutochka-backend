@@ -39,7 +39,7 @@ import yayauheny.by.util.lonAlias
 import yayauheny.by.util.pointExpr
 import yayauheny.by.util.reqDouble
 import yayauheny.by.util.setIfNotNullCoordinates
-import yayauheny.by.util.toJSONBOrEmpty
+import yayauheny.by.util.toJSONB
 import yayauheny.by.util.transactionSuspend
 import yayauheny.by.util.withinDistanceOf
 
@@ -320,8 +320,8 @@ class RestroomRepositoryImpl(
         .set(RESTROOMS.SUBWAY_STATION_ID, createDto.subwayStationId)
         .set(RESTROOMS.NAME, createDto.name)
         .set(RESTROOMS.ADDRESS, createDto.address.takeIf { !it.isNullOrBlank() })
-        .set(RESTROOMS.PHONES, createDto.phones.toJSONBOrEmpty())
-        .set(RESTROOMS.WORK_TIME, createDto.workTime.toJSONBOrEmpty())
+        .set(RESTROOMS.PHONES, createDto.phones.toJSONB())
+        .set(RESTROOMS.WORK_TIME, createDto.workTime.toJSONB())
         .set(RESTROOMS.FEE_TYPE, createDto.feeType?.name)
         .set(RESTROOMS.GENDER_TYPE, createDto.genderType?.name)
         .set(RESTROOMS.ACCESSIBILITY_TYPE, createDto.accessibilityType.name)
@@ -331,8 +331,8 @@ class RestroomRepositoryImpl(
             pointExpr(createDto.coordinates.lon, createDto.coordinates.lat, RESTROOMS.COORDINATES)
         ).set(RESTROOMS.DATA_SOURCE, createDto.dataSource.name)
         .set(RESTROOMS.STATUS, createDto.status.name)
-        .set(RESTROOMS.AMENITIES, createDto.amenities.toJSONBOrEmpty())
-        .set(RESTROOMS.EXTERNAL_MAPS, createDto.externalMaps.toJSONBOrEmpty())
+        .set(RESTROOMS.AMENITIES, createDto.amenities.toJSONB())
+        .set(RESTROOMS.EXTERNAL_MAPS, createDto.externalMaps.toJSONB())
         .set(RESTROOMS.ACCESS_NOTE, createDto.accessNote)
         .set(RESTROOMS.DIRECTION_GUIDE, createDto.directionGuide)
         .set(RESTROOMS.INHERIT_BUILDING_SCHEDULE, createDto.inheritBuildingSchedule)

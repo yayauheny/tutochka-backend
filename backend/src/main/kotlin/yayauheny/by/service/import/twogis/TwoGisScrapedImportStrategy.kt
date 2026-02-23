@@ -56,7 +56,8 @@ class TwoGisScrapedImportStrategy(
     override suspend fun importBatch(
         cityId: UUID,
         payloadType: ImportPayloadType,
-        payload: JsonObject
+        payload: JsonObject,
+        tx: DSLContext?
     ): List<ImportObjectResult> {
         if (payloadType != ImportPayloadType.TWO_GIS_SCRAPED_PLACE_JSON) {
             throw UnsupportedPayloadType(provider(), payloadType)
@@ -69,75 +70,81 @@ class TwoGisScrapedImportStrategy(
 
         logger.info("Processing batch import: ${items.size} items")
 
-        return dsl.transactionSuspend { txCtx ->
-            val txBuildingRepo = BuildingRepositoryImpl(txCtx)
-            val txRestroomRepo = RestroomRepositoryImpl(txCtx)
-            val txSubwayRepo = SubwayRepositoryImpl(txCtx)
+        return if (tx != null) {
+            runInTx(tx, cityId, payloadType, items)
+        } else {
+            dsl.transactionSuspend { runInTx(it, cityId, payloadType, items) }
+        }
+    }
 
-            items.mapIndexed { index, item ->
-                try {
-                    val place = parser.parse(item)
-                    val candidate = normalizer.normalize(cityId, place, payloadType)
-                    val (createDto, buildingId) = resolveBuildingAndCreateDto(candidate, txBuildingRepo)
-                    val originId =
-                        requireNotNull(createDto.originId) {
-                            "originId is required for provider=${candidate.provider}"
-                        }
-                    val existingRestroom =
-                        txRestroomRepo.findByOrigin(
-                            originProvider = createDto.originProvider,
-                            originId = originId
-                        )
+    private suspend fun runInTx(
+        txCtx: DSLContext,
+        cityId: UUID,
+        payloadType: ImportPayloadType,
+        items: List<JsonObject>
+    ): List<ImportObjectResult> {
+        val txBuildingRepo = BuildingRepositoryImpl(txCtx)
+        val txRestroomRepo = RestroomRepositoryImpl(txCtx)
+        val txSubwayRepo = SubwayRepositoryImpl(txCtx)
 
-                    val restroomId =
-                        if (existingRestroom != null) {
-                            val updateDto =
-                                RestroomUpdateDto(
-                                    cityId = createDto.cityId,
-                                    buildingId = createDto.buildingId,
-                                    subwayStationId = createDto.subwayStationId,
-                                    name = createDto.name,
-                                    address = createDto.address,
-                                    phones = createDto.phones,
-                                    workTime = createDto.workTime,
-                                    feeType = createDto.feeType,
-                                    genderType = createDto.genderType,
-                                    accessibilityType = createDto.accessibilityType,
-                                    placeType = createDto.placeType,
-                                    coordinates = createDto.coordinates,
-                                    status = createDto.status,
-                                    amenities = createDto.amenities,
-                                    externalMaps = createDto.externalMaps,
-                                    accessNote = createDto.accessNote,
-                                    directionGuide = createDto.directionGuide,
-                                    inheritBuildingSchedule = createDto.inheritBuildingSchedule,
-                                    hasPhotos = createDto.hasPhotos,
-                                    locationType = createDto.locationType,
-                                    originProvider = createDto.originProvider,
-                                    originId = createDto.originId,
-                                    isHidden = createDto.isHidden
-                                )
-                            txRestroomRepo.update(existingRestroom.id, updateDto).id
-                        } else {
-                            txRestroomRepo.save(createDto).id
-                        }
-
-                    txSubwayRepo.setNearestStationForRestroom(
-                        restroomId = restroomId,
-                        lat = place.location.lat,
-                        lon = place.location.lng
-                    )
-
-                    logger.debug("Successfully imported item {}: restroomId={}, buildingId={}", index, restroomId, buildingId)
-                    ImportObjectResult(
-                        restroomId = restroomId,
-                        buildingId = buildingId
-                    )
-                } catch (e: Exception) {
-                    logger.error("Failed to import item $index: ${e.message}", e)
-                    throw e
+        return items.mapIndexed { index, item ->
+            val place = parser.parse(item)
+            val candidate = normalizer.normalize(cityId, place, payloadType)
+            val (createDto, buildingId) = resolveBuildingAndCreateDto(candidate, txBuildingRepo)
+            val originId =
+                requireNotNull(createDto.originId) {
+                    "originId is required for provider=${candidate.provider}"
                 }
-            }
+            val existingRestroom =
+                txRestroomRepo.findByOrigin(
+                    originProvider = createDto.originProvider,
+                    originId = originId
+                )
+
+            val restroomId =
+                if (existingRestroom != null) {
+                    val updateDto =
+                        RestroomUpdateDto(
+                            cityId = createDto.cityId,
+                            buildingId = createDto.buildingId,
+                            subwayStationId = createDto.subwayStationId,
+                            name = createDto.name,
+                            address = createDto.address,
+                            phones = createDto.phones,
+                            workTime = createDto.workTime,
+                            feeType = createDto.feeType,
+                            genderType = createDto.genderType,
+                            accessibilityType = createDto.accessibilityType,
+                            placeType = createDto.placeType,
+                            coordinates = createDto.coordinates,
+                            status = createDto.status,
+                            amenities = createDto.amenities,
+                            externalMaps = createDto.externalMaps,
+                            accessNote = createDto.accessNote,
+                            directionGuide = createDto.directionGuide,
+                            inheritBuildingSchedule = createDto.inheritBuildingSchedule,
+                            hasPhotos = createDto.hasPhotos,
+                            locationType = createDto.locationType,
+                            originProvider = createDto.originProvider,
+                            originId = createDto.originId,
+                            isHidden = createDto.isHidden
+                        )
+                    txRestroomRepo.update(existingRestroom.id, updateDto).id
+                } else {
+                    txRestroomRepo.save(createDto).id
+                }
+
+            txSubwayRepo.setNearestStationForRestroom(
+                restroomId = restroomId,
+                lat = place.location.lat,
+                lon = place.location.lng
+            )
+
+            logger.debug("Successfully imported item {}: restroomId={}, buildingId={}", index, restroomId, buildingId)
+            ImportObjectResult(
+                restroomId = restroomId,
+                buildingId = buildingId
+            )
         }
     }
 
