@@ -1,4 +1,4 @@
-package integration.api.importapi
+package yayauheny.by.integrationTest.kotlin.api.importapi
 
 import integration.base.BaseIntegrationTest
 import integration.base.KtorTestApplication
@@ -25,12 +25,12 @@ import yayauheny.by.helpers.DatabaseTestHelper
 import yayauheny.by.helpers.assertStatusAndJsonContent
 import yayauheny.by.helpers.loadImportResourceItems
 import yayauheny.by.helpers.testPost
-import yayauheny.by.util.HEADER_IMPORT_CITY_ID
 import yayauheny.by.tables.references.BUILDINGS
+import yayauheny.by.tables.references.RESTROOMS
+import yayauheny.by.tables.references.RESTROOM_IMPORTS
+import yayauheny.by.util.HEADER_IMPORT_CITY_ID
 import yayauheny.by.util.HEADER_IMPORT_PAYLOAD_TYPE
 import yayauheny.by.util.HEADER_IMPORT_PROVIDER
-import yayauheny.by.tables.references.RESTROOM_IMPORTS
-import yayauheny.by.tables.references.RESTROOMS
 
 @Tag("integration")
 class ImportApiIntegrationTest : BaseIntegrationTest() {
@@ -62,8 +62,8 @@ class ImportApiIntegrationTest : BaseIntegrationTest() {
 
                 response.assertStatusAndJsonContent(HttpStatusCode.Created)
                 val json = Json.parseToJsonElement(response.bodyAsText()).jsonObject
-                val restroomId = json["restroomId"]?.jsonPrimitive?.content?.let { java.util.UUID.fromString(it) }
-                val importId = json["importId"]?.jsonPrimitive?.content?.let { java.util.UUID.fromString(it) }
+                val restroomId = json["restroomId"]?.jsonPrimitive?.content?.let { UUID.fromString(it) }
+                val importId = json["importId"]?.jsonPrimitive?.content?.let { UUID.fromString(it) }
                 assertNotNull(restroomId)
                 assertNotNull(importId)
 
@@ -105,7 +105,7 @@ class ImportApiIntegrationTest : BaseIntegrationTest() {
                 val json = Json.parseToJsonElement(response.bodyAsText()).jsonObject
                 assertEquals(2, json["totalProcessed"]?.jsonPrimitive?.content?.toInt())
                 assertEquals(2, json["successful"]?.jsonPrimitive?.content?.toInt())
-                val importId = json["importId"]?.jsonPrimitive?.content?.let { java.util.UUID.fromString(it) }
+                val importId = json["importId"]?.jsonPrimitive?.content?.let { UUID.fromString(it) }
                 assertNotNull(importId)
 
                 val importRecord =

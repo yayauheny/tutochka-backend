@@ -9,7 +9,10 @@ import org.slf4j.LoggerFactory
 
 private val logger = LoggerFactory.getLogger("LiquibaseRunner")
 
-fun runLiquibaseMigrations(dataSource: HikariDataSource) {
+fun runLiquibaseMigrations(
+    dataSource: HikariDataSource,
+    defaultSchemaName: String
+) {
     try {
         logger.info("Starting Liquibase migrations...")
 
@@ -18,6 +21,9 @@ fun runLiquibaseMigrations(dataSource: HikariDataSource) {
                 DatabaseFactory
                     .getInstance()
                     .findCorrectDatabaseImplementation(JdbcConnection(conn))
+
+            database.setDefaultSchemaName(defaultSchemaName)
+            database.setLiquibaseSchemaName(defaultSchemaName)
 
             val liquibase =
                 Liquibase(

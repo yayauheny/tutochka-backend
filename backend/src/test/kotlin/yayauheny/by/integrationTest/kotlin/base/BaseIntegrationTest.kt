@@ -51,6 +51,8 @@ abstract class BaseIntegrationTest {
                 DatabaseFactory
                     .getInstance()
                     .findCorrectDatabaseImplementation(JdbcConnection(conn))
+            database.setDefaultSchemaName("public")
+            database.setLiquibaseSchemaName("public")
             val liquibase =
                 Liquibase(
                     "db/changelog/db.changelog-master.yml",

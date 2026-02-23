@@ -13,9 +13,9 @@ import yayauheny.by.config.ApiConstants
 import yayauheny.by.model.enums.ImportPayloadType
 import yayauheny.by.model.enums.ImportProvider
 
-const val HEADER_IMPORT_PROVIDER = "X-Import-Provider"
-const val HEADER_IMPORT_PAYLOAD_TYPE = "X-Import-Payload-Type"
-const val HEADER_IMPORT_CITY_ID = "X-Import-City-Id"
+const val HEADER_IMPORT_PROVIDER = "Import-Provider"
+const val HEADER_IMPORT_PAYLOAD_TYPE = "Import-Payload-Type"
+const val HEADER_IMPORT_CITY_ID = "Import-City-Id"
 
 data class ImportHeaders(
     val provider: ImportProvider,

@@ -15,6 +15,7 @@ import org.koin.ktor.ext.inject
 import org.koin.ktor.plugin.Koin
 import org.koin.logger.slf4jLogger
 import yayauheny.by.common.plugins.configureErrorHandling
+import yayauheny.by.config.DatabaseConfig
 import yayauheny.by.config.configureRouting
 import yayauheny.by.config.runLiquibaseMigrations
 import yayauheny.by.di.controllerModule
@@ -42,7 +43,8 @@ fun Application.module() {
     }
 
     val dataSource by inject<HikariDataSource>()
-    runLiquibaseMigrations(dataSource)
+    val databaseConfig by inject<DatabaseConfig>()
+    runLiquibaseMigrations(dataSource, databaseConfig.schema)
 
     install(DefaultHeaders)
     install(CallLogging)
