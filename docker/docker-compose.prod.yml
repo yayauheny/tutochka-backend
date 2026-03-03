@@ -1,0 +1,77 @@
+version: "3.9"
+
+services:
+  caddy:
+    image: caddy:2-alpine
+    container_name: tutochka_caddy
+    restart: always
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile
+      - caddy_data:/data
+    networks:
+      - tutochka_net
+
+  backend:
+    image: ghcr.io/USERNAME/tutochka-backend:${TAG}
+    container_name: tutochka_backend
+    restart: always
+    environment:
+      DB_HOST: ${DB_HOST}
+      DB_PORT: ${DB_PORT:-5432}
+      DB_NAME: ${DB_NAME}
+      DB_USER: ${DB_USER}
+      DB_PASSWORD: ${DB_PASSWORD}
+      DB_SSL_MODE: ${DB_SSL_MODE:-require}
+      DB_MAX_POOL_SIZE: ${DB_MAX_POOL_SIZE:-10}
+      DB_MIN_IDLE: ${DB_MIN_IDLE:-2}
+      DB_CONNECTION_TIMEOUT: ${DB_CONNECTION_TIMEOUT:-30000}
+      DB_IDLE_TIMEOUT: ${DB_IDLE_TIMEOUT:-600000}
+      DB_MAX_LIFETIME: ${DB_MAX_LIFETIME:-1800000}
+      APP_PORT: ${APP_PORT:-8080}
+      APP_ENV: ${APP_ENV:-production}
+    networks:
+      - tutochka_net
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/health/live"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  bot:
+    image: ghcr.io/USERNAME/tutochka-bot:${TAG}
+    container_name: tutochka_bot
+    restart: always
+    environment:
+      TELEGRAM_BOT_TOKEN: ${TELEGRAM_BOT_TOKEN}
+      TELEGRAM_BOT_USERNAME: ${TELEGRAM_BOT_USERNAME}
+      BOT_WEBHOOK_PATH: ${BOT_WEBHOOK_PATH:-/telegram/webhook}
+      BOT_ASYNC_PROCESSING: ${BOT_ASYNC_PROCESSING:-true}
+      BOT_WEBHOOK_PUBLIC_URL: ${BOT_WEBHOOK_PUBLIC_URL}
+      BOT_ADMIN_IDS: ${BOT_ADMIN_IDS:-}
+      BACKEND_BASE_URL: ${BACKEND_BASE_URL:-http://backend:8080/api/v1}
+      BACKEND_CONNECT_TIMEOUT_MS: ${BACKEND_CONNECT_TIMEOUT_MS:-3000}
+      BACKEND_READ_TIMEOUT_MS: ${BACKEND_READ_TIMEOUT_MS:-5000}
+      BACKEND_RETRY_ATTEMPTS: ${BACKEND_RETRY_ATTEMPTS:-2}
+      BACKEND_RETRY_DELAY_MS: ${BACKEND_RETRY_DELAY_MS:-200}
+      PORT: ${PORT:-8081}
+      SPRING_PROFILES_ACTIVE: ${SPRING_PROFILES_ACTIVE:-prod}
+    depends_on:
+      backend:
+        condition: service_healthy
+    networks:
+      - tutochka_net
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8081/actuator/health/liveness"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+volumes:
+  caddy_data:
+
+networks:
+  tutochka_net:
+    driver: bridge

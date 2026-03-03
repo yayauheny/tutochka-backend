@@ -304,7 +304,9 @@ object RestroomMapper {
      */
     fun mapToNearestRestroomSlim(
         record: Record,
-        distanceMeters: Double
+        distanceMeters: Double,
+        userLat: Double,
+        userLon: Double
     ): NearestRestroomSlimDto {
         val lat = record.reqDouble("lat")
         val lon = record.reqDouble("lon")
@@ -313,7 +315,7 @@ object RestroomMapper {
 
         val stationId = record.get("s_id") as? java.util.UUID
         val subwayStation =
-            stationId?.let {
+            stationId?.let { sid ->
                 val sNameRu = record.get("s_name_ru", String::class.java) ?: ""
                 val sNameEn = record.get("s_name_en", String::class.java) ?: ""
                 val lineColorHex = record.get("l_hex", String::class.java)?.takeIf { it.isNotBlank() }
@@ -327,6 +329,7 @@ object RestroomMapper {
 
                 stationDisplayName?.let {
                     SubwayStationSlimDto(
+                        id = sid,
                         displayName = it,
                         lineColorHex = lineColorHex
                     )
@@ -341,7 +344,8 @@ object RestroomMapper {
                 record[RESTROOMS.FEE_TYPE]
                     ?.let { FeeType.valueOf(it) }
                     ?: FeeType.UNKNOWN,
-            coordinates = Coordinates(lat = lat, lon = lon),
+            queryCoordinates = Coordinates(lat = userLat, lon = userLon),
+            restroomCoordinates = Coordinates(lat = lat, lon = lon),
             subwayStation = subwayStation
         )
     }

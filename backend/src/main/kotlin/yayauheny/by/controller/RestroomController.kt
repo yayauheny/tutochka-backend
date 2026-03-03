@@ -12,19 +12,19 @@ import io.ktor.server.routing.route
 import yayauheny.by.common.errors.NotFoundException
 import yayauheny.by.common.errors.ValidationException
 import yayauheny.by.config.ApiConstants
+import yayauheny.by.model.dto.Coordinates
 import yayauheny.by.model.restroom.RestroomCreateDto
 import yayauheny.by.model.restroom.RestroomUpdateDto
 import yayauheny.by.service.RestroomService
 import yayauheny.by.service.validation.NearestRestroomsParams
 import yayauheny.by.service.validation.validateAndThen
 import yayauheny.by.service.validation.validateNearestRestroomsParams
+import yayauheny.by.service.validation.validateOrThrow
 import yayauheny.by.service.validation.validateRestroomCreateFields
 import yayauheny.by.service.validation.validateRestroomOnCreate
 import yayauheny.by.service.validation.validateRestroomOnUpdate
 import yayauheny.by.service.validation.validateRestroomUpdateFields
-import yayauheny.by.service.validation.validateOrThrow
 import yayauheny.by.util.createPaginationFromQuery
-import yayauheny.by.util.getBooleanFromQuery
 import yayauheny.by.util.getDoubleFromQuery
 import yayauheny.by.util.getIntFromQuery
 import yayauheny.by.util.getUuidFromPath
@@ -61,16 +61,13 @@ class RestroomController(
                 val lon = call.getDoubleFromQuery("lon")
                 val limit = call.getIntFromQuery("limit") ?: 5
                 val distanceMeters = call.getIntFromQuery("distanceMeters") ?: ApiConstants.DEFAULT_MAX_DISTANCE_METERS
-                val preferStandalone = call.getBooleanFromQuery("preferStandalone", default = true)
-                val onlyStandalone = call.getBooleanFromQuery("onlyStandalone", default = false)
-
                 val params =
                     NearestRestroomsParams(
-                        yayauheny.by.model.dto
-                            .Coordinates(lat, lon),
+                        Coordinates(lat, lon),
                         limit,
                         distanceMeters
                     )
+
                 val restrooms =
                     params
                         .validateAndThen(validateNearestRestroomsParams) { valid ->
@@ -78,11 +75,10 @@ class RestroomController(
                                 valid.coordinates.lat,
                                 valid.coordinates.lon,
                                 valid.limit,
-                                valid.distanceMeters,
-                                preferStandalone,
-                                onlyStandalone
+                                valid.distanceMeters
                             )
                         }.getOrThrow()
+
                 call.respond(HttpStatusCode.OK, restrooms)
             }
 

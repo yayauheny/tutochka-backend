@@ -253,4 +253,42 @@ class RestroomMapperTest {
             assertNull(result.isOpen)
         }
     }
+
+    @Nested
+    @DisplayName("mapToNearestRestroomSlim Tests")
+    inner class MapToNearestRestroomSlimTests {
+        @Test
+        @DisplayName(
+            "GIVEN valid record and query coordinates WHEN mapToNearestRestroomSlim THEN return DTO with queryCoordinates and restroomCoordinates"
+        )
+        fun mapToNearestRestroomSlim_returns_correct_dto() {
+            val testId = UUID.randomUUID()
+            val testName = "Test Restroom"
+            val restroomLat = 55.7558
+            val restroomLon = 37.6176
+            val userLat = 55.75
+            val userLon = 37.62
+            val testDistance = 150.5
+            val testFeeType = FeeType.FREE
+
+            val mockRecord = mockk<Record>(relaxed = true)
+            every { mockRecord.get("lat", Double::class.java) } returns restroomLat
+            every { mockRecord.get("lon", Double::class.java) } returns restroomLon
+            every { mockRecord[RESTROOMS.ID] } returns testId
+            every { mockRecord[RESTROOMS.NAME] } returns testName
+            every { mockRecord[RESTROOMS.FEE_TYPE] } returns testFeeType.name
+            every { mockRecord.get("s_id") } returns null
+
+            val result = RestroomMapper.mapToNearestRestroomSlim(mockRecord, testDistance, userLat, userLon)
+
+            assertNotNull(result)
+            assertEquals(testId, result.id)
+            assertEquals(testName, result.displayName)
+            assertEquals(Coordinates(lat = userLat, lon = userLon), result.queryCoordinates)
+            assertEquals(Coordinates(lat = restroomLat, lon = restroomLon), result.restroomCoordinates)
+            assertEquals(testDistance, result.distanceMeters)
+            assertEquals(testFeeType, result.feeType)
+            assertNull(result.subwayStation)
+        }
+    }
 }

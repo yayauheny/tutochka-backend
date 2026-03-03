@@ -1,8 +1,8 @@
 package yayauheny.by.model.dto
 
+import java.util.UUID
 import kotlinx.serialization.Contextual
 import kotlinx.serialization.Serializable
-import java.util.UUID
 import yayauheny.by.model.enums.FeeType
 
 /**
@@ -13,12 +13,13 @@ import yayauheny.by.model.enums.FeeType
 data class NearestRestroomSlimDto(
     @Contextual val id: UUID,
     /**
-     * Restroom name from DB. May be empty; client (e.g. bot) should show fallback (e.g. "Туалет") when blank.
+     * Restroom name from DB.
      */
     val displayName: String,
     val distanceMeters: Double,
     val feeType: FeeType,
-    val coordinates: Coordinates,
+    val queryCoordinates: Coordinates,
+    val restroomCoordinates: Coordinates,
     /**
      * Minimal subway station info for list display.
      * Contains only displayName and lineColor for emoji rendering.
@@ -31,6 +32,7 @@ data class NearestRestroomSlimDto(
  */
 @Serializable
 data class SubwayStationSlimDto(
+    @Contextual val id: UUID,
     /**
      * Localized display name (preferred: ru, fallback: en/local)
      */

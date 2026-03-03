@@ -26,11 +26,8 @@ class RestroomService(
         latitude: Double,
         longitude: Double,
         limit: Int = 5,
-        distanceMeters: Int? = ApiConstants.DEFAULT_MAX_DISTANCE_METERS,
-        preferStandalone: Boolean = true,
-        onlyStandalone: Boolean = false
-    ): List<NearestRestroomSlimDto> =
-        restroomRepository.findNearestByLocation(latitude, longitude, limit, distanceMeters, preferStandalone, onlyStandalone)
+        distanceMeters: Int? = ApiConstants.DEFAULT_MAX_DISTANCE_METERS
+    ): List<NearestRestroomSlimDto> = restroomRepository.findNearestByLocation(latitude, longitude, limit, distanceMeters)
 
     suspend fun createRestroom(createDto: RestroomCreateDto): RestroomResponseDto {
         return restroomRepository.save(createDto)

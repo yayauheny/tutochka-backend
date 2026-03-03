@@ -150,7 +150,7 @@ class RestroomControllerTest : RoutingTestBase() {
         @DisplayName("GIVEN valid coordinates WHEN GET nearest restrooms THEN return 200 and call service with parsed values")
         fun get_nearest_restrooms_with_valid_coordinates_returns_200_and_calls_service() =
             runTest {
-                coEvery { restroomService.findNearestRestrooms(any(), any(), any()) } returns emptyList()
+                coEvery { restroomService.findNearestRestrooms(any(), any(), any(), any()) } returns emptyList()
 
                 withRoutingApp { client ->
                     val response =
@@ -164,7 +164,7 @@ class RestroomControllerTest : RoutingTestBase() {
                 }
 
                 coVerify(exactly = 1) {
-                    restroomService.findNearestRestrooms(55.7558, 37.6176, 10)
+                    restroomService.findNearestRestrooms(55.7558, 37.6176, 10, any())
                 }
             }
 
@@ -172,7 +172,7 @@ class RestroomControllerTest : RoutingTestBase() {
         @DisplayName("GIVEN coordinates without limit WHEN GET nearest restrooms THEN use default limit")
         fun get_nearest_restrooms_without_limit_uses_default() =
             runTest {
-                coEvery { restroomService.findNearestRestrooms(any(), any(), any()) } returns emptyList()
+                coEvery { restroomService.findNearestRestrooms(any(), any(), any(), any()) } returns emptyList()
 
                 withRoutingApp { client ->
                     val response =
@@ -185,7 +185,7 @@ class RestroomControllerTest : RoutingTestBase() {
                 }
 
                 coVerify(exactly = 1) {
-                    restroomService.findNearestRestrooms(55.7558, 37.6176, 5)
+                    restroomService.findNearestRestrooms(55.7558, 37.6176, 5, any())
                 }
             }
 
@@ -203,7 +203,7 @@ class RestroomControllerTest : RoutingTestBase() {
                     assertEquals(HttpStatusCode.BadRequest, response.status)
                 }
 
-                coVerify(exactly = 0) { restroomService.findNearestRestrooms(any(), any(), any()) }
+                coVerify(exactly = 0) { restroomService.findNearestRestrooms(any(), any(), any(), any()) }
             }
 
         @Test
@@ -220,14 +220,14 @@ class RestroomControllerTest : RoutingTestBase() {
                     assertEquals(HttpStatusCode.BadRequest, response.status)
                 }
 
-                coVerify(exactly = 0) { restroomService.findNearestRestrooms(any(), any(), any()) }
+                coVerify(exactly = 0) { restroomService.findNearestRestrooms(any(), any(), any(), any()) }
             }
 
         @Test
         @DisplayName("GIVEN out of range coordinates WHEN GET nearest restrooms THEN return 400")
         fun get_nearest_restrooms_with_out_of_range_coordinates_returns_400() =
             runTest {
-                coEvery { restroomService.findNearestRestrooms(any(), any(), any()) } returns emptyList()
+                coEvery { restroomService.findNearestRestrooms(any(), any(), any(), any()) } returns emptyList()
 
                 withRoutingApp { client ->
                     val response =
@@ -241,7 +241,7 @@ class RestroomControllerTest : RoutingTestBase() {
                 }
 
                 coVerify(exactly = 0) {
-                    restroomService.findNearestRestrooms(any(), any(), any())
+                    restroomService.findNearestRestrooms(any(), any(), any(), any())
                 }
             }
     }

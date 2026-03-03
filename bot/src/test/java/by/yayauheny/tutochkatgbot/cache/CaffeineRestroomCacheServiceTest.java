@@ -61,6 +61,7 @@ class CaffeineRestroomCacheServiceTest {
                 12.3,
                 FeeType.FREE,
                 new LatLon(53.9, 27.56),
+                new LatLon(53.9, 27.56),
                 null
         );
     }

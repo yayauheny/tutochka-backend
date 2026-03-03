@@ -133,7 +133,7 @@ class RestroomServiceTest {
                     TestDataHelpers.createNearestRestroomList(
                         limit
                     )
-                coEvery { restroomRepository.findNearestByLocation(latitude, longitude, limit) } returns expectedRestrooms
+                coEvery { restroomRepository.findNearestByLocation(latitude, longitude, limit, any()) } returns expectedRestrooms
 
                 val actualRestrooms = restroomService.findNearestRestrooms(latitude, longitude, limit)
 
@@ -142,7 +142,7 @@ class RestroomServiceTest {
                 actualRestrooms.forEach { restroom ->
                     assertTrue(restroom.distanceMeters >= 0, "Distance should be non-negative")
                 }
-                coVerify(exactly = 1) { restroomRepository.findNearestByLocation(latitude, longitude, limit) }
+                coVerify(exactly = 1) { restroomRepository.findNearestByLocation(latitude, longitude, limit, any()) }
             }
 
         @Test
@@ -152,7 +152,7 @@ class RestroomServiceTest {
                 val latitude = 40.7829
                 val longitude = -73.9654
                 val expectedRestrooms: List<NearestRestroomSlimDto> = TestDataHelpers.createNearestRestroomList(5)
-                coEvery { restroomRepository.findNearestByLocation(latitude, longitude, 5) } returns expectedRestrooms
+                coEvery { restroomRepository.findNearestByLocation(latitude, longitude, 5, any()) } returns expectedRestrooms
 
                 val actualRestrooms = restroomService.findNearestRestrooms(latitude, longitude)
 
@@ -161,7 +161,7 @@ class RestroomServiceTest {
                 actualRestrooms.forEach { restroom ->
                     assertTrue(restroom.distanceMeters >= 0, "Distance should be non-negative")
                 }
-                coVerify(exactly = 1) { restroomRepository.findNearestByLocation(latitude, longitude, 5) }
+                coVerify(exactly = 1) { restroomRepository.findNearestByLocation(latitude, longitude, 5, any()) }
             }
 
         @ParameterizedTest
@@ -181,7 +181,7 @@ class RestroomServiceTest {
                 TestDataHelpers.createNearestRestroomList(
                     expectedCount
                 )
-            coEvery { restroomRepository.findNearestByLocation(lat, lon, 5) } returns expectedRestrooms
+            coEvery { restroomRepository.findNearestByLocation(lat, lon, 5, any()) } returns expectedRestrooms
 
             val actualRestrooms = restroomService.findNearestRestrooms(lat, lon)
 
@@ -189,7 +189,7 @@ class RestroomServiceTest {
             actualRestrooms.forEach { restroom ->
                 assertTrue(restroom.distanceMeters >= 0, "Distance should be non-negative")
             }
-            coVerify(exactly = 1) { restroomRepository.findNearestByLocation(lat, lon, 5) }
+            coVerify(exactly = 1) { restroomRepository.findNearestByLocation(lat, lon, 5, any()) }
         }
     }
 

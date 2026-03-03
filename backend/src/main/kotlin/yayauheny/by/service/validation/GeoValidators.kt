@@ -44,7 +44,7 @@ val validateNearestRestroomsParams =
         }
         NearestRestroomsParams::limit {
             minimum(1) hint "Лимит должен быть не менее 1"
-            maximum(10) hint "Лимит должен быть не более 100"
+            maximum(10) hint "Лимит должен быть не более 10"
         }
         NearestRestroomsParams::distanceMeters {
             minimum(1) hint "Радиус поиска должен быть не менее 1 метра"

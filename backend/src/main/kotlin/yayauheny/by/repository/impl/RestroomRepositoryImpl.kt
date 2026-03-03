@@ -396,17 +396,14 @@ class RestroomRepositoryImpl(
         latitude: Double,
         longitude: Double,
         limit: Int?,
-        distanceMeters: Int?,
-        preferStandalone: Boolean,
-        onlyStandalone: Boolean
+        distanceMeters: Int?
     ): List<NearestRestroomSlimDto> =
         withContext(Dispatchers.IO) {
             val maxDistance = (distanceMeters ?: ApiConstants.DEFAULT_MAX_DISTANCE_METERS).toDouble()
+            val maxElements = (limit ?: ApiConstants.DEFAULT_MAX_NEAREST_RESTROOMS_SIZE)
             val coordinateFields = getRestroomsCoordinateFields()
             val knnField = RESTROOMS.COORDINATES.knnOrderTo(latitude, longitude)
             val distanceField = RESTROOMS.COORDINATES.distanceGeographyTo(latitude, longitude)
-            val b = BUILDINGS
-            val s = SUBWAY_STATIONS
             val l = SUBWAY_LINES
 
             val selectFields =
@@ -418,60 +415,35 @@ class RestroomRepositoryImpl(
                     coordinateFields +
                     distanceField.`as`("distance") +
                     listOf(
-                        b.NAME.`as`("b_name"),
-                        b.ADDRESS.`as`("b_address"),
-                        s.ID.`as`("s_id"),
-                        s.NAME_RU.`as`("s_name_ru"),
-                        s.NAME_EN.`as`("s_name_en"),
+                        BUILDINGS.NAME.`as`("b_name"),
+                        BUILDINGS.ADDRESS.`as`("b_address"),
+                        SUBWAY_STATIONS.ID.`as`("s_id"),
+                        SUBWAY_STATIONS.NAME_RU.`as`("s_name_ru"),
+                        SUBWAY_STATIONS.NAME_EN.`as`("s_name_en"),
                         l.HEX_COLOR.`as`("l_hex")
                     )
 
             ctx
                 .select(*selectFields.toTypedArray())
                 .from(RESTROOMS)
-                .leftJoin(b)
-                .on(RESTROOMS.BUILDING_ID.eq(b.ID).and(b.IS_DELETED.isFalse))
-                .leftJoin(s)
-                .on(RESTROOMS.SUBWAY_STATION_ID.eq(s.ID).and(s.IS_DELETED.isFalse))
+                .leftJoin(BUILDINGS)
+                .on(RESTROOMS.BUILDING_ID.eq(BUILDINGS.ID).and(BUILDINGS.IS_DELETED.isFalse))
+                .leftJoin(SUBWAY_STATIONS)
+                .on(RESTROOMS.SUBWAY_STATION_ID.eq(SUBWAY_STATIONS.ID).and(SUBWAY_STATIONS.IS_DELETED.isFalse))
                 .leftJoin(l)
-                .on(s.SUBWAY_LINE_ID.eq(l.ID).and(l.IS_DELETED.isFalse))
+                .on(SUBWAY_STATIONS.SUBWAY_LINE_ID.eq(l.ID).and(l.IS_DELETED.isFalse))
                 .where(
                     RESTROOMS.COORDINATES
                         .withinDistanceOf(latitude, longitude, maxDistance)
                         .and(RESTROOMS.STATUS.eq(RestroomStatus.ACTIVE.name))
                         .and(RESTROOMS.IS_DELETED.isFalse)
                         .and(RESTROOMS.IS_HIDDEN.eq(false))
-                        .let { condition ->
-                            if (onlyStandalone) {
-                                condition.and(RESTROOMS.LOCATION_TYPE.eq("STANDALONE"))
-                            } else {
-                                condition
-                            }
-                        }
-                ).orderBy(
-                    *if (preferStandalone) {
-                        arrayOf(
-                            DSL
-                                .field(
-                                    """
-                                    CASE {0}
-                                        WHEN 'STANDALONE' THEN 0
-                                        WHEN 'INSIDE' THEN 1
-                                        ELSE 2
-                                    END
-                                    """.trimIndent(),
-                                    RESTROOMS.LOCATION_TYPE
-                                ).asc(),
-                            knnField.asc()
-                        )
-                    } else {
-                        arrayOf(knnField.asc())
-                    }
-                ).limit(limit ?: 5)
+                ).orderBy(knnField.asc())
+                .limit(maxElements)
                 .fetch()
                 .map { record ->
                     val distance = record.reqDouble("distance")
-                    RestroomMapper.mapToNearestRestroomSlim(record, distance)
+                    RestroomMapper.mapToNearestRestroomSlim(record, distance, latitude, longitude)
                 }
         }
 

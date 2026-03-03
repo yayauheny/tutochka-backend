@@ -844,7 +844,8 @@ components:
         - displayName
         - distanceMeters
         - feeType
-        - coordinates
+        - queryCoordinates
+        - restroomCoordinates
       properties:
         id:
           type: string
@@ -861,9 +862,24 @@ components:
           type: string
           enum: [FREE, PAID]
           description: Fee type
-        coordinates:
+        queryCoordinates:
           type: object
-          description: Geographic coordinates
+          description: Search point (query) coordinates
+          required:
+            - lat
+            - lon
+          properties:
+            lat:
+              type: number
+              format: double
+              description: Latitude
+            lon:
+              type: number
+              format: double
+              description: Longitude
+        restroomCoordinates:
+          type: object
+          description: Restroom geographic coordinates
           required:
             - lat
             - lon
@@ -880,6 +896,10 @@ components:
           type: object
           description: Minimal subway station info for list display (optional)
           properties:
+            id:
+              type: string
+              format: uuid
+              description: Subway station unique identifier
             displayName:
               type: string
               description: Localized display name (preferred ru, fallback en/local)

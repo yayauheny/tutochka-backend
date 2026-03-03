@@ -18,7 +18,8 @@ object ApiConstants {
     const val MIN_NAME_LENGTH = 2
     const val MIN_NAME_LENGTH_REQUIRED = 1
 
-    const val DEFAULT_MAX_DISTANCE_METERS = 1000
+    const val DEFAULT_MAX_DISTANCE_METERS = 5000
+    const val DEFAULT_MAX_NEAREST_RESTROOMS_SIZE = 5
 
     const val FILTER_PARTS_COUNT = 3
     const val FILTER_DELIMITER = ","

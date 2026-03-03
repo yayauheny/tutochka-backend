@@ -13,9 +13,7 @@ interface RestroomRepository : BaseRepository<RestroomResponseDto, RestroomCreat
         latitude: Double,
         longitude: Double,
         limit: Int? = 5,
-        distanceMeters: Int? = ApiConstants.DEFAULT_MAX_DISTANCE_METERS,
-        preferStandalone: Boolean = true,
-        onlyStandalone: Boolean = false
+        distanceMeters: Int? = ApiConstants.DEFAULT_MAX_DISTANCE_METERS
     ): List<NearestRestroomSlimDto>
 
     suspend fun findByCityId(

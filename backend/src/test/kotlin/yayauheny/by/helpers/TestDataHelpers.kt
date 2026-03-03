@@ -317,6 +317,8 @@ object TestDataHelpers {
         feeType: FeeType = FeeType.FREE,
         lat: Double = 40.7829,
         lon: Double = -73.9654,
+        userLat: Double = 40.78,
+        userLon: Double = -73.96,
         distanceMeters: Double = 100.0,
         subwayStation: yayauheny.by.model.dto.SubwayStationSlimDto? = null
     ) = NearestRestroomSlimDto(
@@ -324,7 +326,8 @@ object TestDataHelpers {
         displayName = displayName,
         distanceMeters = distanceMeters,
         feeType = feeType,
-        coordinates = Coordinates(lat = lat, lon = lon),
+        queryCoordinates = Coordinates(lat = userLat, lon = userLon),
+        restroomCoordinates = Coordinates(lat = lat, lon = lon),
         subwayStation = subwayStation
     )
 
