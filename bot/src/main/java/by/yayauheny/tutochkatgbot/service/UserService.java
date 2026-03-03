@@ -34,29 +34,6 @@ public class UserService {
     }
 
     /**
-     * Get user radius preference
-     * @param userId user ID
-     * @return radius in meters
-     */
-    public Optional<Integer> getRadius(long userId) {
-        return sessionStore.get(userId)
-            .map(UserSession::radius);
-    }
-
-    /**
-     * Set user radius preference
-     * @param userId user ID
-     * @param radius radius in meters
-     */
-    public void setRadius(long userId, int radius) {
-        UserSession currentSession = sessionStore.get(userId)
-            .orElse(UserSession.withLocation(null, radius));
-        
-        UserSession updatedSession = currentSession.updateRadius(radius);
-        sessionStore.put(userId, updatedSession);
-    }
-
-    /**
      * Get user session
      * @param userId user ID
      * @return user session

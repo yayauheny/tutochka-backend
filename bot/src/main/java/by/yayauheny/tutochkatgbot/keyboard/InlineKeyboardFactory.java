@@ -34,18 +34,10 @@ public class InlineKeyboardFactory {
                 .build();
     }
 
-    /**
-     * Create keyboard for compact toilet details (default view)
-     */
-    public InlineKeyboardMarkup toiletDetailsCompact(RestroomResponseDto toilet) {
+    public InlineKeyboardMarkup toiletDetail(RestroomResponseDto toilet) {
         InlineKeyboardButton mapsButton = InlineKeyboardButton.builder()
                 .text(Messages.BUTTON_OPEN_MAPS)
                 .url(formatterService.generateMapsLink(toilet))
-                .build();
-        
-        InlineKeyboardButton moreDetailsButton = InlineKeyboardButton.builder()
-                .text(Messages.BUTTON_MORE_DETAILS)
-                .callbackData(CallbackData.moreDetails(toilet.id().toString()))
                 .build();
         
         InlineKeyboardButton backButton = InlineKeyboardButton.builder()
@@ -56,35 +48,6 @@ public class InlineKeyboardFactory {
         return InlineKeyboardMarkup.builder()
                 .keyboard(List.of(
                     new InlineKeyboardRow(List.of(mapsButton)),
-                    new InlineKeyboardRow(List.of(moreDetailsButton)),
-                    new InlineKeyboardRow(List.of(backButton))
-                ))
-                .build();
-    }
-
-    /**
-     * Create keyboard for full toilet details (expanded view)
-     */
-    public InlineKeyboardMarkup toiletDetailsFull(RestroomResponseDto toilet) {
-        InlineKeyboardButton mapsButton = InlineKeyboardButton.builder()
-                .text(Messages.BUTTON_OPEN_MAPS)
-                .url(formatterService.generateMapsLink(toilet))
-                .build();
-        
-        InlineKeyboardButton hideDetailsButton = InlineKeyboardButton.builder()
-                .text(Messages.BUTTON_HIDE_DETAILS)
-                .callbackData(CallbackData.hideDetails(toilet.id().toString()))
-                .build();
-        
-        InlineKeyboardButton backButton = InlineKeyboardButton.builder()
-                .text(Messages.BUTTON_BACK)
-                .callbackData(CallbackData.backToList())
-                .build();
-        
-        return InlineKeyboardMarkup.builder()
-                .keyboard(List.of(
-                    new InlineKeyboardRow(List.of(mapsButton)),
-                    new InlineKeyboardRow(List.of(hideDetailsButton)),
                     new InlineKeyboardRow(List.of(backButton))
                 ))
                 .build();

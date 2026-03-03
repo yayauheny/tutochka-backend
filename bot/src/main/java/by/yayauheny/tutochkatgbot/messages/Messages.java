@@ -9,8 +9,6 @@ public class Messages {
     public static final String BUTTON_OPEN_MAPS = EmojiConstants.MAP + " Открыть в картах";
     public static final String BUTTON_SEARCH_AGAIN = "🔍 Поиск заново";
     public static final String BUTTON_HELP = "❓ Помощь";
-    public static final String BUTTON_MORE_DETAILS = "ℹ️ Подробнее";
-    public static final String BUTTON_HIDE_DETAILS = "⬆️ Скрыть детали";
     public static final String BUTTON_BACK = "← Назад";
 
     @Deprecated
@@ -97,20 +95,6 @@ public class Messages {
         <b>Тип:</b> {placeType}
         
         {howToFindLine}{landmarkLine}
-        """;
-
-    public static final String TOILET_DETAILS_FULL = """
-        <b>{name}</b>
-        
-        {addressLine}
-        
-        <b>{tags}</b>
-        
-        <b>Тип:</b> {placeType}
-        
-        {buildingLine}{subwayLine}
-        
-        {scheduleBlock}{noteBlock}{routeBlock}
         """;
 
     public static final String LOCATION_REQUEST = "Поделись геолокацией для поиска туалетов:";

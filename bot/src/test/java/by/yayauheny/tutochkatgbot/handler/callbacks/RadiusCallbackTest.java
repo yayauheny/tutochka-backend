@@ -1,8 +1,6 @@
 package by.yayauheny.tutochkatgbot.handler.callbacks;
 
 import by.yayauheny.tutochkatgbot.bot.MessageSender;
-import by.yayauheny.tutochkatgbot.cache.LastLocation;
-import by.yayauheny.tutochkatgbot.cache.LastLocationCacheService;
 import by.yayauheny.tutochkatgbot.dto.backend.NearestRestroomSlimDto;
 import by.yayauheny.tutochkatgbot.handler.UpdateContext;
 import by.yayauheny.tutochkatgbot.keyboard.InlineKeyboardFactory;
@@ -11,6 +9,7 @@ import by.yayauheny.tutochkatgbot.messages.Messages;
 import by.yayauheny.tutochkatgbot.service.FormatterService;
 import by.yayauheny.tutochkatgbot.service.SearchService;
 import by.yayauheny.tutochkatgbot.service.UserService;
+import by.yayauheny.tutochkatgbot.session.UserSession;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
@@ -22,12 +21,10 @@ import org.telegram.telegrambots.meta.api.objects.User;
 import org.telegram.telegrambots.meta.api.objects.message.Message;
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.ReplyKeyboardMarkup;
 
-import java.time.Instant;
 import java.util.List;
 import java.util.Optional;
-import java.util.UUID;
 
-import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.*;
 
@@ -37,8 +34,6 @@ class RadiusCallbackTest {
     private MessageSender sender;
     @Mock
     private UserService userService;
-    @Mock
-    private LastLocationCacheService lastLocationCache;
     @Mock
     private SearchService searchService;
     @Mock
@@ -53,13 +48,12 @@ class RadiusCallbackTest {
     @BeforeEach
     void setUp() {
         MockitoAnnotations.openMocks(this);
-        handler = new RadiusCallback(sender, userService, lastLocationCache, searchService,
+        handler = new RadiusCallback(sender, userService, searchService,
             formatterService, inlineKeyboard, replyKeyboard);
     }
 
     @Test
-    void shouldHandleRadiusCallbackWithCachedLocation() throws Exception {
-        // Given
+    void shouldHandleRadiusCallbackWithSessionLocation() throws Exception {
         long chatId = 123L;
         long userId = 456L;
         int radius = 1000;
@@ -69,28 +63,24 @@ class RadiusCallbackTest {
         Update update = createCallbackUpdate(chatId, userId, "radius:" + radius);
         UpdateContext ctx = UpdateContext.from(update);
 
-        LastLocation cachedLocation = new LastLocation(lat, lon, Instant.now(), "location");
-        when(lastLocationCache.getLastLocation(chatId)).thenReturn(Optional.of(cachedLocation));
+        UserSession.Location location = new UserSession.Location(lat, lon);
+        UserSession session = UserSession.withLocation(location, UserService.DEFAULT_RADIUS);
+        when(userService.getSession(userId)).thenReturn(Optional.of(session));
 
         var mockResults = List.<NearestRestroomSlimDto>of();
         when(searchService.findNearby(lat, lon, radius, 10)).thenReturn(mockResults);
         when(formatterService.toiletsFound(0)).thenReturn("Найдено 0 туалетов");
-        when(inlineKeyboard.toiletList(any())).thenReturn(null);
         when(inlineKeyboard.radiusSelection()).thenReturn(null);
 
-        // When
         handler.handle(update, ctx);
 
-        // Then
-        verify(userService).setRadius(userId, radius);
-        verify(lastLocationCache).getLastLocation(chatId);
+        verify(userService).getSession(userId);
         verify(searchService).findNearby(lat, lon, radius, 10);
         verify(sender).editOrReply(eq(ctx), anyString(), any());
     }
 
     @Test
-    void shouldRequestLocationWhenCacheMiss() throws Exception {
-        // Given
+    void shouldRequestLocationWhenSessionMiss() throws Exception {
         long chatId = 123L;
         long userId = 456L;
         int radius = 1000;
@@ -98,58 +88,49 @@ class RadiusCallbackTest {
         Update update = createCallbackUpdate(chatId, userId, "radius:" + radius);
         UpdateContext ctx = UpdateContext.from(update);
 
-        when(lastLocationCache.getLastLocation(chatId)).thenReturn(Optional.empty());
-        
+        when(userService.getSession(userId)).thenReturn(Optional.empty());
+
         ReplyKeyboardMarkup mockKeyboard = mock(ReplyKeyboardMarkup.class);
         when(replyKeyboard.shareLocation()).thenReturn(mockKeyboard);
 
-        // When
         handler.handle(update, ctx);
 
-        // Then
-        verify(userService).setRadius(userId, radius);
-        verify(lastLocationCache).getLastLocation(chatId);
+        verify(userService).getSession(userId);
         verify(searchService, never()).findNearby(anyDouble(), anyDouble(), anyInt(), anyInt());
-        
+
         ArgumentCaptor<String> messageCaptor = ArgumentCaptor.forClass(String.class);
         verify(sender).editOrReply(eq(ctx), messageCaptor.capture(), isNull());
         assertEquals(Messages.LOCATION_NOT_FOUND, messageCaptor.getValue());
-        
+
         verify(replyKeyboard).shareLocation();
         verify(sender).sendText(eq(chatId), eq(Messages.LOCATION_REQUEST), eq(mockKeyboard));
     }
 
     @Test
     void shouldHandleInvalidRadius() throws Exception {
-        // Given
         long chatId = 123L;
         long userId = 456L;
 
         Update update = createCallbackUpdate(chatId, userId, "radius:invalid");
         UpdateContext ctx = UpdateContext.from(update);
 
-        // When
         handler.handle(update, ctx);
 
-        // Then
-        verify(userService, never()).setRadius(anyLong(), anyInt());
+        verify(userService, never()).getSession(anyLong());
         verify(sender).editOrReply(eq(ctx), contains("Ошибка"), isNull());
     }
 
     @Test
     void shouldHandleEmptyRadius() throws Exception {
-        // Given
         long chatId = 123L;
         long userId = 456L;
 
         Update update = createCallbackUpdate(chatId, userId, "radius:");
         UpdateContext ctx = UpdateContext.from(update);
 
-        // When
         handler.handle(update, ctx);
 
-        // Then
-        verify(userService, never()).setRadius(anyLong(), anyInt());
+        verify(userService, never()).getSession(anyLong());
         verify(sender).editOrReply(eq(ctx), contains("Ошибка"), isNull());
     }
 
@@ -161,7 +142,7 @@ class RadiusCallbackTest {
 
         Message message = new Message();
         message.setMessageId(1);
-        org.telegram.telegrambots.meta.api.objects.chat.Chat chat = 
+        org.telegram.telegrambots.meta.api.objects.chat.Chat chat =
             org.telegram.telegrambots.meta.api.objects.chat.Chat.builder()
                 .id(chatId)
                 .type("private")
@@ -180,4 +161,3 @@ class RadiusCallbackTest {
         return update;
     }
 }
-

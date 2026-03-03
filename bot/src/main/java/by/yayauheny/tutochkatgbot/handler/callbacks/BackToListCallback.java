@@ -63,13 +63,12 @@ public class BackToListCallback implements CallbackHandler {
             sender.sendText(ctx.chatId(), Messages.LOCATION_REQUEST, replyKeyboard.shareLocation());
             return;
         }
-        
-        int radius = userService.getRadius(ctx.userId()).orElse(UserService.DEFAULT_RADIUS);
-        
-        var results = searchService.findNearby(location.latitude(), location.longitude(), radius, 10);
-        
+
+        var results = searchService.findNearby(location.latitude(), location.longitude(), UserService.DEFAULT_RADIUS, 10);
+
         if (results.isEmpty()) {
-            sender.sendText(ctx.chatId(), Messages.NO_TOILETS_FOUND, replyKeyboard.shareLocation());
+            sender.sendText(ctx.chatId(), Messages.NO_TOILETS_FOUND, inlineKeyboard.radiusSelection());
+            sender.sendText(ctx.chatId(), "Или попробуйте другую точку:", replyKeyboard.shareLocation());
             return;
         }
         

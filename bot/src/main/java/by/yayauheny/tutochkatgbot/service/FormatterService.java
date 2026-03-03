@@ -134,7 +134,7 @@ public class FormatterService {
         return EmojiConstants.getEmojiForColor(hexColor);
     }
 
-    public String toiletDetailsCompact(RestroomResponseDto toilet, Double distanceMeters) {
+    public String toiletDetail(RestroomResponseDto toilet, Double distanceMeters) {
         String name = selectDisplayNameForDetails(toilet);
         String address = selectAddress(toilet);
         String tags = formatTags(toilet, distanceMeters);
@@ -160,40 +160,6 @@ public class FormatterService {
         params.put("landmarkLine", landmarkLine);
         
         return Text.substitute(Messages.TOILET_DETAILS_COMPACT, params).trim();
-    }
-
-    public String toiletDetailsFull(RestroomResponseDto toilet, Double distanceMeters) {
-        String name = selectDisplayNameForDetails(toilet);
-        String address = selectAddress(toilet);
-        String tags = formatTags(toilet, distanceMeters);
-        String placeType = Optional.ofNullable(toilet.placeType())
-            .map(pt -> pt.getLocalizedName("ru"))
-            .orElse("Не указано");
-        
-        boolean hasAddress = address != null && !address.isBlank();
-        String distancePart = distanceMeters != null ? "🚶 " + DistanceFormat.meters(distanceMeters) : "";
-        String addressLine = hasAddress
-            ? (distancePart.isEmpty() ? "📍 " + address : distancePart + "   •   📍 " + address)
-            : distancePart;
-        
-        String buildingLine = formatBuildingLine(toilet.building());
-        String subwayLine = formatSubwayLine(toilet.subwayStation());
-        String scheduleBlock = formatScheduleBlock(toilet);
-        String noteBlock = formatNoteBlock(toilet.accessNote());
-        String routeBlock = formatRouteBlock(toilet.directionGuide());
-        
-        Map<String, String> params = new HashMap<>();
-        params.put("name", name);
-        params.put("addressLine", addressLine);
-        params.put("tags", tags);
-        params.put("placeType", placeType);
-        params.put("buildingLine", buildingLine);
-        params.put("subwayLine", subwayLine);
-        params.put("scheduleBlock", scheduleBlock);
-        params.put("noteBlock", noteBlock);
-        params.put("routeBlock", routeBlock);
-        
-        return Text.substitute(Messages.TOILET_DETAILS_FULL, params).trim();
     }
 
     private String formatTags(RestroomResponseDto toilet, Double distanceMeters) {
