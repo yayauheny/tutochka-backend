@@ -63,8 +63,8 @@ class RestroomApiTest : BaseIntegrationTest() {
                 assertTrue(jsonArray.isNotEmpty(), "Response should contain at least one restroom")
                 val firstRestroom = jsonArray.first().jsonObject
                 assertTrue(firstRestroom.containsKey("distanceMeters"), "Response should contain distanceMeters field")
-                assertTrue(firstRestroom.containsKey("coordinates"), "Response should contain coordinates field")
-                val coordinates = firstRestroom["coordinates"]?.jsonObject
+                assertTrue(firstRestroom.containsKey("restroomCoordinates"), "Response should contain restroomCoordinates field")
+                val coordinates = firstRestroom["restroomCoordinates"]?.jsonObject
                 assertTrue(coordinates != null, "Coordinates should be an object")
                 assertTrue(coordinates!!.containsKey("lat"), "Coordinates should have lat field")
                 assertTrue(coordinates.containsKey("lon"), "Coordinates should have lon field")
@@ -141,8 +141,8 @@ class RestroomApiTest : BaseIntegrationTest() {
 
                 jsonArray.forEach { restroom ->
                     assertTrue(restroom.containsKey("distanceMeters"), "Each restroom should have distanceMeters field")
-                    assertTrue(restroom.containsKey("coordinates"), "Each restroom should have coordinates field")
-                    val coordinates = restroom["coordinates"]?.jsonObject
+                    assertTrue(restroom.containsKey("restroomCoordinates"), "Each restroom should have restroomCoordinates field")
+                    val coordinates = restroom["restroomCoordinates"]?.jsonObject
                     assertTrue(coordinates != null, "Coordinates should be an object")
                     assertTrue(coordinates!!.containsKey("lat"), "Coordinates should have lat field")
                     assertTrue(coordinates.containsKey("lon"), "Coordinates should have lon field")

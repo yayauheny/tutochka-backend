@@ -274,12 +274,12 @@ class RestroomMapperTest {
             val mockRecord = mockk<Record>(relaxed = true)
             every { mockRecord.get("lat", Double::class.java) } returns restroomLat
             every { mockRecord.get("lon", Double::class.java) } returns restroomLon
+            every { mockRecord.get("distance", Double::class.java) } returns testDistance
             every { mockRecord[RESTROOMS.ID] } returns testId
             every { mockRecord[RESTROOMS.NAME] } returns testName
             every { mockRecord[RESTROOMS.FEE_TYPE] } returns testFeeType.name
-            every { mockRecord.get("s_id") } returns null
 
-            val result = RestroomMapper.mapToNearestRestroomSlim(mockRecord, testDistance, userLat, userLon)
+            val result = RestroomMapper.mapToNearestRestroomSlim(mockRecord, userLat, userLon)
 
             assertNotNull(result)
             assertEquals(testId, result.id)
@@ -288,7 +288,6 @@ class RestroomMapperTest {
             assertEquals(Coordinates(lat = restroomLat, lon = restroomLon), result.restroomCoordinates)
             assertEquals(testDistance, result.distanceMeters)
             assertEquals(testFeeType, result.feeType)
-            assertNull(result.subwayStation)
         }
     }
 }

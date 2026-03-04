@@ -6,7 +6,6 @@ import by.yayauheny.tutochkatgbot.dto.backend.FeeType;
 import by.yayauheny.tutochkatgbot.dto.backend.NearestRestroomSlimDto;
 import by.yayauheny.tutochkatgbot.dto.backend.RestroomResponseDto;
 import by.yayauheny.tutochkatgbot.dto.backend.SubwayStationResponseDto;
-import by.yayauheny.tutochkatgbot.dto.backend.SubwayStationSlimDto;
 import by.yayauheny.tutochkatgbot.messages.Messages;
 import by.yayauheny.tutochkatgbot.util.DistanceFormat;
 import by.yayauheny.tutochkatgbot.util.EmojiConstants;
@@ -63,36 +62,9 @@ public class FormatterService {
         String distance = DistanceFormat.meters(toilet.distanceMeters());
         FeeType feeType = toilet.feeType();
         String feeIcon = getFeeIcon(feeType);
-        String subwayInfo = formatSubwayInfoSlim(toilet.subwayStation());
+        return distance + "  " + feeIcon + "\n" + name;
+    }
 
-        StringBuilder line1 = new StringBuilder();
-        line1.append(distance).append("  ").append(feeIcon);
-        if (!subwayInfo.isBlank()) {
-            line1.append("  ").append(subwayInfo);
-        }
-        return line1.toString() + "\n" + name;
-    }
-    
-    private String formatSubwayInfoSlim(SubwayStationSlimDto station) {
-        if (station == null) {
-            return "";
-        }
-        
-        String emoji = Optional.ofNullable(station.lineColorHex())
-            .map(EmojiConstants::getEmojiForColor)
-            .orElse(EmojiConstants.METRO);
-        
-        String stationName = Optional.ofNullable(station.displayName())
-            .filter(s -> !s.isBlank())
-            .orElse("");
-        
-        if (stationName.isBlank()) {
-            return "";
-        }
-        
-        return emoji + " " + stationName;
-    }
-    
     private String formatSubwayInfo(SubwayStationResponseDto station) {
         if (station == null) {
             return "";

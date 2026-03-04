@@ -3,6 +3,7 @@ package yayauheny.by.model.dto
 import kotlinx.serialization.Contextual
 import kotlinx.serialization.Serializable
 import java.util.UUID
+import yayauheny.by.model.building.BuildingResponseDto
 import yayauheny.by.model.enums.FeeType
 import yayauheny.by.model.enums.PlaceType
 

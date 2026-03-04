@@ -319,16 +319,14 @@ object TestDataHelpers {
         lon: Double = -73.9654,
         userLat: Double = 40.78,
         userLon: Double = -73.96,
-        distanceMeters: Double = 100.0,
-        subwayStation: yayauheny.by.model.dto.SubwayStationSlimDto? = null
+        distanceMeters: Double = 100.0
     ) = NearestRestroomSlimDto(
         id = id,
         displayName = displayName,
         distanceMeters = distanceMeters,
         feeType = feeType,
         queryCoordinates = Coordinates(lat = userLat, lon = userLon),
-        restroomCoordinates = Coordinates(lat = lat, lon = lon),
-        subwayStation = subwayStation
+        restroomCoordinates = Coordinates(lat = lat, lon = lon)
     )
 
     fun createNearestRestroomList(

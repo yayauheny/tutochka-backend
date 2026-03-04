@@ -892,20 +892,6 @@ components:
               type: number
               format: double
               description: Longitude
-        subwayStation:
-          type: object
-          description: Minimal subway station info for list display (optional)
-          properties:
-            id:
-              type: string
-              format: uuid
-              description: Subway station unique identifier
-            displayName:
-              type: string
-              description: Localized display name (preferred ru, fallback en/local)
-            lineColorHex:
-              type: string
-              description: Line color hex code for emoji mapping (optional)
 
     PageResponseCountry:
       type: object

@@ -24,6 +24,4 @@ data class SubwayStationResponseDto(
             else -> nameRu
         }
     }
-
-    fun lineColor(): String? = line?.hexColor?.takeIf { it.isNotBlank() }
 }

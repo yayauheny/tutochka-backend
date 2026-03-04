@@ -43,8 +43,7 @@ class SearchServiceCacheKeyTest {
             10.0,
             FeeType.FREE,
             new LatLon(53.9, 27.56),
-            new LatLon(53.9, 27.56),
-            null
+            new LatLon(53.9, 27.56)
         );
     }
 }

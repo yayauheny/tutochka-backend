@@ -14,7 +14,6 @@ public record NearestRestroomSlimDto(
     @JsonProperty("distanceMeters") Double distanceMeters,
     @JsonProperty("feeType") FeeType feeType,
     @JsonProperty("queryCoordinates") LatLon queryCoordinates,
-    @JsonProperty("restroomCoordinates") LatLon restroomCoordinates,
-    @JsonProperty("subwayStation") SubwayStationSlimDto subwayStation
+    @JsonProperty("restroomCoordinates") LatLon restroomCoordinates
 ) {}
 

@@ -5,6 +5,7 @@ import java.util.UUID
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import org.jooq.DSLContext
+import org.jooq.Field
 import org.jooq.impl.DSL
 import org.jooq.impl.SQLDataType
 import org.slf4j.LoggerFactory
@@ -37,7 +38,6 @@ import yayauheny.by.util.knnOrderTo
 import yayauheny.by.util.latAlias
 import yayauheny.by.util.lonAlias
 import yayauheny.by.util.pointExpr
-import yayauheny.by.util.reqDouble
 import yayauheny.by.util.setIfNotNullCoordinates
 import yayauheny.by.util.toJSONB
 import yayauheny.by.util.transactionSuspend
@@ -169,37 +169,36 @@ class RestroomRepositoryImpl(
     /**
      * Возвращает все поля таблицы RESTROOMS кроме coordinates (для SELECT запросов)
      */
-    private fun getAllRestroomsFieldsExceptCoordinates(): List<org.jooq.Field<*>> {
-        val r = RESTROOMS
+    private fun getAllRestroomsFieldsExceptCoordinates(): List<Field<*>> {
         return listOf(
-            r.ID,
-            r.CITY_ID,
-            r.BUILDING_ID,
-            r.SUBWAY_STATION_ID,
-            r.NAME,
-            r.ADDRESS,
-            r.PHONES,
-            r.WORK_TIME,
-            r.FEE_TYPE,
-            DSL.field("gender_type", SQLDataType.VARCHAR(20)),
-            r.ACCESSIBILITY_TYPE,
-            r.PLACE_TYPE,
-            r.DATA_SOURCE,
-            r.STATUS,
-            r.AMENITIES,
-            r.EXTERNAL_MAPS,
-            r.ACCESS_NOTE,
-            r.DIRECTION_GUIDE,
-            r.INHERIT_BUILDING_SCHEDULE,
-            r.HAS_PHOTOS,
-            r.LOCATION_TYPE,
-            r.ORIGIN_PROVIDER,
-            r.ORIGIN_ID,
-            r.IS_HIDDEN,
-            r.IS_DELETED,
-            r.CREATED_AT,
-            r.UPDATED_AT,
-            r.DELETED_AT
+            RESTROOMS.ID,
+            RESTROOMS.CITY_ID,
+            RESTROOMS.BUILDING_ID,
+            RESTROOMS.SUBWAY_STATION_ID,
+            RESTROOMS.NAME,
+            RESTROOMS.ADDRESS,
+            RESTROOMS.PHONES,
+            RESTROOMS.WORK_TIME,
+            RESTROOMS.FEE_TYPE,
+            RESTROOMS.GENDER_TYPE,
+            RESTROOMS.ACCESSIBILITY_TYPE,
+            RESTROOMS.PLACE_TYPE,
+            RESTROOMS.DATA_SOURCE,
+            RESTROOMS.STATUS,
+            RESTROOMS.AMENITIES,
+            RESTROOMS.EXTERNAL_MAPS,
+            RESTROOMS.ACCESS_NOTE,
+            RESTROOMS.DIRECTION_GUIDE,
+            RESTROOMS.INHERIT_BUILDING_SCHEDULE,
+            RESTROOMS.HAS_PHOTOS,
+            RESTROOMS.LOCATION_TYPE,
+            RESTROOMS.ORIGIN_PROVIDER,
+            RESTROOMS.ORIGIN_ID,
+            RESTROOMS.IS_HIDDEN,
+            RESTROOMS.IS_DELETED,
+            RESTROOMS.CREATED_AT,
+            RESTROOMS.UPDATED_AT,
+            RESTROOMS.DELETED_AT
         )
     }
 
@@ -207,18 +206,8 @@ class RestroomRepositoryImpl(
      * Возвращает все поля таблицы RESTROOMS с координатами (lat/lon) для SELECT запросов.
      * Устраняет дублирование кода создания latField и lonField в репозиториях.
      */
-    private fun getAllRestroomsFieldsWithCoordinates(): List<org.jooq.Field<*>> {
-        val r = RESTROOMS
-        return getAllRestroomsFieldsExceptCoordinates() + r.COORDINATES.latAlias() + r.COORDINATES.lonAlias()
-    }
-
-    /**
-     * Возвращает координатные поля (lat/lon) для таблицы RESTROOMS.
-     * Используется в запросах, где нужны только координаты без других полей.
-     */
-    private fun getRestroomsCoordinateFields(): List<org.jooq.Field<*>> {
-        val r = RESTROOMS
-        return listOf(r.COORDINATES.latAlias(), r.COORDINATES.lonAlias())
+    private fun getAllRestroomsFieldsWithCoordinates(): List<Field<*>> {
+        return getAllRestroomsFieldsExceptCoordinates() + RESTROOMS.COORDINATES.latAlias() + RESTROOMS.COORDINATES.lonAlias()
     }
 
     override suspend fun findAll(pagination: PaginationRequest): PageResponse<RestroomResponseDto> =
@@ -401,37 +390,20 @@ class RestroomRepositoryImpl(
         withContext(Dispatchers.IO) {
             val maxDistance = (distanceMeters ?: ApiConstants.DEFAULT_MAX_DISTANCE_METERS).toDouble()
             val maxElements = (limit ?: ApiConstants.DEFAULT_MAX_NEAREST_RESTROOMS_SIZE)
-            val coordinateFields = getRestroomsCoordinateFields()
             val knnField = RESTROOMS.COORDINATES.knnOrderTo(latitude, longitude)
             val distanceField = RESTROOMS.COORDINATES.distanceGeographyTo(latitude, longitude)
-            val l = SUBWAY_LINES
-
             val selectFields =
                 listOf(
                     RESTROOMS.ID,
                     RESTROOMS.NAME,
-                    RESTROOMS.FEE_TYPE
-                ) +
-                    coordinateFields +
-                    distanceField.`as`("distance") +
-                    listOf(
-                        BUILDINGS.NAME.`as`("b_name"),
-                        BUILDINGS.ADDRESS.`as`("b_address"),
-                        SUBWAY_STATIONS.ID.`as`("s_id"),
-                        SUBWAY_STATIONS.NAME_RU.`as`("s_name_ru"),
-                        SUBWAY_STATIONS.NAME_EN.`as`("s_name_en"),
-                        l.HEX_COLOR.`as`("l_hex")
-                    )
+                    RESTROOMS.FEE_TYPE,
+                    RESTROOMS.COORDINATES.latAlias(),
+                    RESTROOMS.COORDINATES.lonAlias()
+                ) + distanceField.`as`("distance")
 
             ctx
                 .select(*selectFields.toTypedArray())
                 .from(RESTROOMS)
-                .leftJoin(BUILDINGS)
-                .on(RESTROOMS.BUILDING_ID.eq(BUILDINGS.ID).and(BUILDINGS.IS_DELETED.isFalse))
-                .leftJoin(SUBWAY_STATIONS)
-                .on(RESTROOMS.SUBWAY_STATION_ID.eq(SUBWAY_STATIONS.ID).and(SUBWAY_STATIONS.IS_DELETED.isFalse))
-                .leftJoin(l)
-                .on(SUBWAY_STATIONS.SUBWAY_LINE_ID.eq(l.ID).and(l.IS_DELETED.isFalse))
                 .where(
                     RESTROOMS.COORDINATES
                         .withinDistanceOf(latitude, longitude, maxDistance)
@@ -441,10 +413,7 @@ class RestroomRepositoryImpl(
                 ).orderBy(knnField.asc())
                 .limit(maxElements)
                 .fetch()
-                .map { record ->
-                    val distance = record.reqDouble("distance")
-                    RestroomMapper.mapToNearestRestroomSlim(record, distance, latitude, longitude)
-                }
+                .map { RestroomMapper.mapToNearestRestroomSlim(it, latitude, longitude) }
         }
 
     override suspend fun findByCityId(

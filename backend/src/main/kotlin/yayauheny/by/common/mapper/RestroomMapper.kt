@@ -1,15 +1,16 @@
 package yayauheny.by.common.mapper
 
 import java.time.Instant
+import java.util.UUID
+import org.jooq.JSONB
 import org.jooq.Record
 import org.jooq.UpdateSetFirstStep
 import org.jooq.UpdateSetMoreStep
-import yayauheny.by.model.dto.BuildingResponseDto
+import yayauheny.by.model.building.BuildingResponseDto
 import yayauheny.by.model.dto.Coordinates
 import yayauheny.by.model.dto.NearestRestroomSlimDto
 import yayauheny.by.model.dto.SubwayLineResponseDto
 import yayauheny.by.model.dto.SubwayStationResponseDto
-import yayauheny.by.model.dto.SubwayStationSlimDto
 import yayauheny.by.model.enums.AccessibilityType
 import yayauheny.by.model.enums.DataSourceType
 import yayauheny.by.model.enums.FeeType
@@ -91,13 +92,13 @@ object RestroomMapper {
 
                 BuildingResponseDto(
                     id = it,
-                    cityId = record.get("b_city_id", java.util.UUID::class.java) ?: record[RESTROOMS.CITY_ID]!!,
+                    cityId = record.get("b_city_id", UUID::class.java) ?: record[RESTROOMS.CITY_ID]!!,
                     name = record.get("b_name", String::class.java),
                     address = bAddress,
                     buildingType = bType,
-                    workTime = record.get("b_work_time", org.jooq.JSONB::class.java)?.toJsonObject(),
+                    workTime = record.get("b_work_time", JSONB::class.java)?.toJsonObject(),
                     coordinates = if (bLat != null && bLon != null) Coordinates(bLat, bLon) else Coordinates(lat, lon),
-                    externalIds = record.get("b_external_ids", org.jooq.JSONB::class.java)?.toJsonObject(),
+                    externalIds = record.get("b_external_ids", JSONB::class.java)?.toJsonObject(),
                     isDeleted = record.get("b_is_deleted", Boolean::class.java) ?: false,
                     createdAt =
                         record.get("b_created_at", Instant::class.java)
@@ -229,13 +230,13 @@ object RestroomMapper {
 
                 BuildingResponseDto(
                     id = it,
-                    cityId = record.get("b_city_id", java.util.UUID::class.java) ?: record[RESTROOMS.CITY_ID]!!,
+                    cityId = record.get("b_city_id", UUID::class.java) ?: record[RESTROOMS.CITY_ID]!!,
                     name = record.get("b_name", String::class.java),
                     address = bAddress,
                     buildingType = bType,
-                    workTime = record.get("b_work_time", org.jooq.JSONB::class.java)?.toJsonObject(),
+                    workTime = record.get("b_work_time", JSONB::class.java)?.toJsonObject(),
                     coordinates = if (bLat != null && bLon != null) Coordinates(bLat, bLon) else Coordinates(lat, lon),
-                    externalIds = record.get("b_external_ids", org.jooq.JSONB::class.java)?.toJsonObject(),
+                    externalIds = record.get("b_external_ids", JSONB::class.java)?.toJsonObject(),
                     isDeleted = record.get("b_is_deleted", Boolean::class.java) ?: false,
                     createdAt =
                         record.get("b_created_at", Instant::class.java)
@@ -304,37 +305,14 @@ object RestroomMapper {
      */
     fun mapToNearestRestroomSlim(
         record: Record,
-        distanceMeters: Double,
         userLat: Double,
         userLon: Double
     ): NearestRestroomSlimDto {
         val lat = record.reqDouble("lat")
         val lon = record.reqDouble("lon")
+        val distanceMeters = record.reqDouble("distance")
         val restroomId = record[RESTROOMS.ID]!!
         val displayName = record[RESTROOMS.NAME]?.trim().orEmpty()
-
-        val stationId = record.get("s_id") as? java.util.UUID
-        val subwayStation =
-            stationId?.let { sid ->
-                val sNameRu = record.get("s_name_ru", String::class.java) ?: ""
-                val sNameEn = record.get("s_name_en", String::class.java) ?: ""
-                val lineColorHex = record.get("l_hex", String::class.java)?.takeIf { it.isNotBlank() }
-
-                val stationDisplayName =
-                    when {
-                        !sNameRu.isBlank() -> sNameRu
-                        !sNameEn.isBlank() -> sNameEn
-                        else -> null
-                    }
-
-                stationDisplayName?.let {
-                    SubwayStationSlimDto(
-                        id = sid,
-                        displayName = it,
-                        lineColorHex = lineColorHex
-                    )
-                }
-            }
 
         return NearestRestroomSlimDto(
             id = restroomId,
@@ -345,8 +323,7 @@ object RestroomMapper {
                     ?.let { FeeType.valueOf(it) }
                     ?: FeeType.UNKNOWN,
             queryCoordinates = Coordinates(lat = userLat, lon = userLon),
-            restroomCoordinates = Coordinates(lat = lat, lon = lon),
-            subwayStation = subwayStation
+            restroomCoordinates = Coordinates(lat = lat, lon = lon)
         )
     }
 }
