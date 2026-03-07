@@ -16,15 +16,13 @@ import yayauheny.by.common.errors.ValidationException
 import yayauheny.by.helpers.TestDataHelpers
 import yayauheny.by.helpers.createCityJson
 import yayauheny.by.helpers.createCityUpdateJson
+import yayauheny.by.helpers.assertHasValidationErrors
+import yayauheny.by.helpers.parseErrorResponse
 import yayauheny.by.helpers.testDelete
 import yayauheny.by.helpers.testGet
 import yayauheny.by.helpers.testPost
 import yayauheny.by.helpers.testPut
 
-/**
- * Тесты для проверки корректности HTTP статус-кодов в контроллерах.
- * Проверяет, что все исключения правильно маппятся на соответствующие HTTP статусы.
- */
 @DisplayName("HTTP Status Codes Tests")
 class HttpStatusCodesTest : RoutingTestBase() {
     @Nested
@@ -190,7 +188,7 @@ class HttpStatusCodesTest : RoutingTestBase() {
                     val response = client.testPost("/api/v1/cities", """{"invalid": "data"}""")
 
                     assertEquals(HttpStatusCode.BadRequest, response.status)
-                    // Проверка структуры ответа будет в интеграционных тестах
+                    response.parseErrorResponse().assertHasValidationErrors()
                 }
             }
 

@@ -209,28 +209,24 @@ object RestroomMapper {
             .setIfNotNull(RESTROOMS.ORIGIN_PROVIDER, dto.originProvider?.name)
             .setIfNotNull(RESTROOMS.ORIGIN_ID, dto.originId)
             .setIfNotNull(RESTROOMS.IS_HIDDEN, dto.isHidden)
-}
 
-/**
- * Maps a database record to a slim DTO for nearest restrooms list.
- * displayName is the restroom name from DB (may be empty; client/bot should show fallback e.g. "Туалет").
- */
-fun mapToNearestRestroomSlim(
-    record: Record,
-    userLat: Double,
-    userLon: Double
-): NearestRestroomResponseDto {
-    val lat = record.reqDouble("lat")
-    val lon = record.reqDouble("lon")
-    return NearestRestroomResponseDto(
-        id = record[RESTROOMS.ID]!!,
-        displayName = record[RESTROOMS.NAME]?.trim().orEmpty(),
-        distanceMeters = record.reqDouble("distance"),
-        feeType =
-            record[RESTROOMS.FEE_TYPE]
-                ?.let { FeeType.valueOf(it) }
-                ?: FeeType.UNKNOWN,
-        queryCoordinates = Coordinates(lat = userLat, lon = userLon),
-        restroomCoordinates = Coordinates(lat = lat, lon = lon)
-    )
+    fun mapToNearestRestroomSlim(
+        record: Record,
+        userLat: Double,
+        userLon: Double
+    ): NearestRestroomResponseDto {
+        val lat = record.reqDouble("lat")
+        val lon = record.reqDouble("lon")
+        return NearestRestroomResponseDto(
+            id = record[RESTROOMS.ID]!!,
+            displayName = record[RESTROOMS.NAME]?.trim().orEmpty(),
+            distanceMeters = record.reqDouble("distance"),
+            feeType =
+                record[RESTROOMS.FEE_TYPE]
+                    ?.let { FeeType.valueOf(it) }
+                    ?: FeeType.UNKNOWN,
+            queryCoordinates = Coordinates(lat = userLat, lon = userLon),
+            restroomCoordinates = Coordinates(lat = lat, lon = lon)
+        )
+    }
 }

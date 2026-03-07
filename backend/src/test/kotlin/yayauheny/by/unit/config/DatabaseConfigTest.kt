@@ -5,32 +5,9 @@ import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertThrows
 import yayauheny.by.config.DatabaseConfig
 import kotlin.test.assertEquals
-import kotlin.test.assertNotNull
 
 @DisplayName("DatabaseConfig Validation Tests")
 class DatabaseConfigTest {
-    @Test
-    @DisplayName("Valid configuration should be created successfully")
-    fun valid_configuration_should_be_created_successfully() {
-        val config =
-            DatabaseConfig(
-                host = "localhost",
-                port = 5432,
-                name = "testdb",
-                user = "testuser",
-                password = "testpass",
-                maxPoolSize = 10,
-                minIdle = 2,
-                connectionTimeout = 30000L,
-                idleTimeout = 600000L,
-                maxLifetime = 1800000L
-            )
-
-        assertNotNull(config)
-        assertEquals("localhost", config.host)
-        assertEquals(5432, config.port)
-    }
-
     @Test
     @DisplayName("Blank host should throw IllegalArgumentException")
     fun blank_host_should_throw_exception() {

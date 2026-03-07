@@ -42,9 +42,9 @@ val validateNearestRestroomsParams =
         NearestRestroomsParams::coordinates {
             run(validateCoordinates)
         }
-        NearestRestroomsParams::limit {
+        NearestRestroomsParams::limit ifPresent {
             minimum(1) hint "Лимит должен быть не менее 1"
-            maximum(10) hint "Лимит должен быть не более 10"
+            maximum(100) hint "Лимит должен быть не более 100"
         }
         NearestRestroomsParams::distanceMeters {
             minimum(1) hint "Радиус поиска должен быть не менее 1 метра"

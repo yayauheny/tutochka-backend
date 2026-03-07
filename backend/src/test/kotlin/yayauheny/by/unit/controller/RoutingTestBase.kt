@@ -36,7 +36,6 @@ abstract class RoutingTestBase {
     protected val importService = mockk<ImportService>(relaxed = true)
     private val dslContext =
         mockk<DSLContext>(relaxed = true) {
-            // Настраиваем DSLContext для успешного health check
             val mockSelectStep = mockk<SelectSelectStep<Record1<Any>>>(relaxed = true)
             val mockRecord = mockk<Record1<Any>>(relaxed = true)
             every { select(DSL.field("1")) } returns mockSelectStep

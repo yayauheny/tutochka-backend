@@ -16,7 +16,7 @@ import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
-class SearchServiceCacheKeyTest {
+class SearchServiceBackendCallsTest {
 
     private final BackendClient backend = Mockito.mock(BackendClient.class);
     private final SearchService service = new SearchService(backend);

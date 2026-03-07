@@ -56,21 +56,14 @@ class PSQLExceptionHandlingTest : BaseIntegrationTest() {
                         setBody(cityJson)
                     }
 
-                assertTrue(
-                    duplicateResponse.status == HttpStatusCode.Conflict ||
-                        duplicateResponse.status == HttpStatusCode.BadRequest ||
-                        duplicateResponse.status == HttpStatusCode.Created
+                assertEquals(
+                    HttpStatusCode.Conflict,
+                    duplicateResponse.status,
+                    "Duplicate city should return 409 Conflict"
                 )
-
-                if (duplicateResponse.status == HttpStatusCode.Conflict) {
-                    val errorBody = Json.parseToJsonElement(duplicateResponse.bodyAsText()).jsonObject
-                    assertEquals(409, errorBody["status"]?.jsonPrimitive?.intOrNull)
-                    assertNotNull(errorBody["message"]?.jsonPrimitive?.content)
-                    assertTrue(
-                        errorBody["message"]?.jsonPrimitive?.content?.contains("уже существует") == true ||
-                            errorBody["message"]?.jsonPrimitive?.content?.contains("unique") == true
-                    )
-                }
+                val errorBody = Json.parseToJsonElement(duplicateResponse.bodyAsText()).jsonObject
+                assertEquals(409, errorBody["status"]?.jsonPrimitive?.intOrNull)
+                assertNotNull(errorBody["message"]?.jsonPrimitive?.content)
             }
         }
 

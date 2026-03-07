@@ -5,6 +5,7 @@ import kotlin.test.assertFailsWith
 import kotlin.test.assertNotNull
 import kotlin.test.assertNull
 import kotlin.test.assertTrue
+import kotlinx.serialization.json.JsonNull
 import kotlinx.serialization.json.JsonPrimitive
 import kotlinx.serialization.json.buildJsonArray
 import kotlinx.serialization.json.buildJsonObject
@@ -224,5 +225,46 @@ class TwoGisScrapedParserTest {
         assertFailsWith<InvalidImportPayload> {
             parser.parse(json)
         }
+    }
+
+    @Test
+    fun `should use empty string for null address`() {
+        val json =
+            buildJsonObject {
+                put("id", "12345")
+                put("title", "Test")
+                put("address", JsonNull)
+                put(
+                    "location",
+                    buildJsonObject {
+                        put("lat", 53.9)
+                        put("lng", 27.5)
+                    }
+                )
+            }
+
+        val place = parser.parse(json)
+        assertEquals("", place.address)
+    }
+
+    @Test
+    fun `should accept null working_hours`() {
+        val json =
+            buildJsonObject {
+                put("id", "12345")
+                put("title", "Test")
+                put("address", "Test address")
+                put(
+                    "location",
+                    buildJsonObject {
+                        put("lat", 53.9)
+                        put("lng", 27.5)
+                    }
+                )
+                put("working_hours", JsonNull)
+            }
+
+        val place = parser.parse(json)
+        assertNull(place.workingHours)
     }
 }

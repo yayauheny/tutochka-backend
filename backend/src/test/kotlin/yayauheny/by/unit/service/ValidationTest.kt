@@ -15,31 +15,31 @@ import org.junit.jupiter.api.Test
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.Arguments
 import org.junit.jupiter.params.provider.MethodSource
-import yayauheny.by.service.validation.validateOrThrow
-import yayauheny.by.service.validation.validateWith
 import yayauheny.by.common.errors.ValidationException
-import yayauheny.by.model.dto.Coordinates
+import yayauheny.by.helpers.TestDataHelpers
 import yayauheny.by.model.city.CityCreateDto
 import yayauheny.by.model.country.CountryCreateDto
-import yayauheny.by.model.restroom.RestroomCreateDto
+import yayauheny.by.model.dto.Coordinates
 import yayauheny.by.model.enums.AccessibilityType
 import yayauheny.by.model.enums.DataSourceType
 import yayauheny.by.model.enums.FeeType
 import yayauheny.by.model.enums.GenderType
 import yayauheny.by.model.enums.PlaceType
 import yayauheny.by.model.enums.RestroomStatus
+import yayauheny.by.model.restroom.RestroomCreateDto
+import yayauheny.by.model.subway.SubwayLineCreateDto
+import yayauheny.by.model.subway.SubwayStationCreateDto
 import yayauheny.by.service.validation.NearestRestroomsParams
 import yayauheny.by.service.validation.validateCityOnCreate
 import yayauheny.by.service.validation.validateCountryOnCreate
 import yayauheny.by.service.validation.validateNearestRestroomsParams
+import yayauheny.by.service.validation.validateOrThrow
+import yayauheny.by.service.validation.validateRestroomCreateFields
 import yayauheny.by.service.validation.validateRestroomOnCreate
+import yayauheny.by.service.validation.validateRestroomUpdateFields
 import yayauheny.by.service.validation.validateSubwayLineOnCreate
 import yayauheny.by.service.validation.validateSubwayStationOnCreate
-import yayauheny.by.service.validation.validateRestroomCreateFields
-import yayauheny.by.service.validation.validateRestroomUpdateFields
-import yayauheny.by.model.subway.SubwayLineCreateDto
-import yayauheny.by.model.subway.SubwayStationCreateDto
-import yayauheny.by.helpers.TestDataHelpers
+import yayauheny.by.service.validation.validateWith
 
 class ValidationTest {
     companion object {
@@ -79,6 +79,14 @@ class ValidationTest {
                     CityCreateDto(UUID.randomUUID(), "Минск", "Minsk", null, Coordinates(lat = 53.9006, lon = -181.0)),
                     1
                 ), // lon < -180
+                Arguments.of(
+                    CityCreateDto(UUID.randomUUID(), "Минск", "Minsk", null, Coordinates(lat = Double.NaN, lon = 27.5590)),
+                    1
+                ), // NaN lat
+                Arguments.of(
+                    CityCreateDto(UUID.randomUUID(), "Минск", "Minsk", null, Coordinates(lat = Double.POSITIVE_INFINITY, lon = 27.5590)),
+                    1
+                ), // Infinite lat
                 Arguments.of(
                     CityCreateDto(UUID.randomUUID(), "Минск", "Minsk", null, Coordinates(lat = 53.9006, lon = 27.5590)),
                     0

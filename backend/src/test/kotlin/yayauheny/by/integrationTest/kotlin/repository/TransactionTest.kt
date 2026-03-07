@@ -18,10 +18,8 @@ class TransactionTest : BaseIntegrationTest() {
         runTest {
             val testId = java.util.UUID.randomUUID()
 
-            // Попытка выполнить транзакцию с ошибкой
             try {
                 dslContext.transactionSuspend { txCtx ->
-                    // Вставляем запись
                     txCtx
                         .insertInto(RESTROOMS)
                         .set(RESTROOMS.ID, testId)
@@ -34,11 +32,9 @@ class TransactionTest : BaseIntegrationTest() {
                         .set(RESTROOMS.COORDINATES, pointExpr(37.6176, 55.7558, RESTROOMS.COORDINATES))
                         .execute()
 
-                    // Вызываем ошибку - транзакция должна откатиться
                     throw RuntimeException("Simulated error")
                 }
             } catch (e: RuntimeException) {
-                // Ожидаем ошибку
                 assertEquals("Simulated error", e.message)
             }
 
@@ -49,7 +45,7 @@ class TransactionTest : BaseIntegrationTest() {
                     .where(RESTROOMS.ID.eq(testId))
                     .fetchOne()
 
-            assertNull(savedRecord, "Запись не должна быть сохранена после rollback транзакции")
+            assertNull(savedRecord, "Record should not be persisted after transaction rollback")
         }
 
     @Test
@@ -79,7 +75,7 @@ class TransactionTest : BaseIntegrationTest() {
                     .where(RESTROOMS.ID.eq(testId))
                     .fetchOne()
 
-            assertEquals(testId, savedRecord?.get(RESTROOMS.ID), "Запись должна быть сохранена после успешной транзакции")
-            assertEquals("Test Restroom", savedRecord?.get(RESTROOMS.NAME), "Имя должно совпадать")
+            assertEquals(testId, savedRecord?.get(RESTROOMS.ID), "Record should be persisted after successful transaction")
+            assertEquals("Test Restroom", savedRecord?.get(RESTROOMS.NAME), "Name should match")
         }
 }

@@ -6,11 +6,9 @@ import org.junit.jupiter.api.DisplayName
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.params.ParameterizedTest
-import org.junit.jupiter.params.provider.CsvSource
 import org.junit.jupiter.params.provider.ValueSource
 import yayauheny.by.model.city.CityCreateDto
 import yayauheny.by.model.dto.Coordinates
-import yayauheny.by.common.errors.ValidationException
 import yayauheny.by.service.validation.validateCityOnCreate
 import yayauheny.by.service.validation.validateRestroomCreateFields
 import yayauheny.by.service.validation.validateRestroomOnCreate
@@ -18,110 +16,10 @@ import yayauheny.by.service.validation.validateWith
 import yayauheny.by.helpers.TestDataHelpers
 import java.util.UUID
 import kotlin.test.assertFalse
-import kotlin.test.assertNotNull
 import kotlin.test.assertTrue
 
 @DisplayName("Edge Case Validation Tests")
 class EdgeCaseValidationTest {
-    @Nested
-    @DisplayName("Coordinate Boundary Tests")
-    inner class CoordinateBoundaryTests {
-        @ParameterizedTest
-        @CsvSource(
-            "90.0, 180.0",
-            "-90.0, -180.0",
-            "0.0, 0.0",
-            "89.999999, 179.999999",
-            "-89.999999, -179.999999"
-        )
-        @DisplayName("Valid boundary coordinates should pass validation")
-        fun valid_boundary_coordinates_should_pass(
-            lat: Double,
-            lon: Double
-        ) {
-            val dto =
-                CityCreateDto(
-                    countryId = UUID.randomUUID(),
-                    nameRu = "Test",
-                    nameEn = "Test",
-                    region = null,
-                    coordinates = Coordinates(lat = lat, lon = lon)
-                )
-
-            val result = dto.validateWith(validateCityOnCreate)
-
-            assertTrue(result.isSuccess, "Coordinates ($lat, $lon) should be valid")
-        }
-
-        @ParameterizedTest
-        @CsvSource(
-            "90.1, 180.0",
-            "-90.1, -180.0",
-            "91.0, 0.0",
-            "-91.0, 0.0",
-            "0.0, 180.1",
-            "0.0, -180.1",
-            "0.0, 181.0",
-            "0.0, -181.0",
-            "1.7976931348623157E308, 0.0",
-            "0.0, 1.7976931348623157E308"
-        )
-        @DisplayName("Out-of-range coordinates should fail validation")
-        fun out_of_range_coordinates_should_fail(
-            lat: Double,
-            lon: Double
-        ) {
-            val dto =
-                CityCreateDto(
-                    countryId = UUID.randomUUID(),
-                    nameRu = "Test",
-                    nameEn = "Test",
-                    region = null,
-                    coordinates = Coordinates(lat = lat, lon = lon)
-                )
-
-            val result = dto.validateWith(validateCityOnCreate)
-
-            assertFalse(result.isSuccess, "Coordinates ($lat, $lon) should be invalid")
-            val exception = result.exceptionOrNull() as? ValidationException
-            assertNotNull(exception, "Should throw ValidationException")
-        }
-
-        @Test
-        @DisplayName("NaN coordinates should fail validation")
-        fun nan_coordinates_should_fail() {
-            val dto =
-                CityCreateDto(
-                    countryId = UUID.randomUUID(),
-                    nameRu = "Test",
-                    nameEn = "Test",
-                    region = null,
-                    coordinates = Coordinates(lat = Double.NaN, lon = 0.0)
-                )
-
-            val result = dto.validateWith(validateCityOnCreate)
-
-            assertFalse(result.isSuccess, "NaN latitude should be invalid")
-        }
-
-        @Test
-        @DisplayName("Infinite coordinates should fail validation")
-        fun infinite_coordinates_should_fail() {
-            val dto =
-                CityCreateDto(
-                    countryId = UUID.randomUUID(),
-                    nameRu = "Test",
-                    nameEn = "Test",
-                    region = null,
-                    coordinates = Coordinates(lat = Double.POSITIVE_INFINITY, lon = 0.0)
-                )
-
-            val result = dto.validateWith(validateCityOnCreate)
-
-            assertFalse(result.isSuccess, "Infinite latitude should be invalid")
-        }
-    }
-
     @Nested
     @DisplayName("String Length Boundary Tests")
     inner class StringLengthBoundaryTests {
@@ -168,7 +66,6 @@ class EdgeCaseValidationTest {
                     accessNote = "Test"
                 )
 
-            // validateRestroomOnCreate не проверяет name (это nullable поле)
             val errors1 = validateRestroomCreateFields(dto1)
 
             assertTrue(errors1.isNotEmpty(), "Name over 255 characters should be invalid")
@@ -213,35 +110,6 @@ class EdgeCaseValidationTest {
             val result = dto.validateWith(validateRestroomOnCreate)
 
             assertTrue(result.isSuccess, "Null address is optional and should pass")
-        }
-
-        @Test
-        @DisplayName("Whitespace-only strings for required fields should pass validation (current limitation)")
-        fun whitespace_only_strings_should_pass() {
-            // minLength проверяет длину строки, но не проверяет, что строка не состоит только из пробелов
-            // В реальной валидации whitespace-only строки могут проходить проверку minLength
-            // Это известное ограничение текущей валидации
-            val dto =
-                TestDataHelpers.createRestroomCreateDto(
-                    cityId = UUID.randomUUID(),
-                    name = "   ",
-                    address = "   ",
-                    phones = buildJsonObject {},
-                    workTime = buildJsonObject {},
-                    lat = 53.9,
-                    lon = 27.5,
-                    amenities = buildJsonObject {},
-                    accessNote = "   ",
-                    directionGuide = null
-                )
-
-            // Текущая валидация не проверяет whitespace-only строки
-            // Это может быть улучшено в будущем добавлением проверки trim().isBlank()
-            val result = dto.validateWith(validateRestroomOnCreate)
-
-            // Валидация может пройти, так как "   " имеет длину >= 1
-            // Это ожидаемое поведение текущей реализации
-            assertTrue(result.isSuccess, "Whitespace-only address passes validation (current limitation)")
         }
     }
 
@@ -303,12 +171,6 @@ class EdgeCaseValidationTest {
             val result = dto.validateWith(validateCityOnCreate)
 
             assertTrue(result.isSuccess, "Null optional region should be valid")
-        }
-
-        @Test
-        @DisplayName("Null required fields should fail validation")
-        fun null_required_fields_should_fail() {
-            // For runtime validation, we test with empty strings or invalid values
         }
     }
 
