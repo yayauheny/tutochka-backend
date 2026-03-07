@@ -384,12 +384,12 @@ class RestroomRepositoryImpl(
     override suspend fun findNearestByLocation(
         requestLat: Double,
         requestLon: Double,
-        limit: Int?,
+        limit: Int,
         distanceMeters: Int?
     ): List<NearestRestroomResponseDto> =
         withContext(Dispatchers.IO) {
             val maxDistance = (distanceMeters ?: ApiConstants.DEFAULT_MAX_DISTANCE_METERS).toDouble()
-            val maxElements = (limit ?: ApiConstants.DEFAULT_MAX_NEAREST_RESTROOMS_SIZE)
+            val maxElements = limit
             val knnField = RESTROOMS.COORDINATES.knnOrderTo(requestLat, requestLon)
             val distanceField = RESTROOMS.COORDINATES.distanceGeographyTo(requestLat, requestLon).`as`("distance")
             val selectFields =

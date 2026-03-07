@@ -2,21 +2,21 @@ package yayauheny.by.unit.controller
 
 import io.ktor.http.HttpStatusCode
 import io.mockk.coEvery
+import java.util.UUID
 import kotlin.test.assertEquals
 import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.DisplayName
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
-import java.util.UUID
 import yayauheny.by.common.errors.BadRequestException
 import yayauheny.by.common.errors.ConflictException
 import yayauheny.by.common.errors.FieldError
 import yayauheny.by.common.errors.ServiceUnavailableException
 import yayauheny.by.common.errors.ValidationException
 import yayauheny.by.helpers.TestDataHelpers
+import yayauheny.by.helpers.assertHasValidationErrors
 import yayauheny.by.helpers.createCityJson
 import yayauheny.by.helpers.createCityUpdateJson
-import yayauheny.by.helpers.assertHasValidationErrors
 import yayauheny.by.helpers.parseErrorResponse
 import yayauheny.by.helpers.testDelete
 import yayauheny.by.helpers.testGet
@@ -35,7 +35,7 @@ class HttpStatusCodesTest : RoutingTestBase() {
                 coEvery { cityService.getCityById(any()) } returns TestDataHelpers.createCityResponseDto()
 
                 withRoutingApp { client ->
-                    val response = client.testGet("/api/v1/cities/${java.util.UUID.randomUUID()}")
+                    val response = client.testGet("/api/v1/cities/${UUID.randomUUID()}")
 
                     assertEquals(HttpStatusCode.OK, response.status)
                 }
@@ -48,7 +48,7 @@ class HttpStatusCodesTest : RoutingTestBase() {
                 coEvery { cityService.getCityById(any()) } returns null
 
                 withRoutingApp { client ->
-                    val response = client.testGet("/api/v1/cities/${java.util.UUID.randomUUID()}")
+                    val response = client.testGet("/api/v1/cities/${UUID.randomUUID()}")
 
                     assertEquals(HttpStatusCode.NotFound, response.status)
                 }
@@ -58,8 +58,6 @@ class HttpStatusCodesTest : RoutingTestBase() {
         @DisplayName("GIVEN invalid UUID WHEN GET city THEN return 400 Bad Request")
         fun get_city_with_invalid_uuid_returns_400() =
             runTest {
-                // (invalid UUID format)
-
                 withRoutingApp { client ->
                     val response = client.testGet("/api/v1/cities/invalid-uuid")
 
@@ -129,7 +127,7 @@ class HttpStatusCodesTest : RoutingTestBase() {
         @DisplayName("GIVEN valid update data WHEN PUT city THEN return 200 OK")
         fun put_city_returns_200() =
             runTest {
-                val id = java.util.UUID.randomUUID()
+                val id = UUID.randomUUID()
                 coEvery { cityService.updateCity(any(), any()) } returns TestDataHelpers.createCityResponseDto()
 
                 withRoutingApp { client ->
@@ -144,7 +142,7 @@ class HttpStatusCodesTest : RoutingTestBase() {
         @DisplayName("GIVEN existing city WHEN DELETE city THEN return 200 OK")
         fun delete_existing_city_returns_200() =
             runTest {
-                val id = java.util.UUID.randomUUID()
+                val id = UUID.randomUUID()
                 coEvery { cityService.deleteCity(id) } returns true
 
                 withRoutingApp { client ->
@@ -158,7 +156,7 @@ class HttpStatusCodesTest : RoutingTestBase() {
         @DisplayName("GIVEN non-existent city WHEN DELETE city THEN return 404 Not Found")
         fun delete_non_existent_city_returns_404() =
             runTest {
-                val id = java.util.UUID.randomUUID()
+                val id = UUID.randomUUID()
                 coEvery { cityService.deleteCity(id) } returns false
 
                 withRoutingApp { client ->
@@ -184,8 +182,9 @@ class HttpStatusCodesTest : RoutingTestBase() {
                         )
                     )
 
+                val invalidDto = TestDataHelpers.createCityCreateDto().copy(nameRu = "")
                 withRoutingApp { client ->
-                    val response = client.testPost("/api/v1/cities", """{"invalid": "data"}""")
+                    val response = client.testPost("/api/v1/cities", createCityJson(invalidDto))
 
                     assertEquals(HttpStatusCode.BadRequest, response.status)
                     response.parseErrorResponse().assertHasValidationErrors()

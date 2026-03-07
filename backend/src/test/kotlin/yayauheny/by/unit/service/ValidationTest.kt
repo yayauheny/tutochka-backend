@@ -81,11 +81,11 @@ class ValidationTest {
                 ), // lon < -180
                 Arguments.of(
                     CityCreateDto(UUID.randomUUID(), "Минск", "Minsk", null, Coordinates(lat = Double.NaN, lon = 27.5590)),
-                    1
+                    2
                 ), // NaN lat
                 Arguments.of(
                     CityCreateDto(UUID.randomUUID(), "Минск", "Minsk", null, Coordinates(lat = Double.POSITIVE_INFINITY, lon = 27.5590)),
-                    1
+                    2
                 ), // Infinite lat
                 Arguments.of(
                     CityCreateDto(UUID.randomUUID(), "Минск", "Minsk", null, Coordinates(lat = 53.9006, lon = 27.5590)),

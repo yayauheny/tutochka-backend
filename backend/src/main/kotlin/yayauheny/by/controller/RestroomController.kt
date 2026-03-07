@@ -59,7 +59,7 @@ class RestroomController(
             get("/nearest") {
                 val lat = call.getDoubleFromQuery("lat")
                 val lon = call.getDoubleFromQuery("lon")
-                val limit = call.getIntFromQuery("limit")
+                val limit = call.getIntFromQuery("limit") ?: ApiConstants.DEFAULT_MAX_NEAREST_RESTROOMS_SIZE
                 val distanceMeters = call.getIntFromQuery("distanceMeters") ?: ApiConstants.DEFAULT_MAX_DISTANCE_METERS
                 val params =
                     NearestRestroomsParams(

@@ -10,7 +10,7 @@ import yayauheny.by.model.dto.Coordinates
  */
 data class NearestRestroomsParams(
     val coordinates: Coordinates,
-    val limit: Int?,
+    val limit: Int,
     val distanceMeters: Int
 )
 
@@ -42,7 +42,7 @@ val validateNearestRestroomsParams =
         NearestRestroomsParams::coordinates {
             run(validateCoordinates)
         }
-        NearestRestroomsParams::limit ifPresent {
+        NearestRestroomsParams::limit {
             minimum(1) hint "Лимит должен быть не менее 1"
             maximum(100) hint "Лимит должен быть не более 100"
         }

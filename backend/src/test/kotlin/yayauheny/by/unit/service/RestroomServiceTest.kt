@@ -145,25 +145,6 @@ class RestroomServiceTest {
                 coVerify(exactly = 1) { restroomRepository.findNearestByLocation(latitude, longitude, limit, any()) }
             }
 
-        @Test
-        @DisplayName("GIVEN location without limit WHEN finding nearest restrooms THEN use default limit of 5")
-        fun given_location_without_limit_when_finding_nearest_restrooms_then_use_default_limit_of_5() =
-            runTest {
-                val latitude = 40.7829
-                val longitude = -73.9654
-                val expectedRestrooms: List<NearestRestroomResponseDto> = TestDataHelpers.createNearestRestroomList(5)
-                coEvery { restroomRepository.findNearestByLocation(latitude, longitude, 5, any()) } returns expectedRestrooms
-
-                val actualRestrooms = restroomService.findNearestRestrooms(latitude, longitude)
-
-                assertEquals(expectedRestrooms, actualRestrooms)
-                assertEquals(5, actualRestrooms.size)
-                actualRestrooms.forEach { restroom ->
-                    assertTrue(restroom.distanceMeters >= 0, "Distance should be non-negative")
-                }
-                coVerify(exactly = 1) { restroomRepository.findNearestByLocation(latitude, longitude, 5, any()) }
-            }
-
         @ParameterizedTest
         @CsvSource(
             "0, 0, 0",
@@ -183,7 +164,7 @@ class RestroomServiceTest {
                 )
             coEvery { restroomRepository.findNearestByLocation(lat, lon, 5, any()) } returns expectedRestrooms
 
-            val actualRestrooms = restroomService.findNearestRestrooms(lat, lon)
+            val actualRestrooms = restroomService.findNearestRestrooms(lat, lon, 5)
 
             assertEquals(expectedRestrooms, actualRestrooms)
             actualRestrooms.forEach { restroom ->

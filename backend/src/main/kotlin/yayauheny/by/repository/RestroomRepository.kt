@@ -14,7 +14,7 @@ interface RestroomRepository : BaseRepository<RestroomResponseDto, RestroomCreat
     suspend fun findNearestByLocation(
         requestLat: Double,
         requestLon: Double,
-        limit: Int? = 5,
+        limit: Int,
         distanceMeters: Int? = ApiConstants.DEFAULT_MAX_DISTANCE_METERS
     ): List<NearestRestroomResponseDto>
 

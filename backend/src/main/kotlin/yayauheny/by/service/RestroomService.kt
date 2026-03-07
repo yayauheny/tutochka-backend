@@ -25,7 +25,7 @@ class RestroomService(
     suspend fun findNearestRestrooms(
         latitude: Double,
         longitude: Double,
-        limit: Int? = 5,
+        limit: Int,
         distanceMeters: Int? = ApiConstants.DEFAULT_MAX_DISTANCE_METERS
     ): List<NearestRestroomResponseDto> = restroomRepository.findNearestByLocation(latitude, longitude, limit, distanceMeters)
 
