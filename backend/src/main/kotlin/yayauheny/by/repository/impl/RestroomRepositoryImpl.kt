@@ -20,13 +20,13 @@ import yayauheny.by.common.query.PaginationRequest
 import yayauheny.by.common.query.builder.QueryBuilder
 import yayauheny.by.common.query.builder.QueryExecutor
 import yayauheny.by.config.ApiConstants
-import yayauheny.by.model.dto.NearestRestroomSlimDto
+import yayauheny.by.model.restroom.NearestRestroomResponseDto
 import yayauheny.by.model.enums.ImportProvider
 import yayauheny.by.model.enums.RestroomStatus
 import yayauheny.by.model.restroom.RestroomCreateDto
 import yayauheny.by.model.restroom.RestroomResponseDto
 import yayauheny.by.model.restroom.RestroomUpdateDto
-import yayauheny.by.model.schedule.ScheduleUtils
+import yayauheny.by.util.ScheduleUtils
 import yayauheny.by.repository.RestroomRepository
 import yayauheny.by.service.import.schedule.ScheduleMappingService
 import yayauheny.by.tables.references.BUILDINGS
@@ -382,38 +382,39 @@ class RestroomRepositoryImpl(
         }
 
     override suspend fun findNearestByLocation(
-        latitude: Double,
-        longitude: Double,
+        requestLat: Double,
+        requestLon: Double,
         limit: Int?,
         distanceMeters: Int?
-    ): List<NearestRestroomSlimDto> =
+    ): List<NearestRestroomResponseDto> =
         withContext(Dispatchers.IO) {
             val maxDistance = (distanceMeters ?: ApiConstants.DEFAULT_MAX_DISTANCE_METERS).toDouble()
             val maxElements = (limit ?: ApiConstants.DEFAULT_MAX_NEAREST_RESTROOMS_SIZE)
-            val knnField = RESTROOMS.COORDINATES.knnOrderTo(latitude, longitude)
-            val distanceField = RESTROOMS.COORDINATES.distanceGeographyTo(latitude, longitude)
+            val knnField = RESTROOMS.COORDINATES.knnOrderTo(requestLat, requestLon)
+            val distanceField = RESTROOMS.COORDINATES.distanceGeographyTo(requestLat, requestLon).`as`("distance")
             val selectFields =
                 listOf(
                     RESTROOMS.ID,
                     RESTROOMS.NAME,
                     RESTROOMS.FEE_TYPE,
                     RESTROOMS.COORDINATES.latAlias(),
-                    RESTROOMS.COORDINATES.lonAlias()
-                ) + distanceField.`as`("distance")
+                    RESTROOMS.COORDINATES.lonAlias(),
+                    distanceField
+                )
 
             ctx
-                .select(*selectFields.toTypedArray())
+                .select(selectFields)
                 .from(RESTROOMS)
                 .where(
                     RESTROOMS.COORDINATES
-                        .withinDistanceOf(latitude, longitude, maxDistance)
+                        .withinDistanceOf(requestLat, requestLon, maxDistance)
                         .and(RESTROOMS.STATUS.eq(RestroomStatus.ACTIVE.name))
                         .and(RESTROOMS.IS_DELETED.isFalse)
                         .and(RESTROOMS.IS_HIDDEN.eq(false))
                 ).orderBy(knnField.asc())
                 .limit(maxElements)
                 .fetch()
-                .map { RestroomMapper.mapToNearestRestroomSlim(it, latitude, longitude) }
+                .map { RestroomMapper.mapToNearestRestroomSlim(it, requestLat, requestLon) }
         }
 
     override suspend fun findByCityId(

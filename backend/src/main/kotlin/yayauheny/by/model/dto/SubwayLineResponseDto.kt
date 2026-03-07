@@ -1,4 +1,4 @@
-package yayauheny.by.model.dto
+package yayauheny.by.model.subway
 
 import java.time.Instant
 import java.util.UUID

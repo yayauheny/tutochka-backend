@@ -2,11 +2,13 @@ package yayauheny.by.unit.mapper
 
 import io.mockk.every
 import io.mockk.mockk
-import org.jooq.JSONB
-import org.jooq.Record
+import java.time.Instant
+import java.util.UUID
 import kotlin.test.assertEquals
 import kotlin.test.assertNotNull
 import kotlin.test.assertNull
+import org.jooq.JSONB
+import org.jooq.Record
 import org.junit.jupiter.api.DisplayName
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
@@ -17,8 +19,6 @@ import yayauheny.by.model.enums.DataSourceType
 import yayauheny.by.model.enums.FeeType
 import yayauheny.by.model.enums.RestroomStatus
 import yayauheny.by.tables.references.RESTROOMS
-import java.time.Instant
-import java.util.UUID
 
 @DisplayName("RestroomMapper Tests")
 class RestroomMapperTest {
@@ -214,43 +214,6 @@ class RestroomMapperTest {
             assertEquals("Находится на первом этаже, рядом с главным входом", result.directionGuide)
             assertEquals(true, result.inheritBuildingSchedule)
             assertEquals(true, result.hasPhotos)
-        }
-    }
-
-    @Nested
-    @DisplayName("mapToNearestRestroom Tests")
-    inner class MapToNearestRestroomTests {
-        @Test
-        @DisplayName("GIVEN valid record WHEN mapToNearestRestroom THEN return NearestRestroomResponseDto")
-        fun mapToNearestRestroom_returns_correct_dto() {
-            val testId = UUID.randomUUID()
-            val testName = "Test Restroom"
-            val testAddress = "Test Address"
-            val testLat = 55.7558
-            val testLon = 37.6176
-            val testDistance = 150.5
-            val testFeeType = FeeType.FREE
-
-            val mockRecord = mockk<Record>(relaxed = true)
-            every { mockRecord.get("lat", Double::class.java) } returns testLat
-            every { mockRecord.get("lon", Double::class.java) } returns testLon
-            every { mockRecord[RESTROOMS.ID] } returns testId
-            every { mockRecord[RESTROOMS.NAME] } returns testName
-            every { mockRecord[RESTROOMS.ADDRESS] } returns testAddress
-            every { mockRecord[RESTROOMS.FEE_TYPE] } returns testFeeType.name
-            every { mockRecord[RESTROOMS.WORK_TIME] } returns null
-            every { mockRecord[RESTROOMS.PLACE_TYPE] } returns null
-
-            val result = RestroomMapper.mapToNearestRestroom(mockRecord, testDistance, null)
-
-            assertNotNull(result)
-            assertEquals(testId, result.id)
-            assertEquals(testName, result.name)
-            assertEquals(testAddress, result.address)
-            assertEquals(Coordinates(lat = testLat, lon = testLon), result.coordinates)
-            assertEquals(testDistance, result.distanceMeters)
-            assertEquals(testFeeType, result.feeType)
-            assertNull(result.isOpen)
         }
     }
 

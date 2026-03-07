@@ -1,10 +1,11 @@
-package yayauheny.by.model.dto
+package yayauheny.by.model.subway
 
 import java.time.Instant
 import java.util.Locale
 import java.util.UUID
 import kotlinx.serialization.Contextual
 import kotlinx.serialization.Serializable
+import yayauheny.by.model.dto.Coordinates
 
 @Serializable
 data class SubwayStationResponseDto(

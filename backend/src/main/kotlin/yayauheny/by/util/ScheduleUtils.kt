@@ -1,9 +1,11 @@
-package yayauheny.by.model.schedule
+package yayauheny.by.util
 
 import java.time.DayOfWeek
 import java.time.Instant
 import java.time.LocalTime
 import java.time.ZoneId
+import yayauheny.by.model.schedule.Schedule
+import yayauheny.by.model.schedule.Weekday
 
 object ScheduleUtils {
     fun isOpenNow(

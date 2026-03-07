@@ -10,7 +10,7 @@ import yayauheny.by.model.dto.Coordinates
  */
 data class NearestRestroomsParams(
     val coordinates: Coordinates,
-    val limit: Int,
+    val limit: Int?,
     val distanceMeters: Int
 )
 

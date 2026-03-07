@@ -8,9 +8,6 @@ import org.jooq.UpdateSetFirstStep
 import org.jooq.UpdateSetMoreStep
 import yayauheny.by.model.building.BuildingResponseDto
 import yayauheny.by.model.dto.Coordinates
-import yayauheny.by.model.dto.NearestRestroomSlimDto
-import yayauheny.by.model.dto.SubwayLineResponseDto
-import yayauheny.by.model.dto.SubwayStationResponseDto
 import yayauheny.by.model.enums.AccessibilityType
 import yayauheny.by.model.enums.DataSourceType
 import yayauheny.by.model.enums.FeeType
@@ -22,6 +19,8 @@ import yayauheny.by.model.enums.RestroomStatus
 import yayauheny.by.model.restroom.NearestRestroomResponseDto
 import yayauheny.by.model.restroom.RestroomResponseDto
 import yayauheny.by.model.restroom.RestroomUpdateDto
+import yayauheny.by.model.subway.SubwayLineResponseDto
+import yayauheny.by.model.subway.SubwayStationResponseDto
 import yayauheny.by.tables.references.RESTROOMS
 import yayauheny.by.util.reqDouble
 import yayauheny.by.util.setIfNotNull
@@ -119,7 +118,7 @@ object RestroomMapper {
                     lineId?.let {
                         SubwayLineResponseDto(
                             id = it,
-                            cityId = record.get("l_city_id", java.util.UUID::class.java) ?: record[RESTROOMS.CITY_ID]!!,
+                            cityId = record.get("l_city_id", UUID::class.java) ?: record[RESTROOMS.CITY_ID]!!,
                             nameRu = record.get("l_name_ru", String::class.java) ?: "",
                             nameEn = record.get("l_name_en", String::class.java) ?: "",
                             hexColor = record.get("l_hex", String::class.java) ?: "",
@@ -210,120 +209,28 @@ object RestroomMapper {
             .setIfNotNull(RESTROOMS.ORIGIN_PROVIDER, dto.originProvider?.name)
             .setIfNotNull(RESTROOMS.ORIGIN_ID, dto.originId)
             .setIfNotNull(RESTROOMS.IS_HIDDEN, dto.isHidden)
+}
 
-    fun mapToNearestRestroom(
-        record: Record,
-        distanceMeters: Double,
-        isOpen: Boolean? = null
-    ): NearestRestroomResponseDto {
-        val lat = record.reqDouble("lat")
-        val lon = record.reqDouble("lon")
-
-        val bId = record.get("b_id") as? java.util.UUID
-        val building =
-            bId?.let {
-                val bLat = record.get("b_lat", Double::class.java)
-                val bLon = record.get("b_lon", Double::class.java)
-                val bTypeRaw = record.get("b_type", String::class.java)
-                val bAddress: String = record.get("b_address", String::class.java) ?: ""
-                val bType = PlaceType.fromCode(bTypeRaw)
-
-                BuildingResponseDto(
-                    id = it,
-                    cityId = record.get("b_city_id", UUID::class.java) ?: record[RESTROOMS.CITY_ID]!!,
-                    name = record.get("b_name", String::class.java),
-                    address = bAddress,
-                    buildingType = bType,
-                    workTime = record.get("b_work_time", JSONB::class.java)?.toJsonObject(),
-                    coordinates = if (bLat != null && bLon != null) Coordinates(bLat, bLon) else Coordinates(lat, lon),
-                    externalIds = record.get("b_external_ids", JSONB::class.java)?.toJsonObject(),
-                    isDeleted = record.get("b_is_deleted", Boolean::class.java) ?: false,
-                    createdAt =
-                        record.get("b_created_at", Instant::class.java)
-                            ?: record[RESTROOMS.CREATED_AT]!!,
-                    updatedAt =
-                        record.get("b_updated_at", Instant::class.java)
-                            ?: record[RESTROOMS.UPDATED_AT]!!
-                )
-            }
-
-        val stationId = record.get("s_id") as? java.util.UUID
-        val station =
-            stationId?.let {
-                val sLat = record.get("s_lat", Double::class.java)
-                val sLon = record.get("s_lon", Double::class.java)
-                val lineId = record.get("l_id") as? java.util.UUID
-                val line =
-                    lineId?.let {
-                        SubwayLineResponseDto(
-                            id = it,
-                            cityId = record.get("l_city_id", java.util.UUID::class.java) ?: record[RESTROOMS.CITY_ID]!!,
-                            nameRu = record.get("l_name_ru", String::class.java) ?: "",
-                            nameEn = record.get("l_name_en", String::class.java) ?: "",
-                            hexColor = record.get("l_hex", String::class.java) ?: "",
-                            isDeleted = record.get("l_is_deleted", Boolean::class.java) ?: false,
-                            createdAt =
-                                record.get("l_created_at", Instant::class.java)
-                                    ?: record[RESTROOMS.CREATED_AT]!!
-                        )
-                    }
-                SubwayStationResponseDto(
-                    id = stationId,
-                    subwayLineId = lineId ?: stationId, // fallback just to keep non-null id
-                    nameRu = record.get("s_name_ru", String::class.java) ?: "",
-                    nameEn = record.get("s_name_en", String::class.java) ?: "",
-                    isTransfer = record.get("s_is_transfer", Boolean::class.java) ?: false,
-                    coordinates = if (sLat != null && sLon != null) Coordinates(sLat, sLon) else Coordinates(lat, lon),
-                    isDeleted = record.get("s_is_deleted", Boolean::class.java) ?: false,
-                    createdAt =
-                        record.get("s_created_at", Instant::class.java)
-                            ?: record[RESTROOMS.CREATED_AT]!!,
-                    line = line
-                )
-            }
-
-        return NearestRestroomResponseDto(
-            id = record[RESTROOMS.ID]!!,
-            name = record[RESTROOMS.NAME],
-            address = record[RESTROOMS.ADDRESS],
-            coordinates = Coordinates(lat = lat, lon = lon),
-            distanceMeters = distanceMeters,
-            feeType =
-                record[RESTROOMS.FEE_TYPE]
-                    ?.let { FeeType.valueOf(it) }
-                    ?: FeeType.UNKNOWN,
-            isOpen = isOpen,
-            placeType = PlaceType.entries.find { p -> p.code == record.get(RESTROOMS.PLACE_TYPE) } ?: PlaceType.OTHER,
-            building = building,
-            subwayStation = station
-        )
-    }
-
-    /**
-     * Maps a database record to a slim DTO for nearest restrooms list.
-     * displayName is the restroom name from DB (may be empty; client/bot should show fallback e.g. "Туалет").
-     */
-    fun mapToNearestRestroomSlim(
-        record: Record,
-        userLat: Double,
-        userLon: Double
-    ): NearestRestroomSlimDto {
-        val lat = record.reqDouble("lat")
-        val lon = record.reqDouble("lon")
-        val distanceMeters = record.reqDouble("distance")
-        val restroomId = record[RESTROOMS.ID]!!
-        val displayName = record[RESTROOMS.NAME]?.trim().orEmpty()
-
-        return NearestRestroomSlimDto(
-            id = restroomId,
-            displayName = displayName,
-            distanceMeters = distanceMeters,
-            feeType =
-                record[RESTROOMS.FEE_TYPE]
-                    ?.let { FeeType.valueOf(it) }
-                    ?: FeeType.UNKNOWN,
-            queryCoordinates = Coordinates(lat = userLat, lon = userLon),
-            restroomCoordinates = Coordinates(lat = lat, lon = lon)
-        )
-    }
+/**
+ * Maps a database record to a slim DTO for nearest restrooms list.
+ * displayName is the restroom name from DB (may be empty; client/bot should show fallback e.g. "Туалет").
+ */
+fun mapToNearestRestroomSlim(
+    record: Record,
+    userLat: Double,
+    userLon: Double
+): NearestRestroomResponseDto {
+    val lat = record.reqDouble("lat")
+    val lon = record.reqDouble("lon")
+    return NearestRestroomResponseDto(
+        id = record[RESTROOMS.ID]!!,
+        displayName = record[RESTROOMS.NAME]?.trim().orEmpty(),
+        distanceMeters = record.reqDouble("distance"),
+        feeType =
+            record[RESTROOMS.FEE_TYPE]
+                ?.let { FeeType.valueOf(it) }
+                ?: FeeType.UNKNOWN,
+        queryCoordinates = Coordinates(lat = userLat, lon = userLon),
+        restroomCoordinates = Coordinates(lat = lat, lon = lon)
+    )
 }

@@ -1,25 +1,27 @@
 package yayauheny.by.repository
 
-import yayauheny.by.model.dto.NearestRestroomSlimDto
-import yayauheny.by.model.enums.ImportProvider
 import java.util.UUID
+import yayauheny.by.common.query.PageResponse
+import yayauheny.by.common.query.PaginationRequest
 import yayauheny.by.config.ApiConstants
+import yayauheny.by.model.restroom.NearestRestroomResponseDto
+import yayauheny.by.model.enums.ImportProvider
 import yayauheny.by.model.restroom.RestroomCreateDto
 import yayauheny.by.model.restroom.RestroomResponseDto
 import yayauheny.by.model.restroom.RestroomUpdateDto
 
 interface RestroomRepository : BaseRepository<RestroomResponseDto, RestroomCreateDto, RestroomUpdateDto, UUID> {
     suspend fun findNearestByLocation(
-        latitude: Double,
-        longitude: Double,
+        requestLat: Double,
+        requestLon: Double,
         limit: Int? = 5,
         distanceMeters: Int? = ApiConstants.DEFAULT_MAX_DISTANCE_METERS
-    ): List<NearestRestroomSlimDto>
+    ): List<NearestRestroomResponseDto>
 
     suspend fun findByCityId(
         cityId: UUID,
-        pagination: yayauheny.by.common.query.PaginationRequest
-    ): yayauheny.by.common.query.PageResponse<RestroomResponseDto>
+        pagination: PaginationRequest
+    ): PageResponse<RestroomResponseDto>
 
     /**
      * Находит туалет по внешнему ID из external_maps JSONB поля.
