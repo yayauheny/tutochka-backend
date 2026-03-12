@@ -15,9 +15,7 @@ services:
       - tutochka_net
 
   backend:
-    build:
-      context: ..
-      dockerfile: backend/Dockerfile
+    image: ghcr.io/yayauheny/tutochka-backend:latest
     container_name: tutochka_backend
     restart: always
     environment:
@@ -49,9 +47,7 @@ services:
           memory: 200M
 
   bot:
-    build:
-      context: ..
-      dockerfile: bot/Dockerfile
+    image: ghcr.io/yayauheny/tutochka-bot:latest
     container_name: tutochka_bot
     restart: always
     environment:

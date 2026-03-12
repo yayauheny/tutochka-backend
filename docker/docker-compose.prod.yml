@@ -15,7 +15,7 @@ services:
       - tutochka_net
 
   backend:
-    image: ghcr.io/USERNAME/tutochka-backend:${TAG}
+    image: ghcr.io/yayauheny/tutochka-backend:${TAG:-latest}
     container_name: tutochka_backend
     restart: always
     environment:
@@ -41,7 +41,7 @@ services:
       retries: 3
 
   bot:
-    image: ghcr.io/USERNAME/tutochka-bot:${TAG}
+    image: ghcr.io/yayauheny/tutochka-bot:${TAG:-latest}
     container_name: tutochka_bot
     restart: always
     environment:
