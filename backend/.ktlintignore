@@ -1,0 +1,12 @@
+# jOOQ generated files
+**/tables/**
+**/keys/**
+**/routines/**
+**/udts/**
+**/udt/**
+**/indexes/**
+**/jooq/**
+**/Public.kt
+**/DefaultCatalog.kt
+**/yayauheny/by/Public.kt
+**/yayauheny/by/DefaultCatalog.kt

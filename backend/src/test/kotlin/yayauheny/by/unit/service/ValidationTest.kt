@@ -1,0 +1,669 @@
+package yayauheny.by.unit.service
+
+import java.util.UUID
+import java.util.stream.Stream
+import kotlin.test.assertEquals
+import kotlin.test.assertFailsWith
+import kotlin.test.assertNotNull
+import kotlin.test.assertTrue
+import kotlinx.coroutines.test.runTest
+import kotlinx.serialization.json.buildJsonObject
+import kotlinx.serialization.json.put
+import org.junit.jupiter.api.DisplayName
+import org.junit.jupiter.api.Nested
+import org.junit.jupiter.api.Test
+import org.junit.jupiter.params.ParameterizedTest
+import org.junit.jupiter.params.provider.Arguments
+import org.junit.jupiter.params.provider.MethodSource
+import yayauheny.by.common.errors.ValidationException
+import yayauheny.by.helpers.TestDataHelpers
+import yayauheny.by.model.city.CityCreateDto
+import yayauheny.by.model.country.CountryCreateDto
+import yayauheny.by.model.dto.Coordinates
+import yayauheny.by.model.enums.AccessibilityType
+import yayauheny.by.model.enums.DataSourceType
+import yayauheny.by.model.enums.FeeType
+import yayauheny.by.model.enums.GenderType
+import yayauheny.by.model.enums.PlaceType
+import yayauheny.by.model.enums.RestroomStatus
+import yayauheny.by.model.restroom.RestroomCreateDto
+import yayauheny.by.model.subway.SubwayLineCreateDto
+import yayauheny.by.model.subway.SubwayStationCreateDto
+import yayauheny.by.service.validation.NearestRestroomsParams
+import yayauheny.by.service.validation.validateCityOnCreate
+import yayauheny.by.service.validation.validateCountryOnCreate
+import yayauheny.by.service.validation.validateNearestRestroomsParams
+import yayauheny.by.service.validation.validateOrThrow
+import yayauheny.by.service.validation.validateRestroomCreateFields
+import yayauheny.by.service.validation.validateRestroomOnCreate
+import yayauheny.by.service.validation.validateRestroomUpdateFields
+import yayauheny.by.service.validation.validateSubwayLineOnCreate
+import yayauheny.by.service.validation.validateSubwayStationOnCreate
+import yayauheny.by.service.validation.validateWith
+
+class ValidationTest {
+    companion object {
+        @JvmStatic
+        fun invalidCountryData(): Stream<Arguments> =
+            Stream.of(
+                Arguments.of(CountryCreateDto("", "United States", "US"), 1), // Empty nameRu
+                Arguments.of(CountryCreateDto("Соединенные Штаты", "", "US"), 1), // Empty nameEn
+                Arguments.of(CountryCreateDto("Соединенные Штаты", "United States", ""), 2), // Empty code (minLength + pattern)
+                Arguments.of(CountryCreateDto("Соединенные Штаты", "United States", "US"), 0) // Valid
+            )
+
+        @JvmStatic
+        fun invalidCityData(): Stream<Arguments> =
+            Stream.of(
+                Arguments.of(
+                    CityCreateDto(UUID.randomUUID(), "", "Minsk", null, Coordinates(lat = 53.9006, lon = 27.5590)),
+                    1
+                ), // Empty nameRu
+                Arguments.of(
+                    CityCreateDto(UUID.randomUUID(), "Минск", "", null, Coordinates(lat = 53.9006, lon = 27.5590)),
+                    1
+                ), // Empty nameEn
+                Arguments.of(
+                    CityCreateDto(UUID.randomUUID(), "Минск", "Minsk", null, Coordinates(lat = 91.0, lon = 27.5590)),
+                    1
+                ), // lat > 90
+                Arguments.of(
+                    CityCreateDto(UUID.randomUUID(), "Минск", "Minsk", null, Coordinates(lat = -91.0, lon = 27.5590)),
+                    1
+                ), // lat < -90
+                Arguments.of(
+                    CityCreateDto(UUID.randomUUID(), "Минск", "Minsk", null, Coordinates(lat = 53.9006, lon = 181.0)),
+                    1
+                ), // lon > 180
+                Arguments.of(
+                    CityCreateDto(UUID.randomUUID(), "Минск", "Minsk", null, Coordinates(lat = 53.9006, lon = -181.0)),
+                    1
+                ), // lon < -180
+                Arguments.of(
+                    CityCreateDto(UUID.randomUUID(), "Минск", "Minsk", null, Coordinates(lat = Double.NaN, lon = 27.5590)),
+                    2
+                ), // NaN lat
+                Arguments.of(
+                    CityCreateDto(UUID.randomUUID(), "Минск", "Minsk", null, Coordinates(lat = Double.POSITIVE_INFINITY, lon = 27.5590)),
+                    2
+                ), // Infinite lat
+                Arguments.of(
+                    CityCreateDto(UUID.randomUUID(), "Минск", "Minsk", null, Coordinates(lat = 53.9006, lon = 27.5590)),
+                    0
+                ) // Valid
+            )
+
+        @JvmStatic
+        fun invalidRestroomData(): Stream<Arguments> =
+            Stream.of(
+                Arguments.of(
+                    RestroomCreateDto(
+                        cityId = UUID.randomUUID(),
+                        status = RestroomStatus.ACTIVE,
+                        name = null,
+                        address = "x".repeat(yayauheny.by.config.ApiConstants.MAX_ADDRESS_LENGTH + 1),
+                        phones = null,
+                        workTime = null,
+                        feeType = FeeType.FREE,
+                        genderType = GenderType.UNISEX,
+                        accessibilityType = AccessibilityType.WHEELCHAIR,
+                        placeType = PlaceType.OTHER,
+                        coordinates = Coordinates(lat = 55.7558, lon = 37.6176),
+                        dataSource = DataSourceType.MANUAL,
+                        amenities = buildJsonObject {},
+                        inheritBuildingSchedule = false
+                    ),
+                    1
+                ),
+            )
+
+        @JvmStatic
+        fun invalidNearestRestroomsParamsData(): Stream<Arguments> =
+            Stream.of(
+                Arguments.of(NearestRestroomsParams(Coordinates(lat = 91.0, lon = 37.6176), 10, 1000), 1), // lat > 90
+                Arguments.of(NearestRestroomsParams(Coordinates(lat = -91.0, lon = 37.6176), 10, 1000), 1), // lat < -90
+                Arguments.of(NearestRestroomsParams(Coordinates(lat = 55.7558, lon = 181.0), 10, 1000), 1), // lon > 180
+                Arguments.of(NearestRestroomsParams(Coordinates(lat = 55.7558, lon = -181.0), 10, 1000), 1), // lon < -180
+                Arguments.of(NearestRestroomsParams(Coordinates(lat = 55.7558, lon = 37.6176), 0, 1000), 1), // limit = 0
+                Arguments.of(NearestRestroomsParams(Coordinates(lat = 55.7558, lon = 37.6176), -1, 1000), 1), // limit < 0
+                Arguments.of(NearestRestroomsParams(Coordinates(lat = 55.7558, lon = 37.6176), 101, 1000), 1), // limit > 100
+                Arguments.of(NearestRestroomsParams(Coordinates(lat = 91.0, lon = 181.0), 101, 1000), 3), // Multiple issues
+            )
+    }
+
+    @Nested
+    @DisplayName("CountryCreateDto validation")
+    inner class CountryValidationTest {
+        @Test
+        @DisplayName("Valid data should pass validation")
+        fun givenValidCountryData_whenValidating_thenPasses() {
+            val validDto =
+                CountryCreateDto(
+                    nameRu = "Соединенные Штаты",
+                    nameEn = "United States",
+                    code = "US"
+                )
+
+            val result = validDto.validateWith(validateCountryOnCreate)
+
+            assertTrue(result.isSuccess)
+            assertEquals(validDto, result.getOrNull())
+        }
+
+        @ParameterizedTest
+        @MethodSource("yayauheny.by.unit.service.ValidationTest#invalidCountryData")
+        @DisplayName("Invalid data should fail validation")
+        fun givenInvalidCountryData_whenValidating_thenFailsWithExpectedErrors(
+            dto: CountryCreateDto,
+            expectedErrorCount: Int
+        ) {
+            // (dto and expectedErrorCount provided as parameters)
+
+            val result = dto.validateWith(validateCountryOnCreate)
+
+            if (expectedErrorCount == 0) {
+                assertTrue(result.isSuccess)
+            } else {
+                assertTrue(result.isFailure)
+                val exception = result.exceptionOrNull() as? ValidationException
+                assertNotNull(exception)
+                assertEquals(expectedErrorCount, exception.errors?.size)
+            }
+        }
+    }
+
+    @Nested
+    @DisplayName("CityCreateDto validation")
+    inner class CityValidationTest {
+        @Test
+        @DisplayName("Valid data should pass validation")
+        fun givenValidCityData_whenValidating_thenPasses() {
+            val validDto =
+                CityCreateDto(
+                    countryId = UUID.randomUUID(),
+                    nameRu = "Минск",
+                    nameEn = "Minsk",
+                    region = "Минская область",
+                    coordinates = Coordinates(lat = 53.9006, lon = 27.5590)
+                )
+
+            val result = validDto.validateWith(validateCityOnCreate)
+
+            assertTrue(result.isSuccess)
+            assertEquals(validDto, result.getOrNull())
+        }
+
+        @Test
+        @DisplayName("Valid boundary values should pass validation")
+        fun givenBoundaryCoordinates_whenValidatingCity_thenPasses() {
+            val validDto =
+                CityCreateDto(
+                    countryId = UUID.randomUUID(),
+                    nameRu = "Минск",
+                    nameEn = "Minsk",
+                    region = null,
+                    coordinates = Coordinates(lat = 90.0, lon = 180.0)
+                )
+
+            val result = validDto.validateWith(validateCityOnCreate)
+
+            assertTrue(result.isSuccess)
+        }
+
+        @ParameterizedTest
+        @MethodSource("yayauheny.by.unit.service.ValidationTest#invalidCityData")
+        @DisplayName("Invalid data should fail validation")
+        fun givenInvalidCityData_whenValidating_thenFailsWithExpectedErrors(
+            dto: CityCreateDto,
+            expectedErrorCount: Int
+        ) {
+            // (dto and expectedErrorCount provided as parameters)
+
+            val result = dto.validateWith(validateCityOnCreate)
+
+            if (expectedErrorCount == 0) {
+                assertTrue(result.isSuccess)
+            } else {
+                assertTrue(result.isFailure)
+                val exception = result.exceptionOrNull() as? ValidationException
+                assertNotNull(exception)
+                assertEquals(expectedErrorCount, exception.errors?.size)
+            }
+        }
+    }
+
+    @Nested
+    @DisplayName("RestroomCreateDto validation")
+    inner class RestroomValidationTest {
+        @Test
+        @DisplayName("Valid data should pass validation")
+        fun validDataShouldPassValidation() {
+            val validDto =
+                RestroomCreateDto(
+                    cityId = UUID.randomUUID(),
+                    name = "Public Restroom",
+                    address = "123 Main Street",
+                    phones = buildJsonObject { put("main", "+1234567890") },
+                    workTime = buildJsonObject { put("monday", "08:00-22:00") },
+                    feeType = FeeType.FREE,
+                    genderType = GenderType.UNISEX,
+                    accessibilityType = AccessibilityType.WHEELCHAIR,
+                    coordinates = Coordinates(lat = 55.7558, lon = 37.6176),
+                    dataSource = DataSourceType.MANUAL,
+                    status = RestroomStatus.ACTIVE,
+                    amenities = buildJsonObject { put("wifi", true) },
+                    inheritBuildingSchedule = false,
+                    hasPhotos = false
+                )
+
+            val result = validDto.validateWith(validateRestroomOnCreate)
+
+            assertTrue(result.isSuccess)
+            assertEquals(validDto, result.getOrNull())
+        }
+
+        @ParameterizedTest
+        @MethodSource("yayauheny.by.unit.service.ValidationTest#invalidRestroomData")
+        @DisplayName("Invalid data should fail validation")
+        fun invalidDataShouldFailValidation(
+            dto: RestroomCreateDto,
+            expectedErrorCount: Int
+        ) {
+            val konformResult = dto.validateWith(validateRestroomOnCreate)
+            val konformErrors =
+                if (konformResult.isFailure) {
+                    (konformResult.exceptionOrNull() as? ValidationException)?.errors ?: emptyList()
+                } else {
+                    emptyList()
+                }
+            val additionalErrors = validateRestroomCreateFields(dto)
+            val combinedErrors = konformErrors + additionalErrors
+            assertTrue(
+                combinedErrors.isNotEmpty(),
+                "Should have at least $expectedErrorCount validation error(s)"
+            )
+            assertTrue(
+                combinedErrors.size >= expectedErrorCount,
+                "Expected at least $expectedErrorCount error(s), got ${combinedErrors.size}"
+            )
+        }
+    }
+
+    @Nested
+    @DisplayName("ValidationException throwing")
+    inner class ValidationExceptionTest {
+        @Test
+        @DisplayName("validateOrThrow should throw ValidationException for invalid data")
+        fun validateOrThrowShouldThrowForInvalidData() =
+            runTest {
+                val invalidDto = CountryCreateDto("", "United States", "US")
+
+                val exception =
+                    assertFailsWith<ValidationException> {
+                        invalidDto.validateOrThrow(validateCountryOnCreate)
+                    }
+
+                assertNotNull(exception.errors)
+                assertEquals(1, exception.errors!!.size)
+                assertTrue(exception.errors!![0].field.contains("nameRu"))
+                assertTrue(exception.errors!![0].message.contains("обязательно"))
+            }
+
+        @Test
+        @DisplayName("validateOrThrow should return valid data without throwing")
+        fun validateOrThrowShouldReturnValidDataWithoutThrowing() =
+            runTest {
+                val validDto = CountryCreateDto("США", "United States", "US")
+
+                val result = validDto.validateOrThrow(validateCountryOnCreate)
+
+                assertEquals(validDto, result)
+            }
+    }
+
+    @Nested
+    @DisplayName("Multiple validation errors")
+    inner class MultipleErrorsTest {
+        @Test
+        @DisplayName("Country with multiple issues should return all validation errors")
+        fun countryWithMultipleIssuesShouldReturnAllErrors() {
+            val invalidDto = CountryCreateDto("", "", "U") // Multiple issues
+
+            val result = invalidDto.validateWith(validateCountryOnCreate)
+
+            assertTrue(result.isFailure)
+            val exception = result.exceptionOrNull() as? ValidationException
+            assertNotNull(exception)
+            assertEquals(3, exception.errors?.size) // nameRu, nameEn, code
+
+            val fields = exception.errors!!.map { it.field }
+            // Check that we have errors for the expected fields (field names might be different)
+            assertTrue(fields.any { it.contains("nameRu") || it.contains("name_ru") })
+            assertTrue(fields.any { it.contains("nameEn") || it.contains("name_en") })
+            assertTrue(fields.any { it.contains("code") })
+        }
+
+        @Test
+        @DisplayName("City with multiple issues should return all validation errors")
+        fun cityWithMultipleIssuesShouldReturnAllErrors() {
+            val invalidDto =
+                CityCreateDto(
+                    countryId = UUID.randomUUID(),
+                    nameRu = "",
+                    nameEn = "",
+                    region = null,
+                    coordinates = Coordinates(lat = 91.0, lon = 181.0)
+                ) // Multiple issues
+
+            val result = invalidDto.validateWith(validateCityOnCreate)
+
+            assertTrue(result.isFailure)
+            val exception = result.exceptionOrNull() as? ValidationException
+            assertNotNull(exception)
+            // nameRu (1) + nameEn (1) + coordinates (2 for lat and lon) = 4 errors
+            assertTrue(
+                exception.errors?.size ?: 0 >= 3,
+                "Should have at least 3 errors (nameRu, nameEn, coordinates), got: ${exception.errors?.size}"
+            )
+
+            val fields = exception.errors!!.map { it.field.lowercase() }
+            // Check that we have errors for the expected fields (field names might be different)
+            assertTrue(fields.any { it.contains("nameru") || it.contains("name_ru") }, "Should have nameRu error, got: $fields")
+            assertTrue(fields.any { it.contains("nameen") || it.contains("name_en") }, "Should have nameEn error, got: $fields")
+            // For nested coordinates, errors are reported on "coordinates" field
+            assertTrue(fields.any { it.contains("coordinates") }, "Should have coordinates error, got: $fields")
+        }
+
+        @Test
+        @DisplayName("Restroom with invalid coordinates should return validation errors")
+        fun restroomWithInvalidCoordinatesShouldReturnErrors() {
+            val invalidDto =
+                RestroomCreateDto(
+                    cityId = UUID.randomUUID(),
+                    status = RestroomStatus.ACTIVE,
+                    name = "Test",
+                    address = null,
+                    phones = buildJsonObject {},
+                    workTime = buildJsonObject {},
+                    feeType = FeeType.FREE,
+                    genderType = GenderType.UNISEX,
+                    accessibilityType = AccessibilityType.WHEELCHAIR,
+                    coordinates = Coordinates(lat = 91.0, lon = 181.0),
+                    dataSource = DataSourceType.MANUAL,
+                    amenities = buildJsonObject {},
+                    buildingId = null,
+                    subwayStationId = null,
+                    externalMaps = null,
+                    accessNote = "Test",
+                    directionGuide = null,
+                    inheritBuildingSchedule = false,
+                    hasPhotos = false
+                )
+
+            val result = invalidDto.validateWith(validateRestroomOnCreate)
+
+            assertTrue(result.isFailure)
+            val exception = result.exceptionOrNull() as? ValidationException
+            assertNotNull(exception)
+            assertTrue(
+                exception.errors?.size ?: 0 >= 1,
+                "Should have at least 1 error (coordinates), got: ${exception.errors?.size}"
+            )
+            val fields = exception.errors!!.map { it.field.lowercase() }
+            assertTrue(fields.any { it.contains("coordinates") }, "Should have coordinates error, got: $fields")
+        }
+    }
+
+    @Nested
+    @DisplayName("NearestRestroomsParams validation")
+    inner class NearestRestroomsParamsValidationTest {
+        @Test
+        @DisplayName("Valid parameters should pass validation")
+        fun valid_params_should_pass() {
+            val params = NearestRestroomsParams(Coordinates(lat = 55.7558, lon = 37.6176), 10, 1000)
+
+            val result = params.validateWith(validateNearestRestroomsParams)
+
+            assertTrue(result.isSuccess)
+            assertEquals(params, result.getOrNull())
+        }
+
+        @Test
+        @DisplayName("Valid parameters should pass with validateOrThrow")
+        fun valid_params_should_pass_with_validateOrThrow() =
+            runTest {
+                val params = NearestRestroomsParams(Coordinates(lat = 55.7558, lon = 37.6176), 10, 1000)
+
+                val result = params.validateOrThrow(validateNearestRestroomsParams)
+
+                assertEquals(params, result)
+            }
+
+        @ParameterizedTest
+        @MethodSource("yayauheny.by.unit.service.ValidationTest#invalidNearestRestroomsParamsData")
+        @DisplayName("Invalid parameters should fail validation")
+        fun invalid_params_should_fail(
+            params: NearestRestroomsParams,
+            expectedErrorCount: Int
+        ) {
+            // (params and expectedErrorCount provided as parameters)
+
+            val result = params.validateWith(validateNearestRestroomsParams)
+
+            assertTrue(result.isFailure)
+            val exception = result.exceptionOrNull() as? ValidationException
+            assertNotNull(exception)
+            assertEquals(expectedErrorCount, exception.errors?.size)
+        }
+
+        @ParameterizedTest
+        @MethodSource("yayauheny.by.unit.service.ValidationTest#invalidNearestRestroomsParamsData")
+        @DisplayName("Invalid parameters should throw ValidationException")
+        fun invalid_params_should_throw(
+            params: NearestRestroomsParams,
+            expectedErrorCount: Int
+        ) = runTest {
+            // (params provided as parameter)
+
+            assertFailsWith<ValidationException> {
+                params.validateOrThrow(validateNearestRestroomsParams)
+            }
+        }
+    }
+
+    @Nested
+    @DisplayName("Subway Line Validation Tests")
+    inner class SubwayLineValidationTests {
+        @Test
+        @DisplayName("GIVEN valid subway line data WHEN validate THEN pass")
+        fun given_valid_subway_line_data_when_validate_then_pass() =
+            runTest {
+                val dto =
+                    SubwayLineCreateDto(
+                        cityId = UUID.randomUUID(),
+                        nameRu = "Автозаводская линия",
+                        nameEn = "Avtozavodskaya Line",
+                        hexColor = "#EF161E"
+                    )
+
+                val result = dto.validateWith(validateSubwayLineOnCreate)
+
+                assertTrue(result.isSuccess, "Valid subway line should pass validation")
+            }
+
+        @Test
+        @DisplayName("GIVEN empty nameRu WHEN validate THEN fail")
+        fun given_empty_name_ru_when_validate_then_fail() =
+            runTest {
+                val dto =
+                    SubwayLineCreateDto(
+                        cityId = UUID.randomUUID(),
+                        nameRu = "",
+                        nameEn = "Avtozavodskaya Line",
+                        hexColor = "#EF161E"
+                    )
+
+                val result = dto.validateWith(validateSubwayLineOnCreate)
+
+                assertTrue(result.isFailure, "Empty nameRu should fail validation")
+            }
+
+        @Test
+        @DisplayName("GIVEN invalid hex color WHEN validate THEN fail")
+        fun given_invalid_hex_color_when_validate_then_fail() =
+            runTest {
+                val dto =
+                    SubwayLineCreateDto(
+                        cityId = UUID.randomUUID(),
+                        nameRu = "Автозаводская линия",
+                        nameEn = "Avtozavodskaya Line",
+                        hexColor = "INVALID"
+                    )
+
+                val result = dto.validateWith(validateSubwayLineOnCreate)
+
+                assertTrue(result.isFailure, "Invalid hex color should fail validation")
+            }
+
+        @Test
+        @DisplayName("GIVEN hex color without # WHEN validate THEN fail")
+        fun given_hex_color_without_hash_when_validate_then_fail() =
+            runTest {
+                val dto =
+                    SubwayLineCreateDto(
+                        cityId = UUID.randomUUID(),
+                        nameRu = "Автозаводская линия",
+                        nameEn = "Avtozavodskaya Line",
+                        hexColor = "EF161E"
+                    )
+
+                val result = dto.validateWith(validateSubwayLineOnCreate)
+
+                assertTrue(result.isFailure, "Hex color without # should fail validation")
+            }
+
+        @Test
+        @DisplayName("GIVEN hex color with lowercase WHEN validate THEN pass")
+        fun given_hex_color_with_lowercase_when_validate_then_pass() =
+            runTest {
+                val dto =
+                    SubwayLineCreateDto(
+                        cityId = UUID.randomUUID(),
+                        nameRu = "Автозаводская линия",
+                        nameEn = "Avtozavodskaya Line",
+                        hexColor = "#ef161e"
+                    )
+
+                val result = dto.validateWith(validateSubwayLineOnCreate)
+
+                assertTrue(result.isSuccess, "Lowercase hex color should pass validation")
+            }
+    }
+
+    @Nested
+    @DisplayName("Subway Station Validation Tests")
+    inner class SubwayStationValidationTests {
+        @Test
+        @DisplayName("GIVEN valid subway station data WHEN validate THEN pass")
+        fun given_valid_subway_station_data_when_validate_then_pass() =
+            runTest {
+                val dto =
+                    SubwayStationCreateDto(
+                        subwayLineId = UUID.randomUUID(),
+                        nameRu = "Площадь Победы",
+                        nameEn = "Victory Square",
+                        coordinates = Coordinates(lat = 53.9006, lon = 27.5590)
+                    )
+
+                val result = dto.validateWith(validateSubwayStationOnCreate)
+
+                assertTrue(result.isSuccess, "Valid subway station should pass validation")
+            }
+
+        @Test
+        @DisplayName("GIVEN empty nameRu WHEN validate THEN fail")
+        fun given_empty_name_ru_when_validate_then_fail() =
+            runTest {
+                val dto =
+                    SubwayStationCreateDto(
+                        subwayLineId = UUID.randomUUID(),
+                        nameRu = "",
+                        nameEn = "Victory Square",
+                        coordinates = Coordinates(lat = 53.9006, lon = 27.5590)
+                    )
+
+                val result = dto.validateWith(validateSubwayStationOnCreate)
+
+                assertTrue(result.isFailure, "Empty nameRu should fail validation")
+            }
+
+        @Test
+        @DisplayName("GIVEN invalid coordinates WHEN validate THEN fail")
+        fun given_invalid_coordinates_when_validate_then_fail() =
+            runTest {
+                val dto =
+                    SubwayStationCreateDto(
+                        subwayLineId = UUID.randomUUID(),
+                        nameRu = "Площадь Победы",
+                        nameEn = "Victory Square",
+                        coordinates = Coordinates(lat = 200.0, lon = 200.0)
+                    )
+
+                val result = dto.validateWith(validateSubwayStationOnCreate)
+
+                assertTrue(result.isFailure, "Invalid coordinates should fail validation")
+            }
+    }
+
+    @Nested
+    @DisplayName("Restroom Fields Validation Tests")
+    inner class RestroomFieldsValidationTests {
+        @Test
+        @DisplayName("GIVEN valid restroom create fields WHEN validateRestroomCreateFields THEN return empty list")
+        fun given_valid_restroom_create_fields_when_validate_then_return_empty_list() =
+            runTest {
+                val dto = TestDataHelpers.createRestroomCreateDto()
+
+                val errors = validateRestroomCreateFields(dto)
+
+                assertTrue(errors.isEmpty(), "Valid fields should return no errors")
+            }
+
+        @Test
+        @DisplayName("GIVEN too long name WHEN validateRestroomCreateFields THEN return error")
+        fun given_too_long_name_when_validate_then_return_error() =
+            runTest {
+                val longName = "a".repeat(300)
+                val dto = TestDataHelpers.createRestroomCreateDto(name = longName)
+
+                val errors = validateRestroomCreateFields(dto)
+
+                assertTrue(errors.isNotEmpty(), "Too long name should return error")
+                assertTrue(errors.any { it.field == "name" }, "Error should be for name field")
+            }
+
+        @Test
+        @DisplayName("GIVEN valid restroom update fields WHEN validateRestroomUpdateFields THEN return empty list")
+        fun given_valid_restroom_update_fields_when_validate_then_return_empty_list() =
+            runTest {
+                val dto = TestDataHelpers.createRestroomUpdateDto()
+
+                val errors = validateRestroomUpdateFields(dto)
+
+                assertTrue(errors.isEmpty(), "Valid fields should return no errors")
+            }
+
+        @Test
+        @DisplayName("GIVEN too long accessNote WHEN validateRestroomUpdateFields THEN return error")
+        fun given_too_long_access_note_when_validate_then_return_error() =
+            runTest {
+                val longNote = "a".repeat(300)
+                val dto = TestDataHelpers.createRestroomUpdateDto(accessNote = longNote)
+
+                val errors = validateRestroomUpdateFields(dto)
+
+                assertTrue(errors.isNotEmpty(), "Too long accessNote should return error")
+                assertTrue(errors.any { it.field == "accessNote" }, "Error should be for accessNote field")
+            }
+    }
+}

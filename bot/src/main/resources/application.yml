@@ -1,0 +1,36 @@
+spring:
+  application:
+    name: tutochka-tg-bot
+
+telegram:
+  bot:
+    username: ${TELEGRAM_BOT_USERNAME:your_bot_username}
+    token: ${TELEGRAM_BOT_TOKEN:your_bot_token}
+    webhook-path: ${BOT_WEBHOOK_PATH:/telegram/webhook}
+
+bot:
+  async-processing: ${BOT_ASYNC_PROCESSING:true}
+  webhook-public-url: ${BOT_WEBHOOK_PUBLIC_URL:https://specificative-becki-gastronomically.ngrok-free.dev}
+  admin:
+    ids: ${BOT_ADMIN_IDS:}
+
+backend:
+  base-url: ${BACKEND_BASE_URL:http://localhost:8080/api/v1}
+  connect-timeout-ms: ${BACKEND_CONNECT_TIMEOUT_MS:3000}
+  read-timeout-ms: ${BACKEND_READ_TIMEOUT_MS:5000}
+  retry-attempts: ${BACKEND_RETRY_ATTEMPTS:2}
+  retry-delay-ms: ${BACKEND_RETRY_DELAY_MS:200}
+
+server:
+  port: ${PORT:80}
+
+logging:
+  level:
+    by.yayauheny.tutochkatgbot: DEBUG
+    org.telegram.telegrambots: INFO
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,prometheus

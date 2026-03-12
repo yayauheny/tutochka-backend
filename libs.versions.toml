@@ -1,5 +1,5 @@
 [versions]
-kotlin = "2.1.10"
+kotlin = "2.2.20"
 ktor = "3.2.3"
 exposed = "0.61.0"
 koin = "3.5.6"
@@ -18,6 +18,10 @@ konform = "0.11.0"
 jooqPlugin = "10.1.1"
 jooq = "3.20.8"
 jtsCore = "1.20.0"
+caffeine = "3.1.8"
+telegrambots = "9.2.0"
+wiremock = "2.35.0"
+resilience4j = "2.2.0"
 
 [plugins]
 kotlinJvm = { id = "org.jetbrains.kotlin.jvm", version.ref = "kotlin" }
@@ -71,6 +75,13 @@ swaggerJaxrs2 = { module = "io.swagger.core.v3:swagger-jaxrs2", version.ref = "s
 # Logging
 logbackClassic = { module = "ch.qos.logback:logback-classic", version.ref = "logback" }
 
+# Bot / misc
+caffeine = { module = "com.github.ben-manes.caffeine:caffeine", version.ref = "caffeine" }
+telegrambotsClient = { module = "org.telegram:telegrambots-client", version.ref = "telegrambots" }
+telegrambotsWebhook = { module = "org.telegram:telegrambots-webhook", version.ref = "telegrambots" }
+wiremockJre8 = { module = "com.github.tomakehurst:wiremock-jre8", version.ref = "wiremock" }
+resilience4jRetry = { module = "io.github.resilience4j:resilience4j-retry", version.ref = "resilience4j" }
+
 # Testing
 testcontainersPostgres = { module = "org.testcontainers:postgresql", version.ref = "testcontainers" }
 testcontainersCore = { module = "org.testcontainers:testcontainers", version.ref = "testcontainers" }
@@ -94,7 +105,6 @@ ktorServerBundle = [
 ]
 koinBundle = ["koinKtor", "koinLogger"]
 jooqBundle = ["jooqKotlin"]
-exposedBundle = ["exposedCore", "exposedDao", "exposedJdbc", "exposedJavaDateTime", "exposedJson"]
 liquibaseBundle = ["liquibaseCore", "postgresql", "picocli"]
 validationBundle = ["konform"]
 swaggerBundle = ["swaggerCore", "swaggerAnnotations", "swaggerModels", "swaggerJaxrs2"]

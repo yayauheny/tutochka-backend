@@ -1,0 +1,256 @@
+package yayauheny.by.unit.mapper
+
+import io.mockk.every
+import io.mockk.mockk
+import java.time.Instant
+import java.util.UUID
+import kotlin.test.assertEquals
+import kotlin.test.assertNotNull
+import kotlin.test.assertNull
+import org.jooq.JSONB
+import org.jooq.Record
+import org.junit.jupiter.api.DisplayName
+import org.junit.jupiter.api.Nested
+import org.junit.jupiter.api.Test
+import yayauheny.by.common.mapper.RestroomMapper
+import yayauheny.by.model.dto.Coordinates
+import yayauheny.by.model.enums.AccessibilityType
+import yayauheny.by.model.enums.DataSourceType
+import yayauheny.by.model.enums.FeeType
+import yayauheny.by.model.enums.RestroomStatus
+import yayauheny.by.tables.references.RESTROOMS
+
+@DisplayName("RestroomMapper Tests")
+class RestroomMapperTest {
+    @Nested
+    @DisplayName("mapFromRecord Tests")
+    inner class MapFromRecordTests {
+        @Test
+        @DisplayName("GIVEN valid record WHEN mapFromRecord THEN return RestroomResponseDto with all fields")
+        fun mapFromRecord_returns_correct_dto() {
+            val testId = UUID.randomUUID()
+            val testCityId = UUID.randomUUID()
+            val testName = "Test Restroom"
+            val testAddress = "Test Address"
+            val testLat = 55.7558
+            val testLon = 37.6176
+            val testFeeType = FeeType.FREE
+            val testAccessibilityType = AccessibilityType.WHEELCHAIR
+            val testDataSource = DataSourceType.USER
+            val testStatus = RestroomStatus.ACTIVE
+            val testCreatedAt = Instant.now()
+            val testUpdatedAt = Instant.now()
+
+            val mockRecord = mockk<Record>(relaxed = true)
+            // Mock reqDouble calls
+            every { mockRecord.get("lat", Double::class.java) } returns testLat
+            every { mockRecord.get("lon", Double::class.java) } returns testLon
+            // Mock field access
+            every { mockRecord[RESTROOMS.ID] } returns testId
+            every { mockRecord[RESTROOMS.CITY_ID] } returns testCityId
+            every { mockRecord[RESTROOMS.BUILDING_ID] } returns null
+            every { mockRecord[RESTROOMS.SUBWAY_STATION_ID] } returns null
+            every { mockRecord[RESTROOMS.NAME] } returns testName
+            every { mockRecord[RESTROOMS.ADDRESS] } returns testAddress
+            every { mockRecord[RESTROOMS.PHONES] } returns null
+            every { mockRecord[RESTROOMS.WORK_TIME] } returns null
+            every { mockRecord[RESTROOMS.FEE_TYPE] } returns testFeeType.name
+            every { mockRecord[RESTROOMS.GENDER_TYPE] } returns "UNISEX"
+            every { mockRecord[RESTROOMS.ACCESSIBILITY_TYPE] } returns testAccessibilityType.name
+            every { mockRecord[RESTROOMS.PLACE_TYPE] } returns null
+            every { mockRecord[RESTROOMS.DATA_SOURCE] } returns testDataSource.name
+            every { mockRecord[RESTROOMS.STATUS] } returns testStatus.name
+            every { mockRecord[RESTROOMS.AMENITIES] } returns null
+            val testExternalMapsJson =
+                JSONB.jsonb(
+                    """{"yandex":"https://yandex.ru/maps/-/CCUqM0VhXD","google":"https://maps.google.com/?q=53.9006,27.5590"}"""
+                )
+            every { mockRecord[RESTROOMS.EXTERNAL_MAPS] } returns testExternalMapsJson
+            every { mockRecord[RESTROOMS.ACCESS_NOTE] } returns "Доступен для людей с ограниченными возможностями"
+            every { mockRecord[RESTROOMS.DIRECTION_GUIDE] } returns "Находится на первом этаже, рядом с главным входом"
+            every { mockRecord[RESTROOMS.INHERIT_BUILDING_SCHEDULE] } returns false
+            every { mockRecord[RESTROOMS.HAS_PHOTOS] } returns true
+            every { mockRecord[RESTROOMS.LOCATION_TYPE] } returns "UNKNOWN"
+            every { mockRecord[RESTROOMS.ORIGIN_PROVIDER] } returns "MANUAL"
+            every { mockRecord[RESTROOMS.ORIGIN_ID] } returns null
+            every { mockRecord[RESTROOMS.IS_HIDDEN] } returns false
+            every { mockRecord[RESTROOMS.CREATED_AT] } returns testCreatedAt
+            every { mockRecord[RESTROOMS.UPDATED_AT] } returns testUpdatedAt
+
+            val result = RestroomMapper.mapFromRecord(mockRecord)
+
+            assertNotNull(result)
+            assertEquals(testId, result.id)
+            assertEquals(testCityId, result.cityId)
+            assertEquals(testName, result.name)
+            assertEquals(testAddress, result.address)
+            assertEquals(Coordinates(lat = testLat, lon = testLon), result.coordinates)
+            assertEquals(testFeeType, result.feeType)
+            assertEquals(testAccessibilityType, result.accessibilityType)
+            assertEquals(testDataSource, result.dataSource)
+            assertEquals(testStatus, result.status)
+            assertEquals(testCreatedAt, result.createdAt)
+            assertEquals(testUpdatedAt, result.updatedAt)
+            assertNull(result.buildingId)
+            assertNull(result.subwayStationId)
+            assertEquals(false, result.inheritBuildingSchedule)
+            assertNotNull(result.externalMaps)
+            assertEquals("Доступен для людей с ограниченными возможностями", result.accessNote)
+            assertEquals("Находится на первом этаже, рядом с главным входом", result.directionGuide)
+            assertEquals(true, result.hasPhotos)
+        }
+
+        @Test
+        @DisplayName("GIVEN record with null optional fields WHEN mapFromRecord THEN return DTO with null values")
+        fun mapFromRecord_with_null_optional_fields_returns_dto_with_nulls() {
+            val testId = UUID.randomUUID()
+            val testAddress = "Test Address"
+            val testLat = 55.7558
+            val testLon = 37.6176
+            val testFeeType = FeeType.FREE
+            val testAccessibilityType = AccessibilityType.WHEELCHAIR
+            val testDataSource = DataSourceType.USER
+            val testStatus = RestroomStatus.ACTIVE
+            val testCreatedAt = Instant.now()
+            val testUpdatedAt = Instant.now()
+
+            val mockRecord = mockk<Record>(relaxed = true)
+            every { mockRecord.get("lat", Double::class.java) } returns testLat
+            every { mockRecord.get("lon", Double::class.java) } returns testLon
+            every { mockRecord[RESTROOMS.ID] } returns testId
+            every { mockRecord[RESTROOMS.CITY_ID] } returns null
+            every { mockRecord[RESTROOMS.BUILDING_ID] } returns null
+            every { mockRecord[RESTROOMS.SUBWAY_STATION_ID] } returns null
+            every { mockRecord[RESTROOMS.NAME] } returns null
+            every { mockRecord[RESTROOMS.ADDRESS] } returns testAddress
+            every { mockRecord[RESTROOMS.PHONES] } returns null
+            every { mockRecord[RESTROOMS.WORK_TIME] } returns null
+            every { mockRecord[RESTROOMS.FEE_TYPE] } returns testFeeType.name
+            every { mockRecord[RESTROOMS.GENDER_TYPE] } returns "UNISEX"
+            every { mockRecord[RESTROOMS.ACCESSIBILITY_TYPE] } returns testAccessibilityType.name
+            every { mockRecord[RESTROOMS.PLACE_TYPE] } returns null
+            every { mockRecord[RESTROOMS.DATA_SOURCE] } returns testDataSource.name
+            every { mockRecord[RESTROOMS.STATUS] } returns testStatus.name
+            every { mockRecord[RESTROOMS.AMENITIES] } returns null
+            every { mockRecord[RESTROOMS.EXTERNAL_MAPS] } returns null
+            every { mockRecord[RESTROOMS.ACCESS_NOTE] } returns null
+            every { mockRecord[RESTROOMS.DIRECTION_GUIDE] } returns null
+            every { mockRecord[RESTROOMS.INHERIT_BUILDING_SCHEDULE] } returns false
+            every { mockRecord[RESTROOMS.HAS_PHOTOS] } returns false
+            every { mockRecord[RESTROOMS.LOCATION_TYPE] } returns "UNKNOWN"
+            every { mockRecord[RESTROOMS.ORIGIN_PROVIDER] } returns "MANUAL"
+            every { mockRecord[RESTROOMS.ORIGIN_ID] } returns null
+            every { mockRecord[RESTROOMS.IS_HIDDEN] } returns false
+            every { mockRecord[RESTROOMS.CREATED_AT] } returns testCreatedAt
+            every { mockRecord[RESTROOMS.UPDATED_AT] } returns testUpdatedAt
+
+            val result = RestroomMapper.mapFromRecord(mockRecord)
+
+            assertNotNull(result)
+            assertNull(result.cityId)
+            assertNull(result.name)
+            assertNull(result.accessNote)
+        }
+
+        @Test
+        @DisplayName("GIVEN record with JSONB fields WHEN mapFromRecord THEN return DTO with parsed JSON")
+        fun mapFromRecord_with_jsonb_fields_returns_parsed_json() {
+            val testId = UUID.randomUUID()
+            val testAddress = "Test Address"
+            val testLat = 55.7558
+            val testLon = 37.6176
+            val testFeeType = FeeType.FREE
+            val testAccessibilityType = AccessibilityType.WHEELCHAIR
+            val testDataSource = DataSourceType.USER
+            val testStatus = RestroomStatus.ACTIVE
+            val testCreatedAt = Instant.now()
+            val testUpdatedAt = Instant.now()
+            val testPhonesJson = JSONB.jsonb("""{"mobile":"+1234567890"}""")
+            val testWorkTimeJson = JSONB.jsonb("""{"monday":"09:00-18:00"}""")
+            val testAmenitiesJson = JSONB.jsonb("""{"wifi":true}""")
+
+            val mockRecord = mockk<Record>(relaxed = true)
+            every { mockRecord.get("lat", Double::class.java) } returns testLat
+            every { mockRecord.get("lon", Double::class.java) } returns testLon
+            every { mockRecord[RESTROOMS.ID] } returns testId
+            every { mockRecord[RESTROOMS.CITY_ID] } returns null
+            every { mockRecord[RESTROOMS.NAME] } returns null
+            every { mockRecord[RESTROOMS.BUILDING_ID] } returns null
+            every { mockRecord[RESTROOMS.SUBWAY_STATION_ID] } returns null
+            every { mockRecord[RESTROOMS.ADDRESS] } returns testAddress
+            every { mockRecord[RESTROOMS.PHONES] } returns testPhonesJson
+            every { mockRecord[RESTROOMS.WORK_TIME] } returns testWorkTimeJson
+            every { mockRecord[RESTROOMS.FEE_TYPE] } returns testFeeType.name
+            every { mockRecord[RESTROOMS.GENDER_TYPE] } returns "UNISEX"
+            every { mockRecord[RESTROOMS.ACCESSIBILITY_TYPE] } returns testAccessibilityType.name
+            every { mockRecord[RESTROOMS.PLACE_TYPE] } returns null
+            every { mockRecord[RESTROOMS.DATA_SOURCE] } returns testDataSource.name
+            every { mockRecord[RESTROOMS.STATUS] } returns testStatus.name
+            every { mockRecord[RESTROOMS.AMENITIES] } returns testAmenitiesJson
+            val testExternalMapsJson =
+                JSONB.jsonb(
+                    """{"yandex":"https://yandex.ru/maps/-/CCUqM0VhXD","google":"https://maps.google.com/?q=53.9006,27.5590"}"""
+                )
+            every { mockRecord[RESTROOMS.EXTERNAL_MAPS] } returns testExternalMapsJson
+            every { mockRecord[RESTROOMS.ACCESS_NOTE] } returns "Доступен для людей с ограниченными возможностями"
+            every { mockRecord[RESTROOMS.DIRECTION_GUIDE] } returns "Находится на первом этаже, рядом с главным входом"
+            every { mockRecord[RESTROOMS.INHERIT_BUILDING_SCHEDULE] } returns true
+            every { mockRecord[RESTROOMS.HAS_PHOTOS] } returns true
+            every { mockRecord[RESTROOMS.LOCATION_TYPE] } returns "UNKNOWN"
+            every { mockRecord[RESTROOMS.ORIGIN_PROVIDER] } returns "MANUAL"
+            every { mockRecord[RESTROOMS.ORIGIN_ID] } returns null
+            every { mockRecord[RESTROOMS.IS_HIDDEN] } returns false
+            every { mockRecord[RESTROOMS.CREATED_AT] } returns testCreatedAt
+            every { mockRecord[RESTROOMS.UPDATED_AT] } returns testUpdatedAt
+
+            val result = RestroomMapper.mapFromRecord(mockRecord)
+
+            assertNotNull(result)
+            assertNotNull(result.phones)
+            assertNotNull(result.workTime)
+            assertNotNull(result.amenities)
+            assertNotNull(result.externalMaps)
+            assertEquals("Доступен для людей с ограниченными возможностями", result.accessNote)
+            assertEquals("Находится на первом этаже, рядом с главным входом", result.directionGuide)
+            assertEquals(true, result.inheritBuildingSchedule)
+            assertEquals(true, result.hasPhotos)
+        }
+    }
+
+    @Nested
+    @DisplayName("mapToNearestRestroomSlim Tests")
+    inner class MapToNearestRestroomSlimTests {
+        @Test
+        @DisplayName(
+            "GIVEN valid record and query coordinates WHEN mapToNearestRestroomSlim THEN return DTO with queryCoordinates and restroomCoordinates"
+        )
+        fun mapToNearestRestroomSlim_returns_correct_dto() {
+            val testId = UUID.randomUUID()
+            val testName = "Test Restroom"
+            val restroomLat = 55.7558
+            val restroomLon = 37.6176
+            val userLat = 55.75
+            val userLon = 37.62
+            val testDistance = 150.5
+            val testFeeType = FeeType.FREE
+
+            val mockRecord = mockk<Record>(relaxed = true)
+            every { mockRecord.get("lat", Double::class.java) } returns restroomLat
+            every { mockRecord.get("lon", Double::class.java) } returns restroomLon
+            every { mockRecord.get("distance", Double::class.java) } returns testDistance
+            every { mockRecord[RESTROOMS.ID] } returns testId
+            every { mockRecord[RESTROOMS.NAME] } returns testName
+            every { mockRecord[RESTROOMS.FEE_TYPE] } returns testFeeType.name
+
+            val result = RestroomMapper.mapToNearestRestroomSlim(mockRecord, userLat, userLon)
+
+            assertNotNull(result)
+            assertEquals(testId, result.id)
+            assertEquals(testName, result.displayName)
+            assertEquals(Coordinates(lat = userLat, lon = userLon), result.queryCoordinates)
+            assertEquals(Coordinates(lat = restroomLat, lon = restroomLon), result.restroomCoordinates)
+            assertEquals(testDistance, result.distanceMeters)
+            assertEquals(testFeeType, result.feeType)
+        }
+    }
+}

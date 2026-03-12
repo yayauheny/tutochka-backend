@@ -19,7 +19,7 @@ DATABASE_SETUP.md
 *.md
 
 # Docker
-Dockerfile
+backend/Dockerfile
 .dockerignore
 docker/
 

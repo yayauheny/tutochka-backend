@@ -1,0 +1,1093 @@
+{
+  "items": [
+    {
+      "id": "70000001062416076",
+      "title": "GreenTime, торгово-развлекательный центр",
+      "shortName": null,
+      "extension": "торгово-развлекательный центр",
+      "url": "https://2gis.by/minsk/firm/70000001062416076",
+      "rubrics": [
+        "Торгово-развлекательные центры",
+        "Аренда помещений"
+      ],
+      "category": "mall",
+      "totalScore": 4,
+      "reviewsCount": 1,
+      "ratingCount": 15,
+      "summary": null,
+      "postcode": "220118",
+      "country": "Республика Беларусь",
+      "region": "Минск",
+      "city": "Минск",
+      "district": "Заводской район",
+      "street": "Рудобельская",
+      "houseNumber": "3",
+      "address": "Рудобельская, 3",
+      "mainPhotoUrl": "https://i3.photo.2gis.com/main/branch/217/70000001062416076/common",
+      "location": {
+        "lat": 53.861329,
+        "lng": 27.638588
+      },
+      "working_hours": {
+        "Fri": {
+          "from": "10:00",
+          "to": "22:00"
+        },
+        "Mon": {
+          "from": "10:00",
+          "to": "22:00"
+        },
+        "Sat": {
+          "from": "10:00",
+          "to": "22:00"
+        },
+        "Sun": {
+          "from": "10:00",
+          "to": "22:00"
+        },
+        "Thu": {
+          "from": "10:00",
+          "to": "22:00"
+        },
+        "Tue": {
+          "from": "10:00",
+          "to": "22:00"
+        },
+        "Wed": {
+          "from": "10:00",
+          "to": "22:00"
+        }
+      },
+      "nearestStations": [
+        {
+          "name": "Автозаводская",
+          "distance": 1100,
+          "comment": "Автозаводская линия"
+        },
+        {
+          "name": "Партизанская",
+          "distance": 2000,
+          "comment": "Автозаводская линия"
+        }
+      ],
+      "attributeGroups": [
+        "Торговые помещения",
+        "Туалет",
+        "Нет двери / есть автоматическая дверь",
+        "Доступный вход для людей с инвалидностью"
+      ],
+      "brand": {
+        "name": "GreenTime, торгово-развлекательный центр",
+        "shortName": "GreenTime",
+        "extension": "торгово-развлекательный центр",
+        "branchCount": 1,
+        "rating": {
+          "score": 4,
+          "reviews": 15
+        }
+      },
+      "searchString": "туалет",
+      "searchUrl": "https://2gis.by/search/%D1%82%D1%83%D0%B0%D0%BB%D0%B5%D1%82?m=27.632172%2C53.861217%2F12",
+      "pageNumber": 1,
+      "scrapedAt": "2025-12-24T09:25:00.392Z"
+    },
+    {
+      "id": "70000001055539762",
+      "title": "Гиппо, торговый центр",
+      "shortName": "Гиппо",
+      "extension": "торговый центр",
+      "url": "https://2gis.by/minsk/firm/70000001055539762",
+      "rubrics": [
+        "Торговые центры"
+      ],
+      "category": "mart",
+      "totalScore": 5,
+      "reviewsCount": 2,
+      "ratingCount": 28,
+      "summary": null,
+      "postcode": "220078",
+      "country": "Республика Беларусь",
+      "region": "Минск",
+      "city": "Минск",
+      "district": "Фрунзенский район",
+      "street": "улица Максима Горецкого",
+      "houseNumber": "2 к1",
+      "address": "улица Максима Горецкого, 2 к1",
+      "mainPhotoUrl": "https://i5.photo.2gis.com/main/branch/217/70000001055539762/common",
+      "location": {
+        "lat": 53.876517,
+        "lng": 27.465985
+      },
+      "working_hours": {
+        "Fri": {
+          "from": "09:00",
+          "to": "23:00"
+        },
+        "Mon": {
+          "from": "09:00",
+          "to": "23:00"
+        },
+        "Sat": {
+          "from": "09:00",
+          "to": "23:00"
+        },
+        "Sun": {
+          "from": "09:00",
+          "to": "23:00"
+        },
+        "Thu": {
+          "from": "09:00",
+          "to": "23:00"
+        },
+        "Tue": {
+          "from": "09:00",
+          "to": "23:00"
+        },
+        "Wed": {
+          "from": "09:00",
+          "to": "23:00"
+        }
+      },
+      "nearestStations": [
+        {
+          "name": "Рафиева",
+          "distance": 100,
+          "comment": null
+        }
+      ],
+      "attributeGroups": [
+        "Туалет",
+        "Оплата картой",
+        "Наличный расчёт",
+        "Розница",
+        "Нет двери / есть автоматическая дверь",
+        "Доступный вход для людей с инвалидностью"
+      ],
+      "brand": {
+        "name": "Гиппо, торговый центр",
+        "shortName": "Гиппо",
+        "extension": "торговый центр",
+        "branchCount": 1,
+        "rating": {
+          "score": 5,
+          "reviews": 28
+        }
+      },
+      "searchString": "туалет",
+      "searchUrl": "https://2gis.by/search/%D1%82%D1%83%D0%B0%D0%BB%D0%B5%D1%82/page/2?m=27.479652%2C53.861217%2F12",
+      "pageNumber": 2,
+      "scrapedAt": "2025-12-24T09:25:03.514Z"
+    },
+    {
+      "id": "70000001061373724",
+      "title": "Юго-западная, автостанция",
+      "shortName": null,
+      "extension": "автостанция",
+      "url": "https://2gis.by/minsk/firm/70000001061373724",
+      "rubrics": [
+        "Автовокзалы"
+      ],
+      "category": "bus_station",
+      "totalScore": null,
+      "reviewsCount": null,
+      "ratingCount": 1,
+      "summary": null,
+      "postcode": "220089",
+      "country": "Республика Беларусь",
+      "region": "Минск",
+      "city": "Минск",
+      "district": "Московский район",
+      "street": "Железнодорожная улица",
+      "houseNumber": "41",
+      "address": "Железнодорожная улица, 41",
+      "mainPhotoUrl": "https://i4.photo.2gis.com/main/branch/217/70000001061373724/common",
+      "location": {
+        "lat": 53.872175,
+        "lng": 27.500013
+      },
+      "working_hours": {
+        "Fri": {
+          "from": "07:00",
+          "to": "20:00"
+        },
+        "Mon": {
+          "from": "07:00",
+          "to": "20:00"
+        },
+        "Sat": {
+          "from": "07:00",
+          "to": "20:00"
+        },
+        "Sun": {
+          "from": "07:00",
+          "to": "20:00"
+        },
+        "Thu": {
+          "from": "07:00",
+          "to": "20:00"
+        },
+        "Tue": {
+          "from": "07:00",
+          "to": "20:00"
+        },
+        "Wed": {
+          "from": "07:00",
+          "to": "20:00"
+        }
+      },
+      "nearestStations": [
+        {
+          "name": "Михалово",
+          "distance": 650,
+          "comment": "Московская линия"
+        },
+        {
+          "name": "Петровщина",
+          "distance": 1200,
+          "comment": "Московская линия"
+        }
+      ],
+      "attributeGroups": [
+        "Туалет",
+        "Оплата картой",
+        "Наличный расчёт",
+        "Пандус",
+        "Доступный вход для людей с инвалидностью"
+      ],
+      "brand": {
+        "name": "Юго-западная, автостанция",
+        "shortName": "Юго-западная",
+        "extension": "автостанция",
+        "branchCount": 1,
+        "rating": {
+          "score": null,
+          "reviews": 1
+        }
+      },
+      "searchString": "туалет",
+      "searchUrl": "https://2gis.by/search/%D1%82%D1%83%D0%B0%D0%BB%D0%B5%D1%82/page/2?m=27.479652%2C53.861217%2F12",
+      "pageNumber": 2,
+      "scrapedAt": "2025-12-24T09:25:03.685Z"
+    },
+    {
+      "id": "70000001059402491",
+      "title": "Сеница, торговый центр",
+      "shortName": null,
+      "extension": "торговый центр",
+      "url": "https://2gis.by/minsk/firm/70000001059402491",
+      "rubrics": [
+        "Торговые центры"
+      ],
+      "category": "mart",
+      "totalScore": 4,
+      "reviewsCount": 3,
+      "ratingCount": 31,
+      "summary": null,
+      "postcode": "223056",
+      "country": "Республика Беларусь",
+      "region": "Минск",
+      "city": "Минск",
+      "district": null,
+      "street": "Сеницкий сельсовет",
+      "houseNumber": "84",
+      "address": "Сеницкий сельсовет, 84",
+      "mainPhotoUrl": "https://i3.photo.2gis.com/main/branch/217/70000001059402491/common",
+      "location": {
+        "lat": 53.835492,
+        "lng": 27.505142
+      },
+      "working_hours": {
+        "Fri": {
+          "from": "08:00",
+          "to": "22:00"
+        },
+        "Mon": {
+          "from": "08:00",
+          "to": "22:00"
+        },
+        "Sat": {
+          "from": "08:00",
+          "to": "22:00"
+        },
+        "Sun": {
+          "from": "08:00",
+          "to": "22:00"
+        },
+        "Thu": {
+          "from": "08:00",
+          "to": "22:00"
+        },
+        "Tue": {
+          "from": "08:00",
+          "to": "22:00"
+        },
+        "Wed": {
+          "from": "08:00",
+          "to": "22:00"
+        }
+      },
+      "nearestStations": [
+        {
+          "name": "ТЦ Сеница",
+          "distance": 60,
+          "comment": null
+        }
+      ],
+      "attributeGroups": [
+        "Туалет",
+        "Туалет для маломобильных людей",
+        "Нет двери / есть автоматическая дверь",
+        "Доступный вход для людей с инвалидностью"
+      ],
+      "brand": {
+        "name": "Сеница, торговый центр",
+        "shortName": "Сеница",
+        "extension": "торговый центр",
+        "branchCount": 1,
+        "rating": {
+          "score": 4,
+          "reviews": 31
+        }
+      },
+      "searchString": "туалет",
+      "searchUrl": "https://2gis.by/search/%D1%82%D1%83%D0%B0%D0%BB%D0%B5%D1%82/page/2?m=27.479652%2C53.861217%2F12",
+      "pageNumber": 2,
+      "scrapedAt": "2025-12-24T09:25:03.923Z"
+    },
+    {
+      "id": "70000001042293406",
+      "title": "Домашний очаг, мебельный мегамаркет",
+      "shortName": null,
+      "extension": "мебельный мегамаркет",
+      "url": "https://2gis.by/minsk/firm/70000001042293406",
+      "rubrics": [
+        "ТЦ товаров для интерьера и ремонта"
+      ],
+      "category": "construction_hypermarket",
+      "totalScore": 5,
+      "reviewsCount": 2,
+      "ratingCount": 14,
+      "summary": null,
+      "postcode": "220140",
+      "country": "Республика Беларусь",
+      "region": "Минск",
+      "city": "Минск",
+      "district": "Фрунзенский район",
+      "street": "улица Матусевича",
+      "houseNumber": "35",
+      "address": "улица Матусевича, 35",
+      "mainPhotoUrl": "https://i1.photo.2gis.com/main/branch/217/70000001042293406/common",
+      "location": {
+        "lat": 53.917033,
+        "lng": 27.454007
+      },
+      "working_hours": {
+        "Fri": {
+          "from": "10:00",
+          "to": "21:00"
+        },
+        "Mon": {
+          "from": "10:00",
+          "to": "21:00"
+        },
+        "Sat": {
+          "from": "10:00",
+          "to": "21:00"
+        },
+        "Sun": {
+          "from": "10:00",
+          "to": "21:00"
+        },
+        "Thu": {
+          "from": "10:00",
+          "to": "21:00"
+        },
+        "Tue": {
+          "from": "10:00",
+          "to": "21:00"
+        },
+        "Wed": {
+          "from": "10:00",
+          "to": "21:00"
+        }
+      },
+      "nearestStations": [
+        {
+          "name": "Кунцевщина",
+          "distance": 1400,
+          "comment": "Автозаводская линия"
+        },
+        {
+          "name": "Каменная горка",
+          "distance": 1900,
+          "comment": "Автозаводская линия"
+        }
+      ],
+      "attributeGroups": [
+        "Туалет",
+        "Розница"
+      ],
+      "brand": {
+        "name": "Домашний очаг, мебельный мегамаркет",
+        "shortName": "Домашний очаг",
+        "extension": "мебельный мегамаркет",
+        "branchCount": 1,
+        "rating": {
+          "score": 5,
+          "reviews": 14
+        }
+      },
+      "searchString": "туалет",
+      "searchUrl": "https://2gis.by/search/%D1%82%D1%83%D0%B0%D0%BB%D0%B5%D1%82/page/2?m=27.479652%2C53.935701%2F12",
+      "pageNumber": 2,
+      "scrapedAt": "2025-12-24T09:25:04.556Z"
+    },
+    {
+      "id": "70000001081218861",
+      "title": "Автозапчасти на Лещинского, торговый центр",
+      "shortName": null,
+      "extension": "торговый центр",
+      "url": "https://2gis.by/minsk/firm/70000001081218861",
+      "rubrics": [
+        "Торговые центры"
+      ],
+      "category": "mart",
+      "totalScore": null,
+      "reviewsCount": null,
+      "ratingCount": 10,
+      "summary": null,
+      "postcode": "220140",
+      "country": "Республика Беларусь",
+      "region": "Минск",
+      "city": "Минск",
+      "district": "Фрунзенский район",
+      "street": "улица Лещинского",
+      "houseNumber": "14а",
+      "address": "улица Лещинского, 14а",
+      "mainPhotoUrl": "https://i6.photo.2gis.com/main/branch/217/70000001081218861/common",
+      "location": {
+        "lat": 53.916433,
+        "lng": 27.451732
+      },
+      "working_hours": {
+        "Fri": {
+          "from": "09:00",
+          "to": "20:00"
+        },
+        "Mon": {
+          "from": "09:00",
+          "to": "20:00"
+        },
+        "Sat": {
+          "from": "09:00",
+          "to": "19:00"
+        },
+        "Sun": {
+          "from": "09:00",
+          "to": "19:00"
+        },
+        "Thu": {
+          "from": "09:00",
+          "to": "20:00"
+        },
+        "Tue": {
+          "from": "09:00",
+          "to": "20:00"
+        },
+        "Wed": {
+          "from": "09:00",
+          "to": "20:00"
+        }
+      },
+      "nearestStations": [
+        {
+          "name": "Кунцевщина",
+          "distance": 1300,
+          "comment": "Автозаводская линия"
+        },
+        {
+          "name": "Каменная горка",
+          "distance": 1600,
+          "comment": "Автозаводская линия"
+        }
+      ],
+      "attributeGroups": [
+        "Туалет",
+        "Розница",
+        "Пандус",
+        "Доступный вход для людей с инвалидностью"
+      ],
+      "brand": {
+        "name": "Автозапчасти на Лещинского, торговый центр",
+        "shortName": "Автозапчасти на Лещинского",
+        "extension": "торговый центр",
+        "branchCount": 1,
+        "rating": {
+          "score": null,
+          "reviews": 10
+        }
+      },
+      "searchString": "туалет",
+      "searchUrl": "https://2gis.by/search/%D1%82%D1%83%D0%B0%D0%BB%D0%B5%D1%82/page/2?m=27.479652%2C53.935701%2F12",
+      "pageNumber": 2,
+      "scrapedAt": "2025-12-24T09:25:04.714Z"
+    },
+    {
+      "id": "70000001042504756",
+      "title": "Bonus, торговый центр",
+      "shortName": "Bonus",
+      "extension": "торговый центр",
+      "url": "https://2gis.by/minsk/firm/70000001042504756",
+      "rubrics": [
+        "Торговые центры"
+      ],
+      "category": "mart",
+      "totalScore": 4.8,
+      "reviewsCount": 5,
+      "ratingCount": 20,
+      "summary": null,
+      "postcode": "220055",
+      "country": "Республика Беларусь",
+      "region": "Минск",
+      "city": "Минск",
+      "district": "Фрунзенский район",
+      "street": "улица Владислава Голубка",
+      "houseNumber": "2",
+      "address": "улица Владислава Голубка, 2",
+      "mainPhotoUrl": null,
+      "location": {
+        "lat": 53.925902,
+        "lng": 27.444751
+      },
+      "working_hours": {
+        "Fri": {
+          "from": "09:00",
+          "to": "23:00"
+        },
+        "Mon": {
+          "from": "09:00",
+          "to": "23:00"
+        },
+        "Sat": {
+          "from": "09:00",
+          "to": "23:00"
+        },
+        "Sun": {
+          "from": "09:00",
+          "to": "23:00"
+        },
+        "Thu": {
+          "from": "09:00",
+          "to": "23:00"
+        },
+        "Tue": {
+          "from": "09:00",
+          "to": "23:00"
+        },
+        "Wed": {
+          "from": "09:00",
+          "to": "23:00"
+        }
+      },
+      "nearestStations": [
+        {
+          "name": "Владислава Голубка",
+          "distance": 210,
+          "comment": null
+        }
+      ],
+      "attributeGroups": [
+        "Туалет",
+        "Оплата через банк",
+        "Розница",
+        "Широкий лифт",
+        "Нет двери / есть автоматическая дверь",
+        "Доступный вход для людей с инвалидностью"
+      ],
+      "brand": {
+        "name": "Bonus, торговый центр",
+        "shortName": "Bonus",
+        "extension": "торговый центр",
+        "branchCount": 1,
+        "rating": {
+          "score": 4.8,
+          "reviews": 20
+        }
+      },
+      "searchString": "туалет",
+      "searchUrl": "https://2gis.by/search/%D1%82%D1%83%D0%B0%D0%BB%D0%B5%D1%82/page/2?m=27.479652%2C53.935701%2F12",
+      "pageNumber": 2,
+      "scrapedAt": "2025-12-24T09:25:04.986Z"
+    },
+    {
+      "id": "70000001042005798",
+      "title": "Корона, гипермаркет",
+      "shortName": "Корона",
+      "extension": "гипермаркет",
+      "url": "https://2gis.by/minsk/firm/70000001042005798",
+      "rubrics": [
+        "Гипермаркеты"
+      ],
+      "category": "mart",
+      "totalScore": 5,
+      "reviewsCount": 5,
+      "ratingCount": 13,
+      "summary": null,
+      "postcode": "220035",
+      "country": "Республика Беларусь",
+      "region": "Минск",
+      "city": "Минск",
+      "district": "Центральный район",
+      "street": "проспект Победителей",
+      "houseNumber": "65",
+      "address": "проспект Победителей, 65",
+      "mainPhotoUrl": "https://i4.photo.2gis.com/main/branch/217/70000001042005798/common",
+      "location": {
+        "lat": 53.926417,
+        "lng": 27.517144
+      },
+      "working_hours": {
+        "Fri": {
+          "from": "09:00",
+          "to": "02:00"
+        },
+        "Mon": {
+          "from": "09:00",
+          "to": "02:00"
+        },
+        "Sat": {
+          "from": "09:00",
+          "to": "02:00"
+        },
+        "Sun": {
+          "from": "09:00",
+          "to": "02:00"
+        },
+        "Thu": {
+          "from": "09:00",
+          "to": "02:00"
+        },
+        "Tue": {
+          "from": "09:00",
+          "to": "02:00"
+        },
+        "Wed": {
+          "from": "09:00",
+          "to": "02:00"
+        }
+      },
+      "nearestStations": [
+        {
+          "name": "площадь Государственного флага",
+          "distance": 50,
+          "comment": null
+        }
+      ],
+      "attributeGroups": [
+        "Кулинария",
+        "Пекарня",
+        "Туалет",
+        "Есть касса самообслуживания",
+        "Оплата картой",
+        "Наличный расчёт",
+        "Розница",
+        "Нет двери / есть автоматическая дверь",
+        "Доступный вход для людей с инвалидностью"
+      ],
+      "brand": {
+        "name": "Корона, супермаркет",
+        "shortName": "Корона",
+        "extension": "супермаркет",
+        "branchCount": 12,
+        "rating": {
+          "score": 4.2,
+          "reviews": 48
+        }
+      },
+      "searchString": "туалет",
+      "searchUrl": "https://2gis.by/search/%D1%82%D1%83%D0%B0%D0%BB%D0%B5%D1%82/page/2?m=27.479652%2C53.935701%2F12",
+      "pageNumber": 2,
+      "scrapedAt": "2025-12-24T09:25:05.157Z"
+    },
+    {
+      "id": "70000001041949450",
+      "title": "ОМА, строительный гипермаркет",
+      "shortName": null,
+      "extension": "строительный гипермаркет",
+      "url": "https://2gis.by/minsk/firm/70000001041949450",
+      "rubrics": [
+        "Стройматериалы",
+        "Сухие строительные смеси",
+        "Лаки и краски",
+        "Теплоизоляционные материалы",
+        "Кровельные материалы",
+        "Строительные гипермаркеты",
+        "Электроинструмент",
+        "Сантехника",
+        "Обои",
+        "Герметики и клеи",
+        "Напольные покрытия",
+        "Светотехника"
+      ],
+      "category": "construction_hypermarket",
+      "totalScore": 4.9,
+      "reviewsCount": 3,
+      "ratingCount": 18,
+      "summary": null,
+      "postcode": "220094",
+      "country": "Республика Беларусь",
+      "region": "Минск",
+      "city": "Минск",
+      "district": "Ленинский район",
+      "street": "улица Ванеева",
+      "houseNumber": "38",
+      "address": "улица Ванеева, 38",
+      "mainPhotoUrl": "https://i7.photo.2gis.com/main/branch/217/70000001041949450/common",
+      "location": {
+        "lat": 53.876902,
+        "lng": 27.594431
+      },
+      "working_hours": {
+        "Fri": {
+          "from": "08:00",
+          "to": "22:00"
+        },
+        "Mon": {
+          "from": "08:00",
+          "to": "22:00"
+        },
+        "Sat": {
+          "from": "08:00",
+          "to": "22:00"
+        },
+        "Sun": {
+          "from": "08:00",
+          "to": "22:00"
+        },
+        "Thu": {
+          "from": "08:00",
+          "to": "22:00"
+        },
+        "Tue": {
+          "from": "08:00",
+          "to": "22:00"
+        },
+        "Wed": {
+          "from": "08:00",
+          "to": "22:00"
+        }
+      },
+      "nearestStations": [
+        {
+          "name": "Автобаза",
+          "distance": 90,
+          "comment": null
+        }
+      ],
+      "attributeGroups": [
+        "Доставка",
+        "Туалет",
+        "Оплата картой",
+        "Наличный расчёт",
+        "Оплата через банк",
+        "Розница",
+        "Опт",
+        "Нет двери / есть автоматическая дверь",
+        "Доступный вход для людей с инвалидностью"
+      ],
+      "brand": {
+        "name": "ОМА, строительный гипермаркет",
+        "shortName": "ОМА",
+        "extension": "строительный гипермаркет",
+        "branchCount": 13,
+        "rating": {
+          "score": 4.2,
+          "reviews": 81
+        }
+      },
+      "searchString": "туалет",
+      "searchUrl": "https://2gis.by/search/%D1%82%D1%83%D0%B0%D0%BB%D0%B5%D1%82/page/2?m=27.632172%2C53.861217%2F12",
+      "pageNumber": 2,
+      "scrapedAt": "2025-12-24T09:25:06.267Z"
+    },
+    {
+      "id": "70000001055246395",
+      "title": "Green, торговый центр",
+      "shortName": null,
+      "extension": "торговый центр",
+      "url": "https://2gis.by/minsk/firm/70000001055246395",
+      "rubrics": [
+        "Торговые центры"
+      ],
+      "category": "mart",
+      "totalScore": 4.8,
+      "reviewsCount": 3,
+      "ratingCount": 21,
+      "summary": null,
+      "postcode": "220077",
+      "country": "Республика Беларусь",
+      "region": "Минск",
+      "city": "Минск",
+      "district": "Заводской район",
+      "street": "улица Уборевича",
+      "houseNumber": "176",
+      "address": "улица Уборевича, 176",
+      "mainPhotoUrl": "https://i0.photo.2gis.com/main/branch/217/70000001055246395/common",
+      "location": {
+        "lat": 53.83543,
+        "lng": 27.606058
+      },
+      "working_hours": {
+        "Fri": {
+          "from": "08:00",
+          "to": "23:00"
+        },
+        "Mon": {
+          "from": "08:00",
+          "to": "23:00"
+        },
+        "Sat": {
+          "from": "08:00",
+          "to": "23:00"
+        },
+        "Sun": {
+          "from": "08:00",
+          "to": "23:00"
+        },
+        "Thu": {
+          "from": "08:00",
+          "to": "23:00"
+        },
+        "Tue": {
+          "from": "08:00",
+          "to": "23:00"
+        },
+        "Wed": {
+          "from": "08:00",
+          "to": "23:00"
+        }
+      },
+      "nearestStations": [
+        {
+          "name": "Уборевича",
+          "distance": 110,
+          "comment": null
+        }
+      ],
+      "attributeGroups": [
+        "Туалет",
+        "Розница",
+        "Нет двери / есть автоматическая дверь",
+        "Доступный вход для людей с инвалидностью"
+      ],
+      "brand": {
+        "name": "Green, торговый центр",
+        "shortName": "Green",
+        "extension": "торговый центр",
+        "branchCount": 2,
+        "rating": {
+          "score": 4.4,
+          "reviews": 37
+        }
+      },
+      "searchString": "туалет",
+      "searchUrl": "https://2gis.by/search/%D1%82%D1%83%D0%B0%D0%BB%D0%B5%D1%82/page/2?m=27.632172%2C53.861217%2F12",
+      "pageNumber": 2,
+      "scrapedAt": "2025-12-24T09:25:06.578Z"
+    },
+    {
+      "id": "70000001042463852",
+      "title": "Mon nom, кафе-бар",
+      "shortName": "Mon nom",
+      "extension": "кафе-бар",
+      "url": "https://2gis.by/minsk/firm/70000001042463852",
+      "rubrics": [
+        "Кафе",
+        "Бары"
+      ],
+      "category": "bar",
+      "totalScore": 4.9,
+      "reviewsCount": 14,
+      "ratingCount": 24,
+      "summary": null,
+      "postcode": "220070",
+      "country": "Республика Беларусь",
+      "region": "Минск",
+      "city": "Минск",
+      "district": "Партизанский район",
+      "street": "Стахановская улица",
+      "houseNumber": "2",
+      "address": "Стахановская улица, 2",
+      "mainPhotoUrl": "https://i1.photo.2gis.com/main/branch/217/70000001042463852/common",
+      "location": {
+        "lat": 53.891438,
+        "lng": 27.607364
+      },
+      "working_hours": {
+        "Fri": {
+          "from": "10:00",
+          "to": "22:00"
+        },
+        "Mon": {
+          "from": "10:00",
+          "to": "22:00"
+        },
+        "Sat": {
+          "from": "10:00",
+          "to": "22:00"
+        },
+        "Sun": {
+          "from": "10:00",
+          "to": "22:00"
+        },
+        "Thu": {
+          "from": "10:00",
+          "to": "22:00"
+        },
+        "Tue": {
+          "from": "10:00",
+          "to": "22:00"
+        },
+        "Wed": {
+          "from": "10:00",
+          "to": "22:00"
+        }
+      },
+      "nearestStations": [
+        {
+          "name": "Тракторный завод",
+          "distance": 600,
+          "comment": "Автозаводская линия"
+        },
+        {
+          "name": "Пролетарская",
+          "distance": 1600,
+          "comment": "Автозаводская линия"
+        }
+      ],
+      "attributeGroups": [
+        "Чек 20 р.",
+        "Европейская кухня",
+        "Завтрак",
+        "Заказ столиков",
+        "Заказ навынос",
+        "Винная карта",
+        "Меню на английском",
+        "Можно с ноутбуком",
+        "Завтрак 10:00-21:45",
+        "До 90 мест",
+        "Можно с собакой",
+        "Бургеры",
+        "Салаты",
+        "Сэндвичи",
+        "Супы",
+        "Боулы",
+        "Кофе с собой",
+        "Чай с собой",
+        "Wi-Fi для клиентов",
+        "Туалет",
+        "Оплата картой",
+        "Наличный расчёт"
+      ],
+      "brand": {
+        "name": "Mon nom, кафе-бар",
+        "shortName": "Mon nom",
+        "extension": "кафе-бар",
+        "branchCount": 1,
+        "rating": {
+          "score": 4.9,
+          "reviews": 24
+        }
+      },
+      "searchString": "туалет",
+      "searchUrl": "https://2gis.by/search/%D1%82%D1%83%D0%B0%D0%BB%D0%B5%D1%82/page/2?m=27.632172%2C53.861217%2F12",
+      "pageNumber": 2,
+      "scrapedAt": "2025-12-24T09:25:06.733Z"
+    },
+    {
+      "id": "70000001066197885",
+      "title": "D16, бизнес-центр",
+      "shortName": "D16",
+      "extension": "бизнес-центр",
+      "url": "https://2gis.by/minsk/firm/70000001066197885",
+      "rubrics": [
+        "Бизнес-центры"
+      ],
+      "category": "business_center",
+      "totalScore": 5,
+      "reviewsCount": 1,
+      "ratingCount": 7,
+      "summary": null,
+      "postcode": "220037",
+      "country": "Республика Беларусь",
+      "region": "Минск",
+      "city": "Минск",
+      "district": "Партизанский район",
+      "street": "Долгобродская улица",
+      "houseNumber": "16",
+      "address": "Долгобродская улица, 16",
+      "mainPhotoUrl": "https://i7.photo.2gis.com/main/branch/217/70000001066197885/common",
+      "location": {
+        "lat": 53.897245,
+        "lng": 27.605516
+      },
+      "working_hours": {
+        "Fri": {
+          "from": "08:00",
+          "to": "22:00"
+        },
+        "Mon": {
+          "from": "08:00",
+          "to": "22:00"
+        },
+        "Sat": {
+          "from": "08:00",
+          "to": "22:00"
+        },
+        "Sun": {
+          "from": "08:00",
+          "to": "22:00"
+        },
+        "Thu": {
+          "from": "08:00",
+          "to": "22:00"
+        },
+        "Tue": {
+          "from": "08:00",
+          "to": "22:00"
+        },
+        "Wed": {
+          "from": "08:00",
+          "to": "22:00"
+        }
+      },
+      "nearestStations": [
+        {
+          "name": "Тракторный завод",
+          "distance": 950,
+          "comment": "Автозаводская линия"
+        }
+      ],
+      "attributeGroups": [
+        "Туалет",
+        "Пандус",
+        "Широкий лифт",
+        "Доступный вход для людей с инвалидностью"
+      ],
+      "brand": {
+        "name": "D16, бизнес-центр",
+        "shortName": "D16",
+        "extension": "бизнес-центр",
+        "branchCount": 1,
+        "rating": {
+          "score": 5,
+          "reviews": 7
+        }
+      },
+      "searchString": "туалет",
+      "searchUrl": "https://2gis.by/search/%D1%82%D1%83%D0%B0%D0%BB%D0%B5%D1%82/page/2?m=27.632172%2C53.861217%2F12",
+      "pageNumber": 2,
+      "scrapedAt": "2025-12-24T09:25:06.893Z"
+    }
+  ]
+}

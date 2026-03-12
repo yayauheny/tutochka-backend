@@ -1,0 +1,19 @@
+package yayauheny.by.service.import
+
+import yayauheny.by.model.enums.ImportPayloadType
+import yayauheny.by.model.enums.ImportProvider
+
+object ImportCapabilities {
+    private val allowed: Map<ImportProvider, Set<ImportPayloadType>> =
+        mapOf(
+            ImportProvider.TWO_GIS to setOf(ImportPayloadType.TWO_GIS_SCRAPED_PLACE_JSON)
+        )
+
+    fun requireSupported(
+        provider: ImportProvider,
+        payloadType: ImportPayloadType
+    ) {
+        val ok = allowed[provider]?.contains(payloadType) == true
+        if (!ok) throw UnsupportedPayloadType(provider, payloadType)
+    }
+}
