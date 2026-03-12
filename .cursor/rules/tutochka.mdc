@@ -1,33 +1,8 @@
 ---
-description: Core project rules and Task Master integration for tutochka-backend
+description: Core project rules for tutochka-backend
 globs: **/*
 alwaysApply: true
 ---
-
-## **Task Master Integration (MANDATORY - HIGHEST PRIORITY)**
-
-**CRITICAL RULE**: **EVERY implementation request** (feature, bug fix, refactor) **MUST automatically** go through Task Master workflow, even if user doesn't mention Task Master.
-
-### **Automatic Workflow (No Exceptions)**
-1. **Analyze Request** → Understand what user wants
-2. **Create PRD** → Format as PRD, save to `.taskmaster/docs/[feature-name]-prd.txt`
-3. **Parse PRD** → Call `parse_prd` to generate subtasks
-4. **Read Generated Tasks** → Read `tasks.json` locally (NO API call)
-5. **Work on Subtasks** → Implement STRICTLY according to generated subtasks
-6. **Log Progress** → Use `update_subtask` with structured format
-7. **Complete** → Mark subtasks/tasks as done
-8. **Auto Git Commit** → Automatically commit changes with task reference (if status=done)
-
-### **Local-First Strategy**
-- ✅ **ALWAYS**: Read `.taskmaster/tasks/tasks.json` directly for all read operations
-- ✅ **ALWAYS**: Cache task context in memory during session
-- ❌ **NEVER**: Call `get_task` or `get_tasks` if you can read tasks.json locally
-- ❌ **NEVER**: Make API calls for read-only operations
-
-### **References**
-- [taskmaster_integration.mdc](mdc:.cursor/rules/taskmaster_integration.mdc) - Complete Task Master integration guide
-- [taskmaster/dev_workflow.mdc](mdc:.cursor/rules/taskmaster/dev_workflow.mdc) - Development workflow patterns
-- [taskmaster/git_commit.mdc](mdc:.cursor/rules/taskmaster/git_commit.mdc) - Git commit automation
 
 ## **Code Style & Comments**
 
