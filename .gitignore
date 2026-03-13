@@ -440,11 +440,33 @@ node_modules/
 # OS specific
 .DS_Store
 
-# Task Master files
-# tasks.json - keep for context, but PRD files should not be committed
-.taskmaster/docs/*.txt
-.taskmaster/docs/*.md
-# Keep only README.md and templates
-!.taskmaster/README.md
-!.taskmaster/templates/ 
+# =============================================================================
+# Data files (exclude test data in backend/src/test/resources/import/)
+# =============================================================================
+import/
+2gis_toilets_full_info.json
+backend/docs/*.json
+backend/src/main/resources/*_example.json
+backend/src/main/resources/*_response*.json
+
+# =============================================================================
+# Kilo
+# =============================================================================
+.kilo/
+
+# =============================================================================
+# Task Master
+# =============================================================================
+.taskmaster/
+
+# =============================================================================
+# MCP / agent config (keep .cursor/rules, cursorignore, README)
+# =============================================================================
+.cursor/mcp.json
+.cursor/cli.json
+.cursor/rules/taskmaster*
+.cursor/rules/*taskmaster*
+.cursor/rules/TASKMASTER_AUTO_WORKFLOW.mdc
+.cursor/rules/taskmaster_integration.mdc
+
 .kotlin/
