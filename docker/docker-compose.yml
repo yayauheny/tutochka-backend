@@ -1,8 +1,7 @@
-version: '3.9'
-
 services:
   caddy:
     image: caddy:2-alpine
+    platform: linux/amd64
     container_name: tutochka_caddy
     restart: always
     ports:
@@ -13,9 +12,14 @@ services:
       - caddy_data:/data
     networks:
       - tutochka_net
+    mem_limit: 64m
+    mem_reservation: 32m
+    memswap_limit: 96m
+    mem_swappiness: 10
 
   backend:
     image: ghcr.io/yayauheny/tutochka-backend:latest
+    platform: linux/amd64
     container_name: tutochka_backend
     restart: always
     environment:
@@ -32,6 +36,7 @@ services:
       DB_MAX_LIFETIME: ${DB_MAX_LIFETIME:-1800000}
       APP_PORT: ${APP_PORT:-8080}
       APP_ENV: ${APP_ENV:-production}
+      JAVA_TOOL_OPTIONS: "-XX:MaxRAMPercentage=55 -XX:+UseG1GC"
     networks:
       - tutochka_net
     healthcheck:
@@ -39,15 +44,14 @@ services:
       interval: 30s
       timeout: 10s
       retries: 3
-    deploy:
-      resources:
-        limits:
-          memory: 350M
-        reservations:
-          memory: 200M
+    mem_limit: 220m
+    mem_reservation: 160m
+    memswap_limit: 320m
+    mem_swappiness: 25
 
   bot:
     image: ghcr.io/yayauheny/tutochka-bot:latest
+    platform: linux/amd64
     container_name: tutochka_bot
     restart: always
     environment:
@@ -64,6 +68,7 @@ services:
       BACKEND_RETRY_DELAY_MS: ${BACKEND_RETRY_DELAY_MS:-200}
       PORT: ${PORT:-8081}
       SPRING_PROFILES_ACTIVE: ${SPRING_PROFILES_ACTIVE:-prod}
+      JAVA_TOOL_OPTIONS: "-XX:MaxRAMPercentage=55 -XX:+UseG1GC"
     depends_on:
       backend:
         condition: service_healthy
@@ -74,12 +79,10 @@ services:
       interval: 30s
       timeout: 10s
       retries: 3
-    deploy:
-      resources:
-        limits:
-          memory: 450M
-        reservations:
-          memory: 250M
+    mem_limit: 280m
+    mem_reservation: 200m
+    memswap_limit: 400m
+    mem_swappiness: 25
 
 volumes:
   caddy_data:
