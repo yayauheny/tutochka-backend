@@ -33,8 +33,6 @@ jobs:
           push: true
           tags: |
             ghcr.io/yayauheny/tutochka-backend:latest
-          cache-from: type=gha
-          cache-to: type=gha,mode=max
 
   build-bot-image:
     runs-on: ubuntu-latest
@@ -64,5 +62,3 @@ jobs:
           push: true
           tags: |
             ghcr.io/yayauheny/tutochka-bot:latest
-          cache-from: type=gha
-          cache-to: type=gha,mode=max
