@@ -191,12 +191,14 @@ curl "http://localhost:8080/api/v1/restrooms/city/123e4567-e89b-12d3-a456-426614
 
 ## 🐳 Docker Support / Поддержка Docker
 
-```bash
-# Build Docker image / Собрать Docker образ
-./gradlew buildImage
+See [docker/README.md](docker/README.md) for local development with Postgres, ngrok, and auto Telegram webhook registration.
 
-# Run with Docker Compose / Запустить с Docker Compose
-docker-compose up -d
+```bash
+# Local stack (Postgres + backend + bot)
+docker compose --env-file docker/env.local -f docker/docker-compose-local.yml up -d
+
+# With ngrok + auto webhook
+docker compose --env-file docker/env.local -f docker/docker-compose-local.yml --profile ngrok up -d
 ```
 
 ---

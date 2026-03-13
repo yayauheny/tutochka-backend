@@ -126,8 +126,6 @@ services:
         reservations:
           memory: 250M
 
-  # Туннель на бота в compose. Запуск: docker compose -f docker/docker-compose-local.yml --profile ngrok up -d ngrok
-  # URL туннеля: curl -s http://localhost:4040/api/tunnels | jq -r '.tunnels[0].public_url'
   ngrok:
     image: ngrok/ngrok:latest
     container_name: tutochka_ngrok
@@ -142,6 +140,25 @@ services:
       - tutochka_network
     profiles:
       - ngrok
+
+  webhook-registrar:
+    image: alpine:latest
+    container_name: tutochka_webhook_registrar
+    environment:
+      NGROK_HOST: ngrok
+      NGROK_PORT: "4040"
+      TELEGRAM_BOT_TOKEN: ${TELEGRAM_BOT_TOKEN:?TELEGRAM_BOT_TOKEN required}
+      BOT_WEBHOOK_PATH: ${BOT_WEBHOOK_PATH:-/telegram/webhook}
+    volumes:
+      - ./scripts:/scripts:ro
+    command: ["sh", "-c", "apk add --no-cache curl && sh /scripts/register-webhook.sh"]
+    depends_on:
+      - ngrok
+    networks:
+      - tutochka_network
+    profiles:
+      - ngrok
+    restart: "no"
 
 networks:
   tutochka_network:

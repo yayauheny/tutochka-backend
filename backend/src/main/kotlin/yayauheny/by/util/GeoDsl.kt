@@ -15,9 +15,9 @@ fun <T> pointExpr(
     target: Field<T>
 ): Field<T> = DSL.field("ST_SetSRID(ST_MakePoint({0}, {1}), {2})", target.dataType, lon, lat, SRID)
 
-fun Field<*>.lon(): Field<Double> = DSL.field("ST_X({0})", SQLDataType.DOUBLE, this)
+fun Field<*>.lon(): Field<Double> = DSL.field("ST_X(({0})::geometry)", SQLDataType.DOUBLE, this)
 
-fun Field<*>.lat(): Field<Double> = DSL.field("ST_Y({0})", SQLDataType.DOUBLE, this)
+fun Field<*>.lat(): Field<Double> = DSL.field("ST_Y(({0})::geometry)", SQLDataType.DOUBLE, this)
 
 fun Field<*>.latAlias(): Field<Double> = this.lat().`as`("lat")
 
@@ -29,7 +29,7 @@ fun Field<*>.distanceSphereTo(
     lon: Double
 ): Field<Double> =
     DSL.field(
-        "ST_DistanceSphere({0}, ST_SetSRID(ST_MakePoint({1},{2}), {3}))",
+        "ST_DistanceSphere(({0})::geometry, ST_SetSRID(ST_MakePoint({1},{2}), {3}))",
         SQLDataType.DOUBLE,
         this,
         lon,
@@ -43,7 +43,7 @@ fun Field<*>.distanceGeographyTo(
     lon: Double
 ): Field<Double> =
     DSL.field(
-        "ST_Distance({0}::geography, ST_SetSRID(ST_MakePoint({1},{2}),{3})::geography)",
+        "ST_Distance(({0})::geometry::geography, ST_SetSRID(ST_MakePoint({1},{2}),{3})::geography)",
         SQLDataType.DOUBLE,
         this,
         lon,
@@ -57,7 +57,7 @@ fun Field<*>.knnOrderTo(
     lon: Double
 ): Field<Double> =
     DSL.field(
-        "{0} <-> ST_SetSRID(ST_MakePoint({1},{2}),{3})",
+        "({0})::geometry <-> ST_SetSRID(ST_MakePoint({1},{2}),{3})",
         SQLDataType.DOUBLE,
         this,
         lon,
@@ -72,7 +72,7 @@ fun Field<*>.withinDistanceOf(
     meters: Double
 ): Condition =
     DSL.condition(
-        "ST_DWithin({0}, ST_SetSRID(ST_MakePoint({1},{2}),{3}), {4})",
+        "ST_DWithin(({0})::geometry, ST_SetSRID(ST_MakePoint({1},{2}),{3}), {4})",
         this,
         lon,
         lat,
@@ -87,7 +87,7 @@ fun <T> geomFromGeoJson(
 ): Field<T> = DSL.field("ST_SetSRID(ST_GeomFromGeoJSON({0}), {1})", target.dataType, geoJson, SRID)
 
 /** Преобразует geometry в GeoJSON строку */
-fun Field<*>.asGeoJson(): Field<String> = DSL.field("ST_AsGeoJSON({0})", SQLDataType.VARCHAR, this)
+fun Field<*>.asGeoJson(): Field<String> = DSL.field("ST_AsGeoJSON(({0})::geometry)", SQLDataType.VARCHAR, this)
 
 /** Извлекает double из Record, выбрасывает ошибку если колонка отсутствует */
 fun Record.reqDouble(name: String): Double = get(name, Double::class.java) ?: error("Ожидалась колонка '$name' в SELECT")
