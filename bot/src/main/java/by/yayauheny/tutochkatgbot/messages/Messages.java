@@ -6,7 +6,12 @@ public class Messages {
     
     public static final String BUTTON_SHARE_LOCATION = EmojiConstants.PIN + " Поделиться геолокацией";
     public static final String BUTTON_BACK_TO_LIST = "⬅️ Назад к списку";
+    @Deprecated
     public static final String BUTTON_OPEN_MAPS = EmojiConstants.MAP + " Открыть в картах";
+    public static final String BUTTON_OPEN_YANDEX = EmojiConstants.MAP + " Яндекс Карты";
+    public static final String BUTTON_OPEN_GOOGLE = EmojiConstants.MAP + " Google Maps";
+    public static final String BUTTON_OPEN_2GIS   = EmojiConstants.MAP + " 2ГИС";
+    public static final String BUTTON_OPEN_APPLE  = EmojiConstants.MAP + " Apple Maps";
     public static final String BUTTON_SEARCH_AGAIN = "🔍 Поиск заново";
     public static final String BUTTON_HELP = "❓ Помощь";
     public static final String BUTTON_BACK = "← Назад";
@@ -34,7 +39,7 @@ public class Messages {
         
         🔍 Используй кнопки для навигации
         ⬅️ Назад к списку - вернуться к списку туалетов
-        %s Открыть в картах - показать туалет на карте
+        %s Кнопки карт - открыть туалет в Яндекс, Google, 2ГИС или Apple картах
         
         Команды:
         /start - начать работу
