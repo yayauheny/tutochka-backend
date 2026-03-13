@@ -76,7 +76,7 @@ class CityRepositoryErrorHandlingTest : BaseIntegrationTest() {
                         .from(CITIES)
                         .where(
                             DSL.condition(
-                                "ST_Equals({0}, {1})",
+                                "ST_Equals(({0})::geometry, ({1})::geometry)",
                                 CITIES.COORDINATES,
                                 pointExpr(duplicateCoordinates.lon, duplicateCoordinates.lat, CITIES.COORDINATES)
                             )
@@ -298,7 +298,7 @@ class CityRepositoryErrorHandlingTest : BaseIntegrationTest() {
                         .from(CITIES)
                         .where(
                             DSL.condition(
-                                "ST_Equals({0}, {1})",
+                                "ST_Equals(({0})::geometry, ({1})::geometry)",
                                 CITIES.COORDINATES,
                                 pointExpr(duplicateCoordinates.lon, duplicateCoordinates.lat, CITIES.COORDINATES)
                             )

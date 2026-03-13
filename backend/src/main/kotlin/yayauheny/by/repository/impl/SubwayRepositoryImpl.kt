@@ -203,7 +203,7 @@ class SubwayRepositoryImpl(
                             .and(SUBWAY_LINES.IS_DELETED.isFalse)
                     ).orderBy(
                         DSL.field(
-                            "{0} <-> {1}",
+                            "({0})::geometry <-> ({1})::geometry",
                             SQLDataType.DOUBLE,
                             SUBWAY_STATIONS.COORDINATES,
                             restroomsCoordinatesField

@@ -17,6 +17,14 @@ public final class Links {
     public static String appleMaps(double lat, double lon) {
         return String.format(Locale.US, "https://maps.apple.com/?q=%.6f,%.6f", lat, lon);
     }
+
+    public static String twoGis(double lat, double lon) {
+        return String.format(Locale.US, "https://2gis.ru/?m=%.6f,%.6f/zoom/16", lon, lat);
+    }
+
+    public static String twoGisById(String branchId) {
+        return "https://2gis.ru/geo/" + branchId;
+    }
     
     public static String getDefaultMapsLink(double lat, double lon) {
         return yandexMaps(lat, lon);

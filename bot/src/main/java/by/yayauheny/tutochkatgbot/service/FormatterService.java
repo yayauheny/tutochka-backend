@@ -9,7 +9,6 @@ import by.yayauheny.tutochkatgbot.dto.backend.SubwayStationResponseDto;
 import by.yayauheny.tutochkatgbot.messages.Messages;
 import by.yayauheny.tutochkatgbot.util.DistanceFormat;
 import by.yayauheny.tutochkatgbot.util.EmojiConstants;
-import by.yayauheny.tutochkatgbot.util.Links;
 import by.yayauheny.tutochkatgbot.util.Text;
 import by.yayauheny.tutochkatgbot.util.TextUtil;
 import by.yayauheny.tutochkatgbot.util.WorkTimeFormatter;
@@ -96,10 +95,6 @@ public class FormatterService {
 
     public String toiletsFound(int count) {
         return Text.replace(Messages.TOILETS_FOUND, "count", String.valueOf(count));
-    }
-
-    public String generateMapsLink(RestroomResponseDto toilet) {
-        return Links.getDefaultMapsLink(toilet.coordinates().lat(), toilet.coordinates().lon());
     }
 
     public String colorToEmoji(String hexColor) {

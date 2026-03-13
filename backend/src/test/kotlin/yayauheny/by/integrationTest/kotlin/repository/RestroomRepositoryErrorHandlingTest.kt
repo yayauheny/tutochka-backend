@@ -70,7 +70,7 @@ class RestroomRepositoryErrorHandlingTest : BaseIntegrationTest() {
                         .from(RESTROOMS)
                         .where(
                             DSL.condition(
-                                "ST_Equals({0}, {1})",
+                                "ST_Equals(({0})::geometry, ({1})::geometry)",
                                 RESTROOMS.COORDINATES,
                                 pointExpr(sameCoordinates.lon, sameCoordinates.lat, RESTROOMS.COORDINATES)
                             )
