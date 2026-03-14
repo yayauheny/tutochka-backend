@@ -13,6 +13,7 @@ import java.util.UUID;
 public record RestroomResponseDto(
     @JsonProperty("id") UUID id,
     @JsonProperty("cityId") UUID cityId,
+    @JsonProperty("cityName") String cityName,
     @JsonProperty("buildingId") UUID buildingId,
     @JsonProperty("subwayStationId") UUID subwayStationId,
     @JsonProperty("name") String name,

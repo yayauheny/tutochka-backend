@@ -27,9 +27,9 @@ class SearchServiceBackendCallsTest {
         when(backend.findNearest(anyDouble(), anyDouble(), anyInt(), anyInt()))
             .thenReturn(List.of(dto));
 
-        service.findNearby(53.9, 27.56, 500, 5);
-        service.findNearby(53.9, 27.56, 500, 5);
-        service.findNearby(53.9, 27.56, 1000, 5);
+        service.findNearby(53.9, 27.56, 500, SearchService.DEFAULT_NEAREST_LIMIT);
+        service.findNearby(53.9, 27.56, 500, SearchService.DEFAULT_NEAREST_LIMIT);
+        service.findNearby(53.9, 27.56, 1000, SearchService.DEFAULT_NEAREST_LIMIT);
 
         verify(backend, times(3)).findNearest(anyDouble(), anyDouble(), anyInt(), anyInt());
         verify(backend, times(2)).findNearest(53.9, 27.56, 5, 500);

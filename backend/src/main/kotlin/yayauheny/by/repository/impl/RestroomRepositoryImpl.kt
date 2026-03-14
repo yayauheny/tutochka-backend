@@ -19,7 +19,6 @@ import yayauheny.by.common.query.PageResponse
 import yayauheny.by.common.query.PaginationRequest
 import yayauheny.by.common.query.builder.QueryBuilder
 import yayauheny.by.common.query.builder.QueryExecutor
-import yayauheny.by.config.ApiConstants
 import yayauheny.by.model.restroom.NearestRestroomResponseDto
 import yayauheny.by.model.enums.ImportProvider
 import yayauheny.by.model.enums.RestroomStatus
@@ -30,6 +29,7 @@ import yayauheny.by.util.ScheduleUtils
 import yayauheny.by.repository.RestroomRepository
 import yayauheny.by.service.import.schedule.ScheduleMappingService
 import yayauheny.by.tables.references.BUILDINGS
+import yayauheny.by.tables.references.CITIES
 import yayauheny.by.tables.references.RESTROOMS
 import yayauheny.by.tables.references.SUBWAY_LINES
 import yayauheny.by.tables.references.SUBWAY_STATIONS
@@ -241,6 +241,7 @@ class RestroomRepositoryImpl(
 
     override suspend fun findById(id: UUID): RestroomResponseDto? =
         withContext(Dispatchers.IO) {
+            val c = CITIES
             val b = BUILDINGS
             val s = SUBWAY_STATIONS
             val l = SUBWAY_LINES
@@ -248,6 +249,7 @@ class RestroomRepositoryImpl(
             val selectFields =
                 getAllRestroomsFieldsWithCoordinates() +
                     listOf(
+                        c.NAME_EN.`as`("city_name_en"),
                         b.ID.`as`("b_id"),
                         b.CITY_ID.`as`("b_city_id"),
                         b.NAME.`as`("b_name"),
@@ -280,6 +282,8 @@ class RestroomRepositoryImpl(
             ctx
                 .select(*selectFields.toTypedArray())
                 .from(RESTROOMS)
+                .leftJoin(c)
+                .on(RESTROOMS.CITY_ID.eq(c.ID).and(c.IS_DELETED.isFalse))
                 .leftJoin(b)
                 .on(RESTROOMS.BUILDING_ID.eq(b.ID).and(b.IS_DELETED.isFalse))
                 .leftJoin(s)
@@ -388,8 +392,8 @@ class RestroomRepositoryImpl(
         distanceMeters: Int?
     ): List<NearestRestroomResponseDto> =
         withContext(Dispatchers.IO) {
-            val maxDistance = (distanceMeters ?: ApiConstants.DEFAULT_MAX_DISTANCE_METERS).toDouble()
             val maxElements = limit
+            val maxDistance = (distanceMeters ?: 5000).toDouble()
             val knnField = RESTROOMS.COORDINATES.knnOrderTo(requestLat, requestLon)
             val distanceField = RESTROOMS.COORDINATES.distanceGeographyTo(requestLat, requestLon).`as`("distance")
             val selectFields =

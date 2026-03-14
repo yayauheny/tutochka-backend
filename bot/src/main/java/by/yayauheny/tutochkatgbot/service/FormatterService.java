@@ -61,7 +61,8 @@ public class FormatterService {
         String distance = DistanceFormat.meters(toilet.distanceMeters());
         FeeType feeType = toilet.feeType();
         String feeIcon = getFeeIcon(feeType);
-        return distance + "  " + feeIcon + "\n" + name;
+        String feeSegment = feeIcon.isEmpty() ? "" : "  " + feeIcon;
+        return "🚶 " + distance + feeSegment + "  " + name;
     }
 
     private String formatSubwayInfo(SubwayStationResponseDto station) {

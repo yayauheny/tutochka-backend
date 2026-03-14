@@ -17,11 +17,11 @@ SET subway_station_id = (
     LIMIT 1
 ),
 updated_at = NOW()
-WHERE r.city_id = (SELECT id FROM cities WHERE country_id = (SELECT id FROM countries WHERE code = 'BY') AND name_ru = 'Минск')
+WHERE r.city_id = '00000000-0000-0000-0000-0000000000c1'::uuid
   AND r.subway_station_id IS NULL
   AND r.is_deleted = false;
 
--- rollback UPDATE restrooms SET subway_station_id = NULL, updated_at = NOW() WHERE city_id = (SELECT id FROM cities WHERE country_id = (SELECT id FROM countries WHERE code = 'BY') AND name_ru = 'Минск') AND subway_station_id IS NOT NULL;
+-- rollback UPDATE restrooms SET subway_station_id = NULL, updated_at = NOW() WHERE city_id = '00000000-0000-0000-0000-0000000000c1'::uuid AND subway_station_id IS NOT NULL;
 
 
 

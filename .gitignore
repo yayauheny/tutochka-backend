@@ -357,6 +357,7 @@ gradle-app.setting
 # =============================================================================
 .env
 .env.*
+env.*
 !.env.example
 !.env.template
 *.env
@@ -372,6 +373,7 @@ gradle-app.setting
 # Docker environment files
 docker/.env
 docker/.env.*
+docker/env.*
 docker/env.local
 
 # =============================================================================
