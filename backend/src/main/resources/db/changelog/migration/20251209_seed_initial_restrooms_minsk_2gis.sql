@@ -46,8 +46,9 @@ VALUES (
 )
 ON CONFLICT (id) DO NOTHING;
 
--- 4. Restroom #1: Мужской платный туалет
+-- 4. Restroom #1: Мужской платный туалет (predefined id)
 INSERT INTO restrooms (
+    id,
     city_id,
     building_id,
     subway_station_id,
@@ -76,6 +77,7 @@ INSERT INTO restrooms (
     data_source
 )
 VALUES (
+    '00000000-0000-0000-0000-0000000000e1'::uuid,
     '00000000-0000-0000-0000-0000000000c1'::uuid,
     '00000000-0000-0000-0000-0000000000d1'::uuid,
     'f3f404f3-1dfe-451e-8193-727e60685b80'::uuid,
@@ -111,10 +113,12 @@ VALUES (
     ST_SetSRID(ST_MakePoint(27.55127, 53.890864), 4326),
     '{"2gis": {"branch_id": "70000001081591971"}}'::jsonb,
     'IMPORT'
-);
+)
+ON CONFLICT (id) DO NOTHING;
 
--- 5. Restroom #2: Женский платный туалет (тот же адрес, те же условия)
+-- 5. Restroom #2: Женский платный туалет (predefined id)
 INSERT INTO restrooms (
+    id,
     city_id,
     building_id,
     subway_station_id,
@@ -143,6 +147,7 @@ INSERT INTO restrooms (
     data_source
 )
 VALUES (
+    '00000000-0000-0000-0000-0000000000e2'::uuid,
     '00000000-0000-0000-0000-0000000000c1'::uuid,
     '00000000-0000-0000-0000-0000000000d1'::uuid,
     'f3f404f3-1dfe-451e-8193-727e60685b80'::uuid,
@@ -178,7 +183,8 @@ VALUES (
     ST_SetSRID(ST_MakePoint(27.55127, 53.890864), 4326),
     '{"2gis": {"branch_id": "70000001081591972"}}'::jsonb,
     'IMPORT'
-);
+)
+ON CONFLICT (id) DO NOTHING;
 
 -- rollback DELETE FROM restrooms WHERE data_source = 'IMPORT' AND address = 'Минск, Привокзальная площадь, 5';
 -- rollback DELETE FROM buildings WHERE address = 'Минск, Привокзальная площадь, 5';
