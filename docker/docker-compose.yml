@@ -12,9 +12,9 @@ services:
       - caddy_data:/data
     networks:
       - tutochka_net
-    mem_limit: 64m
-    mem_reservation: 32m
-    memswap_limit: 96m
+    mem_limit: 48m
+    mem_reservation: 24m
+    memswap_limit: 72m
     mem_swappiness: 10
 
   backend:
@@ -36,7 +36,7 @@ services:
       DB_MAX_LIFETIME: ${DB_MAX_LIFETIME:-1800000}
       APP_PORT: ${APP_PORT:-8080}
       APP_ENV: ${APP_ENV:-production}
-      JAVA_TOOL_OPTIONS: "-XX:MaxRAMPercentage=55 -XX:+UseG1GC"
+      JAVA_TOOL_OPTIONS: "-XX:MaxRAMPercentage=45 -XX:+UseG1GC"
     networks:
       - tutochka_net
     healthcheck:
@@ -44,9 +44,9 @@ services:
       interval: 30s
       timeout: 10s
       retries: 3
-    mem_limit: 220m
-    mem_reservation: 160m
-    memswap_limit: 320m
+    mem_limit: 180m
+    mem_reservation: 120m
+    memswap_limit: 270m
     mem_swappiness: 25
 
   bot:
@@ -68,7 +68,7 @@ services:
       BACKEND_RETRY_DELAY_MS: ${BACKEND_RETRY_DELAY_MS:-200}
       PORT: ${PORT:-8081}
       SPRING_PROFILES_ACTIVE: ${SPRING_PROFILES_ACTIVE:-prod}
-      JAVA_TOOL_OPTIONS: "-XX:MaxRAMPercentage=55 -XX:+UseG1GC"
+      JAVA_TOOL_OPTIONS: "-XX:MaxRAMPercentage=45 -XX:+UseG1GC"
     depends_on:
       backend:
         condition: service_healthy
@@ -79,9 +79,9 @@ services:
       interval: 30s
       timeout: 10s
       retries: 3
-    mem_limit: 280m
-    mem_reservation: 200m
-    memswap_limit: 400m
+    mem_limit: 220m
+    mem_reservation: 150m
+    memswap_limit: 330m
     mem_swappiness: 25
 
 volumes:
