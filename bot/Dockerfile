@@ -16,7 +16,7 @@ RUN ./gradlew :bot:dependencies --no-daemon
 
 COPY bot/src bot/src
 
-RUN ./gradlew :bot:bootJar --no-daemon -x test \
+RUN ./gradlew :bot:bootJar --no-daemon -x test -x integrationTest \
     && cp "$(find /app/bot/build/libs -maxdepth 1 -type f -name '*.jar' ! -name '*-plain.jar' | head -n 1)" /app/app.jar
 
 FROM eclipse-temurin:21-jre-jammy

@@ -18,7 +18,9 @@ COPY liquibase/ liquibase/
 
 # Build the application (skip ktlint for Docker build)
 ENV SKIP_KTLINT=true
-RUN ./gradlew build --no-daemon -x test -x ktlintCheck -x ktlintFormat -x ktlintKotlinScriptCheck -x ktlintMainSourceSetCheck -x ktlintTestSourceSetCheck
+RUN ./gradlew build --no-daemon \
+    -x test -x integrationTest \
+    -x ktlintCheck -x ktlintFormat -x ktlintKotlinScriptCheck -x ktlintMainSourceSetCheck -x ktlintTestSourceSetCheck
 
 # Production stage with lightweight JRE
 FROM eclipse-temurin:17-jre-jammy AS production
