@@ -18,7 +18,7 @@ services:
     mem_swappiness: 10
 
   backend:
-    image: ghcr.io/yayauheny/tutochka-backend@sha256:f0a7b7e0182e79a01f1488e3ffc544ce628e13ae38513b92ed599a94b5ae5abe
+    image: ghcr.io/yayauheny/tutochka-backend:latest
     platform: linux/amd64
     container_name: tutochka_backend
     restart: always
@@ -50,7 +50,7 @@ services:
     mem_swappiness: 25
 
   bot:
-    image: ghcr.io/yayauheny/tutochka-bot@sha256:6806f7f3b5bea4e96f19c8caa7da4ec2d0e777f7ec7e2dc603af28246d90cf23
+    image: ghcr.io/yayauheny/tutochka-bot:latest
     platform: linux/amd64
     container_name: tutochka_bot
     restart: always
