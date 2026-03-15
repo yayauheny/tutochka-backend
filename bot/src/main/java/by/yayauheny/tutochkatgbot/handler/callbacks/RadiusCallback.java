@@ -79,7 +79,7 @@ public class RadiusCallback implements CallbackHandler {
             logger.debug("Using session location for search: userId={}, lat={}, lon={}, radius={}",
                 ctx.userId(), location.latitude(), location.longitude(), radius);
 
-            var results = searchService.findNearby(location.latitude(), location.longitude(), radius, 10);
+            var results = searchService.findNearby(location.latitude(), location.longitude(), radius, SearchService.DEFAULT_NEAREST_LIMIT);
 
             if (results.isEmpty()) {
                 sender.editOrReply(ctx, Messages.NO_TOILETS_FOUND, inlineKeyboard.radiusSelection());

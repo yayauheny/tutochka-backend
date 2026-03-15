@@ -19,12 +19,13 @@ public final class Links {
     }
 
     public static String twoGis(double lat, double lon) {
-        return String.format(Locale.US, "https://2gis.ru/?m=%.6f,%.6f/zoom/16", lon, lat);
+        return String.format(Locale.US, "https://2gis.ru/geo/%.5f,%.5f", lon, lat);
     }
 
     public static String twoGisById(String branchId) {
-        return "https://2gis.ru/geo/" + branchId;
+        return String.format("https://2gis.ru/firm/%s", branchId);
     }
+    
     
     public static String getDefaultMapsLink(double lat, double lon) {
         return yandexMaps(lat, lon);

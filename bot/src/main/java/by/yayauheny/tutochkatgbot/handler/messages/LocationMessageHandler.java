@@ -53,7 +53,7 @@ public class LocationMessageHandler implements MessageHandler {
         
         userService.saveLocation(ctx.userId(), latitude, longitude);
 
-        var results = searchService.findNearby(latitude, longitude, UserService.DEFAULT_RADIUS, 10);
+        var results = searchService.findNearby(latitude, longitude, UserService.DEFAULT_RADIUS, SearchService.DEFAULT_NEAREST_LIMIT);
         
         if (results.isEmpty()) {
             sender.sendText(ctx.chatId(), Messages.NO_TOILETS_FOUND, inlineKeyboard.radiusSelection());

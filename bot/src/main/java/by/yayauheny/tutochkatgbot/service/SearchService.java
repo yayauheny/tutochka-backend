@@ -13,6 +13,7 @@ import java.util.Optional;
 @Service
 public class SearchService {
     private static final Logger logger = LoggerFactory.getLogger(SearchService.class);
+    public static final int DEFAULT_NEAREST_LIMIT = 5;
 
     private final BackendClient backend;
 

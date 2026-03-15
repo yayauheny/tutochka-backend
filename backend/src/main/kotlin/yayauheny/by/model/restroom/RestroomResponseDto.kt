@@ -21,6 +21,7 @@ import yayauheny.by.model.enums.RestroomStatus
 data class RestroomResponseDto(
     @Contextual val id: UUID,
     @Contextual val cityId: UUID?,
+    val cityName: String? = null,
     @Contextual val buildingId: UUID?,
     @Contextual val subwayStationId: UUID?,
     val name: String?,

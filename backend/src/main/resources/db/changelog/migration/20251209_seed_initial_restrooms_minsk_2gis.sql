@@ -1,17 +1,17 @@
 -- liquibase formatted sql
 
--- changeset yayauheny:seed-initial-restrooms-minsk-2gis
 
 -- 1. Ensure country BY (Беларусь) exists
-INSERT INTO countries (code, name_ru, name_en)
-VALUES ('BY', 'Беларусь', 'Belarus')
+INSERT INTO countries (id, code, name_ru, name_en)
+VALUES ('00000000-0000-0000-0000-0000000000b1'::uuid, 'BY', 'Беларусь', 'Belarus')
 ON CONFLICT (code) DO UPDATE
 SET name_ru = EXCLUDED.name_ru,
     name_en = EXCLUDED.name_en;
 
 -- 2. Ensure city Минск exists (coordinates ≈ центр города)
-INSERT INTO cities (country_id, name_ru, name_en, region, coordinates)
+INSERT INTO cities (id, country_id, name_ru, name_en, region, coordinates)
 VALUES (
+    '00000000-0000-0000-0000-0000000000c1'::uuid,
     (SELECT id FROM countries WHERE code = 'BY'),
     'Минск',
     'Minsk',
@@ -23,6 +23,7 @@ SET name_en = EXCLUDED.name_en;
 
 -- 3. Building: Минск, Привокзальная площадь, 5 (ЖД вокзал)
 INSERT INTO buildings (
+    id,
     city_id,
     name,
     address,
@@ -33,7 +34,8 @@ INSERT INTO buildings (
     import_status
 )
 VALUES (
-    (SELECT id FROM cities WHERE country_id = (SELECT id FROM countries WHERE code = 'BY') AND name_ru = 'Минск'),
+    '00000000-0000-0000-0000-0000000000d1'::uuid,
+    '00000000-0000-0000-0000-0000000000c1'::uuid,
     'Минский железнодорожный вокзал',
     'Минск, Привокзальная площадь, 5',
     'railway_station',
@@ -41,10 +43,12 @@ VALUES (
     ST_SetSRID(ST_MakePoint(27.55127, 53.890864), 4326),
     '{"2gis_building_id": "70030076195149995"}'::jsonb,
     'COMPLETED'
-);
+)
+ON CONFLICT (id) DO NOTHING;
 
--- 4. Restroom #1: Мужской платный туалет
+-- 4. Restroom #1: Мужской платный туалет (predefined id)
 INSERT INTO restrooms (
+    id,
     city_id,
     building_id,
     subway_station_id,
@@ -73,14 +77,10 @@ INSERT INTO restrooms (
     data_source
 )
 VALUES (
-    (SELECT id FROM cities WHERE country_id = (SELECT id FROM countries WHERE code = 'BY') AND name_ru = 'Минск'),
-    (SELECT id
-     FROM buildings
-     WHERE city_id = (SELECT id FROM cities WHERE country_id = (SELECT id FROM countries WHERE code = 'BY') AND name_ru = 'Минск')
-       AND address = 'Минск, Привокзальная площадь, 5'
-     ORDER BY created_at ASC
-     LIMIT 1),
-    NULL,
+    '00000000-0000-0000-0000-0000000000e1'::uuid,
+    '00000000-0000-0000-0000-0000000000c1'::uuid,
+    '00000000-0000-0000-0000-0000000000d1'::uuid,
+    'f3f404f3-1dfe-451e-8193-727e60685b80'::uuid,
 
     'Мужской платный туалет',
     'public_toilet',
@@ -113,10 +113,12 @@ VALUES (
     ST_SetSRID(ST_MakePoint(27.55127, 53.890864), 4326),
     '{"2gis": {"branch_id": "70000001081591971"}}'::jsonb,
     'IMPORT'
-);
+)
+ON CONFLICT (id) DO NOTHING;
 
--- 5. Restroom #2: Женский платный туалет (тот же адрес, те же условия)
+-- 5. Restroom #2: Женский платный туалет (predefined id)
 INSERT INTO restrooms (
+    id,
     city_id,
     building_id,
     subway_station_id,
@@ -145,14 +147,10 @@ INSERT INTO restrooms (
     data_source
 )
 VALUES (
-    (SELECT id FROM cities WHERE country_id = (SELECT id FROM countries WHERE code = 'BY') AND name_ru = 'Минск'),
-    (SELECT id
-     FROM buildings
-     WHERE city_id = (SELECT id FROM cities WHERE country_id = (SELECT id FROM countries WHERE code = 'BY') AND name_ru = 'Минск')
-       AND address = 'Минск, Привокзальная площадь, 5'
-     ORDER BY created_at ASC
-     LIMIT 1),
-    NULL,
+    '00000000-0000-0000-0000-0000000000e2'::uuid,
+    '00000000-0000-0000-0000-0000000000c1'::uuid,
+    '00000000-0000-0000-0000-0000000000d1'::uuid,
+    'f3f404f3-1dfe-451e-8193-727e60685b80'::uuid,
 
     'Женский платный туалет',
     'public_toilet',
@@ -185,7 +183,8 @@ VALUES (
     ST_SetSRID(ST_MakePoint(27.55127, 53.890864), 4326),
     '{"2gis": {"branch_id": "70000001081591972"}}'::jsonb,
     'IMPORT'
-);
+)
+ON CONFLICT (id) DO NOTHING;
 
 -- rollback DELETE FROM restrooms WHERE data_source = 'IMPORT' AND address = 'Минск, Привокзальная площадь, 5';
 -- rollback DELETE FROM buildings WHERE address = 'Минск, Привокзальная площадь, 5';

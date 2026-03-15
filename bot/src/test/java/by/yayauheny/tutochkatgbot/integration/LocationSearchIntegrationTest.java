@@ -6,6 +6,7 @@ import by.yayauheny.tutochkatgbot.dto.backend.FeeType;
 import by.yayauheny.tutochkatgbot.dto.backend.LatLon;
 import by.yayauheny.tutochkatgbot.dto.backend.NearestRestroomSlimDto;
 import by.yayauheny.tutochkatgbot.router.UpdateRouter;
+import by.yayauheny.tutochkatgbot.service.SearchService;
 import java.util.List;
 import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
@@ -45,7 +46,7 @@ class LocationSearchIntegrationTest {
 
     @Test
     void locationFlowReturnsList() {
-        when(backendClient.findNearest(53.9, 27.56, 10, 500))
+        when(backendClient.findNearest(53.9, 27.56, SearchService.DEFAULT_NEAREST_LIMIT, 500))
             .thenReturn(List.of(sampleNearest()));
 
         Update update = locationUpdate(53.9, 27.56);
@@ -65,7 +66,7 @@ class LocationSearchIntegrationTest {
 
     @Test
     void locationFlowEmptyResultsSendsNoToiletsMessage() {
-        when(backendClient.findNearest(53.0, 28.0, 10, 500)).thenReturn(List.of());
+        when(backendClient.findNearest(53.0, 28.0, SearchService.DEFAULT_NEAREST_LIMIT, 500)).thenReturn(List.of());
 
         Update update = locationUpdate(53.0, 28.0);
 

@@ -9,13 +9,13 @@ COPY bot/build.gradle.kts bot/
 
 RUN chmod +x ./gradlew
 
-RUN --mount=type=cache,target=/root/.gradle \
-    ./gradlew :backend:dependencies --no-daemon
+RUN ./gradlew :backend:dependencies --no-daemon
 
 COPY backend/src backend/src
 
-RUN --mount=type=cache,target=/root/.gradle \
-    ./gradlew :backend:buildFatJar --no-daemon --build-cache
+RUN ./gradlew :backend:buildFatJar --no-daemon \
+    -x test -x integrationTest \
+    -x ktlintCheck -x ktlintFormat -x ktlintKotlinScriptCheck -x ktlintMainSourceSetCheck -x ktlintTestSourceSetCheck
 
 FROM eclipse-temurin:21-jre-jammy
 WORKDIR /app

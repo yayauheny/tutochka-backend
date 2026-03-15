@@ -1,8 +1,6 @@
 package yayauheny.by.common.mapper
 
 import java.time.Instant
-import java.util.UUID
-import org.jooq.JSONB
 import org.jooq.Record
 import org.jooq.UpdateSetFirstStep
 import org.jooq.UpdateSetMoreStep
@@ -35,6 +33,7 @@ object RestroomMapper {
         return RestroomResponseDto(
             id = record[RESTROOMS.ID]!!,
             cityId = record[RESTROOMS.CITY_ID],
+            cityName = null,
             buildingId = record[RESTROOMS.BUILDING_ID],
             subwayStationId = record[RESTROOMS.SUBWAY_STATION_ID],
             name = record[RESTROOMS.NAME],
@@ -80,6 +79,8 @@ object RestroomMapper {
         val lat = record.reqDouble("lat")
         val lon = record.reqDouble("lon")
 
+        val cityNameEn = record.get("city_name_en", String::class.java)
+
         val bId = record.get("b_id") as? java.util.UUID
         val building =
             bId?.let {
@@ -91,13 +92,13 @@ object RestroomMapper {
 
                 BuildingResponseDto(
                     id = it,
-                    cityId = record.get("b_city_id", UUID::class.java) ?: record[RESTROOMS.CITY_ID]!!,
+                    cityId = record.get("b_city_id", java.util.UUID::class.java) ?: record[RESTROOMS.CITY_ID]!!,
                     name = record.get("b_name", String::class.java),
                     address = bAddress,
                     buildingType = bType,
-                    workTime = record.get("b_work_time", JSONB::class.java)?.toJsonObject(),
+                    workTime = record.get("b_work_time", org.jooq.JSONB::class.java)?.toJsonObject(),
                     coordinates = if (bLat != null && bLon != null) Coordinates(bLat, bLon) else Coordinates(lat, lon),
-                    externalIds = record.get("b_external_ids", JSONB::class.java)?.toJsonObject(),
+                    externalIds = record.get("b_external_ids", org.jooq.JSONB::class.java)?.toJsonObject(),
                     isDeleted = record.get("b_is_deleted", Boolean::class.java) ?: false,
                     createdAt =
                         record.get("b_created_at", Instant::class.java)
@@ -118,7 +119,7 @@ object RestroomMapper {
                     lineId?.let {
                         SubwayLineResponseDto(
                             id = it,
-                            cityId = record.get("l_city_id", UUID::class.java) ?: record[RESTROOMS.CITY_ID]!!,
+                            cityId = record.get("l_city_id", java.util.UUID::class.java) ?: record[RESTROOMS.CITY_ID]!!,
                             nameRu = record.get("l_name_ru", String::class.java) ?: "",
                             nameEn = record.get("l_name_en", String::class.java) ?: "",
                             hexColor = record.get("l_hex", String::class.java) ?: "",
@@ -146,6 +147,7 @@ object RestroomMapper {
         return RestroomResponseDto(
             id = record[RESTROOMS.ID]!!,
             cityId = record[RESTROOMS.CITY_ID],
+            cityName = cityNameEn,
             buildingId = record[RESTROOMS.BUILDING_ID],
             subwayStationId = record[RESTROOMS.SUBWAY_STATION_ID],
             name = record[RESTROOMS.NAME],
@@ -210,6 +212,10 @@ object RestroomMapper {
             .setIfNotNull(RESTROOMS.ORIGIN_ID, dto.originId)
             .setIfNotNull(RESTROOMS.IS_HIDDEN, dto.isHidden)
 
+    /**
+     * Maps a database record to a slim DTO for nearest restrooms list.
+     * displayName is the restroom name from DB (may be empty; client/bot should show fallback e.g. "Туалет").
+     */
     fun mapToNearestRestroomSlim(
         record: Record,
         userLat: Double,
@@ -217,6 +223,7 @@ object RestroomMapper {
     ): NearestRestroomResponseDto {
         val lat = record.reqDouble("lat")
         val lon = record.reqDouble("lon")
+
         return NearestRestroomResponseDto(
             id = record[RESTROOMS.ID]!!,
             displayName = record[RESTROOMS.NAME]?.trim().orEmpty(),

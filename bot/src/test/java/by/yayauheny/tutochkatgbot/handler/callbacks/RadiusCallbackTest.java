@@ -68,14 +68,14 @@ class RadiusCallbackTest {
         when(userService.getSession(userId)).thenReturn(Optional.of(session));
 
         var mockResults = List.<NearestRestroomSlimDto>of();
-        when(searchService.findNearby(lat, lon, radius, 10)).thenReturn(mockResults);
+        when(searchService.findNearby(lat, lon, radius, SearchService.DEFAULT_NEAREST_LIMIT)).thenReturn(mockResults);
         when(formatterService.toiletsFound(0)).thenReturn("Найдено 0 туалетов");
         when(inlineKeyboard.radiusSelection()).thenReturn(null);
 
         handler.handle(update, ctx);
 
         verify(userService).getSession(userId);
-        verify(searchService).findNearby(lat, lon, radius, 10);
+        verify(searchService).findNearby(lat, lon, radius, SearchService.DEFAULT_NEAREST_LIMIT);
         verify(sender).editOrReply(eq(ctx), anyString(), any());
     }
 

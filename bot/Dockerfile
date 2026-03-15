@@ -12,13 +12,11 @@ COPY backend/build.gradle.kts backend/
 
 RUN chmod +x ./gradlew
 
-RUN --mount=type=cache,target=/root/.gradle \
-    ./gradlew :bot:dependencies --no-daemon
+RUN ./gradlew :bot:dependencies --no-daemon
 
 COPY bot/src bot/src
 
-RUN --mount=type=cache,target=/root/.gradle \
-    ./gradlew :bot:bootJar --no-daemon --build-cache -x test \
+RUN ./gradlew :bot:bootJar --no-daemon -x test -x integrationTest \
     && cp "$(find /app/bot/build/libs -maxdepth 1 -type f -name '*.jar' ! -name '*-plain.jar' | head -n 1)" /app/app.jar
 
 FROM eclipse-temurin:21-jre-jammy
