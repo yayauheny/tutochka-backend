@@ -297,6 +297,89 @@ class ImportApiIntegrationTest : BaseIntegrationTest() {
         }
 
     @Test
+    @DisplayName("yandex_importBatch_shouldImportAllItemsFromResourceFile")
+    fun yandex_importBatch_shouldImportAllItemsFromResourceFile() =
+        runTest {
+            val items = loadImportResourceItems("import/yandex_scraped_places.json")
+            val n = items.size
+            assertTrue(n in 3..20, "Expected 3-20 items in Yandex resource, got $n")
+
+            val env = DatabaseTestHelper.createTestEnvironment(dslContext)
+            val body = buildImportBody(items)
+            val headers = yandexImportHeaders(env.cityId)
+
+            KtorTestApplication.withApp(dslContext) { client ->
+                val response = client.testPost("/api/v1/import/batch", body, headers)
+
+                response.assertStatusAndJsonContent(HttpStatusCode.Created)
+                val json = Json.parseToJsonElement(response.bodyAsText()).jsonObject
+                assertEquals(n, json["totalProcessed"]?.jsonPrimitive?.content?.toInt())
+                assertEquals(n, json["successful"]?.jsonPrimitive?.content?.toInt())
+                val importId = json["importId"]?.jsonPrimitive?.content?.let { UUID.fromString(it) }
+                assertNotNull(importId)
+
+                val successImportCount =
+                    dslContext
+                        .selectCount()
+                        .from(RESTROOM_IMPORTS)
+                        .where(RESTROOM_IMPORTS.STATUS.eq("SUCCESS"))
+                        .and(RESTROOM_IMPORTS.CITY_ID.eq(env.cityId))
+                        .fetchOne()
+                        ?.value1() ?: 0
+                assertEquals(n, successImportCount)
+
+                val restroomCount =
+                    dslContext
+                        .selectCount()
+                        .from(RESTROOMS)
+                        .where(RESTROOMS.ORIGIN_PROVIDER.eq("YANDEX_MAPS"))
+                        .fetchOne()
+                        ?.value1() ?: 0
+                assertEquals(n, restroomCount)
+            }
+        }
+
+    @Test
+    @DisplayName("yandex_importSingle_shouldImportOneItemFromResourceFile_and_upsert_on_repeat")
+    fun yandex_importSingle_shouldImportOneItemFromResourceFile_and_upsert_on_repeat() =
+        runTest {
+            val items = loadImportResourceItems("import/yandex_scraped_places.json")
+            val firstItem = items.first()
+
+            val env = DatabaseTestHelper.createTestEnvironment(dslContext)
+            val body = buildImportBody(listOf(firstItem))
+            val headers = yandexImportHeaders(env.cityId)
+
+            KtorTestApplication.withApp(dslContext) { client ->
+                val response1 = client.testPost("/api/v1/import", body, headers)
+                response1.assertStatusAndJsonContent(HttpStatusCode.Created)
+                val json1 = Json.parseToJsonElement(response1.bodyAsText()).jsonObject
+                val restroomId1 = json1["restroomId"]?.jsonPrimitive?.content?.let { UUID.fromString(it) }
+                val status1 = json1["status"]?.jsonPrimitive?.content
+                assertNotNull(restroomId1)
+                assertTrue(status1 == "SUCCESS", "Expected status SUCCESS, got $status1")
+
+                val response2 = client.testPost("/api/v1/import", body, headers)
+                response2.assertStatusAndJsonContent(HttpStatusCode.Created)
+                val json2 = Json.parseToJsonElement(response2.bodyAsText()).jsonObject
+                val restroomId2 = json2["restroomId"]?.jsonPrimitive?.content?.let { UUID.fromString(it) }
+                assertNotNull(restroomId2)
+                assertEquals(restroomId1, restroomId2, "Re-import of same Yandex item should return same restroomId (upsert by originId)")
+
+                val placeId = firstItem["placeId"]!!.jsonPrimitive.content
+                val countByOrigin =
+                    dslContext
+                        .selectCount()
+                        .from(RESTROOMS)
+                        .where(RESTROOMS.ORIGIN_ID.eq(placeId))
+                        .and(RESTROOMS.ORIGIN_PROVIDER.eq("YANDEX_MAPS"))
+                        .fetchOne()
+                        ?.value1() ?: 0
+                assertEquals(1, countByOrigin, "Exactly one restroom should exist for this Yandex originId")
+            }
+        }
+
+    @Test
     @DisplayName("importSingle_shouldImportOneItemFromResourceFile")
     fun importSingle_shouldImportOneItemFromResourceFile() =
         runTest {
@@ -339,6 +422,13 @@ class ImportApiIntegrationTest : BaseIntegrationTest() {
         mapOf(
             HEADER_IMPORT_PROVIDER to "TWO_GIS",
             HEADER_IMPORT_PAYLOAD_TYPE to "TWO_GIS_SCRAPED_PLACE_JSON",
+            HEADER_IMPORT_CITY_ID to cityId.toString()
+        )
+
+    private fun yandexImportHeaders(cityId: UUID): Map<String, String> =
+        mapOf(
+            HEADER_IMPORT_PROVIDER to "YANDEX_MAPS",
+            HEADER_IMPORT_PAYLOAD_TYPE to "YANDEX_MAPS_SCRAPED_PLACE_JSON",
             HEADER_IMPORT_CITY_ID to cityId.toString()
         )
 

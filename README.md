@@ -10,6 +10,36 @@
 
 ---
 
+## Service Overview (LLM / agent context)
+
+TuTochka is a backend service for discovering public restrooms and related locations. It provides a **REST API** and supports a **Telegram bot** client that calls the API over HTTP (the database behind the backend is the source of truth).
+
+**Current product scope**
+
+- Store and serve restroom data (relational PostgreSQL/PostGIS + JSONB for flexible fields).
+- Search **nearest** restrooms by coordinates (geospatial proximity, not travel time).
+- List restrooms by city with pagination.
+- Return building, subway, schedule-related metadata, fee, accessibility, and text **direction** fields.
+- Support Telegram bot presentation of search results.
+
+**Core domain entities:** Country, City, Building, SubwayLine, SubwayStation, Restroom.
+
+**Current integrations:** REST API (`/api/v1`, see codebase and `backend/src/main/resources/openapi.yaml`); Telegram bot (Spring Boot) as HTTP client.
+
+**Important limitations**
+
+- Schema is global; **actual data coverage** depends on deployment and imports (not worldwide by default).
+- No user-generated submissions in production yet; no review/rating workflow in schema.
+- No real photo storage yet — `hasPhotos` is a flag only.
+- Indoor guidance is **text/metadata** (`directionGuide`), not turn-by-turn indoor routing.
+- Import from 2GIS/Yandex-class providers is **partial** (API + queue exist; full automation/rollout ongoing).
+
+**Status:** Backend API and Telegram bot implemented; building/subway linkage on restroom payloads implemented; data import and production rollout still in progress.
+
+**Full technical reference (architecture, indexes, geo, API examples, glossary):** [docs/architecture/TECHNICAL_OVERVIEW.md](docs/architecture/TECHNICAL_OVERVIEW.md)
+
+---
+
 ## 📖 About / О проекте
 
 ### English
@@ -311,6 +341,7 @@ See [bot/README.md](bot/README.md) for detailed bot configuration and environmen
 
 ## 📖 Documentation / Документация
 
+- **Technical overview (architecture, geo, limitations):** [docs/architecture/TECHNICAL_OVERVIEW.md](docs/architecture/TECHNICAL_OVERVIEW.md) | [docs index](docs/DOCS_INDEX.md)
 - **API Documentation:** Available at `/swagger-ui.html` when running
 - **Database Schema:** See `src/main/resources/db/changelog/` for migration files
 - **Code Style:** Follows ktlint standards with automatic formatting

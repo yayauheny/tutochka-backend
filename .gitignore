@@ -6,6 +6,9 @@
 # $ git config --global mergetool.keepBackup false
 *.orig
 
+# Accidental full .git copies (never commit)
+.git.backup*/
+
 # Created by git when using merge tools for conflicts
 *.BACKUP.*
 *.BASE.*
