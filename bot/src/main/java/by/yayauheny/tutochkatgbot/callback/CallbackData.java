@@ -19,6 +19,10 @@ public final class CallbackData {
         return "radius:" + meters; 
     }
 
+    public static String route(String provider, String restroomId) {
+        return "route:" + provider + ":" + restroomId;
+    }
+
     public static boolean isType(String data, String type) { 
         return data.startsWith(type + ":"); 
     }
@@ -26,5 +30,15 @@ public final class CallbackData {
     public static String arg(String data) { 
         int i = data.indexOf(':'); 
         return i >= 0 ? data.substring(i + 1) : ""; 
+    }
+
+    public static String routeProvider(String data) {
+        String[] parts = data.split(":", 3);
+        return parts.length >= 2 ? parts[1] : "";
+    }
+
+    public static String routeRestroomId(String data) {
+        String[] parts = data.split(":", 3);
+        return parts.length == 3 ? parts[2] : "";
     }
 }

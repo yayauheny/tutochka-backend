@@ -22,6 +22,7 @@ import yayauheny.by.controller.CountryController
 import yayauheny.by.controller.HealthController
 import yayauheny.by.controller.ImportController
 import yayauheny.by.controller.RestroomController
+import yayauheny.by.metrics.BackendSearchMetrics
 import org.jooq.DSLContext
 import yayauheny.by.service.CityService
 import yayauheny.by.service.CountryService
@@ -55,7 +56,7 @@ abstract class RoutingTestBase {
             module {
                 single { CountryController(get()) }
                 single { CityController(get()) }
-                single { RestroomController(get()) }
+                single { RestroomController(get(), mockk<BackendSearchMetrics>(relaxed = true)) }
                 single { HealthController(get()) }
                 single { ImportController(get(), get()) }
             }

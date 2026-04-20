@@ -61,6 +61,7 @@ public class WebBackendClient implements BackendClient {
                         .queryParam("limit", limit)
                         .queryParam("distanceMeters", distanceMeters)
                         .build())
+                    .header("X-Client-Type", "telegram_bot")
                     .accept(MediaType.APPLICATION_JSON)
                     .retrieve()
                     .body(NearestRestroomSlimDto[].class)
@@ -74,6 +75,7 @@ public class WebBackendClient implements BackendClient {
             withRetry(() ->
                 client.get()
                     .uri("/restrooms/{id}", id)
+                    .header("X-Client-Type", "telegram_bot")
                     .accept(MediaType.APPLICATION_JSON)
                     .retrieve()
                     .body(RestroomResponseDto.class)

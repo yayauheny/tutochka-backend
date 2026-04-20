@@ -4,6 +4,7 @@ import by.yayauheny.tutochkatgbot.dto.backend.LatLon;
 import by.yayauheny.tutochkatgbot.dto.backend.NearestRestroomSlimDto;
 import by.yayauheny.tutochkatgbot.dto.backend.FeeType;
 import by.yayauheny.tutochkatgbot.integration.BackendClient;
+import by.yayauheny.tutochkatgbot.metrics.BotMetrics;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
 
@@ -19,7 +20,8 @@ import static org.mockito.Mockito.when;
 class SearchServiceBackendCallsTest {
 
     private final BackendClient backend = Mockito.mock(BackendClient.class);
-    private final SearchService service = new SearchService(backend);
+    private final BotMetrics botMetrics = Mockito.mock(BotMetrics.class);
+    private final SearchService service = new SearchService(backend, botMetrics);
 
     @Test
     void findNearbyCallsBackendEachTime() {

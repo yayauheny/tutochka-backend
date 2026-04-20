@@ -12,6 +12,9 @@ import io.ktor.server.routing.route
 import yayauheny.by.common.errors.EntityNotFoundException
 import yayauheny.by.common.errors.ValidationException
 import yayauheny.by.config.ApiConstants
+import yayauheny.by.metrics.BackendSearchMetrics
+import yayauheny.by.metrics.SearchMetricBuckets
+import yayauheny.by.metrics.extractClientType
 import yayauheny.by.model.dto.Coordinates
 import yayauheny.by.model.restroom.RestroomCreateDto
 import yayauheny.by.model.restroom.RestroomUpdateDto
@@ -31,7 +34,8 @@ import yayauheny.by.util.getUuidFromPath
 import yayauheny.by.util.toPaginationRequest
 
 class RestroomController(
-    private val restroomService: RestroomService
+    private val restroomService: RestroomService,
+    private val backendSearchMetrics: BackendSearchMetrics
 ) {
     fun Route.restroomRoutes() {
         route("/restrooms") {
@@ -57,29 +61,60 @@ class RestroomController(
             }
 
             get("/nearest") {
-                val lat = call.getDoubleFromQuery("lat")
-                val lon = call.getDoubleFromQuery("lon")
-                val limit = call.getIntFromQuery("limit") ?: ApiConstants.DEFAULT_MAX_NEAREST_RESTROOMS_SIZE
-                val distanceMeters = call.getIntFromQuery("distanceMeters") ?: ApiConstants.DEFAULT_MAX_DISTANCE_METERS
-                val params =
-                    NearestRestroomsParams(
-                        Coordinates(lat, lon),
-                        limit,
-                        distanceMeters
+                val clientType = call.extractClientType()
+                val rawDistanceMeters = call.request.queryParameters["distanceMeters"]
+                val radiusBucket = SearchMetricBuckets.radiusBucketOrFallback(rawDistanceMeters)
+                backendSearchMetrics.incrementSearchRequest(clientType, radiusBucket)
+
+                try {
+                    val lat = call.getDoubleFromQuery("lat")
+                    val lon = call.getDoubleFromQuery("lon")
+                    val limit = call.getIntFromQuery("limit") ?: ApiConstants.DEFAULT_MAX_NEAREST_RESTROOMS_SIZE
+                    val distanceMeters = call.getIntFromQuery("distanceMeters") ?: ApiConstants.DEFAULT_MAX_DISTANCE_METERS
+                    val params =
+                        NearestRestroomsParams(
+                            Coordinates(lat, lon),
+                            limit,
+                            distanceMeters
+                        )
+
+                    val restrooms =
+                        params
+                            .validateAndThen(validateNearestRestroomsParams) { valid ->
+                                restroomService.findNearestRestrooms(
+                                    valid.coordinates.lat,
+                                    valid.coordinates.lon,
+                                    valid.limit,
+                                    valid.distanceMeters
+                                )
+                            }.getOrThrow()
+
+                    val resultsCount = restrooms.size
+                    val firstDistanceMeters = restrooms.firstOrNull()?.distanceMeters?.toInt()
+
+                    backendSearchMetrics.incrementSearchResults(
+                        clientType = clientType,
+                        resultBucket = SearchMetricBuckets.resultBucket(resultsCount)
+                    )
+                    backendSearchMetrics.incrementSearchQuality(
+                        clientType = clientType,
+                        qualityBucket = SearchMetricBuckets.qualityBucket(resultsCount, firstDistanceMeters)
                     )
 
-                val restrooms =
-                    params
-                        .validateAndThen(validateNearestRestroomsParams) { valid ->
-                            restroomService.findNearestRestrooms(
-                                valid.coordinates.lat,
-                                valid.coordinates.lon,
-                                valid.limit,
-                                valid.distanceMeters
-                            )
-                        }.getOrThrow()
-
-                call.respond(HttpStatusCode.OK, restrooms)
+                    call.respond(HttpStatusCode.OK, restrooms)
+                } catch (e: ValidationException) {
+                    backendSearchMetrics.incrementSearchFailure("validation")
+                    throw e
+                } catch (e: IllegalArgumentException) {
+                    backendSearchMetrics.incrementSearchFailure("validation")
+                    throw e
+                } catch (e: EntityNotFoundException) {
+                    backendSearchMetrics.incrementSearchFailure("not_found")
+                    throw e
+                } catch (e: Exception) {
+                    backendSearchMetrics.incrementSearchFailure("internal")
+                    throw e
+                }
             }
 
             post {

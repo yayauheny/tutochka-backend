@@ -7,6 +7,7 @@ import by.yayauheny.tutochkatgbot.dto.backend.LatLon;
 import by.yayauheny.tutochkatgbot.dto.backend.NearestRestroomSlimDto;
 import by.yayauheny.tutochkatgbot.router.UpdateRouter;
 import by.yayauheny.tutochkatgbot.service.SearchService;
+import io.micrometer.core.instrument.MeterRegistry;
 import java.util.List;
 import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
@@ -38,6 +39,9 @@ class LocationSearchIntegrationTest {
     @Autowired
     private UpdateRouter updateRouter;
 
+    @Autowired
+    private MeterRegistry meterRegistry;
+
     @MockitoBean
     private MessageSender messageSender;
 
@@ -62,6 +66,19 @@ class LocationSearchIntegrationTest {
         assertThat(chatCaptor.getValue()).isEqualTo(123L);
         assertThat(textCaptor.getValue()).contains("Найдено").contains("1");
         assertThat(keyboardCaptor.getValue()).isNotNull();
+
+        double backendCalls = meterRegistry.get("bot_backend_requests_total")
+            .tag("endpoint", "/restrooms/nearest")
+            .tag("outcome", "success")
+            .counter()
+            .count();
+        long durationCount = meterRegistry.get("bot_backend_request_duration_seconds")
+            .tag("endpoint", "/restrooms/nearest")
+            .timer()
+            .count();
+
+        assertThat(backendCalls).isGreaterThanOrEqualTo(1.0);
+        assertThat(durationCount).isGreaterThanOrEqualTo(1L);
     }
 
     @Test

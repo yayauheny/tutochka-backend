@@ -1,0 +1,36 @@
+prometheus.remote_write "cloud" {
+  endpoint {
+    url = sys.env("GRAFANA_CLOUD_PROM_URL")
+
+    basic_auth {
+      username = sys.env("GRAFANA_CLOUD_PROM_USERNAME")
+      password = sys.env("GRAFANA_CLOUD_API_KEY")
+    }
+  }
+}
+
+prometheus.scrape "backend" {
+  scrape_interval = "60s"
+  scrape_timeout  = "10s"
+
+  targets = [{
+    __address__      = "backend:8080",
+    __metrics_path__ = "/metrics",
+    job              = "backend",
+  }]
+
+  forward_to = [prometheus.remote_write.cloud.receiver]
+}
+
+prometheus.scrape "bot" {
+  scrape_interval = "60s"
+  scrape_timeout  = "10s"
+
+  targets = [{
+    __address__      = "bot:8081",
+    __metrics_path__ = "/actuator/prometheus",
+    job              = "bot",
+  }]
+
+  forward_to = [prometheus.remote_write.cloud.receiver]
+}

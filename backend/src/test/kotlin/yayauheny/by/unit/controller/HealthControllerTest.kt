@@ -33,6 +33,7 @@ import yayauheny.by.controller.RestroomController
 import yayauheny.by.helpers.assertJsonContentType
 import yayauheny.by.helpers.testGet
 import yayauheny.by.helpers.testJson
+import yayauheny.by.metrics.BackendSearchMetrics
 import yayauheny.by.service.CityService
 import yayauheny.by.service.CountryService
 import yayauheny.by.service.RestroomService
@@ -58,7 +59,7 @@ class HealthControllerTest {
             module {
                 single<CountryController> { CountryController(get()) }
                 single<CityController> { CityController(get()) }
-                single<RestroomController> { RestroomController(get()) }
+                single<RestroomController> { RestroomController(get(), mockk<BackendSearchMetrics>(relaxed = true)) }
                 single<HealthController> { HealthController(get()) }
                 single<ImportController> { ImportController(get(), get()) }
             }

@@ -5,15 +5,12 @@ import by.yayauheny.tutochkatgbot.dto.backend.NearestRestroomSlimDto;
 import by.yayauheny.tutochkatgbot.dto.backend.RestroomResponseDto;
 import by.yayauheny.tutochkatgbot.messages.Messages;
 import by.yayauheny.tutochkatgbot.service.FormatterService;
-import by.yayauheny.tutochkatgbot.util.Links;
 import org.springframework.stereotype.Component;
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.InlineKeyboardMarkup;
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.buttons.InlineKeyboardButton;
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.buttons.InlineKeyboardRow;
 
 import java.util.List;
-import java.util.Map;
-import java.util.Optional;
 
 /**
  * Factory for inline keyboards
@@ -38,31 +35,26 @@ public class InlineKeyboardFactory {
     }
 
     public InlineKeyboardMarkup toiletDetail(RestroomResponseDto toilet) {
-        double lat = toilet.coordinates().lat();
-        double lon = toilet.coordinates().lon();
+        String restroomId = toilet.id().toString();
 
         InlineKeyboardButton yandexButton = InlineKeyboardButton.builder()
                 .text(Messages.BUTTON_OPEN_YANDEX)
-                .url(Links.yandexMaps(lat, lon))
+                .callbackData(CallbackData.route("yandex", restroomId))
                 .build();
 
         InlineKeyboardButton googleButton = InlineKeyboardButton.builder()
                 .text(Messages.BUTTON_OPEN_GOOGLE)
-                .url(Links.googleMaps(lat, lon))
+                .callbackData(CallbackData.route("google", restroomId))
                 .build();
-
-        String twoGisUrl = extract2GisBranchId(toilet.externalMaps())
-                .map(Links::twoGisById)
-                .orElseGet(() -> Links.twoGis(lat, lon));
 
         InlineKeyboardButton twoGisButton = InlineKeyboardButton.builder()
                 .text(Messages.BUTTON_OPEN_2GIS)
-                .url(twoGisUrl)
+                .callbackData(CallbackData.route("2gis", restroomId))
                 .build();
 
         InlineKeyboardButton appleButton = InlineKeyboardButton.builder()
                 .text(Messages.BUTTON_OPEN_APPLE)
-                .url(Links.appleMaps(lat, lon))
+                .callbackData(CallbackData.route("apple", restroomId))
                 .build();
         
         InlineKeyboardButton backButton = InlineKeyboardButton.builder()
@@ -115,21 +107,5 @@ public class InlineKeyboardFactory {
                 .text(buttonText)
                 .callbackData(CallbackData.detail(toilet.id().toString()))
                 .build();
-    }
-
-    private Optional<String> extract2GisBranchId(Map<String, Object> externalMaps) {
-        if (externalMaps == null) {
-            return Optional.empty();
-        }
-
-        Object twoGis = externalMaps.get("2gis");
-        if (!(twoGis instanceof Map<?, ?> twoGisMap)) {
-            return Optional.empty();
-        }
-
-        Object branchId = twoGisMap.get("branch_id");
-        return (branchId instanceof String s && !s.isBlank())
-                ? Optional.of(s)
-                : Optional.empty();
     }
 }

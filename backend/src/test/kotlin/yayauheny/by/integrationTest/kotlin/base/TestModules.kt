@@ -5,6 +5,7 @@ import org.koin.core.module.Module
 import org.koin.dsl.module
 import yayauheny.by.di.controllerModule
 import yayauheny.by.di.importModule
+import yayauheny.by.config.metricsModule
 import yayauheny.by.di.serviceModule
 import yayauheny.by.repository.BuildingRepository
 import yayauheny.by.repository.CityRepository
@@ -31,5 +32,5 @@ fun buildTestModules(testDslContext: DSLContext): List<Module> {
             single<RestroomImportRepository> { RestroomImportRepositoryImpl(get()) }
         }
 
-    return listOf(testDatabaseModule, serviceModule, importModule, controllerModule)
+    return listOf(testDatabaseModule, serviceModule, importModule, controllerModule, metricsModule)
 }
