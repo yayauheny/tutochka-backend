@@ -7,7 +7,6 @@ COPY gradlew ./
 COPY gradle/ gradle/
 COPY build.gradle.kts settings.gradle.kts libs.versions.toml gradle.properties ./
 COPY bot/build.gradle.kts bot/
-# Keep only if Gradle configuration for :bot touches :backend
 COPY backend/build.gradle.kts backend/
 
 RUN chmod +x ./gradlew
@@ -23,9 +22,12 @@ FROM eclipse-temurin:21-jre-jammy
 WORKDIR /app
 
 RUN groupadd -g 1001 appgroup \
-    && useradd -u 1001 -g appgroup -s /usr/sbin/nologin -m appuser
+    && useradd -u 1001 -g appgroup -s /usr/sbin/nologin -m appuser \
+    && mkdir -p /app/logs
 
 COPY --from=builder /app/app.jar /app/app.jar
+
+RUN chown -R appuser:appgroup /app
 
 USER 1001:1001
 EXPOSE 8081
