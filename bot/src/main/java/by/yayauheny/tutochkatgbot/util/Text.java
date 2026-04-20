@@ -33,4 +33,19 @@ public final class Text {
     public static String replace(String template, String placeholder, String value) {
         return template.replace("{" + placeholder + "}", value);
     }
+
+    /**
+     * Escapes text for Telegram HTML parse mode.
+     */
+    public static String escapeHtml(String value) {
+        if (value == null) {
+            return null;
+        }
+        return value
+            .replace("&", "&amp;")
+            .replace("<", "&lt;")
+            .replace(">", "&gt;")
+            .replace("\"", "&quot;")
+            .replace("'", "&#39;");
+    }
 }

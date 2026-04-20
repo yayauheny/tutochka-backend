@@ -131,7 +131,7 @@ object RestroomMapper {
                     }
                 SubwayStationResponseDto(
                     id = stationId,
-                    subwayLineId = lineId ?: stationId, // fallback just to keep non-null id
+                    subwayLineId = lineId,
                     nameRu = record.get("s_name_ru", String::class.java) ?: "",
                     nameEn = record.get("s_name_en", String::class.java) ?: "",
                     isTransfer = record.get("s_is_transfer", Boolean::class.java) ?: false,

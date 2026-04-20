@@ -37,7 +37,6 @@ import yayauheny.by.metrics.BackendSearchMetrics
 import yayauheny.by.service.CityService
 import yayauheny.by.service.CountryService
 import yayauheny.by.service.RestroomService
-import yayauheny.by.repository.CityRepository
 import yayauheny.by.service.import.ImportService
 
 @DisplayName("HealthController Tests")
@@ -54,14 +53,13 @@ class HealthControllerTest {
                 single<CityService> { mockk<CityService>(relaxed = true) }
                 single<RestroomService> { mockk<RestroomService>(relaxed = true) }
                 single<ImportService> { mockk<ImportService>(relaxed = true) }
-                single<CityRepository> { mockk<CityRepository>(relaxed = true) }
             },
             module {
                 single<CountryController> { CountryController(get()) }
                 single<CityController> { CityController(get()) }
                 single<RestroomController> { RestroomController(get(), mockk<BackendSearchMetrics>(relaxed = true)) }
                 single<HealthController> { HealthController(get()) }
-                single<ImportController> { ImportController(get(), get()) }
+                single<ImportController> { ImportController(get()) }
             }
         )
 

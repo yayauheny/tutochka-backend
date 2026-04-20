@@ -173,6 +173,24 @@ class ImportApiIntegrationTest : BaseIntegrationTest() {
         }
 
     @Test
+    @DisplayName("GIVEN valid payload without cityId header WHEN POST /import THEN returns 400")
+    fun given_valid_payload_without_city_id_when_import_then_returns_400() =
+        runTest {
+            val body = buildImportBody(listOf(sampleRestrooms.first()))
+            val headers =
+                mapOf(
+                    HEADER_IMPORT_PROVIDER to "2gis",
+                    HEADER_IMPORT_PAYLOAD_TYPE to "single"
+                )
+
+            KtorTestApplication.withApp(dslContext) { client ->
+                val response = client.testPost("/api/v1/import", body, headers)
+
+                response.assertStatusAndJsonContent(HttpStatusCode.BadRequest)
+            }
+        }
+
+    @Test
     @DisplayName("GIVEN unknown category and unknown attribute groups WHEN POST /import THEN imports successfully (skip unknown, no error)")
     fun given_unknown_category_and_unknown_attrs_when_import_then_succeeds_skip_unknown() =
         runTest {

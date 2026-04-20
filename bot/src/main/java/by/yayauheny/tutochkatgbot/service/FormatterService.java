@@ -103,7 +103,7 @@ public class FormatterService {
     }
 
     public String toiletDetail(RestroomResponseDto toilet, Double distanceMeters) {
-        String name = selectDisplayNameForDetails(toilet);
+        String name = Text.escapeHtml(selectDisplayNameForDetails(toilet));
         String address = selectAddress(toilet);
         String tags = formatTags(toilet, distanceMeters);
         String placeType = Optional.ofNullable(toilet.placeType())
@@ -113,7 +113,7 @@ public class FormatterService {
         boolean hasAddress = address != null && !address.isBlank();
         String distancePart = distanceMeters != null ? "🚶 " + DistanceFormat.meters(distanceMeters) : "";
         String addressLine = hasAddress
-            ? (distancePart.isEmpty() ? "📍 " + address : distancePart + "   •   📍 " + address)
+            ? (distancePart.isEmpty() ? "📍 " + Text.escapeHtml(address) : distancePart + "   •   📍 " + Text.escapeHtml(address))
             : distancePart;
         
         String howToFindLine = formatHowToFindLine(toilet.directionGuide());
@@ -123,7 +123,7 @@ public class FormatterService {
         params.put("name", name);
         params.put("addressLine", addressLine);
         params.put("tags", tags);
-        params.put("placeType", placeType);
+        params.put("placeType", Text.escapeHtml(placeType));
         params.put("howToFindLine", howToFindLine);
         params.put("landmarkLine", landmarkLine);
         
@@ -205,7 +205,7 @@ public class FormatterService {
             return "";
         }
         
-        return "<b>Как найти:</b> " + trimmed + "\n";
+        return "<b>Как найти:</b> " + Text.escapeHtml(trimmed) + "\n";
     }
 
     private String formatLandmarkLine(BuildingResponseDto building, SubwayStationResponseDto subway) {
@@ -214,7 +214,7 @@ public class FormatterService {
         if (building != null) {
             String buildingName = building.displayName();
             if (buildingName != null && !buildingName.isBlank()) {
-                result.append(buildingName);
+                result.append(Text.escapeHtml(buildingName));
             }
         }
         
@@ -222,9 +222,9 @@ public class FormatterService {
             String stationName = subway.displayName("ru");
             if (stationName != null && !stationName.isBlank()) {
                 if (result.length() > 0) {
-                    result.append(", метро ").append(stationName);
+                    result.append(", метро ").append(Text.escapeHtml(stationName));
                 } else {
-                    result.append("Метро ").append(stationName);
+                    result.append("Метро ").append(Text.escapeHtml(stationName));
                 }
             }
         }
@@ -233,7 +233,7 @@ public class FormatterService {
             return "";
         }
         
-        return "<b>Ориентир:</b> " + result.toString() + "\n";
+        return "<b>Ориентир:</b> " + result + "\n";
     }
 
     private String formatBuildingLine(BuildingResponseDto building) {
@@ -246,7 +246,7 @@ public class FormatterService {
             return "";
         }
         
-        return "<b>Здание:</b> " + buildingName + "\n";
+        return "<b>Здание:</b> " + Text.escapeHtml(buildingName) + "\n";
     }
 
     private String formatSubwayLine(SubwayStationResponseDto subway) {
@@ -263,7 +263,7 @@ public class FormatterService {
             .map(EmojiConstants::getEmojiForColor)
             .orElse(EmojiConstants.METRO);
         
-        return "<b>Метро:</b> " + emoji + " " + stationName + "\n";
+        return "<b>Метро:</b> " + emoji + " " + Text.escapeHtml(stationName) + "\n";
     }
 
     private String formatScheduleBlock(RestroomResponseDto toilet) {
@@ -280,7 +280,7 @@ public class FormatterService {
             return "";
         }
         
-        return "<b>Заметка:</b>\n" + accessNote.trim() + "\n\n";
+        return "<b>Заметка:</b>\n" + Text.escapeHtml(accessNote.trim()) + "\n\n";
     }
 
     private String formatRouteBlock(String directionGuide) {
@@ -288,6 +288,6 @@ public class FormatterService {
             return "";
         }
         
-        return "<b>Маршрут:</b>\n" + directionGuide.trim() + "\n";
+        return "<b>Маршрут:</b>\n" + Text.escapeHtml(directionGuide.trim()) + "\n";
     }
 }

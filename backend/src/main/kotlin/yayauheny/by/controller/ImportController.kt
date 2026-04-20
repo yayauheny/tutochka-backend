@@ -9,16 +9,13 @@ import io.ktor.server.routing.route
 import kotlinx.serialization.json.JsonArray
 import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.jsonArray
-import kotlinx.serialization.json.jsonPrimitive
 import java.util.UUID
 import org.slf4j.LoggerFactory
 import yayauheny.by.common.errors.FieldError
 import yayauheny.by.common.errors.ValidationException
-import yayauheny.by.common.query.PaginationRequest
 import yayauheny.by.model.import.ImportBatchResponseDto
 import yayauheny.by.model.import.ImportRequestDto
 import yayauheny.by.model.import.ImportResponseDto
-import yayauheny.by.repository.CityRepository
 import yayauheny.by.service.import.ImportService
 import yayauheny.by.service.validation.ImportItemsParams
 import yayauheny.by.service.validation.validateImportItemsParams
@@ -26,8 +23,7 @@ import yayauheny.by.service.validation.validateOrThrow
 import yayauheny.by.util.getImportHeaders
 
 class ImportController(
-    private val importService: ImportService,
-    private val cityRepository: CityRepository
+    private val importService: ImportService
 ) {
     private val logger = LoggerFactory.getLogger(ImportController::class.java)
 
@@ -38,7 +34,7 @@ class ImportController(
                     val headers = call.getImportHeaders()
                     val request = parseImportBody(call.receive())
                     ImportItemsParams(request.items, isBatch = false).validateOrThrow(validateImportItemsParams)
-                    val cityId = resolveCityId(headers, request.items)
+                    val cityId = requireCityId(headers)
 
                     logger.info(
                         "Import request received: provider={}, payloadType={}, cityId={}",
@@ -87,7 +83,7 @@ class ImportController(
                     val headers = call.getImportHeaders()
                     val request = parseImportBody(call.receive())
                     ImportItemsParams(request.items, isBatch = true).validateOrThrow(validateImportItemsParams)
-                    val cityId = resolveCityId(headers, request.items)
+                    val cityId = requireCityId(headers)
 
                     logger.info(
                         "Batch import request received: provider={}, payloadType={}, cityId={}",
@@ -133,25 +129,11 @@ class ImportController(
         }
     }
 
-    private suspend fun resolveCityId(
-        headers: yayauheny.by.util.ImportHeaders,
-        items: List<JsonObject>
-    ): UUID {
-        if (headers.cityId != null) return headers.cityId
-        val cityName =
-            items
-                .firstOrNull()
-                ?.get("city")
-                ?.jsonPrimitive
-                ?.content
-                ?.takeIf { it.isNotBlank() }
-                ?: throw ValidationException(listOf(FieldError("items", "cityId is missing and items do not contain 'city' to resolve")))
-        val page = cityRepository.findByName(cityName, PaginationRequest(page = 0, size = 1))
-        val found =
-            page.content.firstOrNull()
-                ?: throw ValidationException(listOf(FieldError("city", "City not found by name: $cityName")))
-        return found.id
-    }
+    private fun requireCityId(headers: yayauheny.by.util.ImportHeaders): UUID =
+        headers.cityId
+            ?: throw ValidationException(
+                listOf(FieldError("cityId", "cityId header is required for import"))
+            )
 
     private fun parseImportBody(body: JsonObject): ImportRequestDto {
         val itemsElement =

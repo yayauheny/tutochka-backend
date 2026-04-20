@@ -1029,6 +1029,7 @@ components:
         subwayLineId:
           type: string
           format: uuid
+          nullable: true
         nameRu:
           type: string
         nameEn:

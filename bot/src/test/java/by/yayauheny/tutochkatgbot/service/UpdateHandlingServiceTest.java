@@ -11,6 +11,7 @@ import org.telegram.telegrambots.meta.api.objects.location.Location;
 import org.telegram.telegrambots.meta.api.objects.message.Message;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 
 class UpdateHandlingServiceTest {
 
@@ -64,5 +65,19 @@ class UpdateHandlingServiceTest {
     @Test
     void resolveUpdateType_shouldReturnOther() {
         assertEquals("other", service.resolveUpdateType(new Update()));
+    }
+
+    @Test
+    void handle_shouldPropagateRouterErrors() {
+        Update update = new Update();
+        Message message = new Message();
+        message.setChat(Chat.builder().id(1L).type("private").build());
+        message.setText("hello");
+        update.setMessage(message);
+
+        Mockito.doThrow(new RuntimeException("boom")).when(router).route(update);
+
+        assertThrows(RuntimeException.class, () -> service.handle(update));
+        Mockito.verify(botMetrics).incrementTelegramUpdate("message");
     }
 }

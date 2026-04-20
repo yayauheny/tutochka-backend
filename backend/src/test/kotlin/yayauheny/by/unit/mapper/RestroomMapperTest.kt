@@ -215,6 +215,64 @@ class RestroomMapperTest {
             assertEquals(true, result.inheritBuildingSchedule)
             assertEquals(true, result.hasPhotos)
         }
+
+        @Test
+        @DisplayName("GIVEN station without line WHEN mapFromRecordEnriched THEN subwayLineId is null")
+        fun mapFromRecordEnriched_with_station_without_line_returns_null_subway_line_id() {
+            val testId = UUID.randomUUID()
+            val testCityId = UUID.randomUUID()
+            val testStationId = UUID.randomUUID()
+            val testLat = 55.7558
+            val testLon = 37.6176
+            val mockRecord = mockk<Record>(relaxed = true)
+
+            every { mockRecord.get("lat", Double::class.java) } returns testLat
+            every { mockRecord.get("lon", Double::class.java) } returns testLon
+            every { mockRecord[RESTROOMS.ID] } returns testId
+            every { mockRecord[RESTROOMS.CITY_ID] } returns testCityId
+            every { mockRecord[RESTROOMS.BUILDING_ID] } returns null
+            every { mockRecord[RESTROOMS.SUBWAY_STATION_ID] } returns testStationId
+            every { mockRecord[RESTROOMS.NAME] } returns "Test Restroom"
+            every { mockRecord[RESTROOMS.ADDRESS] } returns "Test Address"
+            every { mockRecord[RESTROOMS.PHONES] } returns null
+            every { mockRecord[RESTROOMS.WORK_TIME] } returns null
+            every { mockRecord[RESTROOMS.FEE_TYPE] } returns null
+            every { mockRecord[RESTROOMS.GENDER_TYPE] } returns null
+            every { mockRecord[RESTROOMS.ACCESSIBILITY_TYPE] } returns AccessibilityType.UNKNOWN.name
+            every { mockRecord[RESTROOMS.PLACE_TYPE] } returns null
+            every { mockRecord[RESTROOMS.DATA_SOURCE] } returns DataSourceType.USER.name
+            every { mockRecord[RESTROOMS.STATUS] } returns RestroomStatus.ACTIVE.name
+            every { mockRecord[RESTROOMS.AMENITIES] } returns null
+            every { mockRecord[RESTROOMS.EXTERNAL_MAPS] } returns null
+            every { mockRecord[RESTROOMS.ACCESS_NOTE] } returns null
+            every { mockRecord[RESTROOMS.DIRECTION_GUIDE] } returns null
+            every { mockRecord[RESTROOMS.INHERIT_BUILDING_SCHEDULE] } returns false
+            every { mockRecord[RESTROOMS.HAS_PHOTOS] } returns false
+            every { mockRecord[RESTROOMS.LOCATION_TYPE] } returns "UNKNOWN"
+            every { mockRecord[RESTROOMS.ORIGIN_PROVIDER] } returns "MANUAL"
+            every { mockRecord[RESTROOMS.ORIGIN_ID] } returns null
+            every { mockRecord[RESTROOMS.IS_HIDDEN] } returns false
+            every { mockRecord[RESTROOMS.CREATED_AT] } returns Instant.now()
+            every { mockRecord[RESTROOMS.UPDATED_AT] } returns Instant.now()
+
+            every { mockRecord.get("s_id") } returns testStationId
+            every { mockRecord.get("s_lat", Double::class.java) } returns testLat
+            every { mockRecord.get("s_lon", Double::class.java) } returns testLon
+            every { mockRecord.get("l_id") } returns null
+            every { mockRecord.get("city_name_en", String::class.java) } returns null
+            every { mockRecord.get("s_name_ru", String::class.java) } returns "Площадь Победы"
+            every { mockRecord.get("s_name_en", String::class.java) } returns "Victory Square"
+            every { mockRecord.get("s_is_transfer", Boolean::class.java) } returns false
+            every { mockRecord.get("s_is_deleted", Boolean::class.java) } returns false
+            every { mockRecord.get("s_created_at", Instant::class.java) } returns Instant.now()
+
+            val result = RestroomMapper.mapFromRecordEnriched(mockRecord)
+
+            assertNotNull(result.subwayStation)
+            assertEquals(testStationId, result.subwayStation?.id)
+            assertNull(result.subwayStation?.subwayLineId)
+            assertNull(result.subwayStation?.line)
+        }
     }
 
     @Nested

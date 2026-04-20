@@ -8,7 +8,6 @@ import yayauheny.by.controller.HealthController
 import yayauheny.by.controller.ImportController
 import yayauheny.by.controller.RestroomController
 import yayauheny.by.metrics.BackendSearchMetrics
-import yayauheny.by.repository.CityRepository
 import yayauheny.by.service.CityService
 import yayauheny.by.service.CountryService
 import yayauheny.by.service.RestroomService
@@ -20,5 +19,5 @@ val controllerModule =
         single<CityController> { CityController(get<CityService>()) }
         single<RestroomController> { RestroomController(get<RestroomService>(), get<BackendSearchMetrics>()) }
         single<HealthController> { HealthController(get<DSLContext>()) }
-        single<ImportController> { ImportController(get<ImportService>(), get<CityRepository>()) }
+        single<ImportController> { ImportController(get<ImportService>()) }
     }

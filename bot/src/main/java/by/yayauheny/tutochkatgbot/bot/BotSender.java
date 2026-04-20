@@ -54,6 +54,7 @@ public class BotSender implements MessageSender {
             logger.debug("Sent message to chat {}: {}", chatId, text);
         } catch (TelegramApiException e) {
             logger.error("Failed to send message to chat {}: {}", chatId, e.getMessage(), e);
+            throw new IllegalStateException("Failed to send message to chat " + chatId, e);
         }
     }
 
@@ -122,6 +123,7 @@ public class BotSender implements MessageSender {
             logger.debug("Answered callback query: {}", callbackQueryId);
         } catch (TelegramApiException e) {
             logger.warn("Failed to answer callback {}", callbackQueryId, e);
+            throw new IllegalStateException("Failed to answer callback " + callbackQueryId, e);
         }
     }
 }

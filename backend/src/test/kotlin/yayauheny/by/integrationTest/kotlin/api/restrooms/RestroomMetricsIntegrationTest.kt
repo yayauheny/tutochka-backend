@@ -27,7 +27,6 @@ import yayauheny.by.metrics.BackendSearchMetrics
 import yayauheny.by.model.dto.Coordinates
 import yayauheny.by.model.enums.FeeType
 import yayauheny.by.model.restroom.NearestRestroomResponseDto
-import yayauheny.by.repository.CityRepository
 import yayauheny.by.service.CityService
 import yayauheny.by.service.CountryService
 import yayauheny.by.service.RestroomService
@@ -42,7 +41,6 @@ class RestroomMetricsIntegrationTest {
             val countryService = mockk<CountryService>(relaxed = true)
             val cityService = mockk<CityService>(relaxed = true)
             val importService = mockk<ImportService>(relaxed = true)
-            val cityRepository = mockk<CityRepository>(relaxed = true)
             val dslContext = mockk<DSLContext>(relaxed = true)
             val registry = PrometheusMeterRegistry(PrometheusConfig.DEFAULT)
             val backendSearchMetrics = BackendSearchMetrics(registry)
@@ -69,7 +67,6 @@ class RestroomMetricsIntegrationTest {
                             single<CityService> { cityService }
                             single<RestroomService> { restroomService }
                             single<ImportService> { importService }
-                            single<CityRepository> { cityRepository }
                             single<DSLContext> { dslContext }
                             single<PrometheusMeterRegistry> { registry }
                             single<BackendSearchMetrics> { backendSearchMetrics }
@@ -79,7 +76,7 @@ class RestroomMetricsIntegrationTest {
                             single { yayauheny.by.controller.CityController(get()) }
                             single { yayauheny.by.controller.RestroomController(get(), get()) }
                             single { yayauheny.by.controller.HealthController(get()) }
-                            single { yayauheny.by.controller.ImportController(get(), get()) }
+                            single { yayauheny.by.controller.ImportController(get()) }
                         }
                     )
                 }
@@ -116,7 +113,6 @@ class RestroomMetricsIntegrationTest {
             val countryService = mockk<CountryService>(relaxed = true)
             val cityService = mockk<CityService>(relaxed = true)
             val importService = mockk<ImportService>(relaxed = true)
-            val cityRepository = mockk<CityRepository>(relaxed = true)
             val dslContext = mockk<DSLContext>(relaxed = true)
             val registry = PrometheusMeterRegistry(PrometheusConfig.DEFAULT)
             val backendSearchMetrics = BackendSearchMetrics(registry)
@@ -129,7 +125,6 @@ class RestroomMetricsIntegrationTest {
                             single<CityService> { cityService }
                             single<RestroomService> { restroomService }
                             single<ImportService> { importService }
-                            single<CityRepository> { cityRepository }
                             single<DSLContext> { dslContext }
                             single<PrometheusMeterRegistry> { registry }
                             single<BackendSearchMetrics> { backendSearchMetrics }
@@ -139,7 +134,7 @@ class RestroomMetricsIntegrationTest {
                             single { yayauheny.by.controller.CityController(get()) }
                             single { yayauheny.by.controller.RestroomController(get(), get()) }
                             single { yayauheny.by.controller.HealthController(get()) }
-                            single { yayauheny.by.controller.ImportController(get(), get()) }
+                            single { yayauheny.by.controller.ImportController(get()) }
                         }
                     )
                 }

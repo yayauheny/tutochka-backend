@@ -27,6 +27,7 @@ public class UpdateHandlingService {
             router.route(update);
         } catch (Exception e) {
             log.error("Error processing update", e);
+            throw e;
         }
     }
 

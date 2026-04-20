@@ -9,7 +9,7 @@ telegram:
     webhook-path: ${BOT_WEBHOOK_PATH:/telegram/webhook}
 
 bot:
-  async-processing: ${BOT_ASYNC_PROCESSING:true}
+  async-processing: ${BOT_ASYNC_PROCESSING:false}
   webhook-public-url: ${BOT_WEBHOOK_PUBLIC_URL:https://specificative-becki-gastronomically.ngrok-free.dev}
   admin:
     ids: ${BOT_ADMIN_IDS:}

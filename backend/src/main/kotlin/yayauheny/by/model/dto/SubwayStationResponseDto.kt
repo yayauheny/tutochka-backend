@@ -10,7 +10,7 @@ import yayauheny.by.model.dto.Coordinates
 @Serializable
 data class SubwayStationResponseDto(
     @Contextual val id: UUID,
-    @Contextual val subwayLineId: UUID,
+    @Contextual val subwayLineId: UUID?,
     val nameRu: String,
     val nameEn: String,
     val isTransfer: Boolean = false,
