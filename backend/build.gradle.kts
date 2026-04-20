@@ -55,12 +55,15 @@ dependencies {
     implementation(libs.hikaricp)
     implementation(libs.liquibaseCore)
     implementation(libs.logbackClassic)
+    implementation(libs.ktorServerMetricsMicrometer)
+    implementation(libs.micrometerPrometheus)
 
     runtimeOnly(libs.postgresql)
 
     testImplementation(libs.bundles.testingBundle)
     testImplementation(libs.ktorServerTestHost)
     testImplementation(libs.bundles.testcontainersBundle)
+    testImplementation(libs.assertj)
 
     testRuntimeOnly(libs.postgresql)
 

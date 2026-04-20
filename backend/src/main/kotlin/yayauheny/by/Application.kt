@@ -7,6 +7,7 @@ import io.ktor.server.application.install
 import io.ktor.server.plugins.calllogging.CallLogging
 import io.ktor.server.plugins.contentnegotiation.ContentNegotiation
 import io.ktor.server.plugins.defaultheaders.DefaultHeaders
+import io.micrometer.prometheus.PrometheusMeterRegistry
 import java.time.Instant
 import java.util.UUID
 import kotlinx.serialization.json.Json
@@ -16,11 +17,13 @@ import org.koin.ktor.plugin.Koin
 import org.koin.logger.slf4jLogger
 import yayauheny.by.common.plugins.configureErrorHandling
 import yayauheny.by.config.DatabaseConfig
+import yayauheny.by.config.MetricsConfig.configureMetrics
 import yayauheny.by.config.configureRouting
 import yayauheny.by.config.runLiquibaseMigrations
 import yayauheny.by.di.controllerModule
 import yayauheny.by.di.databaseConfigModule
 import yayauheny.by.di.importModule
+import yayauheny.by.di.metricsModule
 import yayauheny.by.di.serviceModule
 import yayauheny.by.util.InstantSerializer
 import yayauheny.by.util.UUIDSerializer
@@ -37,7 +40,8 @@ fun Application.module() {
                 databaseConfigModule,
                 serviceModule,
                 importModule,
-                controllerModule
+                controllerModule,
+                metricsModule
             )
         )
     }
@@ -45,6 +49,9 @@ fun Application.module() {
     val dataSource by inject<HikariDataSource>()
     val databaseConfig by inject<DatabaseConfig>()
     runLiquibaseMigrations(dataSource, databaseConfig.schema)
+
+    val prometheusRegistry by inject<PrometheusMeterRegistry>()
+    configureMetrics(prometheusRegistry)
 
     install(DefaultHeaders)
     install(CallLogging)

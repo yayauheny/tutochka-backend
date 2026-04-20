@@ -2,6 +2,7 @@ package yayauheny.by.di
 
 import org.jooq.DSLContext
 import org.koin.dsl.module
+import yayauheny.by.config.BackendMetrics
 import yayauheny.by.controller.CityController
 import yayauheny.by.controller.CountryController
 import yayauheny.by.controller.HealthController
@@ -17,7 +18,7 @@ val controllerModule =
     module {
         single<CountryController> { CountryController(get<CountryService>()) }
         single<CityController> { CityController(get<CityService>()) }
-        single<RestroomController> { RestroomController(get<RestroomService>()) }
+        single<RestroomController> { RestroomController(get<RestroomService>(), get<BackendMetrics>()) }
         single<HealthController> { HealthController(get<DSLContext>()) }
         single<ImportController> { ImportController(get<ImportService>(), get<CityRepository>()) }
     }

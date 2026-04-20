@@ -22,6 +22,8 @@ caffeine = "3.1.8"
 telegrambots = "9.2.0"
 wiremock = "2.35.0"
 resilience4j = "2.2.0"
+micrometer = "1.14.5"
+assertj = "3.27.3"
 
 [plugins]
 kotlinJvm = { id = "org.jetbrains.kotlin.jvm", version.ref = "kotlin" }
@@ -75,6 +77,10 @@ swaggerJaxrs2 = { module = "io.swagger.core.v3:swagger-jaxrs2", version.ref = "s
 # Logging
 logbackClassic = { module = "ch.qos.logback:logback-classic", version.ref = "logback" }
 
+# Metrics
+ktorServerMetricsMicrometer = { module = "io.ktor:ktor-server-metrics-micrometer", version.ref = "ktor" }
+micrometerPrometheus = { module = "io.micrometer:micrometer-registry-prometheus", version.ref = "micrometer" }
+
 # Bot / misc
 caffeine = { module = "com.github.ben-manes.caffeine:caffeine", version.ref = "caffeine" }
 telegrambotsClient = { module = "org.telegram:telegrambots-client", version.ref = "telegrambots" }
@@ -90,6 +96,7 @@ mockk = { module = "io.mockk:mockk", version.ref = "mockk" }
 kotlinxCoroutinesTest = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-test", version.ref = "kotlinxCoroutinesTest" }
 junitJupiter = { module = "org.junit.jupiter:junit-jupiter", version.ref = "junitJupiter" }
 junitPlatformLauncher = { module = "org.junit.platform:junit-platform-launcher", version.ref = "junitPlatform" }
+assertj = { module = "org.assertj:assertj-core", version.ref = "assertj" }
 
 [bundles]
 ktorServerBundle = [
