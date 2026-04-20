@@ -55,4 +55,12 @@ public class BotMetrics {
             .register(registry)
             .increment();
     }
+
+    public void incrementBackListCache(String outcome) {
+        Counter.builder("bot_back_list_cache_total")
+            .description("Back-to-list cache outcomes")
+            .tag("outcome", BotMetricLabelWhitelist.normalizeCacheOutcome(outcome))
+            .register(registry)
+            .increment();
+    }
 }

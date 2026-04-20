@@ -1,7 +1,10 @@
 package by.yayauheny.tutochkatgbot.handler.callbacks;
 
 import by.yayauheny.tutochkatgbot.bot.MessageSender;
+import by.yayauheny.tutochkatgbot.cache.BackListSnapshotCache;
 import by.yayauheny.tutochkatgbot.dto.backend.NearestRestroomSlimDto;
+import by.yayauheny.tutochkatgbot.dto.backend.FeeType;
+import by.yayauheny.tutochkatgbot.dto.backend.LatLon;
 import by.yayauheny.tutochkatgbot.handler.UpdateContext;
 import by.yayauheny.tutochkatgbot.keyboard.InlineKeyboardFactory;
 import by.yayauheny.tutochkatgbot.keyboard.ReplyKeyboardFactory;
@@ -37,6 +40,8 @@ class RadiusCallbackTest {
     @Mock
     private SearchService searchService;
     @Mock
+    private BackListSnapshotCache backListSnapshotCache;
+    @Mock
     private FormatterService formatterService;
     @Mock
     private InlineKeyboardFactory inlineKeyboard;
@@ -48,7 +53,7 @@ class RadiusCallbackTest {
     @BeforeEach
     void setUp() {
         MockitoAnnotations.openMocks(this);
-        handler = new RadiusCallback(sender, userService, searchService,
+        handler = new RadiusCallback(sender, userService, searchService, backListSnapshotCache,
             formatterService, inlineKeyboard, replyKeyboard);
     }
 
@@ -67,16 +72,26 @@ class RadiusCallbackTest {
         UserSession session = UserSession.withLocation(location, UserService.DEFAULT_RADIUS);
         when(userService.getSession(userId)).thenReturn(Optional.of(session));
 
-        var mockResults = List.<NearestRestroomSlimDto>of();
+        var mockResults =
+            List.of(
+                new NearestRestroomSlimDto(
+                    java.util.UUID.randomUUID(),
+                    "Test restroom",
+                    123.0,
+                    FeeType.FREE,
+                    new LatLon(lat, lon),
+                    new LatLon(lat + 0.001, lon + 0.001)
+                )
+            );
         when(searchService.findNearby(lat, lon, radius, SearchService.DEFAULT_NEAREST_LIMIT)).thenReturn(mockResults);
-        when(formatterService.toiletsFound(0)).thenReturn("Найдено 0 туалетов");
-        when(inlineKeyboard.radiusSelection()).thenReturn(null);
+        when(formatterService.toiletsFound(1)).thenReturn("Найдено 1 туалетов поблизости:");
 
         handler.handle(update, ctx);
 
         verify(userService).getSession(userId);
         verify(searchService).findNearby(lat, lon, radius, SearchService.DEFAULT_NEAREST_LIMIT);
-        verify(sender).editOrReply(eq(ctx), anyString(), any());
+        verify(sender).editOrReply(eq(ctx), eq("Найдено 1 туалетов поблизости:"), any());
+        verify(backListSnapshotCache).store(chatId, userId, radius, mockResults);
     }
 
     @Test

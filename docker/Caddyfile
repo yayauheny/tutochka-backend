@@ -1,6 +1,6 @@
 tutochka.by, www.tutochka.by {
     # Передаем запросы от Телеграма внутрь контейнера с ботом
-    reverse_proxy /telegram/* bot:8081
+    reverse_proxy /telegram/* bot:{$BOT_PORT:8081}
 
     # (Опционально) Заглушка для главной страницы, чтобы видеть, что сайт жив
     respond / "TuTochka (BY) is working!" 200

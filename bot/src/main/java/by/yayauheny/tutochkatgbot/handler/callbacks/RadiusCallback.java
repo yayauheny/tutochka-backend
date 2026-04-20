@@ -7,6 +7,7 @@ import by.yayauheny.tutochkatgbot.handler.UpdateContext;
 import by.yayauheny.tutochkatgbot.keyboard.InlineKeyboardFactory;
 import by.yayauheny.tutochkatgbot.keyboard.ReplyKeyboardFactory;
 import by.yayauheny.tutochkatgbot.messages.Messages;
+import by.yayauheny.tutochkatgbot.cache.BackListSnapshotCache;
 import by.yayauheny.tutochkatgbot.service.FormatterService;
 import by.yayauheny.tutochkatgbot.service.SearchService;
 import by.yayauheny.tutochkatgbot.service.UserService;
@@ -23,18 +24,21 @@ public class RadiusCallback implements CallbackHandler {
     private final MessageSender sender;
     private final UserService userService;
     private final SearchService searchService;
+    private final BackListSnapshotCache backListSnapshotCache;
     private final FormatterService formatterService;
     private final InlineKeyboardFactory inlineKeyboard;
     private final ReplyKeyboardFactory replyKeyboard;
 
     public RadiusCallback(MessageSender sender, UserService userService,
                          SearchService searchService,
+                         BackListSnapshotCache backListSnapshotCache,
                          FormatterService formatterService,
                          InlineKeyboardFactory inlineKeyboard,
                          ReplyKeyboardFactory replyKeyboard) {
         this.sender = sender;
         this.userService = userService;
         this.searchService = searchService;
+        this.backListSnapshotCache = backListSnapshotCache;
         this.formatterService = formatterService;
         this.inlineKeyboard = inlineKeyboard;
         this.replyKeyboard = replyKeyboard;
@@ -88,6 +92,7 @@ public class RadiusCallback implements CallbackHandler {
 
             String message = formatterService.toiletsFound(results.size());
             sender.editOrReply(ctx, message, inlineKeyboard.toiletList(results));
+            backListSnapshotCache.store(ctx.chatId(), ctx.userId(), radius, results);
         } catch (NumberFormatException e) {
             logger.warn("Invalid radius format in callback: {}", ctx.callbackData(), e);
             sender.editOrReply(ctx, "❌ Ошибка: неверный радиус", null);

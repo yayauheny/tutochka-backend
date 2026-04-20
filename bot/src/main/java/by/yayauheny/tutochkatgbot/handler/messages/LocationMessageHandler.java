@@ -6,6 +6,7 @@ import by.yayauheny.tutochkatgbot.handler.UpdateContext;
 import by.yayauheny.tutochkatgbot.keyboard.InlineKeyboardFactory;
 import by.yayauheny.tutochkatgbot.keyboard.ReplyKeyboardFactory;
 import by.yayauheny.tutochkatgbot.messages.Messages;
+import by.yayauheny.tutochkatgbot.cache.BackListSnapshotCache;
 import by.yayauheny.tutochkatgbot.service.FormatterService;
 import by.yayauheny.tutochkatgbot.service.SearchService;
 import by.yayauheny.tutochkatgbot.service.UserService;
@@ -22,15 +23,18 @@ public class LocationMessageHandler implements MessageHandler {
     private final MessageSender sender;
     private final SearchService searchService;
     private final UserService userService;
+    private final BackListSnapshotCache backListSnapshotCache;
     private final FormatterService formatterService;
     private final InlineKeyboardFactory inlineKeyboard;
     private final ReplyKeyboardFactory replyKeyboard;
 
     public LocationMessageHandler(MessageSender sender, SearchService searchService, UserService userService,
+                                 BackListSnapshotCache backListSnapshotCache,
                                  FormatterService formatterService, InlineKeyboardFactory inlineKeyboard, ReplyKeyboardFactory replyKeyboard) {
         this.sender = sender;
         this.searchService = searchService;
         this.userService = userService;
+        this.backListSnapshotCache = backListSnapshotCache;
         this.formatterService = formatterService;
         this.inlineKeyboard = inlineKeyboard;
         this.replyKeyboard = replyKeyboard;
@@ -63,5 +67,6 @@ public class LocationMessageHandler implements MessageHandler {
         
         String message = formatterService.toiletsFound(results.size());
         sender.sendText(ctx.chatId(), message, inlineKeyboard.toiletList(results));
+        backListSnapshotCache.store(ctx.chatId(), ctx.userId(), UserService.DEFAULT_RADIUS, results);
     }
 }

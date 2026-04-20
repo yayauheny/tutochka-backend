@@ -70,4 +70,20 @@ class BotMetricsTest {
 
         assertEquals(1.0, count);
     }
+
+    @Test
+    void incrementBackListCache_shouldIncreaseCounter() {
+        SimpleMeterRegistry registry = new SimpleMeterRegistry();
+        BotMetrics metrics = new BotMetrics(registry);
+
+        metrics.incrementBackListCache("hit");
+
+        double count =
+            registry.get("bot_back_list_cache_total")
+                .tag("outcome", "hit")
+                .counter()
+                .count();
+
+        assertEquals(1.0, count);
+    }
 }

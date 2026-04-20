@@ -1,9 +1,9 @@
 prometheus.remote_write "cloud" {
   endpoint {
-    url = sys.env("GRAFANA_CLOUD_PROM_URL")
+    url = sys.env("GRAFANA_CLOUD_URL")
 
     basic_auth {
-      username = sys.env("GRAFANA_CLOUD_PROM_USERNAME")
+      username = sys.env("GRAFANA_CLOUD_USERNAME")
       password = sys.env("GRAFANA_CLOUD_API_KEY")
     }
   }
@@ -14,7 +14,7 @@ prometheus.scrape "backend" {
   scrape_timeout  = "10s"
 
   targets = [{
-    __address__      = "backend:8080",
+    __address__      = "backend:" + coalesce(sys.env("BACKEND_PORT"), "8080"),
     __metrics_path__ = "/metrics",
     job              = "backend",
   }]
@@ -22,12 +22,65 @@ prometheus.scrape "backend" {
   forward_to = [prometheus.remote_write.cloud.receiver]
 }
 
+loki.write "cloud" {
+  endpoint {
+    url = sys.env("GRAFANA_CLOUD_LOKI_URL")
+
+    basic_auth {
+      username = sys.env("GRAFANA_CLOUD_LOKI_USERNAME")
+      password = sys.env("GRAFANA_CLOUD_API_KEY")
+    }
+  }
+}
+
+discovery.docker "backend" {
+  host = "unix:///var/run/docker.sock"
+
+  filter {
+    name   = "name"
+    values = ["tutochka_backend"]
+  }
+}
+
+loki.source.docker "backend" {
+  host = "unix:///var/run/docker.sock"
+  targets = discovery.docker.backend.targets
+  labels = {
+    service     = "backend",
+    environment = "prod",
+    job         = "tutochka",
+    container   = "tutochka_backend",
+  }
+  forward_to = [loki.write.cloud.receiver]
+}
+
+discovery.docker "bot" {
+  host = "unix:///var/run/docker.sock"
+
+  filter {
+    name   = "name"
+    values = ["tutochka_bot"]
+  }
+}
+
+loki.source.docker "bot" {
+  host = "unix:///var/run/docker.sock"
+  targets = discovery.docker.bot.targets
+  labels = {
+    service     = "bot",
+    environment = "prod",
+    job         = "tutochka",
+    container   = "tutochka_bot",
+  }
+  forward_to = [loki.write.cloud.receiver]
+}
+
 prometheus.scrape "bot" {
   scrape_interval = "60s"
   scrape_timeout  = "10s"
 
   targets = [{
-    __address__      = "bot:8081",
+    __address__      = "bot:" + coalesce(sys.env("BOT_PORT"), "8081"),
     __metrics_path__ = "/actuator/prometheus",
     job              = "bot",
   }]

@@ -3,7 +3,7 @@ ktor:
         modules:
             - yayauheny.by.ApplicationKt.module
     deployment:
-        port: ${APP_PORT:8080}
+        port: ${BACKEND_PORT:${APP_PORT:8080}}
         shutdownGracePeriod: 5000
         shutdownTimeout: 10000
 
@@ -19,14 +19,3 @@ database:
     connectionTimeout: ${DB_CONNECTION_TIMEOUT:30000}
     idleTimeout: ${DB_IDLE_TIMEOUT:600000}
     maxLifetime: ${DB_MAX_LIFETIME:1800000}
-
-logging:
-    level: INFO
-    appenders:
-        - type: console
-          format: "%d{yyyy-MM-dd HH:mm:ss} - %msg%n"
-        - type: file
-          file: /app/logs/backend.log
-          format: "%d{yyyy-MM-dd HH:mm:ss} [%thread] %-5level %logger{36} - %msg%n"
-          maxFileSize: 10MB
-          maxFiles: 30

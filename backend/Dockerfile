@@ -21,8 +21,7 @@ FROM eclipse-temurin:21-jre-jammy
 WORKDIR /app
 
 RUN groupadd -g 1001 appgroup \
-    && useradd -u 1001 -g appgroup -s /usr/sbin/nologin -m appuser \
-    && mkdir -p /app/logs
+    && useradd -u 1001 -g appgroup -s /usr/sbin/nologin -m appuser
 
 COPY --from=builder /app/backend/build/libs/backend-all.jar /app/app.jar
 RUN chown -R appuser:appgroup /app

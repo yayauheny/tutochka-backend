@@ -8,6 +8,7 @@ public final class BotMetricLabelWhitelist {
     private static final String UNKNOWN = "unknown";
     private static final Set<String> UPDATE_TYPES = Set.of("message", "callback", "command", "location", "other");
     private static final Set<String> OUTCOMES = Set.of("success", "4xx", "5xx", "error");
+    private static final Set<String> CACHE_OUTCOMES = Set.of("hit", "miss", "expired");
     private static final Set<String> PROVIDERS = Set.of("yandex", "google", "2gis", "apple");
     private static final Set<String> CLIENT_TYPES = Set.of("telegram_bot", "telegram_miniapp", "api");
     private static final Set<String> ENDPOINTS = Set.of("/restrooms/nearest", "/restrooms/{id}", UNKNOWN);
@@ -20,6 +21,10 @@ public final class BotMetricLabelWhitelist {
 
     public static String normalizeOutcome(String outcome) {
         return normalize(outcome, OUTCOMES, "error");
+    }
+
+    public static String normalizeCacheOutcome(String outcome) {
+        return normalize(outcome, CACHE_OUTCOMES, "miss");
     }
 
     public static String normalizeProvider(String provider) {
