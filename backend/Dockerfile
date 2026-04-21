@@ -9,13 +9,40 @@ COPY bot/build.gradle.kts bot/
 
 RUN chmod +x ./gradlew
 
-RUN ./gradlew :backend:dependencies --no-daemon
+RUN echo "=== JAVA / GRADLE VERSION ===" \
+    && java -version \
+    && ./gradlew --version
+
+RUN echo "=== FILES BEFORE SOURCES COPY ===" \
+    && pwd \
+    && ls -la \
+    && find . -maxdepth 3 -type f | sort
+
+RUN echo "=== RESOLVE DEPENDENCIES ===" \
+    && ./gradlew :backend:dependencies \
+        --no-daemon \
+        --stacktrace \
+        --info \
+        --warning-mode all
 
 COPY backend/src backend/src
 
-RUN ./gradlew :backend:buildFatJar --no-daemon \
-    -x test -x integrationTest \
-    -x ktlintCheck -x ktlintFormat -x ktlintKotlinScriptCheck -x ktlintMainSourceSetCheck -x ktlintTestSourceSetCheck
+RUN echo "=== FILES AFTER SOURCES COPY ===" \
+    && find backend -maxdepth 5 -type f | sort | sed -n '1,300p'
+
+RUN echo "=== BUILD FAT JAR START ===" \
+    && ./gradlew :backend:buildFatJar \
+        --no-daemon \
+        --stacktrace \
+        --info \
+        --warning-mode all \
+        -x test \
+        -x integrationTest \
+        -x ktlintCheck \
+        -x ktlintFormat \
+        -x ktlintKotlinScriptCheck \
+        -x ktlintMainSourceSetCheck \
+        -x ktlintTestSourceSetCheck
 
 FROM eclipse-temurin:21-jre-jammy
 WORKDIR /app
