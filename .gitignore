@@ -447,9 +447,10 @@ node_modules/
 .DS_Store
 
 # =============================================================================
-# Data files (exclude test data in backend/src/test/resources/import/)
+# Local data files
 # =============================================================================
-import/
+/import/
+backend/src/test/resources/import/
 2gis_toilets_full_info.json
 backend/docs/*.json
 backend/src/main/resources/*_example.json
