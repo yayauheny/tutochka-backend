@@ -56,22 +56,6 @@ class BotMetricsTest {
     }
 
     @Test
-    void incrementRouteClick_shouldIncreaseCounter() {
-        SimpleMeterRegistry registry = new SimpleMeterRegistry();
-        BotMetrics metrics = new BotMetrics(registry);
-
-        metrics.incrementRouteClick("telegram_bot", "google");
-
-        double count = registry.get("route_click_total")
-            .tag("client_type", "telegram_bot")
-            .tag("provider", "google")
-            .counter()
-            .count();
-
-        assertEquals(1.0, count);
-    }
-
-    @Test
     void incrementBackListCache_shouldIncreaseCounter() {
         SimpleMeterRegistry registry = new SimpleMeterRegistry();
         BotMetrics metrics = new BotMetrics(registry);

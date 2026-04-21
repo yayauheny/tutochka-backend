@@ -114,8 +114,8 @@ class YandexMapsScrapedNormalizer : Normalizer<YandexMapsScrapedPlace> {
     ): FeeType {
         val source = (name ?: "").lowercase()
         return when {
-            source.contains("платный") || features.any { it.contains("платный туалет") } -> FeeType.PAID
             source.contains("бесплатный") || features.any { it.contains("бесплатный туалет") } -> FeeType.FREE
+            source.contains("платный") || features.any { it.contains("платный туалет") } -> FeeType.PAID
             else -> FeeType.UNKNOWN
         }
     }

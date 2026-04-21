@@ -40,21 +40,6 @@ class BotMetricLabelWhitelistTest {
     @ParameterizedTest
     @CsvSource(
         value = {
-            "google,google",
-            "YANDEX,yandex",
-            " 2GiS ,2gis",
-            "mystery,unknown",
-            "null,unknown"
-        },
-        nullValues = {"null"}
-    )
-    void normalizeProvider_shouldBeCaseInsensitiveAndSafe(String input, String expected) {
-        assertEquals(expected, BotMetricLabelWhitelist.normalizeProvider(input));
-    }
-
-    @ParameterizedTest
-    @CsvSource(
-        value = {
             "telegram_bot,telegram_bot",
             "TELEGRAM_MINIAPP,telegram_miniapp",
             " Api ,api",

@@ -109,23 +109,6 @@ class BotMetricsIntegrationTest {
     }
 
     @Test
-    void routeCallbackShouldIncrementRouteClickMetric() {
-        UUID restroomId = UUID.randomUUID();
-        when(backendClient.getById(restroomId.toString()))
-            .thenReturn(Optional.of(sampleRestroom(restroomId)));
-
-        updateRouter.route(routeUpdate(123L, 10L, CallbackData.route("google", restroomId.toString())));
-
-        double count = meterRegistry.get("route_click_total")
-            .tag("client_type", "telegram_bot")
-            .tag("provider", "google")
-            .counter()
-            .count();
-
-        assertThat(count).isGreaterThanOrEqualTo(1.0);
-    }
-
-    @Test
     void detailCallbackShouldRecordBotBackendMetricsForByIdEndpoint() {
         UUID restroomId = UUID.randomUUID();
         when(backendClient.getById(restroomId.toString()))

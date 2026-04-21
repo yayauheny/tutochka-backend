@@ -47,15 +47,6 @@ public class BotMetrics {
         );
     }
 
-    public void incrementRouteClick(String clientType, String provider) {
-        Counter.builder("route_click_total")
-            .description("Route link clicks")
-            .tag("client_type", BotMetricLabelWhitelist.normalizeClientType(clientType))
-            .tag("provider", BotMetricLabelWhitelist.normalizeProvider(provider))
-            .register(registry)
-            .increment();
-    }
-
     public void incrementBackListCache(String outcome) {
         Counter.builder("bot_back_list_cache_total")
             .description("Back-to-list cache outcomes")

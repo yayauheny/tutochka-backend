@@ -5,12 +5,15 @@ import by.yayauheny.tutochkatgbot.dto.backend.NearestRestroomSlimDto;
 import by.yayauheny.tutochkatgbot.dto.backend.RestroomResponseDto;
 import by.yayauheny.tutochkatgbot.messages.Messages;
 import by.yayauheny.tutochkatgbot.service.FormatterService;
+import by.yayauheny.tutochkatgbot.util.Links;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
 import org.springframework.stereotype.Component;
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.InlineKeyboardMarkup;
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.buttons.InlineKeyboardButton;
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.buttons.InlineKeyboardRow;
-
-import java.util.List;
 
 /**
  * Factory for inline keyboards
@@ -35,40 +38,26 @@ public class InlineKeyboardFactory {
     }
 
     public InlineKeyboardMarkup toiletDetail(RestroomResponseDto toilet) {
-        String restroomId = toilet.id().toString();
+        List<InlineKeyboardRow> rows = new ArrayList<>();
 
-        InlineKeyboardButton yandexButton = InlineKeyboardButton.builder()
-                .text(Messages.BUTTON_OPEN_YANDEX)
-                .callbackData(CallbackData.route("yandex", restroomId))
-                .build();
-
-        InlineKeyboardButton googleButton = InlineKeyboardButton.builder()
-                .text(Messages.BUTTON_OPEN_GOOGLE)
-                .callbackData(CallbackData.route("google", restroomId))
-                .build();
-
-        InlineKeyboardButton twoGisButton = InlineKeyboardButton.builder()
-                .text(Messages.BUTTON_OPEN_2GIS)
-                .callbackData(CallbackData.route("2gis", restroomId))
-                .build();
-
-        InlineKeyboardButton appleButton = InlineKeyboardButton.builder()
-                .text(Messages.BUTTON_OPEN_APPLE)
-                .callbackData(CallbackData.route("apple", restroomId))
-                .build();
-        
-        InlineKeyboardButton backButton = InlineKeyboardButton.builder()
+        addRow(rows,
+            createMapButton(Messages.BUTTON_OPEN_YANDEX, yandexUrl(toilet)),
+            createMapButton(Messages.BUTTON_OPEN_GOOGLE, googleUrl(toilet))
+        );
+        addRow(rows,
+            createMapButton(Messages.BUTTON_OPEN_2GIS, twoGisUrl(toilet)),
+            createMapButton(Messages.BUTTON_OPEN_APPLE, appleUrl(toilet))
+        );
+        rows.add(new InlineKeyboardRow(List.of(
+            InlineKeyboardButton.builder()
                 .text(Messages.BUTTON_BACK)
                 .callbackData(CallbackData.backToList())
-                .build();
-        
+                .build()
+        )));
+
         return InlineKeyboardMarkup.builder()
-                .keyboard(List.of(
-                    new InlineKeyboardRow(List.of(yandexButton, googleButton)),
-                    new InlineKeyboardRow(List.of(twoGisButton, appleButton)),
-                    new InlineKeyboardRow(List.of(backButton))
-                ))
-                .build();
+            .keyboard(rows)
+            .build();
     }
 
     public InlineKeyboardMarkup radiusSelection() {
@@ -102,10 +91,87 @@ public class InlineKeyboardFactory {
 
     private InlineKeyboardButton createToiletButton(NearestRestroomSlimDto toilet) {
         String buttonText = formatterService.toiletListItem(toilet);
-        
+
         return InlineKeyboardButton.builder()
                 .text(buttonText)
                 .callbackData(CallbackData.detail(toilet.id().toString()))
                 .build();
+    }
+
+    private void addRow(List<InlineKeyboardRow> rows, InlineKeyboardButton... buttons) {
+        List<InlineKeyboardButton> rowButtons = new ArrayList<>();
+        for (InlineKeyboardButton button : buttons) {
+            if (button != null) {
+                rowButtons.add(button);
+            }
+        }
+        if (!rowButtons.isEmpty()) {
+            rows.add(new InlineKeyboardRow(rowButtons));
+        }
+    }
+
+    private InlineKeyboardButton createMapButton(String text, Optional<String> url) {
+        return url.filter(value -> !value.isBlank())
+            .map(value -> InlineKeyboardButton.builder()
+                .text(text)
+                .url(value)
+                .build())
+            .orElse(null);
+    }
+
+    protected Optional<String> yandexUrl(RestroomResponseDto toilet) {
+        return mapUrl(toilet, Links::yandexMaps);
+    }
+
+    protected Optional<String> googleUrl(RestroomResponseDto toilet) {
+        return mapUrl(toilet, Links::googleMaps);
+    }
+
+    protected Optional<String> appleUrl(RestroomResponseDto toilet) {
+        return mapUrl(toilet, Links::appleMaps);
+    }
+
+    protected Optional<String> twoGisUrl(RestroomResponseDto toilet) {
+        Map<String, Object> externalMaps = toilet.externalMaps();
+        String branchId = extractTwoGisBranchId(externalMaps);
+        if (branchId != null && !branchId.isBlank()) {
+            return Optional.of(Links.twoGisById(branchId));
+        }
+
+        if (toilet.coordinates() == null) {
+            return Optional.empty();
+        }
+
+        return Optional.of(Links.twoGis(toilet.coordinates().lat(), toilet.coordinates().lon()));
+    }
+
+    private Optional<String> mapUrl(RestroomResponseDto toilet, MapLinkBuilder builder) {
+        if (toilet.coordinates() == null) {
+            return Optional.empty();
+        }
+        return Optional.ofNullable(builder.build(toilet.coordinates().lat(), toilet.coordinates().lon()));
+    }
+
+    private String extractTwoGisBranchId(Map<String, Object> externalMaps) {
+        if (externalMaps == null) {
+            return null;
+        }
+
+        Object twoGis = externalMaps.get("2gis");
+        if (twoGis instanceof String s) {
+            return s;
+        }
+
+        if (twoGis instanceof Map<?, ?> twoGisMap) {
+            Object branchId = twoGisMap.get("branch_id");
+            return branchId instanceof String s ? s : null;
+        }
+
+        return null;
+    }
+
+    @FunctionalInterface
+    private interface MapLinkBuilder {
+        String build(double lat, double lon);
     }
 }
