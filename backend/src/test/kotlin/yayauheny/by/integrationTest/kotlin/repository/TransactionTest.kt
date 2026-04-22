@@ -5,12 +5,14 @@ import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertNull
 import org.junit.jupiter.api.DisplayName
+import org.junit.jupiter.api.Tag
 import org.junit.jupiter.api.Test
 import yayauheny.by.tables.references.RESTROOMS
 import yayauheny.by.util.pointExpr
 import yayauheny.by.util.transactionSuspend
 
 @DisplayName("Transaction atomicity tests")
+@Tag("integration")
 class TransactionTest : BaseIntegrationTest() {
     @Test
     @DisplayName("GIVEN transaction with error WHEN rollback THEN no data persisted")

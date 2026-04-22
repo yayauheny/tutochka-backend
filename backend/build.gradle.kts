@@ -1,3 +1,4 @@
+import org.gradle.api.tasks.testing.Test
 import org.jooq.meta.jaxb.Logging
 import org.testcontainers.containers.PostgreSQLContainer
 import org.testcontainers.utility.DockerImageName
@@ -197,11 +198,15 @@ tasks.test {
         excludeTags(testsTagIntegration)
     }
     systemProperty("junit.jupiter.execution.parallel.enabled", testsParallel)
-    finalizedBy("jacocoTestReport")
 
     testLogging {
         events("failed", "skipped")
         exceptionFormat = org.gradle.api.tasks.testing.logging.TestExceptionFormat.FULL
+    }
+
+    reports {
+        junitXml.required.set(true)
+        html.required.set(true)
     }
 }
 
@@ -218,16 +223,20 @@ tasks.register<Test>("integrationTest") {
     classpath = sourceSets.test.get().runtimeClasspath
     systemProperty("junit.jupiter.execution.parallel.enabled", "false")
     shouldRunAfter("test")
-    finalizedBy("jacocoTestReport")
 
     testLogging {
         events("failed", "skipped")
         exceptionFormat = org.gradle.api.tasks.testing.logging.TestExceptionFormat.FULL
     }
+
+    reports {
+        junitXml.required.set(true)
+        html.required.set(true)
+    }
 }
 
 tasks.check {
-    dependsOn("integrationTest")
+    dependsOn("integrationTest", "jacocoTestReport")
 }
 
 val ktlintVersion = providers.gradleProperty("ktlint.version").get()

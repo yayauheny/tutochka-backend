@@ -15,32 +15,14 @@ import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.BeforeAll
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.TestInstance
-import org.testcontainers.containers.PostgreSQLContainer
-import org.testcontainers.junit.jupiter.Container
-import org.testcontainers.junit.jupiter.Testcontainers
-import org.testcontainers.utility.DockerImageName
 import yayauheny.by.helpers.DatabaseTestHelper
 
-@Testcontainers
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 abstract class BaseIntegrationTest {
-    companion object {
-        private const val IMAGE = "postgis/postgis:17-3.5"
-
-        @Container
-        @JvmStatic
-        val postgres: PostgreSQLContainer<*> =
-            PostgreSQLContainer(
-                DockerImageName
-                    .parse(IMAGE)
-                    .asCompatibleSubstituteFor("postgres")
-            ).withDatabaseName("testdb")
-                .withUsername("postgres")
-                .withPassword("postgres")
-    }
-
     protected lateinit var dslContext: DSLContext
     private var connection: Connection? = null
+    protected val postgres
+        get() = TestPostgresContainer.postgres
 
     @BeforeAll
     fun runMigrationsOnce() {

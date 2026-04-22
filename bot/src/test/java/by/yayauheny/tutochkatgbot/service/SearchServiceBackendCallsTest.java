@@ -7,10 +7,13 @@ import by.yayauheny.tutochkatgbot.integration.BackendClient;
 import by.yayauheny.tutochkatgbot.metrics.BotMetrics;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
+import org.springframework.http.HttpStatus;
+import org.springframework.web.client.HttpClientErrorException;
 
 import java.util.List;
 import java.util.UUID;
 
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.anyDouble;
 import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.Mockito.times;
@@ -36,6 +39,14 @@ class SearchServiceBackendCallsTest {
         verify(backend, times(3)).findNearest(anyDouble(), anyDouble(), anyInt(), anyInt());
         verify(backend, times(2)).findNearest(53.9, 27.56, 5, 500);
         verify(backend, times(1)).findNearest(53.9, 27.56, 5, 1000);
+    }
+
+    @Test
+    void getByIdShouldReturnEmptyFor4xxErrors() {
+        when(backend.getById("missing"))
+            .thenThrow(new HttpClientErrorException(HttpStatus.NOT_FOUND));
+
+        assertTrue(service.getById("missing").isEmpty());
     }
 
     private NearestRestroomSlimDto sampleNearest() {

@@ -1,0 +1,18 @@
+telegram:
+  bot:
+    username: test_bot
+    token: test_token
+    webhook-path: /telegram/webhook
+
+bot:
+  async-processing: false
+  webhook-public-url: ""
+  admin:
+    ids: ""
+
+backend:
+  base-url: http://localhost:9999/api/v1
+  connect-timeout-ms: 1000
+  read-timeout-ms: 1000
+  retry-attempts: 1
+  retry-delay-ms: 0
