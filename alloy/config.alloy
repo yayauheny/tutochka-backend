@@ -10,13 +10,13 @@ prometheus.remote_write "cloud" {
 }
 
 prometheus.scrape "backend" {
+  job_name        = "backend"
   scrape_interval = "60s"
   scrape_timeout  = "10s"
 
   targets = [{
-    __address__      = "backend:" + coalesce(sys.env("BACKEND_PORT"), "8080"),
+    __address__      = coalesce(sys.env("BACKEND_METRICS_TARGET"), "backend:" + coalesce(sys.env("BACKEND_PORT"), "8080")),
     __metrics_path__ = "/metrics",
-    job              = "backend",
   }]
 
   forward_to = [prometheus.remote_write.cloud.receiver]
@@ -46,7 +46,7 @@ loki.source.docker "backend" {
   host = "unix:///var/run/docker.sock"
   targets = discovery.docker.backend.targets
   labels = {
-    service     = "backend",
+    service_name = "backend",
     environment = "prod",
     job         = "tutochka",
     container   = "tutochka_backend",
@@ -67,7 +67,7 @@ loki.source.docker "bot" {
   host = "unix:///var/run/docker.sock"
   targets = discovery.docker.bot.targets
   labels = {
-    service     = "bot",
+    service_name = "bot",
     environment = "prod",
     job         = "tutochka",
     container   = "tutochka_bot",
@@ -76,13 +76,13 @@ loki.source.docker "bot" {
 }
 
 prometheus.scrape "bot" {
+  job_name        = "bot"
   scrape_interval = "60s"
   scrape_timeout  = "10s"
 
   targets = [{
-    __address__      = "bot:" + coalesce(sys.env("BOT_PORT"), "8081"),
+    __address__      = coalesce(sys.env("BOT_METRICS_TARGET"), "bot:" + coalesce(sys.env("BOT_PORT"), "8081")),
     __metrics_path__ = "/actuator/prometheus",
-    job              = "bot",
   }]
 
   forward_to = [prometheus.remote_write.cloud.receiver]
