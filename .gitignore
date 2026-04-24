@@ -430,6 +430,18 @@ vault.json.local
 # =============================================================================
 # Logs
 logs
+!backend/logs/
+backend/logs/*
+!backend/logs/.gitkeep
+!backend/logs/archive/
+backend/logs/archive/*
+!backend/logs/archive/.gitkeep
+!bot/logs/
+bot/logs/*
+!bot/logs/.gitkeep
+!bot/logs/archive/
+bot/logs/archive/*
+!bot/logs/archive/.gitkeep
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*

@@ -51,7 +51,8 @@ RUN groupadd -g 1001 appgroup \
     && useradd -u 1001 -g appgroup -s /usr/sbin/nologin -m appuser
 
 COPY --from=builder /app/backend/build/libs/backend-all.jar /app/app.jar
-RUN chown -R appuser:appgroup /app
+RUN mkdir -p /app/logs/archive \
+    && chown -R appuser:appgroup /app
 
 USER 1001:1001
 EXPOSE 8080

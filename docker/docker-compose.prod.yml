@@ -47,6 +47,7 @@ services:
       DB_MAX_LIFETIME: ${DB_MAX_LIFETIME:-1800000}
       BACKEND_PORT: ${BACKEND_PORT:-8080}
       APP_ENV: ${APP_ENV:-production}
+      BACKEND_LOG_DIR: /app/logs
       JAVA_TOOL_OPTIONS: >-
         -Xms256m
         -Xmx1536m
@@ -57,6 +58,8 @@ services:
         -XX:+ExitOnOutOfMemoryError
     networks:
       - tutochka_net
+    volumes:
+      - backend_logs:/app/logs
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:8080/health/live"]
       interval: 30s
@@ -91,6 +94,7 @@ services:
       BACKEND_RETRY_DELAY_MS: ${BACKEND_RETRY_DELAY_MS:-200}
       BOT_PORT: ${BOT_PORT:-8081}
       SPRING_PROFILES_ACTIVE: ${SPRING_PROFILES_ACTIVE:-prod}
+      BOT_LOG_DIR: /app/logs
       JAVA_TOOL_OPTIONS: >-
         -Xms128m
         -Xmx768m
@@ -104,6 +108,8 @@ services:
         condition: service_healthy
     networks:
       - tutochka_net
+    volumes:
+      - bot_logs:/app/logs
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:8081/actuator/health/liveness"]
       interval: 30s
@@ -136,7 +142,8 @@ services:
     volumes:
       - ../alloy/config.alloy:/etc/alloy/config.alloy:ro
       - alloy_data:/var/lib/alloy
-      - /var/run/docker.sock:/var/run/docker.sock:ro
+      - backend_logs:/var/log/tutochka/backend:ro
+      - bot_logs:/var/log/tutochka/bot:ro
     depends_on:
       backend:
         condition: service_healthy
@@ -153,6 +160,8 @@ services:
 volumes:
   caddy_data:
   alloy_data:
+  backend_logs:
+  bot_logs:
 
 networks:
   tutochka_net:

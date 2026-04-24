@@ -33,46 +33,40 @@ loki.write "cloud" {
   }
 }
 
-discovery.docker "backend" {
-  host = "unix:///var/run/docker.sock"
-
-  filter {
-    name   = "name"
-    values = ["tutochka_backend"]
-  }
-}
-
-loki.source.docker "backend" {
-  host = "unix:///var/run/docker.sock"
-  targets = discovery.docker.backend.targets
-  labels = {
+local.file_match "backend" {
+  path_targets = [{
+    __path__     = "/var/log/tutochka/backend/*.log",
+    container    = "tutochka_backend",
+    environment  = "prod",
+    job          = "tutochka",
     service_name = "backend",
-    environment = "prod",
-    job         = "tutochka",
-    container   = "tutochka_backend",
-  }
+  }]
+
+  sync_period = "10s"
+}
+
+loki.source.file "backend" {
+  targets       = local.file_match.backend.targets
   forward_to = [loki.write.cloud.receiver]
+  tail_from_end = true
 }
 
-discovery.docker "bot" {
-  host = "unix:///var/run/docker.sock"
-
-  filter {
-    name   = "name"
-    values = ["tutochka_bot"]
-  }
-}
-
-loki.source.docker "bot" {
-  host = "unix:///var/run/docker.sock"
-  targets = discovery.docker.bot.targets
-  labels = {
+local.file_match "bot" {
+  path_targets = [{
+    __path__     = "/var/log/tutochka/bot/*.log",
+    container    = "tutochka_bot",
+    environment  = "prod",
+    job          = "tutochka",
     service_name = "bot",
-    environment = "prod",
-    job         = "tutochka",
-    container   = "tutochka_bot",
-  }
+  }]
+
+  sync_period = "10s"
+}
+
+loki.source.file "bot" {
+  targets       = local.file_match.bot.targets
   forward_to = [loki.write.cloud.receiver]
+  tail_from_end = true
 }
 
 prometheus.scrape "bot" {
