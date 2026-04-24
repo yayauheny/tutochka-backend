@@ -24,6 +24,10 @@ backend:
 server:
   port: ${BOT_PORT:${PORT:8081}}
 
+logging:
+  level:
+    by.yayauheny.tutochkatgbot: INFO
+
 management:
   endpoints:
     web:

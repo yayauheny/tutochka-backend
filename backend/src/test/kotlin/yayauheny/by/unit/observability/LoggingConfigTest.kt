@@ -23,11 +23,15 @@ class LoggingConfigTest {
     fun `backend and bot logback configs should rotate files`() {
         val backendLogback = readRepoFile("backend/src/main/resources/logback.xml")
         val botLogback = readRepoFile("bot/src/main/resources/logback.xml")
+        val botApplication = readRepoFile("bot/src/main/resources/application.yml")
+        val botProductionApplication = readRepoFile("bot/src/main/resources/application-prod.yml")
 
         assertTrue(backendLogback.contains("RollingFileAppender"))
         assertTrue(backendLogback.contains("SizeAndTimeBasedRollingPolicy"))
         assertTrue(backendLogback.contains("value=\"\${BACKEND_LOG_DIR:-backend/logs}\""))
         assertTrue(backendLogback.contains("<file>\${BACKEND_LOG_DIR}/backend.log</file>"))
+        assertTrue(backendLogback.contains("<maxFileSize>10MB</maxFileSize>"))
+        assertTrue(backendLogback.contains("<totalSizeCap>100MB</totalSizeCap>"))
         assertTrue(
             backendLogback.contains(
                 "<fileNamePattern>\${BACKEND_LOG_DIR}/archive/backend.%d{yyyy-MM-dd}.%i.log.gz</fileNamePattern>"
@@ -38,11 +42,23 @@ class LoggingConfigTest {
         assertTrue(botLogback.contains("SizeAndTimeBasedRollingPolicy"))
         assertTrue(botLogback.contains("value=\"\${BOT_LOG_DIR:-bot/logs}\""))
         assertTrue(botLogback.contains("<file>\${BOT_LOG_DIR}/bot.log</file>"))
+        assertTrue(botLogback.contains("<maxFileSize>10MB</maxFileSize>"))
+        assertTrue(botLogback.contains("<totalSizeCap>100MB</totalSizeCap>"))
         assertTrue(
             botLogback.contains(
                 "<fileNamePattern>\${BOT_LOG_DIR}/archive/bot.%d{yyyy-MM-dd}.%i.log.gz</fileNamePattern>"
             )
         )
+        assertFalse(botLogback.contains("by.yayauheny.tutochkatgbot"))
+        assertFalse(botLogback.contains("org.telegram.telegrambots"))
+        assertFalse(botLogback.contains("org.springframework"))
+
+        assertTrue(botApplication.contains("by.yayauheny.tutochkatgbot: DEBUG"))
+        assertTrue(botApplication.contains("org.telegram.telegrambots: INFO"))
+        assertTrue(botApplication.contains("org.springframework: WARN"))
+        assertTrue(botProductionApplication.contains("by.yayauheny.tutochkatgbot: INFO"))
+        assertTrue(botProductionApplication.contains("org.telegram.telegrambots: WARN"))
+        assertTrue(botProductionApplication.contains("org.springframework: WARN"))
     }
 
     private fun readRepoFile(relativePath: String): String {

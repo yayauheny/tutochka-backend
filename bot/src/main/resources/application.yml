@@ -27,7 +27,6 @@ server:
 logging:
   level:
     by.yayauheny.tutochkatgbot: DEBUG
-    org.telegram.telegrambots: INFO
 
 management:
   endpoints:

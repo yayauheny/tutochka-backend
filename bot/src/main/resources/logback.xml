@@ -12,9 +12,9 @@
         <append>true</append>
         <rollingPolicy class="ch.qos.logback.core.rolling.SizeAndTimeBasedRollingPolicy">
             <fileNamePattern>${BOT_LOG_DIR}/archive/bot.%d{yyyy-MM-dd}.%i.log.gz</fileNamePattern>
-            <maxFileSize>25MB</maxFileSize>
+            <maxFileSize>10MB</maxFileSize>
             <maxHistory>7</maxHistory>
-            <totalSizeCap>250MB</totalSizeCap>
+            <totalSizeCap>100MB</totalSizeCap>
         </rollingPolicy>
         <encoder>
             <pattern>%d{yyyy-MM-dd HH:mm:ss.SSS} [%thread] %-5level %logger{36} - %msg%n</pattern>
@@ -25,8 +25,4 @@
         <appender-ref ref="STDOUT"/>
         <appender-ref ref="FILE"/>
     </root>
-
-    <logger name="by.yayauheny.tutochkatgbot" level="INFO"/>
-    <logger name="org.telegram.telegrambots" level="WARN"/>
-    <logger name="org.springframework" level="WARN"/>
 </configuration>
