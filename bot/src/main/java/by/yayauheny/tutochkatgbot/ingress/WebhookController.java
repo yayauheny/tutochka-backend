@@ -6,12 +6,8 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RestController;
 import org.telegram.telegrambots.meta.api.objects.Update;
 
-/**
- * Webhook controller for receiving Telegram updates
- */
 @RestController
 public class WebhookController {
-    
     private final UpdateProcessingService processingService;
     
     public WebhookController(UpdateProcessingService processingService) {
@@ -19,7 +15,7 @@ public class WebhookController {
     }
     
     @PostMapping("${telegram.bot.webhook-path}")
-    public void handleWebhook(@RequestBody Update update) {
+    public void handleWebhook(@RequestBody Update update) throws Exception {
         processingService.process(update);
     }
 }

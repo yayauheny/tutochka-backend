@@ -10,7 +10,7 @@ import static org.mockito.Mockito.verify;
 class WebhookControllerTest {
 
     @Test
-    void handleWebhookShouldDelegateToProcessingService() {
+    void handleWebhookShouldDelegateToProcessingService() throws Exception {
         UpdateProcessingService processingService = Mockito.mock(UpdateProcessingService.class);
         WebhookController controller = new WebhookController(processingService);
         Update update = new Update();

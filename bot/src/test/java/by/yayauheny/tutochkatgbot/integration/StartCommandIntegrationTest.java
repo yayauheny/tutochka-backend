@@ -25,7 +25,7 @@ class StartCommandIntegrationTest extends AbstractSpringBotIntegrationTest {
     private WebBackendClient backendClient;
 
     @Test
-    void startCommandSendsWelcomeWithShareLocationKeyboard() {
+    void startCommandSendsWelcomeWithShareLocationKeyboard() throws Exception {
         Update update = commandUpdate(123L, 10L, "/start");
 
         updateRouter.route(update);

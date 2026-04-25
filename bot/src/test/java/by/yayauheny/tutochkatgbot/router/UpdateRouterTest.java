@@ -121,19 +121,16 @@ class UpdateRouterTest {
     }
 
     @Test
-    void routeShouldSendSomethingWentWrongOnceWhenCallbackHandlerThrows() throws Exception {
+    void routeShouldPropagateCallbackHandlerErrors() throws Exception {
         Update update = createCallbackUpdate("detail:123");
         UpdateContext ctx = UpdateContext.from(update);
 
         when(firstCallbackHandler.canHandle("detail:123")).thenReturn(true);
         org.mockito.Mockito.doThrow(new RuntimeException("boom")).when(firstCallbackHandler).handle(update, ctx);
 
-        router.route(update);
+        org.junit.jupiter.api.Assertions.assertThrows(RuntimeException.class, () -> router.route(update));
 
         verify(sender).answerCallbackQuery("query-id", null);
-        verify(sender).safeReply(eq(ctx), eq(Messages.SOMETHING_WENT_WRONG));
-        verify(sender, never()).sendText(org.mockito.ArgumentMatchers.anyLong(), org.mockito.ArgumentMatchers.anyString());
-        verify(sender, never()).editOrReply(eq(ctx), org.mockito.ArgumentMatchers.anyString(), org.mockito.ArgumentMatchers.any());
         verify(secondCallbackHandler, never()).handle(eq(update), eq(ctx));
     }
 

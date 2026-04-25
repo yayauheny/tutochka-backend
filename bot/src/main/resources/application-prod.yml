@@ -9,7 +9,6 @@ telegram:
     webhook-path: ${BOT_WEBHOOK_PATH}
 
 bot:
-  async-processing: ${BOT_ASYNC_PROCESSING:false}
   webhook-public-url: ${BOT_WEBHOOK_PUBLIC_URL:}
   admin:
     ids: ${BOT_ADMIN_IDS:}
@@ -23,10 +22,6 @@ backend:
 
 server:
   port: ${BOT_PORT:${PORT:8081}}
-
-logging:
-  level:
-    by.yayauheny.tutochkatgbot: INFO
 
 management:
   endpoints:

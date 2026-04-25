@@ -10,6 +10,8 @@ import by.yayauheny.tutochkatgbot.cache.BackListSnapshotCache;
 import by.yayauheny.tutochkatgbot.service.FormatterService;
 import by.yayauheny.tutochkatgbot.service.SearchService;
 import by.yayauheny.tutochkatgbot.service.UserService;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.core.annotation.Order;
 import org.springframework.stereotype.Component;
 import org.telegram.telegrambots.meta.api.objects.Update;
@@ -20,6 +22,8 @@ import org.telegram.telegrambots.meta.api.objects.Update;
 @Component
 @Order(1)
 public class LocationMessageHandler implements MessageHandler {
+    private static final Logger log = LoggerFactory.getLogger(LocationMessageHandler.class);
+
     private final MessageSender sender;
     private final SearchService searchService;
     private final UserService userService;
@@ -52,6 +56,7 @@ public class LocationMessageHandler implements MessageHandler {
         
         if (latitude == null || longitude == null) {
             sender.sendText(ctx.chatId(), Messages.SOMETHING_WENT_WRONG);
+            log.warn("Handled location message: chatId={}, userId={}, outcome=missing_location", ctx.chatId(), ctx.userId());
             return;
         }
         
@@ -62,11 +67,24 @@ public class LocationMessageHandler implements MessageHandler {
         if (results.isEmpty()) {
             sender.sendText(ctx.chatId(), Messages.NO_TOILETS_FOUND, inlineKeyboard.radiusSelection());
             sender.sendText(ctx.chatId(), "Или попробуйте другую точку:", replyKeyboard.shareLocation());
+            log.info(
+                "Handled location search: chatId={}, userId={}, radiusMeters={}, resultCount=0, outcome=no_results",
+                ctx.chatId(),
+                ctx.userId(),
+                UserService.DEFAULT_RADIUS
+            );
             return;
         }
-        
+
         String message = formatterService.toiletsFound(results.size());
         sender.sendText(ctx.chatId(), message, inlineKeyboard.toiletList(results));
         backListSnapshotCache.store(ctx.chatId(), ctx.userId(), UserService.DEFAULT_RADIUS, results);
+        log.info(
+            "Handled location search: chatId={}, userId={}, radiusMeters={}, resultCount={}, outcome=results_sent",
+            ctx.chatId(),
+            ctx.userId(),
+            UserService.DEFAULT_RADIUS,
+            results.size()
+        );
     }
 }

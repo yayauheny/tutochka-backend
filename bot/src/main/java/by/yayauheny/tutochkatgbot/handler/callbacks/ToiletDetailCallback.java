@@ -20,7 +20,8 @@ import org.telegram.telegrambots.meta.api.objects.Update;
 @Component
 @Order(1)
 public class ToiletDetailCallback implements CallbackHandler {
-    private static final Logger logger = LoggerFactory.getLogger(ToiletDetailCallback.class);
+    private static final Logger log = LoggerFactory.getLogger(ToiletDetailCallback.class);
+
     private final MessageSender sender;
     private final SearchService searchService;
     private final FormatterService formatterService;
@@ -46,27 +47,29 @@ public class ToiletDetailCallback implements CallbackHandler {
 
     @Override
     public void handle(Update update, UpdateContext ctx) throws Exception {
-        try {
-            String toiletId = CallbackData.arg(ctx.callbackData());
-            
-            if (toiletId == null || toiletId.isBlank()) {
-                logger.warn("Empty toilet ID in callback: {}", ctx.callbackData());
-                sender.editOrReply(ctx, Messages.SOMETHING_WENT_WRONG, null);
-                return;
-            }
-            
-            var toilet = searchService.getById(toiletId)
-                    .orElseThrow(() -> new IllegalArgumentException("Toilet not found: " + toiletId));
-            
-            Double distanceMeters = toilet.distanceMeters() != null ? toilet.distanceMeters().doubleValue() : null;
-            String text = formatterService.toiletDetail(toilet, distanceMeters);
-            sender.editOrReply(ctx, text, inlineKeyboard.toiletDetail(toilet));
-        } catch (IllegalArgumentException e) {
-            logger.warn("Toilet not found: {}", e.getMessage());
+        String toiletId = CallbackData.arg(ctx.callbackData());
+
+        if (toiletId == null || toiletId.isBlank()) {
             sender.editOrReply(ctx, Messages.SOMETHING_WENT_WRONG, null);
-        } catch (Exception e) {
-            logger.error("Error handling toilet detail callback: {}", e.getMessage(), e);
-            sender.editOrReply(ctx, Messages.SOMETHING_WENT_WRONG, null);
+            log.warn(
+                "Handled detail callback: chatId={}, userId={}, outcome=invalid_id",
+                ctx.chatId(),
+                ctx.userId()
+            );
+            return;
         }
+
+        var toilet = searchService.getById(toiletId)
+                .orElseThrow(() -> new IllegalArgumentException("Toilet not found: " + toiletId));
+
+        Double distanceMeters = toilet.distanceMeters() != null ? toilet.distanceMeters().doubleValue() : null;
+        String text = formatterService.toiletDetail(toilet, distanceMeters);
+        sender.editOrReply(ctx, text, inlineKeyboard.toiletDetail(toilet));
+        log.info(
+            "Handled detail callback: chatId={}, userId={}, restroomId={}, outcome=detail_sent",
+            ctx.chatId(),
+            ctx.userId(),
+            toiletId
+        );
     }
 }

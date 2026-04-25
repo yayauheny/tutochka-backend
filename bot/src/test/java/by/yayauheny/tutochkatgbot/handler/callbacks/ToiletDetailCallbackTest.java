@@ -34,6 +34,7 @@ import org.telegram.telegrambots.meta.api.objects.message.Message;
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.InlineKeyboardMarkup;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.never;
@@ -93,30 +94,30 @@ class ToiletDetailCallbackTest {
 
     @ParameterizedTest
     @ValueSource(strings = {"detail:abc", "detail:-1"})
-    void shouldRejectMalformedOrNegativeLikeIdWithoutBuildingKeyboard(String callbackData) throws Exception {
+    void shouldPropagateMalformedOrNegativeId(String callbackData) throws Exception {
         Update update = createDetailUpdate(callbackData);
         UpdateContext ctx = UpdateContext.from(update);
 
         when(searchService.getById(anyString())).thenReturn(Optional.empty());
 
-        handler.handle(update, ctx);
+        assertThrows(IllegalArgumentException.class, () -> handler.handle(update, ctx));
 
         verify(searchService).getById(callbackData.substring(callbackData.indexOf(':') + 1));
-        verify(sender).editOrReply(eq(ctx), eq(Messages.SOMETHING_WENT_WRONG), isNull());
+        verify(sender, never()).editOrReply(eq(ctx), eq(Messages.SOMETHING_WENT_WRONG), isNull());
     }
 
     @Test
-    void shouldNotBuildKeyboardWhenSearchFails() throws Exception {
+    void shouldPropagateWhenSearchFindsNothing() throws Exception {
         UUID restroomId = UUID.randomUUID();
         when(searchService.getById(restroomId.toString())).thenReturn(Optional.empty());
 
         Update update = createDetailUpdate("detail:" + restroomId);
         UpdateContext ctx = UpdateContext.from(update);
 
-        handler.handle(update, ctx);
+        assertThrows(IllegalArgumentException.class, () -> handler.handle(update, ctx));
 
         verify(searchService).getById(restroomId.toString());
-        verify(sender).editOrReply(eq(ctx), eq(Messages.SOMETHING_WENT_WRONG), isNull());
+        verify(sender, never()).editOrReply(eq(ctx), eq(Messages.SOMETHING_WENT_WRONG), isNull());
     }
 
     private Update createDetailUpdate(String callbackData) {
@@ -152,7 +153,7 @@ class ToiletDetailCallbackTest {
             DataSourceType.USER,
             RestroomStatus.ACTIVE,
             Map.of(),
-            Map.of("2gis", (Object) "abc123"),
+            Map.of("2gis", "abc123"),
             null,
             null,
             false,

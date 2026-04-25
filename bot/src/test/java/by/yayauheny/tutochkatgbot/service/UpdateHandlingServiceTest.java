@@ -57,6 +57,7 @@ class UpdateHandlingServiceTest {
         Message message = new Message();
         message.setChat(Chat.builder().id(1L).type("private").build());
         message.setText("hello");
+        message.setFrom(org.telegram.telegrambots.meta.api.objects.User.builder().id(1L).isBot(false).firstName("Test").build());
         update.setMessage(message);
 
         assertEquals("message", service.resolveUpdateType(update));
@@ -68,11 +69,12 @@ class UpdateHandlingServiceTest {
     }
 
     @Test
-    void handle_shouldPropagateRouterErrors() {
+    void handle_shouldPropagateRouterErrors() throws Exception {
         Update update = new Update();
         Message message = new Message();
         message.setChat(Chat.builder().id(1L).type("private").build());
         message.setText("hello");
+        message.setFrom(org.telegram.telegrambots.meta.api.objects.User.builder().id(1L).isBot(false).firstName("Test").build());
         update.setMessage(message);
 
         Mockito.doThrow(new RuntimeException("boom")).when(router).route(update);

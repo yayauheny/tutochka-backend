@@ -29,7 +29,7 @@ class DetailFlowIntegrationTest extends AbstractSpringBotIntegrationTest {
     private WebBackendClient backendClient;
 
     @Test
-    void detailCallbackShouldReturnCardWithUrlKeyboard() {
+    void detailCallbackShouldReturnCardWithUrlKeyboard() throws Exception {
         UUID restroomId = UUID.randomUUID();
         when(backendClient.getById(restroomId.toString()))
             .thenReturn(Optional.of(restroomResponse(restroomId, twoGisExternalMap("abc123"))));

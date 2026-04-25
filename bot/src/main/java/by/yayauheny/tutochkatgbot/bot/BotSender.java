@@ -1,8 +1,6 @@
 package by.yayauheny.tutochkatgbot.bot;
 
 import by.yayauheny.tutochkatgbot.handler.UpdateContext;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
 import org.telegram.telegrambots.meta.api.methods.AnswerCallbackQuery;
 import org.telegram.telegrambots.meta.api.methods.send.SendMessage;
@@ -12,12 +10,8 @@ import org.telegram.telegrambots.meta.api.objects.replykeyboard.ReplyKeyboardMar
 import org.telegram.telegrambots.meta.exceptions.TelegramApiException;
 import org.telegram.telegrambots.meta.generics.TelegramClient;
 
-/**
- * Service for sending messages and handling errors
- */
 @Component
 public class BotSender implements MessageSender {
-    private static final Logger logger = LoggerFactory.getLogger(BotSender.class);
     private final TelegramClient telegramClient;
 
     public BotSender(TelegramClient telegramClient) {
@@ -51,9 +45,7 @@ public class BotSender implements MessageSender {
             }
             
             telegramClient.execute(message);
-            logger.debug("Sent message to chat {}: {}", chatId, text);
         } catch (TelegramApiException e) {
-            logger.error("Failed to send message to chat {}: {}", chatId, e.getMessage(), e);
             throw new IllegalStateException("Failed to send message to chat " + chatId, e);
         }
     }
@@ -85,9 +77,7 @@ public class BotSender implements MessageSender {
             }
             
             telegramClient.execute(editMessage);
-            logger.debug("Edited message in chat {}: {}", ctx.chatId(), text);
         } catch (TelegramApiException e) {
-            logger.error("Failed to edit message in chat {}: {}", ctx.chatId(), e.getMessage(), e);
             sendText(ctx.chatId(), text, inlineKeyboard);
         }
     }
@@ -120,9 +110,7 @@ public class BotSender implements MessageSender {
                     .showAlert(false)
                     .build();
             telegramClient.execute(answer);
-            logger.debug("Answered callback query: {}", callbackQueryId);
         } catch (TelegramApiException e) {
-            logger.warn("Failed to answer callback {}", callbackQueryId, e);
             throw new IllegalStateException("Failed to answer callback " + callbackQueryId, e);
         }
     }

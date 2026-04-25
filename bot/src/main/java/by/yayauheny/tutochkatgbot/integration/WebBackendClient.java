@@ -6,6 +6,12 @@ import by.yayauheny.tutochkatgbot.dto.backend.RestroomResponseDto;
 import io.github.resilience4j.retry.Retry;
 import io.github.resilience4j.retry.RetryConfig;
 import io.github.resilience4j.retry.RetryRegistry;
+import java.net.http.HttpClient;
+import java.time.Duration;
+import java.util.Arrays;
+import java.util.List;
+import java.util.Optional;
+import java.util.function.Supplier;
 import org.springframework.http.client.JdkClientHttpRequestFactory;
 import org.springframework.http.MediaType;
 import org.springframework.stereotype.Component;
@@ -13,13 +19,6 @@ import org.springframework.web.client.RestClient;
 import org.springframework.web.client.RestClientException;
 import org.springframework.web.client.RestClientResponseException;
 import org.springframework.web.client.ResourceAccessException;
-
-import java.net.http.HttpClient;
-import java.time.Duration;
-import java.util.Arrays;
-import java.util.List;
-import java.util.Optional;
-import java.util.function.Supplier;
 
 /**
  * Web client implementation for backend integration
@@ -84,9 +83,8 @@ public class WebBackendClient implements BackendClient {
     }
 
     private <T> T withRetry(Supplier<T> action) {
-        Supplier<T> decorated = Retry.decorateSupplier(retry, action);
         try {
-            return decorated.get();
+            return Retry.decorateSupplier(retry, action).get();
         } catch (RuntimeException ex) {
             Throwable cause = ex.getCause();
             if (cause instanceof RestClientException) {
@@ -101,8 +99,7 @@ public class WebBackendClient implements BackendClient {
             return false;
         }
         if (ex instanceof RestClientResponseException resp) {
-            int status = resp.getRawStatusCode();
-            return status >= 500;
+            return resp.getStatusCode().value() >= 500;
         }
         return ex instanceof ResourceAccessException;
     }

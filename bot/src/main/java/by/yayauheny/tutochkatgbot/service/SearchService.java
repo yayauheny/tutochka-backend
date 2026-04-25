@@ -1,6 +1,7 @@
 package by.yayauheny.tutochkatgbot.service;
 
 import by.yayauheny.tutochkatgbot.dto.backend.NearestRestroomSlimDto;
+import by.yayauheny.tutochkatgbot.dto.backend.RestroomResponseDto;
 import by.yayauheny.tutochkatgbot.integration.BackendClient;
 import by.yayauheny.tutochkatgbot.metrics.BotMetrics;
 import io.micrometer.core.instrument.Timer;
@@ -15,8 +16,8 @@ import java.util.Optional;
 
 @Service
 public class SearchService {
-    private static final Logger logger = LoggerFactory.getLogger(SearchService.class);
     public static final int DEFAULT_NEAREST_LIMIT = 5;
+    private static final Logger log = LoggerFactory.getLogger(SearchService.class);
 
     private final BackendClient backend;
     private final BotMetrics botMetrics;
@@ -27,13 +28,22 @@ public class SearchService {
     }
 
     public List<NearestRestroomSlimDto> findNearby(double lat, double lon, int radiusMeters, int limit) {
-        logger.debug("Searching nearby: lat={}, lon={}, radius={}, limit={}", lat, lon, radiusMeters, limit);
+        long startedAt = System.nanoTime();
         Timer.Sample sample = botMetrics.startBackendTimer();
         try {
             var result = backend.findNearest(lat, lon, limit, radiusMeters);
             botMetrics.incrementBackendRequest(BotMetrics.ENDPOINT_NEAREST, "success");
-            logger.debug("Backend returned {} restrooms", result.size());
-            return filterAndLimit(result, radiusMeters, limit);
+            var filtered = filterAndLimit(result, radiusMeters, limit);
+            long durationMs = (System.nanoTime() - startedAt) / 1_000_000;
+            log.info(
+                "Backend nearest search completed: radiusMeters={}, limit={}, backendCount={}, returnedCount={}, durationMs={}",
+                radiusMeters,
+                limit,
+                result.size(),
+                filtered.size(),
+                durationMs
+            );
+            return filtered;
         } catch (RestClientResponseException e) {
             botMetrics.incrementBackendRequest(BotMetrics.ENDPOINT_NEAREST, statusToOutcome(e.getRawStatusCode()));
             throw e;
@@ -45,15 +55,15 @@ public class SearchService {
         }
     }
 
-    public Optional<by.yayauheny.tutochkatgbot.dto.backend.RestroomResponseDto> getById(String id) {
-        Timer.Sample sample = botMetrics.startBackendTimer();
+    public Optional<RestroomResponseDto> getById(String id) {
+        var sample = botMetrics.startBackendTimer();
         try {
             var result = backend.getById(id);
             botMetrics.incrementBackendRequest(BotMetrics.ENDPOINT_BY_ID, "success");
             return result;
         } catch (RestClientResponseException e) {
             botMetrics.incrementBackendRequest(BotMetrics.ENDPOINT_BY_ID, statusToOutcome(e.getRawStatusCode()));
-            if (e.getRawStatusCode() >= 400 && e.getRawStatusCode() < 500) {
+            if (e.getStatusCode().value() >= 400 && e.getStatusCode().value() < 500) {
                 return Optional.empty();
             }
             throw e;

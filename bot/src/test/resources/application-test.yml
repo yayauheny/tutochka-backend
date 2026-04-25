@@ -5,7 +5,6 @@ telegram:
     webhook-path: /telegram/webhook
 
 bot:
-  async-processing: false
   webhook-public-url: ""
   admin:
     ids: ""

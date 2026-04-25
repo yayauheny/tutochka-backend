@@ -16,6 +16,7 @@ import org.springframework.web.client.HttpClientErrorException;
 import org.springframework.web.client.HttpServerErrorException;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.anyDouble;
 import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.Mockito.when;
@@ -38,11 +39,11 @@ class BotMetricsIntegrationTest extends AbstractSpringBotIntegrationTest {
     private WebBackendClient backendClient;
 
     @Test
-    void backend4xxShouldIncrementOutcomeCounter() {
+    void backend4xxShouldIncrementOutcomeCounter() throws Exception {
         when(backendClient.findNearest(anyDouble(), anyDouble(), anyInt(), anyInt()))
             .thenThrow(new HttpClientErrorException(HttpStatus.BAD_REQUEST));
 
-        updateRouter.route(locationUpdate(123L, 10L, 53.9, 27.56));
+        assertThrows(HttpClientErrorException.class, () -> updateRouter.route(locationUpdate(123L, 10L, 53.9, 27.56)));
 
         double count = meterRegistry.get("bot_backend_requests_total")
             .tag("endpoint", "/restrooms/nearest")
@@ -54,7 +55,7 @@ class BotMetricsIntegrationTest extends AbstractSpringBotIntegrationTest {
     }
 
     @Test
-    void updateHandlingServiceShouldIncrementTelegramUpdateMetric() {
+    void updateHandlingServiceShouldIncrementTelegramUpdateMetric() throws Exception {
         updateHandlingService.handle(locationUpdate(123L, 10L, 53.9, 27.56));
 
         double updates = meterRegistry.get("telegram_updates_total")
@@ -66,11 +67,11 @@ class BotMetricsIntegrationTest extends AbstractSpringBotIntegrationTest {
     }
 
     @Test
-    void backend5xxShouldIncrementOutcomeCounter() {
+    void backend5xxShouldIncrementOutcomeCounter() throws Exception {
         when(backendClient.findNearest(anyDouble(), anyDouble(), anyInt(), anyInt()))
             .thenThrow(new HttpServerErrorException(HttpStatus.INTERNAL_SERVER_ERROR));
 
-        updateRouter.route(locationUpdate(123L, 10L, 53.9, 27.56));
+        assertThrows(HttpServerErrorException.class, () -> updateRouter.route(locationUpdate(123L, 10L, 53.9, 27.56)));
 
         double count = meterRegistry.get("bot_backend_requests_total")
             .tag("endpoint", "/restrooms/nearest")
@@ -82,7 +83,7 @@ class BotMetricsIntegrationTest extends AbstractSpringBotIntegrationTest {
     }
 
     @Test
-    void detailCallbackShouldRecordBotBackendMetricsForByIdEndpoint() {
+    void detailCallbackShouldRecordBotBackendMetricsForByIdEndpoint() throws Exception {
         UUID restroomId = UUID.randomUUID();
         when(backendClient.getById(restroomId.toString()))
             .thenReturn(Optional.of(restroomResponse(restroomId, twoGisExternalMap("abc123"))));
@@ -106,7 +107,7 @@ class BotMetricsIntegrationTest extends AbstractSpringBotIntegrationTest {
     }
 
     @Test
-    void customMetricsShouldNotExposeForbiddenLabelsOrValues() {
+    void customMetricsShouldNotExposeForbiddenLabelsOrValues() throws Exception {
         when(backendClient.findNearest(anyDouble(), anyDouble(), anyInt(), anyInt()))
             .thenReturn(List.of());
 

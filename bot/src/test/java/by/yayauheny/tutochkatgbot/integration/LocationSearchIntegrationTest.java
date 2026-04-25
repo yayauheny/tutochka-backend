@@ -31,7 +31,7 @@ class LocationSearchIntegrationTest extends AbstractSpringBotIntegrationTest {
     private WebBackendClient backendClient;
 
     @Test
-    void locationFlowReturnsList() {
+    void locationFlowReturnsList() throws Exception {
         when(backendClient.findNearest(53.9, 27.56, SearchService.DEFAULT_NEAREST_LIMIT, 500))
             .thenReturn(List.of(nearestRestroom("Test restroom", 123.0)));
 
@@ -64,7 +64,7 @@ class LocationSearchIntegrationTest extends AbstractSpringBotIntegrationTest {
     }
 
     @Test
-    void locationFlowEmptyResultsSendsNoToiletsMessage() {
+    void locationFlowEmptyResultsSendsNoToiletsMessage() throws Exception {
         when(backendClient.findNearest(53.0, 28.0, SearchService.DEFAULT_NEAREST_LIMIT, 500))
             .thenReturn(List.of());
 

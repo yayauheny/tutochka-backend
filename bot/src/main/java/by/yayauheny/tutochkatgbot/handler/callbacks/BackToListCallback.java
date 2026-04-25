@@ -9,6 +9,8 @@ import by.yayauheny.tutochkatgbot.keyboard.InlineKeyboardFactory;
 import by.yayauheny.tutochkatgbot.keyboard.ReplyKeyboardFactory;
 import by.yayauheny.tutochkatgbot.messages.Messages;
 import by.yayauheny.tutochkatgbot.service.FormatterService;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.core.annotation.Order;
 import org.springframework.stereotype.Component;
 import org.telegram.telegrambots.meta.api.objects.Update;
@@ -19,6 +21,8 @@ import org.telegram.telegrambots.meta.api.objects.Update;
 @Component
 @Order(2)
 public class BackToListCallback implements CallbackHandler {
+    private static final Logger log = LoggerFactory.getLogger(BackToListCallback.class);
+
     private final MessageSender sender;
     private final BackListSnapshotCache backListSnapshotCache;
     private final FormatterService formatterService;
@@ -52,11 +56,22 @@ public class BackToListCallback implements CallbackHandler {
         var snapshotOpt = backListSnapshotCache.get(ctx.chatId(), ctx.userId());
         if (snapshotOpt.isEmpty()) {
             sender.sendText(ctx.chatId(), Messages.LOCATION_REQUEST, replyKeyboard.shareLocation());
+            log.warn(
+                "Handled back-to-list callback: chatId={}, userId={}, outcome=location_requested",
+                ctx.chatId(),
+                ctx.userId()
+            );
             return;
         }
 
         var snapshot = snapshotOpt.get();
         String message = formatterService.toiletsFound(snapshot.items().size());
         sender.editOrReply(ctx, message, inlineKeyboard.toiletList(snapshot.items()));
+        log.info(
+            "Handled back-to-list callback: chatId={}, userId={}, itemCount={}, outcome=snapshot_restored",
+            ctx.chatId(),
+            ctx.userId(),
+            snapshot.items().size()
+        );
     }
 }
