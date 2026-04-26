@@ -13,11 +13,15 @@ docker compose --env-file docker/env.local -f docker/docker-compose-local.yml up
 docker compose --env-file docker/env.local -f docker/docker-compose-local.yml --profile ngrok up -d
 ```
 
+Скопируй `docker/env.local.example` в `docker/env.local` и задай `BOT_WEBHOOK_SECRET_TOKEN` перед запуском webhook-режима.
+
 Порядок запуска:
 1. `postgres`
 2. `backend`
 3. `bot`
 4. `ngrok` и `webhook-registrar` только если нужен внешний Telegram-доступ
+
+Для webhook-режима обязательно задать `BOT_WEBHOOK_SECRET_TOKEN`, иначе регистрация webhook не выполнится.
 
 ## Hybrid Debug Stack
 ```bash

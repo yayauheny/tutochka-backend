@@ -2,10 +2,11 @@ telegram:
   bot:
     username: test_bot
     token: test_token
-    webhook-path: /telegram/webhook
 
 bot:
+  webhook-path: /telegram/webhook
   webhook-public-url: ""
+  webhook-secret-token: test_secret_token
   admin:
     ids: ""
 

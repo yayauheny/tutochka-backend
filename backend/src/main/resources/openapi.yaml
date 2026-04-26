@@ -1,24 +1,21 @@
 openapi: 3.0.3
 info:
   title: Tutochka Backend API
-  description: REST API for managing countries, cities, and restrooms
+  description: REST API for countries, cities, restrooms, imports, and health checks
   version: 0.1.0
-  contact:
-    name: Tutochka Team
-    email: support@tutochka.by
 
 servers:
   - url: http://localhost:8080/api/v1
-    description: Development server
+    description: Local development server
 
 paths:
   /health:
     get:
       summary: Health check
-      description: Check if the service is running
+      description: Return service and database status
       responses:
         '200':
-          description: Service is healthy
+          description: Health status
           content:
             application/json:
               schema:
@@ -30,15 +27,160 @@ paths:
                   service:
                     type: string
                     example: TuTochka API
+                  database:
+                    type: string
+                    example: connected
+
+  /health/ready:
+    get:
+      summary: Readiness check
+      description: Return readiness and database status
+      responses:
+        '200':
+          description: Readiness status
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: ready
+                  database:
+                    type: string
+                    example: connected
+
+  /health/live:
+    get:
+      summary: Liveness check
+      description: Return liveness status
+      responses:
+        '200':
+          description: Liveness status
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: alive
+                  service:
+                    type: string
+                    example: TuTochka API
+
+  /import:
+    post:
+      summary: Import one item
+      description: Import one provider payload item
+      parameters:
+        - name: Import-Provider
+          in: header
+          required: true
+          description: Import provider
+          schema:
+            type: string
+            enum: [TWO_GIS, YANDEX_MAPS, GOOGLE_MAPS, OSM, USER, MANUAL]
+        - name: Import-Payload-Type
+          in: header
+          required: true
+          description: Import payload type
+          schema:
+            type: string
+            enum: [TWO_GIS_SCRAPED_PLACE_JSON, YANDEX_MAPS_SCRAPED_PLACE_JSON, MANUAL]
+        - name: Import-City-Id
+          in: header
+          required: true
+          description: City ID
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ImportRequestDto'
+      responses:
+        '201':
+          description: Import completed
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ImportResponseDto'
+        '400':
+          description: Validation error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /import/batch:
+    post:
+      summary: Import a batch
+      description: Import multiple provider payload items
+      parameters:
+        - name: Import-Provider
+          in: header
+          required: true
+          description: Import provider
+          schema:
+            type: string
+            enum: [TWO_GIS, YANDEX_MAPS, GOOGLE_MAPS, OSM, USER, MANUAL]
+        - name: Import-Payload-Type
+          in: header
+          required: true
+          description: Import payload type
+          schema:
+            type: string
+            enum: [TWO_GIS_SCRAPED_PLACE_JSON, YANDEX_MAPS_SCRAPED_PLACE_JSON, MANUAL]
+        - name: Import-City-Id
+          in: header
+          required: true
+          description: City ID
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ImportRequestDto'
+      responses:
+        '201':
+          description: Batch import completed
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ImportBatchResponseDto'
+        '400':
+          description: Validation error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
 
   /countries:
     get:
-      summary: Get all countries
-      description: Retrieve a paginated list of all countries
+      summary: List countries
+      description: Return paginated countries
       parameters:
         - name: page
           in: query
-          description: Page number (0-based)
+          description: Page number
           schema:
             type: integer
             default: 0
@@ -55,7 +197,7 @@ paths:
             type: string
       responses:
         '200':
-          description: Successfully retrieved countries
+          description: OK
           content:
             application/json:
               schema:
@@ -73,8 +215,8 @@ paths:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
     post:
-      summary: Create new country
-      description: Create a new country with the provided data
+      summary: Create country
+      description: Create a country
       requestBody:
         required: true
         content:
@@ -83,7 +225,7 @@ paths:
               $ref: '#/components/schemas/CountryCreateDto'
       responses:
         '201':
-          description: Country created successfully
+          description: Created
           content:
             application/json:
               schema:
@@ -103,8 +245,8 @@ paths:
 
   /countries/{id}:
     get:
-      summary: Get country by ID
-      description: Retrieve a specific country by its unique identifier
+      summary: Get country
+      description: Return one country by ID
       parameters:
         - name: id
           in: path
@@ -115,13 +257,13 @@ paths:
             format: uuid
       responses:
         '200':
-          description: Country found
+          description: OK
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/CountryResponseDto'
         '404':
-          description: Country not found
+          description: Not found
           content:
             application/json:
               schema:
@@ -136,7 +278,7 @@ paths:
   /countries/code/{code}:
     get:
       summary: Get country by code
-      description: Retrieve a specific country by its country code
+      description: Return one country by code
       parameters:
         - name: code
           in: path
@@ -147,13 +289,13 @@ paths:
             example: US
       responses:
         '200':
-          description: Country found
+          description: OK
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/CountryResponseDto'
         '404':
-          description: Country not found
+          description: Not found
           content:
             application/json:
               schema:
@@ -167,8 +309,8 @@ paths:
 
   /cities:
     get:
-      summary: Get all cities
-      description: Retrieve a paginated list of all cities
+      summary: List cities
+      description: Return paginated cities
       parameters:
         - name: page
           in: query
@@ -189,7 +331,7 @@ paths:
             type: string
       responses:
         '200':
-          description: Successfully retrieved cities
+          description: OK
           content:
             application/json:
               schema:
@@ -207,8 +349,8 @@ paths:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
     post:
-      summary: Create new city
-      description: Create a new city with the provided data
+      summary: Create city
+      description: Create a city
       requestBody:
         required: true
         content:
@@ -217,7 +359,7 @@ paths:
               $ref: '#/components/schemas/CityCreateDto'
       responses:
         '201':
-          description: City created successfully
+          description: Created
           content:
             application/json:
               schema:
@@ -237,8 +379,8 @@ paths:
 
   /cities/{id}:
     get:
-      summary: Get city by ID
-      description: Retrieve a specific city by its unique identifier
+      summary: Get city
+      description: Return one city by ID
       parameters:
         - name: id
           in: path
@@ -249,13 +391,13 @@ paths:
             format: uuid
       responses:
         '200':
-          description: City found
+          description: OK
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/CityResponseDto'
         '404':
-          description: City not found
+          description: Not found
           content:
             application/json:
               schema:
@@ -269,8 +411,8 @@ paths:
 
   /cities/country/{countryId}:
     get:
-      summary: Get cities by country
-      description: Retrieve cities for a specific country
+      summary: List cities by country
+      description: Return cities for one country
       parameters:
         - name: countryId
           in: path
@@ -293,7 +435,7 @@ paths:
             default: 20
       responses:
         '200':
-          description: Successfully retrieved cities
+          description: OK
           content:
             application/json:
               schema:
@@ -319,8 +461,8 @@ paths:
 
   /cities/search:
     get:
-      summary: Search cities by name
-      description: Search cities by name (Russian or English)
+      summary: Search cities
+      description: Search cities by name
       parameters:
         - name: name
           in: query
@@ -343,7 +485,7 @@ paths:
             default: 20
       responses:
         '200':
-          description: Successfully retrieved cities
+          description: OK
           content:
             application/json:
               schema:
@@ -363,8 +505,8 @@ paths:
 
   /restrooms:
     get:
-      summary: Get all restrooms
-      description: Retrieve a paginated list of all restrooms
+      summary: List restrooms
+      description: Return paginated restrooms
       parameters:
         - name: page
           in: query
@@ -385,7 +527,7 @@ paths:
             type: string
       responses:
         '200':
-          description: Successfully retrieved restrooms
+          description: OK
           content:
             application/json:
               schema:
@@ -403,8 +545,8 @@ paths:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
     post:
-      summary: Create new restroom
-      description: Create a new restroom with the provided data
+      summary: Create restroom
+      description: Create a restroom
       requestBody:
         required: true
         content:
@@ -413,7 +555,7 @@ paths:
               $ref: '#/components/schemas/RestroomCreateDto'
       responses:
         '201':
-          description: Restroom created successfully
+          description: Created
           content:
             application/json:
               schema:
@@ -433,8 +575,8 @@ paths:
 
   /restrooms/{id}:
     get:
-      summary: Get restroom by ID
-      description: Retrieve a specific restroom by its unique identifier
+      summary: Get restroom
+      description: Return one restroom by ID
       parameters:
         - name: id
           in: path
@@ -445,13 +587,13 @@ paths:
             format: uuid
       responses:
         '200':
-          description: Restroom found
+          description: OK
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/RestroomResponseDto'
         '404':
-          description: Restroom not found
+          description: Not found
           content:
             application/json:
               schema:
@@ -465,8 +607,8 @@ paths:
 
   /restrooms/city/{cityId}:
     get:
-      summary: Get restrooms by city
-      description: Retrieve restrooms for a specific city
+      summary: List restrooms by city
+      description: Return restrooms for one city
       parameters:
         - name: cityId
           in: path
@@ -489,7 +631,7 @@ paths:
             default: 20
       responses:
         '200':
-          description: Successfully retrieved restrooms
+          description: OK
           content:
             application/json:
               schema:
@@ -515,8 +657,8 @@ paths:
 
   /restrooms/nearest:
     get:
-      summary: Find nearest restrooms
-      description: Find the nearest restrooms to a given location
+      summary: Nearest restrooms
+      description: Return nearest restrooms for a coordinate
       parameters:
         - name: lat
           in: query
@@ -536,7 +678,7 @@ paths:
             example: -74.0060
         - name: limit
           in: query
-          description: Maximum number of restrooms to return
+          description: Max results
           schema:
             type: integer
             minimum: 1
@@ -544,7 +686,7 @@ paths:
             default: 5
       responses:
         '200':
-          description: Successfully retrieved nearest restrooms
+          description: OK
           content:
             application/json:
               schema:
@@ -552,7 +694,7 @@ paths:
                 items:
                   $ref: '#/components/schemas/NearestRestroomSlimDto'
         '400':
-          description: Missing or invalid coordinates
+          description: Invalid coordinates
           content:
             application/json:
               schema:
@@ -566,6 +708,56 @@ paths:
 
 components:
   schemas:
+    ImportRequestDto:
+      type: object
+      required:
+        - items
+      properties:
+        items:
+          type: array
+          description: Raw provider items
+          items:
+            type: object
+            additionalProperties: true
+
+    ImportResponseDto:
+      type: object
+      properties:
+        importId:
+          type: string
+          format: uuid
+          description: Import job ID
+        restroomId:
+          type: string
+          format: uuid
+          description: Restroom ID
+        buildingId:
+          type: string
+          format: uuid
+          nullable: true
+          description: Building ID
+        status:
+          type: string
+          enum: [PENDING, SUCCESS, FAILED]
+          description: Import status
+
+    ImportBatchResponseDto:
+      type: object
+      properties:
+        importId:
+          type: string
+          format: uuid
+          description: Import job ID
+        totalProcessed:
+          type: integer
+          description: Total items processed
+        successful:
+          type: integer
+          description: Successful items
+        failed:
+          type: integer
+          description: Failed items
+
     CountryCreateDto:
       type: object
       required:

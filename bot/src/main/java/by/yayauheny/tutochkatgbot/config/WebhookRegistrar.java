@@ -18,12 +18,17 @@ public class WebhookRegistrar implements ApplicationRunner {
     private static final Logger log = LoggerFactory.getLogger(WebhookRegistrar.class);
     
     private final TelegramClient client;
+    private final String webhookUrl;
+    private final String webhookSecretToken;
     
-    @Value("${bot.webhook-public-url:}")
-    private String webhookUrl;
-
-    public WebhookRegistrar(TelegramClient client) {
+    public WebhookRegistrar(
+            TelegramClient client,
+            @Value("${bot.webhook-public-url:}") String webhookUrl,
+            @Value("${bot.webhook-secret-token:}") String webhookSecretToken
+    ) {
         this.client = client;
+        this.webhookUrl = webhookUrl;
+        this.webhookSecretToken = webhookSecretToken;
     }
 
     @Override
@@ -32,10 +37,14 @@ public class WebhookRegistrar implements ApplicationRunner {
             log.info("Webhook URL not configured (bot.webhook-public-url), skipping webhook registration");
             return;
         }
+        if (webhookSecretToken == null || webhookSecretToken.isBlank()) {
+            throw new IllegalStateException("bot.webhook-secret-token must be configured when bot.webhook-public-url is set");
+        }
         
         try {
             SetWebhook setWebhook = SetWebhook.builder()
                     .url(webhookUrl)
+                    .secretToken(webhookSecretToken)
                     .build();
             client.execute(setWebhook);
             log.info("Webhook registered successfully: {}", webhookUrl);
@@ -45,4 +54,3 @@ public class WebhookRegistrar implements ApplicationRunner {
         }
     }
 }
-

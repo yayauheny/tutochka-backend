@@ -97,6 +97,7 @@ services:
       BOT_WEBHOOK_PATH: ${BOT_WEBHOOK_PATH:-/telegram/webhook}
       BOT_ASYNC_PROCESSING: ${BOT_ASYNC_PROCESSING:-true}
       BOT_WEBHOOK_PUBLIC_URL: ${BOT_WEBHOOK_PUBLIC_URL:-}
+      BOT_WEBHOOK_SECRET_TOKEN: ${BOT_WEBHOOK_SECRET_TOKEN:?BOT_WEBHOOK_SECRET_TOKEN required}
       BOT_ADMIN_IDS: ${BOT_ADMIN_IDS:-}
       BACKEND_BASE_URL: ${BACKEND_BASE_URL:-http://backend:8080/api/v1}
       BACKEND_CONNECT_TIMEOUT_MS: ${BACKEND_CONNECT_TIMEOUT_MS:-3000}
@@ -147,6 +148,7 @@ services:
       NGROK_PORT: "4040"
       TELEGRAM_BOT_TOKEN: ${TELEGRAM_BOT_TOKEN:?TELEGRAM_BOT_TOKEN required}
       BOT_WEBHOOK_PATH: ${BOT_WEBHOOK_PATH:-/telegram/webhook}
+      BOT_WEBHOOK_SECRET_TOKEN: ${BOT_WEBHOOK_SECRET_TOKEN:?BOT_WEBHOOK_SECRET_TOKEN required}
     volumes:
       - ./scripts:/scripts:ro
     command: ["sh", "-c", "apk add --no-cache curl && sh /scripts/register-webhook.sh"]

@@ -14,7 +14,7 @@ public class WebhookController {
         this.processingService = processingService;
     }
     
-    @PostMapping("${telegram.bot.webhook-path}")
+    @PostMapping("${bot.webhook-path}")
     public void handleWebhook(@RequestBody Update update) throws Exception {
         processingService.process(update);
     }
