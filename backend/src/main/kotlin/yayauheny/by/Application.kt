@@ -4,7 +4,6 @@ import com.zaxxer.hikari.HikariDataSource
 import io.ktor.serialization.kotlinx.json.json
 import io.ktor.server.application.Application
 import io.ktor.server.application.install
-import io.ktor.server.plugins.calllogging.CallLogging
 import io.ktor.server.plugins.contentnegotiation.ContentNegotiation
 import io.ktor.server.plugins.defaultheaders.DefaultHeaders
 import io.micrometer.prometheusmetrics.PrometheusMeterRegistry
@@ -18,6 +17,7 @@ import org.koin.logger.slf4jLogger
 import yayauheny.by.common.plugins.configureErrorHandling
 import yayauheny.by.config.DatabaseConfig
 import yayauheny.by.config.configureMetrics
+import yayauheny.by.config.configureRequestLogging
 import yayauheny.by.config.configureRouting
 import yayauheny.by.config.runLiquibaseMigrations
 import yayauheny.by.di.controllerModule
@@ -54,7 +54,7 @@ fun Application.module() {
     configureMetrics(prometheusRegistry)
 
     install(DefaultHeaders)
-    install(CallLogging)
+    configureRequestLogging()
     install(ContentNegotiation) {
         json(
             Json {
