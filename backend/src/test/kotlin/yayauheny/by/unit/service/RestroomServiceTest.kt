@@ -22,7 +22,7 @@ import org.junit.jupiter.params.provider.CsvSource
 import org.junit.jupiter.params.provider.EnumSource
 import org.junit.jupiter.params.provider.ValueSource
 import yayauheny.by.helpers.TestDataHelpers
-import yayauheny.by.model.restroom.NearestRestroomResponseDto
+import yayauheny.by.model.restroom.NearestRestroomSlimDto
 import yayauheny.by.common.query.PaginationRequest
 import yayauheny.by.common.query.PageResponse
 import yayauheny.by.model.restroom.RestroomCreateDto
@@ -129,7 +129,7 @@ class RestroomServiceTest {
             runTest {
                 val latitude = 40.7829
                 val longitude = -73.9654
-                val expectedRestrooms: List<NearestRestroomResponseDto> =
+                val expectedRestrooms: List<NearestRestroomSlimDto> =
                     TestDataHelpers.createNearestRestroomList(
                         limit
                     )
@@ -158,7 +158,7 @@ class RestroomServiceTest {
             lon: Double,
             expectedCount: Int
         ) = runTest {
-            val expectedRestrooms: List<NearestRestroomResponseDto> =
+            val expectedRestrooms: List<NearestRestroomSlimDto> =
                 TestDataHelpers.createNearestRestroomList(
                     expectedCount
                 )

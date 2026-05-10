@@ -1,9 +1,9 @@
 package by.yayauheny.tutochkatgbot.service;
 
-import by.yayauheny.tutochkatgbot.dto.backend.LatLon;
-import by.yayauheny.tutochkatgbot.dto.backend.NearestRestroomSlimDto;
-import by.yayauheny.tutochkatgbot.dto.backend.FeeType;
-import by.yayauheny.tutochkatgbot.integration.BackendClient;
+import yayauheny.by.model.dto.Coordinates;
+import yayauheny.by.model.restroom.NearestRestroomSlimDto;
+import yayauheny.by.model.enums.FeeType;
+import yayauheny.by.contract.BackendClient;
 import by.yayauheny.tutochkatgbot.metrics.BotMetrics;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
@@ -55,8 +55,8 @@ class SearchServiceBackendCallsTest {
             "Test",
             10.0,
             FeeType.FREE,
-            new LatLon(53.9, 27.56),
-            new LatLon(53.9, 27.56)
+            new Coordinates(53.9, 27.56),
+            new Coordinates(53.9, 27.56)
         );
     }
 }

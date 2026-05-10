@@ -1,8 +1,8 @@
 package by.yayauheny.tutochkatgbot.service;
 
 import by.yayauheny.tutochkatgbot.config.BackendProperties;
-import by.yayauheny.tutochkatgbot.dto.backend.NearestRestroomSlimDto;
-import by.yayauheny.tutochkatgbot.dto.backend.RestroomResponseDto;
+import yayauheny.by.model.restroom.NearestRestroomSlimDto;
+import yayauheny.by.model.restroom.RestroomResponseDto;
 import by.yayauheny.tutochkatgbot.integration.WebBackendClient;
 import com.sun.net.httpserver.HttpExchange;
 import com.sun.net.httpserver.HttpServer;
@@ -62,8 +62,8 @@ class WebBackendClientHttpTest {
         List<NearestRestroomSlimDto> result = client.findNearest(53.9, 27.56, 5, 500);
 
         assertThat(result).hasSize(1);
-        assertThat(result.get(0).id()).isEqualTo(restroomId);
-        assertThat(result.get(0).displayName()).isEqualTo("Test restroom");
+        assertThat(result.get(0).getId()).isEqualTo(restroomId);
+        assertThat(result.get(0).getDisplayName()).isEqualTo("Test restroom");
         assertThat(requestMethod.get()).isEqualTo("GET");
         assertThat(clientTypeHeader.get()).isEqualTo("telegram_bot");
         assertThat(parseQuery(rawQuery.get()))
@@ -92,7 +92,7 @@ class WebBackendClientHttpTest {
         Optional<RestroomResponseDto> result = client.getById(restroomId.toString());
 
         assertThat(result).isPresent();
-        assertThat(result.orElseThrow().id()).isEqualTo(restroomId);
+        assertThat(result.orElseThrow().getId()).isEqualTo(restroomId);
         assertThat(attempts.get()).isEqualTo(3);
     }
 
@@ -165,7 +165,7 @@ class WebBackendClientHttpTest {
               "feeType": "FREE",
               "genderType": null,
               "accessibilityType": "UNKNOWN",
-              "placeType": "OTHER",
+              "placeType": "other",
               "coordinates": {"lat": 53.9, "lon": 27.56},
               "dataSource": "USER",
               "status": "ACTIVE",

@@ -2,9 +2,9 @@ package by.yayauheny.tutochkatgbot.handler.callbacks;
 
 import by.yayauheny.tutochkatgbot.bot.MessageSender;
 import by.yayauheny.tutochkatgbot.cache.BackListSnapshotCache;
-import by.yayauheny.tutochkatgbot.dto.backend.NearestRestroomSlimDto;
-import by.yayauheny.tutochkatgbot.dto.backend.FeeType;
-import by.yayauheny.tutochkatgbot.dto.backend.LatLon;
+import yayauheny.by.model.restroom.NearestRestroomSlimDto;
+import yayauheny.by.model.enums.FeeType;
+import yayauheny.by.model.dto.Coordinates;
 import by.yayauheny.tutochkatgbot.handler.UpdateContext;
 import by.yayauheny.tutochkatgbot.keyboard.InlineKeyboardFactory;
 import by.yayauheny.tutochkatgbot.keyboard.ReplyKeyboardFactory;
@@ -79,8 +79,8 @@ class RadiusCallbackTest {
                     "Test restroom",
                     123.0,
                     FeeType.FREE,
-                    new LatLon(lat, lon),
-                    new LatLon(lat + 0.001, lon + 0.001)
+                    new Coordinates(lat, lon),
+                    new Coordinates(lat + 0.001, lon + 0.001)
                 )
             );
         when(searchService.findNearby(lat, lon, radius, SearchService.DEFAULT_NEAREST_LIMIT)).thenReturn(mockResults);

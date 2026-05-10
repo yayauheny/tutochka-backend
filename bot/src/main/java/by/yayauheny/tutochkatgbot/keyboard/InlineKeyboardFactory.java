@@ -1,19 +1,21 @@
 package by.yayauheny.tutochkatgbot.keyboard;
 
 import by.yayauheny.tutochkatgbot.callback.CallbackData;
-import by.yayauheny.tutochkatgbot.dto.backend.NearestRestroomSlimDto;
-import by.yayauheny.tutochkatgbot.dto.backend.RestroomResponseDto;
 import by.yayauheny.tutochkatgbot.messages.Messages;
 import by.yayauheny.tutochkatgbot.service.FormatterService;
 import by.yayauheny.tutochkatgbot.util.Links;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
 import java.util.Optional;
 import org.springframework.stereotype.Component;
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.InlineKeyboardMarkup;
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.buttons.InlineKeyboardButton;
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.buttons.InlineKeyboardRow;
+import kotlinx.serialization.json.JsonElement;
+import kotlinx.serialization.json.JsonObject;
+import kotlinx.serialization.json.JsonPrimitive;
+import yayauheny.by.model.restroom.NearestRestroomSlimDto;
+import yayauheny.by.model.restroom.RestroomResponseDto;
 
 /**
  * Factory for inline keyboards
@@ -94,7 +96,7 @@ public class InlineKeyboardFactory {
 
         return InlineKeyboardButton.builder()
                 .text(buttonText)
-                .callbackData(CallbackData.detail(toilet.id().toString()))
+                .callbackData(CallbackData.detail(toilet.getId().toString()))
                 .build();
     }
 
@@ -132,39 +134,41 @@ public class InlineKeyboardFactory {
     }
 
     protected Optional<String> twoGisUrl(RestroomResponseDto toilet) {
-        Map<String, Object> externalMaps = toilet.externalMaps();
+        JsonObject externalMaps = toilet.getExternalMaps();
         String branchId = extractTwoGisBranchId(externalMaps);
         if (branchId != null && !branchId.isBlank()) {
             return Optional.of(Links.twoGisById(branchId));
         }
 
-        if (toilet.coordinates() == null) {
+        if (toilet.getCoordinates() == null) {
             return Optional.empty();
         }
 
-        return Optional.of(Links.twoGis(toilet.coordinates().lat(), toilet.coordinates().lon()));
+        return Optional.of(Links.twoGis(toilet.getCoordinates().getLat(), toilet.getCoordinates().getLon()));
     }
 
     private Optional<String> mapUrl(RestroomResponseDto toilet, MapLinkBuilder builder) {
-        if (toilet.coordinates() == null) {
+        if (toilet.getCoordinates() == null) {
             return Optional.empty();
         }
-        return Optional.ofNullable(builder.build(toilet.coordinates().lat(), toilet.coordinates().lon()));
+        return Optional.ofNullable(builder.build(toilet.getCoordinates().getLat(), toilet.getCoordinates().getLon()));
     }
 
-    private String extractTwoGisBranchId(Map<String, Object> externalMaps) {
+    private String extractTwoGisBranchId(JsonObject externalMaps) {
         if (externalMaps == null) {
             return null;
         }
 
-        Object twoGis = externalMaps.get("2gis");
-        if (twoGis instanceof String s) {
-            return s;
+        JsonElement twoGis = externalMaps.get("2gis");
+        if (twoGis instanceof JsonPrimitive primitive) {
+            return primitive.getContent();
         }
 
-        if (twoGis instanceof Map<?, ?> twoGisMap) {
-            Object branchId = twoGisMap.get("branch_id");
-            return branchId instanceof String s ? s : null;
+        if (twoGis instanceof JsonObject twoGisObject) {
+            JsonElement branchId = twoGisObject.get("branch_id");
+            if (branchId instanceof JsonPrimitive primitive) {
+                return primitive.getContent();
+            }
         }
 
         return null;

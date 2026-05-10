@@ -24,6 +24,8 @@ wiremock = "2.35.0"
 resilience4j = "2.2.0"
 micrometer = "1.14.5"
 assertj = "3.27.3"
+jackson = "2.19.2"
+kotlinxSerialization = "1.8.1"
 
 [plugins]
 kotlinJvm = { id = "org.jetbrains.kotlin.jvm", version.ref = "kotlin" }
@@ -73,6 +75,10 @@ swaggerCore = { module = "io.swagger.core.v3:swagger-core", version.ref = "swagg
 swaggerAnnotations = { module = "io.swagger.core.v3:swagger-annotations", version.ref = "swagger" }
 swaggerModels = { module = "io.swagger.core.v3:swagger-models", version.ref = "swagger" }
 swaggerJaxrs2 = { module = "io.swagger.core.v3:swagger-jaxrs2", version.ref = "swagger" }
+jacksonAnnotations = { module = "com.fasterxml.jackson.core:jackson-annotations", version.ref = "jackson" }
+jacksonModuleKotlin = { module = "com.fasterxml.jackson.module:jackson-module-kotlin", version.ref = "jackson" }
+kotlinxSerializationCore = { module = "org.jetbrains.kotlinx:kotlinx-serialization-core", version.ref = "kotlinxSerialization" }
+kotlinxSerializationJson = { module = "org.jetbrains.kotlinx:kotlinx-serialization-json", version.ref = "kotlinxSerialization" }
 
 # Logging
 logbackClassic = { module = "ch.qos.logback:logback-classic", version.ref = "logback" }

@@ -1,8 +1,8 @@
 package yayauheny.by.model.subway
 
 import java.time.Instant
-import java.util.Locale
 import java.util.UUID
+import kotlin.jvm.JvmOverloads
 import kotlinx.serialization.Contextual
 import kotlinx.serialization.Serializable
 import yayauheny.by.model.dto.Coordinates
@@ -19,10 +19,15 @@ data class SubwayStationResponseDto(
     @Contextual val createdAt: Instant,
     val line: SubwayLineResponseDto? = null
 ) {
-    fun displayName(preferredLang: Locale? = null): String {
-        return when (preferredLang) {
-            Locale.ENGLISH -> nameEn
-            else -> nameRu
+    @JvmOverloads
+    fun displayName(preferredLang: String? = null): String {
+        return when {
+            preferredLang?.equals("en", ignoreCase = true) == true && !nameEn.isBlank() -> nameEn.trim()
+            !nameRu.isBlank() -> nameRu.trim()
+            !nameEn.isBlank() -> nameEn.trim()
+            else -> "Unknown"
         }
     }
+
+    fun lineColor(): String? = line?.hexColor?.takeIf { it.isNotBlank() }
 }

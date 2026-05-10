@@ -26,7 +26,7 @@ import yayauheny.by.helpers.testJson
 import yayauheny.by.metrics.BackendSearchMetrics
 import yayauheny.by.model.dto.Coordinates
 import yayauheny.by.model.enums.FeeType
-import yayauheny.by.model.restroom.NearestRestroomResponseDto
+import yayauheny.by.model.restroom.NearestRestroomSlimDto
 import yayauheny.by.service.CityService
 import yayauheny.by.service.CountryService
 import yayauheny.by.service.RestroomService
@@ -49,7 +49,7 @@ class RestroomMetricsIntegrationTest {
                 restroomService.findNearestRestrooms(53.9, 27.56, 5, 300)
             } returns
                 listOf(
-                    NearestRestroomResponseDto(
+                    NearestRestroomSlimDto(
                         id = java.util.UUID.randomUUID(),
                         displayName = "Test restroom",
                         distanceMeters = 250.0,
@@ -164,6 +164,7 @@ class RestroomMetricsIntegrationTest {
                 "lat=",
                 "lon=",
                 "user_id=",
+                "userId=",
                 "chat_id=",
                 "restroom_id="
             )

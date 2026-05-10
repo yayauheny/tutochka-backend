@@ -1,18 +1,17 @@
 package by.yayauheny.tutochkatgbot.service;
 
-import by.yayauheny.tutochkatgbot.dto.backend.NearestRestroomSlimDto;
-import by.yayauheny.tutochkatgbot.dto.backend.RestroomResponseDto;
-import by.yayauheny.tutochkatgbot.integration.BackendClient;
 import by.yayauheny.tutochkatgbot.metrics.BotMetrics;
-import io.micrometer.core.instrument.Timer;
+import java.util.Comparator;
+import java.util.List;
+import java.util.Optional;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestClientResponseException;
-
-import java.util.Comparator;
-import java.util.List;
-import java.util.Optional;
+import yayauheny.by.contract.BackendClient;
+import yayauheny.by.model.restroom.NearestRestroomSlimDto;
+import yayauheny.by.model.restroom.RestroomResponseDto;
+import io.micrometer.core.instrument.Timer;
 
 @Service
 public class SearchService {
@@ -80,8 +79,8 @@ public class SearchService {
 
     private List<NearestRestroomSlimDto> filterAndLimit(List<NearestRestroomSlimDto> source, int radiusMeters, int limit) {
         return source.stream()
-            .filter(r -> r.distanceMeters() <= radiusMeters)
-            .sorted(Comparator.comparingDouble(NearestRestroomSlimDto::distanceMeters))
+            .filter(r -> r.getDistanceMeters() <= radiusMeters)
+            .sorted(Comparator.comparingDouble(NearestRestroomSlimDto::getDistanceMeters))
             .limit(limit)
             .toList();
     }

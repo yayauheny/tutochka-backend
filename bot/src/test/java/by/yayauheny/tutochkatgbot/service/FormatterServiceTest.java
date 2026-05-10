@@ -1,20 +1,21 @@
 package by.yayauheny.tutochkatgbot.service;
 
-import by.yayauheny.tutochkatgbot.dto.backend.AccessibilityType;
-import by.yayauheny.tutochkatgbot.dto.backend.BuildingResponseDto;
-import by.yayauheny.tutochkatgbot.dto.backend.DataSourceType;
-import by.yayauheny.tutochkatgbot.dto.backend.FeeType;
-import by.yayauheny.tutochkatgbot.dto.backend.ImportProvider;
-import by.yayauheny.tutochkatgbot.dto.backend.LatLon;
-import by.yayauheny.tutochkatgbot.dto.backend.LocationType;
-import by.yayauheny.tutochkatgbot.dto.backend.PlaceType;
-import by.yayauheny.tutochkatgbot.dto.backend.RestroomResponseDto;
-import by.yayauheny.tutochkatgbot.dto.backend.RestroomStatus;
-import by.yayauheny.tutochkatgbot.dto.backend.SubwayLineResponseDto;
-import by.yayauheny.tutochkatgbot.dto.backend.SubwayStationResponseDto;
+import yayauheny.by.model.enums.AccessibilityType;
+import yayauheny.by.model.building.BuildingResponseDto;
+import yayauheny.by.model.enums.DataSourceType;
+import yayauheny.by.model.enums.FeeType;
+import yayauheny.by.model.enums.ImportProvider;
+import yayauheny.by.model.dto.Coordinates;
+import yayauheny.by.model.enums.LocationType;
+import yayauheny.by.model.enums.PlaceType;
+import yayauheny.by.model.restroom.RestroomResponseDto;
+import yayauheny.by.model.enums.RestroomStatus;
+import yayauheny.by.model.subway.SubwayLineResponseDto;
+import yayauheny.by.model.subway.SubwayStationResponseDto;
 import java.time.Instant;
 import java.util.Map;
 import java.util.UUID;
+import kotlinx.serialization.json.JsonObject;
 import org.junit.jupiter.api.Test;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -34,17 +35,17 @@ class FormatterServiceTest {
                 UUID.randomUUID(),
                 "<b>Bad</b>",
                 "Main <script>alert(1)</script> Street",
-                Map.of(),
-                Map.of(),
+                new JsonObject(Map.of()),
+                new JsonObject(Map.of()),
                 FeeType.UNKNOWN,
                 null,
                 AccessibilityType.UNKNOWN,
                 PlaceType.OTHER,
-                new LatLon(53.9, 27.56),
+                new Coordinates(53.9, 27.56),
                 DataSourceType.USER,
                 RestroomStatus.ACTIVE,
-                Map.of(),
-                Map.of(),
+                new JsonObject(Map.of()),
+                new JsonObject(Map.of()),
                 null,
                 "Find it near <b>exit</b>",
                 false,
@@ -62,9 +63,9 @@ class FormatterServiceTest {
                     "HQ <script>",
                     "Some <i>address</i>",
                     PlaceType.OTHER,
-                    Map.of(),
-                    new LatLon(53.91, 27.57),
-                    Map.of(),
+                    new JsonObject(Map.of()),
+                    new Coordinates(53.91, 27.57),
+                    new JsonObject(Map.of()),
                     false,
                     Instant.parse("2025-01-01T00:00:00Z"),
                     Instant.parse("2025-01-01T00:00:00Z")
@@ -75,7 +76,7 @@ class FormatterServiceTest {
                     "Victory <b>Square</b>",
                     "Victory Square",
                     false,
-                    new LatLon(53.92, 27.58),
+                    new Coordinates(53.92, 27.58),
                     false,
                     Instant.parse("2025-01-01T00:00:00Z"),
                     new SubwayLineResponseDto(

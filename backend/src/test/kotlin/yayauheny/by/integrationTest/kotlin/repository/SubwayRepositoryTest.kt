@@ -1,7 +1,6 @@
 package integration.repository
 
 import integration.base.BaseIntegrationTest
-import java.util.Locale
 import java.util.UUID
 import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
@@ -428,7 +427,7 @@ class SubwayRepositoryTest : BaseIntegrationTest() {
                     nameEn = "Victory Square"
                 )
 
-            val displayName = station.displayName(Locale.ENGLISH)
+            val displayName = station.displayName("en")
 
             assertTrue(displayName == "Victory Square", "Should return English name")
         }

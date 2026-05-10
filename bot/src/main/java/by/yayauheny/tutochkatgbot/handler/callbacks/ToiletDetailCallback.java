@@ -62,7 +62,7 @@ public class ToiletDetailCallback implements CallbackHandler {
         var toilet = searchService.getById(toiletId)
                 .orElseThrow(() -> new IllegalArgumentException("Toilet not found: " + toiletId));
 
-        Double distanceMeters = toilet.distanceMeters() != null ? toilet.distanceMeters().doubleValue() : null;
+        Double distanceMeters = toilet.getDistanceMeters() != null ? toilet.getDistanceMeters().doubleValue() : null;
         String text = formatterService.toiletDetail(toilet, distanceMeters);
         sender.editOrReply(ctx, text, inlineKeyboard.toiletDetail(toilet));
         log.info(

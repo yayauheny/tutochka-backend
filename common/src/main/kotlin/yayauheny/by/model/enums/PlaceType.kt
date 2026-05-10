@@ -1,11 +1,14 @@
 package yayauheny.by.model.enums
 
+import com.fasterxml.jackson.annotation.JsonCreator
+import com.fasterxml.jackson.annotation.JsonValue
+import kotlin.jvm.JvmStatic
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 
 @Serializable
 enum class PlaceType(
-    val code: String,
+    @get:JsonValue val code: String,
     val ruName: String,
     val enName: String
 ) {
@@ -55,6 +58,8 @@ enum class PlaceType(
     OTHER("other", "Прочее", "Other");
 
     companion object {
+        @JvmStatic
+        @JsonCreator(mode = JsonCreator.Mode.DELEGATING)
         fun fromCode(value: String?): PlaceType = entries.find { it.code == value } ?: OTHER
     }
 

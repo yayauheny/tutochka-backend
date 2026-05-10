@@ -1,8 +1,8 @@
 package by.yayauheny.tutochkatgbot.cache;
 
-import by.yayauheny.tutochkatgbot.dto.backend.FeeType;
-import by.yayauheny.tutochkatgbot.dto.backend.LatLon;
-import by.yayauheny.tutochkatgbot.dto.backend.NearestRestroomSlimDto;
+import yayauheny.by.model.enums.FeeType;
+import yayauheny.by.model.dto.Coordinates;
+import yayauheny.by.model.restroom.NearestRestroomSlimDto;
 import by.yayauheny.tutochkatgbot.metrics.BotMetrics;
 import io.micrometer.core.instrument.simple.SimpleMeterRegistry;
 import java.time.Clock;
@@ -40,7 +40,7 @@ class BackListSnapshotCacheTest {
         assertTrue(snapshot.isPresent());
         assertEquals(500, snapshot.get().radiusMeters());
         assertEquals(1, snapshot.get().items().size());
-        assertEquals("A", snapshot.get().items().get(0).displayName());
+        assertEquals("A", snapshot.get().items().get(0).getDisplayName());
         assertEquals(1.0, registry.get("bot_back_list_cache_total").tag("outcome", "hit").counter().count());
     }
 
@@ -87,7 +87,7 @@ class BackListSnapshotCacheTest {
         assertTrue(snapshot.isPresent());
         assertEquals(1000, snapshot.get().radiusMeters());
         assertEquals(2, snapshot.get().items().size());
-        assertEquals("B", snapshot.get().items().get(0).displayName());
+        assertEquals("B", snapshot.get().items().get(0).getDisplayName());
     }
 
     @Test
@@ -115,8 +115,8 @@ class BackListSnapshotCacheTest {
             name,
             123.0,
             FeeType.FREE,
-            new LatLon(53.9, 27.56),
-            new LatLon(53.9001, 27.5601)
+            new Coordinates(53.9, 27.56),
+            new Coordinates(53.9001, 27.5601)
         );
     }
 

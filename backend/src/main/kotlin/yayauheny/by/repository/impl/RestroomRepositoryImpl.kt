@@ -19,7 +19,7 @@ import yayauheny.by.common.query.PageResponse
 import yayauheny.by.common.query.PaginationRequest
 import yayauheny.by.common.query.builder.QueryBuilder
 import yayauheny.by.common.query.builder.QueryExecutor
-import yayauheny.by.model.restroom.NearestRestroomResponseDto
+import yayauheny.by.model.restroom.NearestRestroomSlimDto
 import yayauheny.by.model.enums.ImportProvider
 import yayauheny.by.model.enums.RestroomStatus
 import yayauheny.by.model.restroom.RestroomCreateDto
@@ -390,7 +390,7 @@ class RestroomRepositoryImpl(
         requestLon: Double,
         limit: Int,
         distanceMeters: Int?
-    ): List<NearestRestroomResponseDto> =
+    ): List<NearestRestroomSlimDto> =
         withContext(Dispatchers.IO) {
             val maxElements = limit
             val maxDistance = (distanceMeters ?: 5000).toDouble()

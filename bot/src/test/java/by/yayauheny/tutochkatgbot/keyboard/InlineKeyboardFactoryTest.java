@@ -1,23 +1,25 @@
 package by.yayauheny.tutochkatgbot.keyboard;
 
-import by.yayauheny.tutochkatgbot.dto.backend.AccessibilityType;
-import by.yayauheny.tutochkatgbot.dto.backend.BuildingResponseDto;
-import by.yayauheny.tutochkatgbot.dto.backend.DataSourceType;
-import by.yayauheny.tutochkatgbot.dto.backend.FeeType;
-import by.yayauheny.tutochkatgbot.dto.backend.ImportProvider;
-import by.yayauheny.tutochkatgbot.dto.backend.LatLon;
-import by.yayauheny.tutochkatgbot.dto.backend.LocationType;
-import by.yayauheny.tutochkatgbot.dto.backend.PlaceType;
-import by.yayauheny.tutochkatgbot.dto.backend.RestroomResponseDto;
-import by.yayauheny.tutochkatgbot.dto.backend.RestroomStatus;
-import by.yayauheny.tutochkatgbot.dto.backend.SubwayLineResponseDto;
-import by.yayauheny.tutochkatgbot.dto.backend.SubwayStationResponseDto;
+import yayauheny.by.model.enums.AccessibilityType;
+import yayauheny.by.model.building.BuildingResponseDto;
+import yayauheny.by.model.enums.DataSourceType;
+import yayauheny.by.model.enums.FeeType;
+import yayauheny.by.model.enums.ImportProvider;
+import yayauheny.by.model.dto.Coordinates;
+import yayauheny.by.model.enums.LocationType;
+import yayauheny.by.model.enums.PlaceType;
+import yayauheny.by.model.restroom.RestroomResponseDto;
+import yayauheny.by.model.enums.RestroomStatus;
+import yayauheny.by.model.subway.SubwayLineResponseDto;
+import yayauheny.by.model.subway.SubwayStationResponseDto;
 import by.yayauheny.tutochkatgbot.service.FormatterService;
 import by.yayauheny.tutochkatgbot.util.Links;
 import java.time.Instant;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
+import kotlinx.serialization.json.JsonElementKt;
+import kotlinx.serialization.json.JsonObject;
 import org.junit.jupiter.api.Test;
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.InlineKeyboardMarkup;
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.buttons.InlineKeyboardButton;
@@ -29,7 +31,7 @@ class InlineKeyboardFactoryTest {
 
     @Test
     void toiletDetailShouldRenderUrlButtonsWithSameLayout() {
-        InlineKeyboardMarkup keyboard = factory.toiletDetail(sampleRestroom(Map.of()));
+        InlineKeyboardMarkup keyboard = factory.toiletDetail(sampleRestroom(new JsonObject(Map.of())));
 
         assertThat(keyboard.getKeyboard()).hasSize(3);
         assertThat(keyboard.getKeyboard().get(0)).hasSize(2);
@@ -54,7 +56,7 @@ class InlineKeyboardFactoryTest {
                 }
             };
 
-        InlineKeyboardMarkup keyboard = partialFactory.toiletDetail(sampleRestroom(Map.of()));
+        InlineKeyboardMarkup keyboard = partialFactory.toiletDetail(sampleRestroom(new JsonObject(Map.of())));
 
         assertThat(keyboard.getKeyboard()).hasSize(3);
         assertThat(keyboard.getKeyboard().get(0)).hasSize(2);
@@ -66,9 +68,9 @@ class InlineKeyboardFactoryTest {
 
     @Test
     void twoGisButtonShouldUseBranchIdWhenAvailable() {
-        InlineKeyboardMarkup keyboard = factory.toiletDetail(sampleRestroom(Map.of(
-            "2gis", (Object) "abc123"
-        )));
+        InlineKeyboardMarkup keyboard = factory.toiletDetail(sampleRestroom(new JsonObject(Map.of(
+            "2gis", JsonElementKt.JsonPrimitive("abc123")
+        ))));
 
         InlineKeyboardButton twoGisButton = keyboard.getKeyboard().get(1).get(0);
 
@@ -79,14 +81,14 @@ class InlineKeyboardFactoryTest {
 
     @Test
     void twoGisButtonShouldUseBranchIdEvenWithoutCoordinates() {
-        InlineKeyboardMarkup keyboard = factory.toiletDetail(sampleRestroomWithoutCoordinates(Map.of(
-            "2gis", (Object) "abc123"
-        )));
+        InlineKeyboardMarkup keyboard = factory.toiletDetail(sampleRestroomWithoutCoordinates(new JsonObject(Map.of(
+            "2gis", JsonElementKt.JsonPrimitive("abc123")
+        ))));
 
-        assertThat(keyboard.getKeyboard()).hasSize(2);
-        assertThat(keyboard.getKeyboard().get(0)).hasSize(1);
+        assertThat(keyboard.getKeyboard()).hasSize(3);
+        assertThat(keyboard.getKeyboard().get(1)).hasSize(2);
 
-        InlineKeyboardButton twoGisButton = keyboard.getKeyboard().get(0).get(0);
+        InlineKeyboardButton twoGisButton = keyboard.getKeyboard().get(1).get(0);
 
         assertThat(twoGisButton.getText()).isEqualTo("🗺 2ГИС");
         assertThat(twoGisButton.getUrl()).isEqualTo(Links.twoGisById("abc123"));
@@ -95,7 +97,7 @@ class InlineKeyboardFactoryTest {
 
     @Test
     void twoGisButtonShouldFallbackToGeoUrlWithoutBranchId() {
-        InlineKeyboardMarkup keyboard = factory.toiletDetail(sampleRestroom(Map.of()));
+        InlineKeyboardMarkup keyboard = factory.toiletDetail(sampleRestroom(new JsonObject(Map.of())));
 
         InlineKeyboardButton twoGisButton = keyboard.getKeyboard().get(1).get(0);
 
@@ -109,7 +111,7 @@ class InlineKeyboardFactoryTest {
         assertThat(button.getCallbackData()).isNull();
     }
 
-    private RestroomResponseDto sampleRestroom(Map<String, Object> externalMaps) {
+    private RestroomResponseDto sampleRestroom(JsonObject externalMaps) {
         return new RestroomResponseDto(
             UUID.randomUUID(),
             UUID.randomUUID(),
@@ -118,16 +120,16 @@ class InlineKeyboardFactoryTest {
             null,
             "Test restroom",
             "Address",
-            Map.of(),
-            Map.of(),
+            new JsonObject(Map.of()),
+            new JsonObject(Map.of()),
             FeeType.UNKNOWN,
             null,
             AccessibilityType.UNKNOWN,
             PlaceType.OTHER,
-            new LatLon(53.9, 27.56),
+            new Coordinates(53.9, 27.56),
             DataSourceType.USER,
             RestroomStatus.ACTIVE,
-            Map.of(),
+            new JsonObject(Map.of()),
             externalMaps,
             null,
             null,
@@ -145,7 +147,7 @@ class InlineKeyboardFactoryTest {
         );
     }
 
-    private RestroomResponseDto sampleRestroomWithoutCoordinates(Map<String, Object> externalMaps) {
+    private RestroomResponseDto sampleRestroomWithoutCoordinates(JsonObject externalMaps) {
         return new RestroomResponseDto(
             UUID.randomUUID(),
             UUID.randomUUID(),
@@ -154,16 +156,16 @@ class InlineKeyboardFactoryTest {
             null,
             "Test restroom",
             "Address",
-            Map.of(),
-            Map.of(),
+            new JsonObject(Map.of()),
+            new JsonObject(Map.of()),
             FeeType.UNKNOWN,
             null,
             AccessibilityType.UNKNOWN,
             PlaceType.OTHER,
-            null,
+            new Coordinates(53.9, 27.56),
             DataSourceType.USER,
             RestroomStatus.ACTIVE,
-            Map.of(),
+            new JsonObject(Map.of()),
             externalMaps,
             null,
             null,

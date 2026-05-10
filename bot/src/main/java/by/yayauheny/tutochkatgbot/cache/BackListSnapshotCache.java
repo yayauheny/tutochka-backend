@@ -1,6 +1,5 @@
 package by.yayauheny.tutochkatgbot.cache;
 
-import by.yayauheny.tutochkatgbot.dto.backend.NearestRestroomSlimDto;
 import by.yayauheny.tutochkatgbot.metrics.BotMetrics;
 import com.github.benmanes.caffeine.cache.Cache;
 import com.github.benmanes.caffeine.cache.Caffeine;
@@ -15,6 +14,7 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicLong;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
+import yayauheny.by.model.restroom.NearestRestroomSlimDto;
 
 @Component
 public class BackListSnapshotCache {

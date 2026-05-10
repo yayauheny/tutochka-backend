@@ -1,11 +1,5 @@
 package by.yayauheny.tutochkatgbot.service;
 
-import by.yayauheny.tutochkatgbot.dto.backend.AccessibilityType;
-import by.yayauheny.tutochkatgbot.dto.backend.BuildingResponseDto;
-import by.yayauheny.tutochkatgbot.dto.backend.FeeType;
-import by.yayauheny.tutochkatgbot.dto.backend.NearestRestroomSlimDto;
-import by.yayauheny.tutochkatgbot.dto.backend.RestroomResponseDto;
-import by.yayauheny.tutochkatgbot.dto.backend.SubwayStationResponseDto;
 import by.yayauheny.tutochkatgbot.messages.Messages;
 import by.yayauheny.tutochkatgbot.util.DistanceFormat;
 import by.yayauheny.tutochkatgbot.util.EmojiConstants;
@@ -16,15 +10,21 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
 import org.springframework.stereotype.Service;
+import yayauheny.by.model.building.BuildingResponseDto;
+import yayauheny.by.model.enums.AccessibilityType;
+import yayauheny.by.model.enums.FeeType;
+import yayauheny.by.model.restroom.NearestRestroomSlimDto;
+import yayauheny.by.model.restroom.RestroomResponseDto;
+import yayauheny.by.model.subway.SubwayStationResponseDto;
 
 @Service
 public class FormatterService {
 
     private String selectDisplayNameForDetails(RestroomResponseDto toilet) {
-        String name = TextUtil.normalizeNullableText(toilet.name());
+        String name = TextUtil.normalizeNullableText(toilet.getName());
         if (name == null || name.isBlank() || "Туалет".equalsIgnoreCase(name)) {
-            return Optional.ofNullable(toilet.building())
-                .map(b -> b.displayName())
+            return Optional.ofNullable(toilet.getBuilding())
+                .map(BuildingResponseDto::displayName)
                 .filter(str -> str != null && !str.isBlank())
                 .orElse("Туалет");
         }
@@ -32,22 +32,22 @@ public class FormatterService {
     }
     
     private String selectAddress(RestroomResponseDto toilet) {
-        String address = TextUtil.normalizeNullableText(toilet.address());
-        if ((address == null || address.isBlank()) && toilet.building() != null) {
-            address = TextUtil.normalizeNullableText(toilet.building().address());
+        String address = TextUtil.normalizeNullableText(toilet.getAddress());
+        if ((address == null || address.isBlank()) && toilet.getBuilding() != null) {
+            address = TextUtil.normalizeNullableText(toilet.getBuilding().getAddress());
         }
         return (address == null || address.isBlank()) ? null : address;
     }
     
     private String selectWorkTime(RestroomResponseDto toilet) {
-        if (Boolean.TRUE.equals(toilet.inheritBuildingSchedule()) && toilet.building() != null) {
-            java.util.Map<String, Object> buildingWorkTime = toilet.building().workTime();
+        if (Boolean.TRUE.equals(toilet.getInheritBuildingSchedule()) && toilet.getBuilding() != null) {
+            kotlinx.serialization.json.JsonObject buildingWorkTime = toilet.getBuilding().getWorkTime();
             if (buildingWorkTime != null && !buildingWorkTime.isEmpty()) {
                 return WorkTimeFormatter.formatWorkTime(buildingWorkTime);
             }
         }
         
-        java.util.Map<String, Object> workTime = toilet.workTime();
+        kotlinx.serialization.json.JsonObject workTime = toilet.getWorkTime();
         if (workTime != null && !workTime.isEmpty()) {
             return WorkTimeFormatter.formatWorkTime(workTime);
         }
@@ -56,10 +56,10 @@ public class FormatterService {
     }
 
     public String toiletListItem(NearestRestroomSlimDto toilet) {
-        String normalized = TextUtil.normalizeNullableText(toilet.displayName());
+        String normalized = TextUtil.normalizeNullableText(toilet.getDisplayName());
         String name = (normalized != null && !normalized.isBlank()) ? normalized : "Туалет";
-        String distance = DistanceFormat.meters(toilet.distanceMeters());
-        FeeType feeType = toilet.feeType();
+        String distance = DistanceFormat.meters(toilet.getDistanceMeters());
+        FeeType feeType = toilet.getFeeType();
         String feeIcon = getFeeIcon(feeType);
         String feeSegment = feeIcon.isEmpty() ? "" : "  " + feeIcon;
         return "🚶 " + distance + feeSegment + "  " + name;
@@ -106,7 +106,7 @@ public class FormatterService {
         String name = Text.escapeHtml(selectDisplayNameForDetails(toilet));
         String address = selectAddress(toilet);
         String tags = formatTags(toilet, distanceMeters);
-        String placeType = Optional.ofNullable(toilet.placeType())
+        String placeType = Optional.ofNullable(toilet.getPlaceType())
             .map(pt -> pt.getLocalizedName("ru"))
             .orElse("Не указано");
         
@@ -116,8 +116,8 @@ public class FormatterService {
             ? (distancePart.isEmpty() ? "📍 " + Text.escapeHtml(address) : distancePart + "   •   📍 " + Text.escapeHtml(address))
             : distancePart;
         
-        String howToFindLine = formatHowToFindLine(toilet.directionGuide());
-        String landmarkLine = formatLandmarkLine(toilet.building(), toilet.subwayStation());
+        String howToFindLine = formatHowToFindLine(toilet.getDirectionGuide());
+        String landmarkLine = formatLandmarkLine(toilet.getBuilding(), toilet.getSubwayStation());
         
         Map<String, String> params = new HashMap<>();
         params.put("name", name);
@@ -138,12 +138,12 @@ public class FormatterService {
             tags.add(statusTag);
         }
         
-        String feeTag = formatFeeTag(toilet.feeType());
+        String feeTag = formatFeeTag(toilet.getFeeType());
         if (feeTag != null) {
             tags.add(feeTag);
         }
         
-        String accessibilityTag = formatAccessibilityTag(toilet.accessibilityType());
+        String accessibilityTag = formatAccessibilityTag(toilet.getAccessibilityType());
         if (accessibilityTag != null) {
             tags.add(accessibilityTag);
         }
@@ -152,21 +152,15 @@ public class FormatterService {
     }
 
     private String formatStatusTag(RestroomResponseDto toilet) {
-        java.util.Map<String, Object> workTime = toilet.workTime();
-        if (workTime != null) {
-            Object is24x7 = workTime.get("is_24x7");
-            if (is24x7 instanceof Boolean && (Boolean) is24x7) {
-                return "Круглосуточно";
-            }
+        kotlinx.serialization.json.JsonObject workTime = toilet.getWorkTime();
+        if (is24x7(workTime)) {
+            return "Круглосуточно";
         }
         
-        if (Boolean.TRUE.equals(toilet.inheritBuildingSchedule()) && toilet.building() != null) {
-            java.util.Map<String, Object> buildingWorkTime = toilet.building().workTime();
-            if (buildingWorkTime != null) {
-                Object is24x7 = buildingWorkTime.get("is_24x7");
-                if (is24x7 instanceof Boolean && (Boolean) is24x7) {
-                    return "Круглосуточно";
-                }
+        if (Boolean.TRUE.equals(toilet.getInheritBuildingSchedule()) && toilet.getBuilding() != null) {
+            kotlinx.serialization.json.JsonObject buildingWorkTime = toilet.getBuilding().getWorkTime();
+            if (is24x7(buildingWorkTime)) {
+                return "Круглосуточно";
             }
         }
         
@@ -289,5 +283,17 @@ public class FormatterService {
         }
         
         return "<b>Маршрут:</b>\n" + Text.escapeHtml(directionGuide.trim()) + "\n";
+    }
+
+    private boolean is24x7(kotlinx.serialization.json.JsonObject workTime) {
+        if (workTime == null) {
+            return false;
+        }
+        kotlinx.serialization.json.JsonElement value = workTime.get("is_24x7");
+        if (!(value instanceof kotlinx.serialization.json.JsonPrimitive primitive)) {
+            return false;
+        }
+        Boolean booleanValue = kotlinx.serialization.json.JsonElementKt.getBooleanOrNull(primitive);
+        return Boolean.TRUE.equals(booleanValue);
     }
 }

@@ -2,9 +2,9 @@ package by.yayauheny.tutochkatgbot.handler.callbacks;
 
 import by.yayauheny.tutochkatgbot.bot.MessageSender;
 import by.yayauheny.tutochkatgbot.cache.BackListSnapshotCache;
-import by.yayauheny.tutochkatgbot.dto.backend.FeeType;
-import by.yayauheny.tutochkatgbot.dto.backend.LatLon;
-import by.yayauheny.tutochkatgbot.dto.backend.NearestRestroomSlimDto;
+import yayauheny.by.model.enums.FeeType;
+import yayauheny.by.model.dto.Coordinates;
+import yayauheny.by.model.restroom.NearestRestroomSlimDto;
 import by.yayauheny.tutochkatgbot.handler.UpdateContext;
 import by.yayauheny.tutochkatgbot.keyboard.InlineKeyboardFactory;
 import by.yayauheny.tutochkatgbot.keyboard.ReplyKeyboardFactory;
@@ -127,8 +127,8 @@ class BackToListCallbackTest {
             name,
             123.0,
             FeeType.FREE,
-            new LatLon(53.9, 27.56),
-            new LatLon(53.9001, 27.5601)
+            new Coordinates(53.9, 27.56),
+            new Coordinates(53.9001, 27.5601)
         );
     }
 

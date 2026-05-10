@@ -1,15 +1,15 @@
 package by.yayauheny.tutochkatgbot.handler.callbacks;
 
 import by.yayauheny.tutochkatgbot.bot.MessageSender;
-import by.yayauheny.tutochkatgbot.dto.backend.AccessibilityType;
-import by.yayauheny.tutochkatgbot.dto.backend.DataSourceType;
-import by.yayauheny.tutochkatgbot.dto.backend.FeeType;
-import by.yayauheny.tutochkatgbot.dto.backend.ImportProvider;
-import by.yayauheny.tutochkatgbot.dto.backend.LatLon;
-import by.yayauheny.tutochkatgbot.dto.backend.LocationType;
-import by.yayauheny.tutochkatgbot.dto.backend.PlaceType;
-import by.yayauheny.tutochkatgbot.dto.backend.RestroomResponseDto;
-import by.yayauheny.tutochkatgbot.dto.backend.RestroomStatus;
+import yayauheny.by.model.enums.AccessibilityType;
+import yayauheny.by.model.enums.DataSourceType;
+import yayauheny.by.model.enums.FeeType;
+import yayauheny.by.model.enums.ImportProvider;
+import yayauheny.by.model.dto.Coordinates;
+import yayauheny.by.model.enums.LocationType;
+import yayauheny.by.model.enums.PlaceType;
+import yayauheny.by.model.restroom.RestroomResponseDto;
+import yayauheny.by.model.enums.RestroomStatus;
 import by.yayauheny.tutochkatgbot.handler.UpdateContext;
 import by.yayauheny.tutochkatgbot.keyboard.InlineKeyboardFactory;
 import by.yayauheny.tutochkatgbot.messages.Messages;
@@ -19,6 +19,7 @@ import java.time.Instant;
 import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
+import kotlinx.serialization.json.JsonObject;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
@@ -143,17 +144,17 @@ class ToiletDetailCallbackTest {
             null,
             "Test restroom",
             "Address",
-            Map.of(),
-            Map.of(),
+            new JsonObject(Map.of()),
+            new JsonObject(Map.of()),
             FeeType.FREE,
             null,
             AccessibilityType.UNKNOWN,
             PlaceType.OTHER,
-            new LatLon(53.9, 27.56),
+            new Coordinates(53.9, 27.56),
             DataSourceType.USER,
             RestroomStatus.ACTIVE,
-            Map.of(),
-            Map.of("2gis", "abc123"),
+            new JsonObject(Map.of()),
+            new JsonObject(Map.of("2gis", kotlinx.serialization.json.JsonElementKt.JsonPrimitive("abc123"))),
             null,
             null,
             false,

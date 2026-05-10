@@ -4,7 +4,7 @@ import java.util.UUID
 import yayauheny.by.common.query.PageResponse
 import yayauheny.by.common.query.PaginationRequest
 import yayauheny.by.config.ApiConstants
-import yayauheny.by.model.restroom.NearestRestroomResponseDto
+import yayauheny.by.model.restroom.NearestRestroomSlimDto
 import yayauheny.by.model.restroom.RestroomResponseDto
 import yayauheny.by.model.restroom.RestroomCreateDto
 import yayauheny.by.model.restroom.RestroomUpdateDto
@@ -27,7 +27,7 @@ class RestroomService(
         longitude: Double,
         limit: Int,
         distanceMeters: Int? = ApiConstants.DEFAULT_MAX_DISTANCE_METERS
-    ): List<NearestRestroomResponseDto> = restroomRepository.findNearestByLocation(latitude, longitude, limit, distanceMeters)
+    ): List<NearestRestroomSlimDto> = restroomRepository.findNearestByLocation(latitude, longitude, limit, distanceMeters)
 
     suspend fun createRestroom(createDto: RestroomCreateDto): RestroomResponseDto {
         return restroomRepository.save(createDto)

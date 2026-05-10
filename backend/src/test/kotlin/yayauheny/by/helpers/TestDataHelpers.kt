@@ -15,7 +15,7 @@ import yayauheny.by.model.country.CountryCreateDto
 import yayauheny.by.model.country.CountryResponseDto
 import yayauheny.by.model.country.CountryUpdateDto
 import yayauheny.by.model.dto.Coordinates
-import yayauheny.by.model.restroom.NearestRestroomResponseDto
+import yayauheny.by.model.restroom.NearestRestroomSlimDto
 import yayauheny.by.model.enums.AccessibilityType
 import yayauheny.by.model.enums.DataSourceType
 import yayauheny.by.model.enums.ImportProvider
@@ -320,7 +320,7 @@ object TestDataHelpers {
         userLat: Double = 40.78,
         userLon: Double = -73.96,
         distanceMeters: Double = 100.0
-    ) = NearestRestroomResponseDto(
+    ) = NearestRestroomSlimDto(
         id = id,
         displayName = displayName,
         distanceMeters = distanceMeters,
@@ -334,7 +334,7 @@ object TestDataHelpers {
         cityId: UUID = UUID.randomUUID(),
         baseLat: Double = 40.7829,
         baseLon: Double = -73.9654
-    ): List<NearestRestroomResponseDto> =
+    ): List<NearestRestroomSlimDto> =
         (1..count).map { i ->
             createNearestRestroomSlimDto(
                 displayName = "Restroom $i",

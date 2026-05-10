@@ -8,6 +8,7 @@ pluginManagement {
 rootProject.name = "tutochka"
 
 include("backend")
+include("common")
 include("bot")
 
 dependencyResolutionManagement {

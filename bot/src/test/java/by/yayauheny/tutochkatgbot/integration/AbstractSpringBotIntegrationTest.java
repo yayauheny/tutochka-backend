@@ -1,16 +1,16 @@
 package by.yayauheny.tutochkatgbot.integration;
 
 import by.yayauheny.tutochkatgbot.TutochkaTgBotApplication;
-import by.yayauheny.tutochkatgbot.dto.backend.AccessibilityType;
-import by.yayauheny.tutochkatgbot.dto.backend.DataSourceType;
-import by.yayauheny.tutochkatgbot.dto.backend.FeeType;
-import by.yayauheny.tutochkatgbot.dto.backend.ImportProvider;
-import by.yayauheny.tutochkatgbot.dto.backend.LatLon;
-import by.yayauheny.tutochkatgbot.dto.backend.LocationType;
-import by.yayauheny.tutochkatgbot.dto.backend.NearestRestroomSlimDto;
-import by.yayauheny.tutochkatgbot.dto.backend.PlaceType;
-import by.yayauheny.tutochkatgbot.dto.backend.RestroomResponseDto;
-import by.yayauheny.tutochkatgbot.dto.backend.RestroomStatus;
+import yayauheny.by.model.enums.AccessibilityType;
+import yayauheny.by.model.enums.DataSourceType;
+import yayauheny.by.model.enums.FeeType;
+import yayauheny.by.model.enums.ImportProvider;
+import yayauheny.by.model.dto.Coordinates;
+import yayauheny.by.model.enums.LocationType;
+import yayauheny.by.model.restroom.NearestRestroomSlimDto;
+import yayauheny.by.model.enums.PlaceType;
+import yayauheny.by.model.restroom.RestroomResponseDto;
+import yayauheny.by.model.enums.RestroomStatus;
 import java.time.Instant;
 import java.util.List;
 import java.util.Map;
@@ -75,7 +75,7 @@ public abstract class AbstractSpringBotIntegrationTest {
         return update;
     }
 
-    protected RestroomResponseDto restroomResponse(UUID restroomId, Map<String, Object> externalMaps) {
+    protected RestroomResponseDto restroomResponse(UUID restroomId, kotlinx.serialization.json.JsonObject externalMaps) {
         return new RestroomResponseDto(
             restroomId,
             UUID.randomUUID(),
@@ -84,16 +84,16 @@ public abstract class AbstractSpringBotIntegrationTest {
             null,
             "Test restroom",
             "Address",
-            Map.of(),
-            Map.of(),
+            new kotlinx.serialization.json.JsonObject(Map.of()),
+            new kotlinx.serialization.json.JsonObject(Map.of()),
             FeeType.FREE,
             null,
             AccessibilityType.UNKNOWN,
             PlaceType.OTHER,
-            new LatLon(53.9, 27.56),
+            new Coordinates(53.9, 27.56),
             DataSourceType.USER,
             RestroomStatus.ACTIVE,
-            Map.of(),
+            new kotlinx.serialization.json.JsonObject(Map.of()),
             externalMaps,
             null,
             null,
@@ -117,13 +117,15 @@ public abstract class AbstractSpringBotIntegrationTest {
             name,
             distanceMeters,
             FeeType.FREE,
-            new LatLon(53.9, 27.56),
-            new LatLon(53.9001, 27.5601)
+            new Coordinates(53.9, 27.56),
+            new Coordinates(53.9001, 27.5601)
         );
     }
 
-    protected Map<String, Object> twoGisExternalMap(String branchId) {
-        return Map.of("2gis", (Object) branchId);
+    protected kotlinx.serialization.json.JsonObject twoGisExternalMap(String branchId) {
+        return new kotlinx.serialization.json.JsonObject(
+            Map.of("2gis", kotlinx.serialization.json.JsonElementKt.JsonPrimitive(branchId))
+        );
     }
 
     private Chat chat(long id) {

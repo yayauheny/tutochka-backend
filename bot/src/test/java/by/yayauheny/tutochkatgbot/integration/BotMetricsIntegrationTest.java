@@ -123,10 +123,10 @@ class BotMetricsIntegrationTest extends AbstractSpringBotIntegrationTest {
                 String value = tag.getValue();
                 assertThat(key)
                     .as("Forbidden metric tag key: %s=%s on meter %s", key, value, meter.getId().getName())
-                    .isNotIn("lat", "lon", "chat_id", "user_id", "restroom_id");
+                    .isNotIn("lat", "lon", "chat_id", "user_id", "userId", "restroom_id");
                 assertThat(value)
                     .as("Forbidden metric tag value: %s=%s on meter %s", key, value, meter.getId().getName())
-                    .isNotIn("lat", "lon", "chat_id", "user_id", "restroom_id");
+                    .isNotIn("lat", "lon", "chat_id", "user_id", "userId", "restroom_id");
             }
         }
     }

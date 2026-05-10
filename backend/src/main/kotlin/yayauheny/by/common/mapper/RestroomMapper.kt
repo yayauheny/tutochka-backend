@@ -14,7 +14,7 @@ import yayauheny.by.model.enums.ImportProvider
 import yayauheny.by.model.enums.LocationType
 import yayauheny.by.model.enums.PlaceType
 import yayauheny.by.model.enums.RestroomStatus
-import yayauheny.by.model.restroom.NearestRestroomResponseDto
+import yayauheny.by.model.restroom.NearestRestroomSlimDto
 import yayauheny.by.model.restroom.RestroomResponseDto
 import yayauheny.by.model.restroom.RestroomUpdateDto
 import yayauheny.by.model.subway.SubwayLineResponseDto
@@ -220,11 +220,11 @@ object RestroomMapper {
         record: Record,
         userLat: Double,
         userLon: Double
-    ): NearestRestroomResponseDto {
+    ): NearestRestroomSlimDto {
         val lat = record.reqDouble("lat")
         val lon = record.reqDouble("lon")
 
-        return NearestRestroomResponseDto(
+        return NearestRestroomSlimDto(
             id = record[RESTROOMS.ID]!!,
             displayName = record[RESTROOMS.NAME]?.trim().orEmpty(),
             distanceMeters = record.reqDouble("distance"),
