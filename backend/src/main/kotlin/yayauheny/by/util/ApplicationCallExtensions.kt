@@ -1,7 +1,7 @@
 package yayauheny.by.util
 
-import io.ktor.server.application.ApplicationCall
-import io.ktor.server.request.header
+import io.ktor.http.Headers
+import io.ktor.http.Parameters
 import java.math.BigDecimal
 import java.math.RoundingMode
 import java.util.UUID
@@ -25,14 +25,14 @@ data class ImportHeaders(
     val cityId: UUID?
 )
 
-fun ApplicationCall.getImportHeaders(): ImportHeaders {
+fun Headers.getImportHeaders(): ImportHeaders {
     val providerRaw =
-        request.header(HEADER_IMPORT_PROVIDER)
+        getRequestHeader(HEADER_IMPORT_PROVIDER)
             ?: throw ValidationException(listOf(FieldError(HEADER_IMPORT_PROVIDER, "Header is required")))
     val payloadTypeRaw =
-        request.header(HEADER_IMPORT_PAYLOAD_TYPE)
+        getRequestHeader(HEADER_IMPORT_PAYLOAD_TYPE)
             ?: throw ValidationException(listOf(FieldError(HEADER_IMPORT_PAYLOAD_TYPE, "Header is required")))
-    val cityIdRaw = request.header(HEADER_IMPORT_CITY_ID)
+    val cityIdRaw = getRequestHeader(HEADER_IMPORT_CITY_ID)
 
     val provider =
         runCatching { ImportProvider.valueOf(providerRaw) }.getOrElse {
@@ -53,23 +53,21 @@ fun ApplicationCall.getImportHeaders(): ImportHeaders {
     return ImportHeaders(provider, payloadType, cityId)
 }
 
-fun ApplicationCall.toPaginationRequest(
+fun Parameters.toPaginationRequest(
     defaultSize: Int = ApiConstants.DEFAULT_PAGE_SIZE,
     maxSize: Int = ApiConstants.MAX_PAGE_SIZE
 ): PaginationRequest {
-    val params = request.queryParameters
-
-    val page = params["page"]?.toIntOrNull()?.coerceAtLeast(0) ?: ApiConstants.DEFAULT_PAGE
-    val size = params["size"]?.toIntOrNull()?.coerceIn(1, maxSize) ?: defaultSize
-    val sort = params["sort"]
+    val page = this["page"]?.toIntOrNull()?.coerceAtLeast(0) ?: ApiConstants.DEFAULT_PAGE
+    val size = this["size"]?.toIntOrNull()?.coerceIn(1, maxSize) ?: defaultSize
+    val sort = this["sort"]
 
     val direction =
-        params["direction"]?.let {
+        this["direction"]?.let {
             runCatching { SortDirection.valueOf(it.uppercase()) }.getOrDefault(SortDirection.ASC)
         } ?: SortDirection.ASC
 
     val filters =
-        params["filters"]
+        this["filters"]
             ?.split(ApiConstants.FILTER_DELIMITER)
             ?.mapNotNull { raw ->
                 val parts = raw.split(ApiConstants.FILTER_VALUE_DELIMITER)
@@ -92,8 +90,8 @@ fun ApplicationCall.toPaginationRequest(
     )
 }
 
-fun ApplicationCall.getUuidFromPath(paramName: String): UUID {
-    val uuidString = parameters[paramName] ?: throw IllegalArgumentException("Отсутствует обязательный параметр: $paramName")
+fun Parameters.getUuidFromPath(paramName: String): UUID {
+    val uuidString = this[paramName] ?: throw IllegalArgumentException("Отсутствует обязательный параметр: $paramName")
     return try {
         UUID.fromString(uuidString)
     } catch (e: IllegalArgumentException) {
@@ -101,23 +99,23 @@ fun ApplicationCall.getUuidFromPath(paramName: String): UUID {
     }
 }
 
-fun ApplicationCall.getStringFromPath(paramName: String): String {
-    return parameters[paramName] ?: throw IllegalArgumentException("Отсутствует обязательный параметр: $paramName")
+fun Parameters.getStringFromPath(paramName: String): String {
+    return this[paramName] ?: throw IllegalArgumentException("Отсутствует обязательный параметр: $paramName")
 }
 
-fun ApplicationCall.getDoubleFromQuery(paramName: String): Double {
+fun Parameters.getDoubleFromQuery(paramName: String): Double {
     val value =
-        request.queryParameters[paramName]
+        this[paramName]
             ?: throw IllegalArgumentException("Отсутствует обязательный параметр: $paramName")
     return value.toDoubleOrNull()
         ?: throw IllegalArgumentException("Неверный формат параметра $paramName: '$value' не является числом")
 }
 
-fun ApplicationCall.getIntFromQuery(
+fun Parameters.getIntFromQuery(
     paramName: String,
     default: Int? = null
 ): Int? {
-    val value = request.queryParameters[paramName]
+    val value = this[paramName]
     return if (value == null) {
         default
     } else {
@@ -126,11 +124,11 @@ fun ApplicationCall.getIntFromQuery(
     }
 }
 
-fun ApplicationCall.getBooleanFromQuery(
+fun Parameters.getBooleanFromQuery(
     paramName: String,
     default: Boolean = false
 ): Boolean {
-    val value = request.queryParameters[paramName]
+    val value = this[paramName]
     return if (value == null) {
         default
     } else {
@@ -139,11 +137,6 @@ fun ApplicationCall.getBooleanFromQuery(
     }
 }
 
-fun ApplicationCall.createPaginationFromQuery(
-    defaultSize: Int = ApiConstants.DEFAULT_PAGE_SIZE,
-    maxSize: Int = ApiConstants.MAX_PAGE_SIZE
-): PaginationRequest = toPaginationRequest(defaultSize, maxSize)
-
-fun ApplicationCall.getRequestHeader(name: String): String? = request.headers[name]?.trim()?.takeIf { it.isNotEmpty() }
+fun Headers.getRequestHeader(name: String): String? = this[name]?.trim()?.takeIf { it.isNotEmpty() }
 
 fun Double.toBigDecimalRounded(): BigDecimal = BigDecimal.valueOf(this).setScale(2, RoundingMode.HALF_UP)

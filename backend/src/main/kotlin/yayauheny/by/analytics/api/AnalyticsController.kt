@@ -1,13 +1,13 @@
 package yayauheny.by.analytics.api
 
 import io.ktor.http.HttpStatusCode
-import io.ktor.server.application.ApplicationCall
 import io.ktor.server.request.receive
 import io.ktor.server.response.respond
 import io.ktor.server.routing.Route
 import io.ktor.server.routing.post
 import io.ktor.server.routing.route
 import org.slf4j.LoggerFactory
+import yayauheny.by.analytics.model.AnalyticsIdentityHeaders
 import yayauheny.by.analytics.service.AnalyticsService
 import yayauheny.by.model.analytics.AnalyticsEventCommand
 import yayauheny.by.model.analytics.AnalyticsEventRequest
@@ -22,14 +22,18 @@ class AnalyticsController(
     fun Route.analyticsRoutes() {
         route("/analytics") {
             post("/events") {
-                call.trackEvent()
+                val request = call.receive<AnalyticsEventRequest>()
+                val identity = call.request.headers.getAnalyticsIdentityHeaders(AnalyticsSource.API)
+                trackEvent(request, identity)
+                call.respond(HttpStatusCode.Accepted)
             }
         }
     }
 
-    private suspend fun ApplicationCall.trackEvent() {
-        val request = receive<AnalyticsEventRequest>()
-        val identity = getAnalyticsIdentityHeaders(AnalyticsSource.API)
+    private suspend fun trackEvent(
+        request: AnalyticsEventRequest,
+        identity: AnalyticsIdentityHeaders
+    ) {
         val command =
             AnalyticsEventCommand(
                 event = request.event,
@@ -49,7 +53,5 @@ class AnalyticsController(
         }.onFailure { exception ->
             log.warn("Failed to track analytics event", exception)
         }
-
-        respond(HttpStatusCode.Accepted)
     }
 }

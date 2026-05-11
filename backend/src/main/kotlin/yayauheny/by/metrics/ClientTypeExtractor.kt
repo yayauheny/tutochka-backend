@@ -1,5 +1,5 @@
 package yayauheny.by.metrics
 
-import io.ktor.server.application.ApplicationCall
+import io.ktor.http.Headers
 
-fun ApplicationCall.extractClientType(): String = MetricLabelWhitelist.clientTypeOrDefault(request.headers["X-Client-Type"])
+fun Headers.extractClientType(): String = MetricLabelWhitelist.clientTypeOrDefault(this["X-Client-Type"])

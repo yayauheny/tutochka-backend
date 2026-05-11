@@ -25,13 +25,13 @@ class CountryController(
     fun Route.countryRoutes() {
         route("/countries") {
             get {
-                val pagination = call.toPaginationRequest()
+                val pagination = call.request.queryParameters.toPaginationRequest()
                 val pageResponse = countryService.getAllCountries(pagination)
                 call.respond(HttpStatusCode.OK, pageResponse)
             }
 
             get("/{id}") {
-                val id = call.getUuidFromPath("id")
+                val id = call.parameters.getUuidFromPath("id")
                 val country =
                     countryService.getCountryById(id)
                         ?: throw NotFoundException("Страна с ID '$id' не найдена")
@@ -39,7 +39,7 @@ class CountryController(
             }
 
             get("/code/{code}") {
-                val code = call.getStringFromPath("code")
+                val code = call.parameters.getStringFromPath("code")
                 val country =
                     countryService.getCountryByCode(code)
                         ?: throw NotFoundException("Страна с кодом '$code' не найдена")
@@ -54,7 +54,7 @@ class CountryController(
             }
 
             put("/{id}") {
-                val id = call.getUuidFromPath("id")
+                val id = call.parameters.getUuidFromPath("id")
                 val updateDto = call.receive<yayauheny.by.model.country.CountryUpdateDto>()
                 updateDto.validateOrThrow(validateCountryOnUpdate)
                 val country = countryService.updateCountry(id, updateDto)
@@ -62,7 +62,7 @@ class CountryController(
             }
 
             delete("/{id}") {
-                val id = call.getUuidFromPath("id")
+                val id = call.parameters.getUuidFromPath("id")
                 val deleted = countryService.deleteCountry(id)
                 if (deleted) {
                     call.respond(HttpStatusCode.OK, mapOf("deleted" to true))

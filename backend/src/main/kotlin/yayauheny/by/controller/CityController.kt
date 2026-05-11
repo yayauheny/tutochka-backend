@@ -30,13 +30,13 @@ class CityController(
     fun Route.cityRoutes() {
         route("/cities") {
             get {
-                val pagination = call.toPaginationRequest()
+                val pagination = call.request.queryParameters.toPaginationRequest()
                 val pageResponse = cityService.getAllCities(pagination)
                 call.respond(HttpStatusCode.OK, pageResponse)
             }
 
             get("/{id}") {
-                val id = call.getUuidFromPath("id")
+                val id = call.parameters.getUuidFromPath("id")
                 val city =
                     cityService.getCityById(id)
                         ?: throw NotFoundException("Город с ID '$id' не найден")
@@ -44,18 +44,19 @@ class CityController(
             }
 
             get("/country/{countryId}") {
-                val countryId = call.getUuidFromPath("countryId")
-                val pagination = call.toPaginationRequest()
+                val countryId = call.parameters.getUuidFromPath("countryId")
+                val pagination = call.request.queryParameters.toPaginationRequest()
                 val pageResponse = cityService.getCitiesByCountry(countryId, pagination)
                 call.respond(HttpStatusCode.OK, pageResponse)
             }
 
             get("/search") {
-                val nameParam = call.request.queryParameters["name"]?.trim()
+                val query = call.request.queryParameters
+                val nameParam = query["name"]?.trim()
                 val searchParams = CitySearchParams(name = nameParam ?: "")
                 val validParams = searchParams.validateAndThen(validateCitySearchParams) { it }.getOrThrow()
 
-                val pagination = call.toPaginationRequest()
+                val pagination = query.toPaginationRequest()
                 val pageResponse = cityService.searchCitiesByName(validParams.name, pagination)
                 call.respond(HttpStatusCode.OK, pageResponse)
             }
@@ -72,7 +73,7 @@ class CityController(
             }
 
             put("/{id}") {
-                val id = call.getUuidFromPath("id")
+                val id = call.parameters.getUuidFromPath("id")
                 val updateDto = call.receive<CityUpdateDto>()
                 updateDto.validateOrThrow(validateCityOnUpdate)
                 val additionalErrors = validateRegion(updateDto.region)
@@ -84,7 +85,7 @@ class CityController(
             }
 
             delete("/{id}") {
-                val id = call.getUuidFromPath("id")
+                val id = call.parameters.getUuidFromPath("id")
                 val deleted = cityService.deleteCity(id)
                 when {
                     deleted -> call.respond(HttpStatusCode.OK, mapOf("deleted" to true))

@@ -31,7 +31,7 @@ class ImportController(
         route("/import") {
             post {
                 try {
-                    val headers = call.getImportHeaders()
+                    val headers = call.request.headers.getImportHeaders()
                     val request = parseImportBody(call.receive())
                     ImportItemsParams(request.items, isBatch = false).validateOrThrow(validateImportItemsParams)
                     val cityId = requireCityId(headers)
@@ -80,7 +80,7 @@ class ImportController(
 
             post("/batch") {
                 try {
-                    val headers = call.getImportHeaders()
+                    val headers = call.request.headers.getImportHeaders()
                     val request = parseImportBody(call.receive())
                     ImportItemsParams(request.items, isBatch = true).validateOrThrow(validateImportItemsParams)
                     val cityId = requireCityId(headers)
