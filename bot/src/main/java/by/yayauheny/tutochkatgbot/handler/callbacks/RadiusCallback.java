@@ -95,7 +95,13 @@ public class RadiusCallback implements CallbackHandler {
             }
 
             var location = sessionOpt.get().location();
-            var results = searchService.findNearby(location.latitude(), location.longitude(), radius, SearchService.DEFAULT_NEAREST_LIMIT);
+            var results = searchService.findNearby(
+                location.latitude(),
+                location.longitude(),
+                radius,
+                SearchService.DEFAULT_NEAREST_LIMIT,
+                ctx
+            );
 
             if (results.isEmpty()) {
                 sender.editOrReply(ctx, Messages.NO_TOILETS_FOUND, inlineKeyboard.radiusSelection());

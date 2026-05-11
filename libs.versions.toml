@@ -26,6 +26,7 @@ micrometer = "1.14.5"
 assertj = "3.27.3"
 jackson = "2.19.2"
 kotlinxSerialization = "1.8.1"
+tink = "1.21.0"
 
 [plugins]
 kotlinJvm = { id = "org.jetbrains.kotlin.jvm", version.ref = "kotlin" }
@@ -63,6 +64,7 @@ hikaricp = { module = "com.zaxxer:HikariCP", version.ref = "hikaricp" }
 liquibaseCore = { module = "org.liquibase:liquibase-core", version = "4.24.0" }
 picocli = { module = "info.picocli:picocli", version = "4.6.3" }
 jtsCore = { module = "org.locationtech.jts:jts-core", version.ref = "jtsCore" }
+tink = { module = "com.google.crypto.tink:tink", version.ref = "tink" }
 
 konform = { module = "io.konform:konform-jvm", version.ref = "konform" }
 

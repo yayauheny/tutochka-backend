@@ -11,6 +11,7 @@ import org.jooq.impl.DSL
 import org.jooq.impl.Internal
 import org.jooq.impl.QOM.ForeignKeyRule
 
+import yayauheny.by.tables.AnalyticsEvents
 import yayauheny.by.tables.Buildings
 import yayauheny.by.tables.Cities
 import yayauheny.by.tables.Countries
@@ -19,6 +20,9 @@ import yayauheny.by.tables.Restrooms
 import yayauheny.by.tables.SpatialRefSys
 import yayauheny.by.tables.SubwayLines
 import yayauheny.by.tables.SubwayStations
+import yayauheny.by.tables.UserAnalytics
+import yayauheny.by.tables.Users
+import yayauheny.by.tables.records.AnalyticsEventsRecord
 import yayauheny.by.tables.records.BuildingsRecord
 import yayauheny.by.tables.records.CitiesRecord
 import yayauheny.by.tables.records.CountriesRecord
@@ -27,6 +31,8 @@ import yayauheny.by.tables.records.RestroomsRecord
 import yayauheny.by.tables.records.SpatialRefSysRecord
 import yayauheny.by.tables.records.SubwayLinesRecord
 import yayauheny.by.tables.records.SubwayStationsRecord
+import yayauheny.by.tables.records.UserAnalyticsRecord
+import yayauheny.by.tables.records.UsersRecord
 
 
 
@@ -34,6 +40,7 @@ import yayauheny.by.tables.records.SubwayStationsRecord
 // UNIQUE and PRIMARY KEY definitions
 // -------------------------------------------------------------------------
 
+val ANALYTICS_EVENTS_PKEY: UniqueKey<AnalyticsEventsRecord> = Internal.createUniqueKey(AnalyticsEvents.ANALYTICS_EVENTS, DSL.name("analytics_events_pkey"), arrayOf(AnalyticsEvents.ANALYTICS_EVENTS.ID), true)
 val BUILDINGS_PKEY: UniqueKey<BuildingsRecord> = Internal.createUniqueKey(Buildings.BUILDINGS, DSL.name("buildings_pkey"), arrayOf(Buildings.BUILDINGS.ID), true)
 val CITIES_PKEY: UniqueKey<CitiesRecord> = Internal.createUniqueKey(Cities.CITIES, DSL.name("cities_pkey"), arrayOf(Cities.CITIES.ID), true)
 val CITIES_UNIQUE_COUNTRY_NAME_EN: UniqueKey<CitiesRecord> = Internal.createUniqueKey(Cities.CITIES, DSL.name("cities_unique_country_name_en"), arrayOf(Cities.CITIES.COUNTRY_ID, Cities.CITIES.NAME_EN), true)
@@ -45,11 +52,15 @@ val RESTROOMS_PKEY: UniqueKey<RestroomsRecord> = Internal.createUniqueKey(Restro
 val SPATIAL_REF_SYS_PKEY: UniqueKey<SpatialRefSysRecord> = Internal.createUniqueKey(SpatialRefSys.SPATIAL_REF_SYS, DSL.name("spatial_ref_sys_pkey"), arrayOf(SpatialRefSys.SPATIAL_REF_SYS.SRID), true)
 val SUBWAY_LINES_PKEY: UniqueKey<SubwayLinesRecord> = Internal.createUniqueKey(SubwayLines.SUBWAY_LINES, DSL.name("subway_lines_pkey"), arrayOf(SubwayLines.SUBWAY_LINES.ID), true)
 val SUBWAY_STATIONS_PKEY: UniqueKey<SubwayStationsRecord> = Internal.createUniqueKey(SubwayStations.SUBWAY_STATIONS, DSL.name("subway_stations_pkey"), arrayOf(SubwayStations.SUBWAY_STATIONS.ID), true)
+val USER_ANALYTICS_PKEY: UniqueKey<UserAnalyticsRecord> = Internal.createUniqueKey(UserAnalytics.USER_ANALYTICS, DSL.name("user_analytics_pkey"), arrayOf(UserAnalytics.USER_ANALYTICS.USER_ID), true)
+val USERS_PKEY: UniqueKey<UsersRecord> = Internal.createUniqueKey(Users.USERS, DSL.name("users_pkey"), arrayOf(Users.USERS.ID), true)
+val USERS_TG_USER_ID_KEY: UniqueKey<UsersRecord> = Internal.createUniqueKey(Users.USERS, DSL.name("users_tg_user_id_key"), arrayOf(Users.USERS.TG_USER_ID), true)
 
 // -------------------------------------------------------------------------
 // FOREIGN KEY definitions
 // -------------------------------------------------------------------------
 
+val ANALYTICS_EVENTS__ANALYTICS_EVENTS_USER_ID_FKEY: ForeignKey<AnalyticsEventsRecord, UsersRecord> = Internal.createForeignKey(AnalyticsEvents.ANALYTICS_EVENTS, DSL.name("analytics_events_user_id_fkey"), arrayOf(AnalyticsEvents.ANALYTICS_EVENTS.USER_ID), yayauheny.by.keys.USERS_PKEY, arrayOf(Users.USERS.ID), true, ForeignKeyRule.SET_NULL, ForeignKeyRule.NO_ACTION)
 val BUILDINGS__BUILDINGS_CITY_ID_FKEY: ForeignKey<BuildingsRecord, CitiesRecord> = Internal.createForeignKey(Buildings.BUILDINGS, DSL.name("buildings_city_id_fkey"), arrayOf(Buildings.BUILDINGS.CITY_ID), yayauheny.by.keys.CITIES_PKEY, arrayOf(Cities.CITIES.ID), true, ForeignKeyRule.CASCADE, ForeignKeyRule.NO_ACTION)
 val CITIES__CITIES_COUNTRY_ID_FKEY: ForeignKey<CitiesRecord, CountriesRecord> = Internal.createForeignKey(Cities.CITIES, DSL.name("cities_country_id_fkey"), arrayOf(Cities.CITIES.COUNTRY_ID), yayauheny.by.keys.COUNTRIES_PKEY, arrayOf(Countries.COUNTRIES.ID), true, ForeignKeyRule.CASCADE, ForeignKeyRule.NO_ACTION)
 val RESTROOM_IMPORTS__RESTROOM_IMPORTS_BUILDING_ID_FKEY: ForeignKey<RestroomImportsRecord, BuildingsRecord> = Internal.createForeignKey(RestroomImports.RESTROOM_IMPORTS, DSL.name("restroom_imports_building_id_fkey"), arrayOf(RestroomImports.RESTROOM_IMPORTS.BUILDING_ID), yayauheny.by.keys.BUILDINGS_PKEY, arrayOf(Buildings.BUILDINGS.ID), true, ForeignKeyRule.SET_NULL, ForeignKeyRule.NO_ACTION)
@@ -60,3 +71,4 @@ val RESTROOMS__RESTROOMS_CITY_ID_FKEY: ForeignKey<RestroomsRecord, CitiesRecord>
 val RESTROOMS__RESTROOMS_SUBWAY_STATION_ID_FKEY: ForeignKey<RestroomsRecord, SubwayStationsRecord> = Internal.createForeignKey(Restrooms.RESTROOMS, DSL.name("restrooms_subway_station_id_fkey"), arrayOf(Restrooms.RESTROOMS.SUBWAY_STATION_ID), yayauheny.by.keys.SUBWAY_STATIONS_PKEY, arrayOf(SubwayStations.SUBWAY_STATIONS.ID), true, ForeignKeyRule.SET_NULL, ForeignKeyRule.NO_ACTION)
 val SUBWAY_LINES__SUBWAY_LINES_CITY_ID_FKEY: ForeignKey<SubwayLinesRecord, CitiesRecord> = Internal.createForeignKey(SubwayLines.SUBWAY_LINES, DSL.name("subway_lines_city_id_fkey"), arrayOf(SubwayLines.SUBWAY_LINES.CITY_ID), yayauheny.by.keys.CITIES_PKEY, arrayOf(Cities.CITIES.ID), true, ForeignKeyRule.CASCADE, ForeignKeyRule.NO_ACTION)
 val SUBWAY_STATIONS__SUBWAY_STATIONS_SUBWAY_LINE_ID_FKEY: ForeignKey<SubwayStationsRecord, SubwayLinesRecord> = Internal.createForeignKey(SubwayStations.SUBWAY_STATIONS, DSL.name("subway_stations_subway_line_id_fkey"), arrayOf(SubwayStations.SUBWAY_STATIONS.SUBWAY_LINE_ID), yayauheny.by.keys.SUBWAY_LINES_PKEY, arrayOf(SubwayLines.SUBWAY_LINES.ID), true, ForeignKeyRule.CASCADE, ForeignKeyRule.NO_ACTION)
+val USER_ANALYTICS__USER_ANALYTICS_USER_ID_FKEY: ForeignKey<UserAnalyticsRecord, UsersRecord> = Internal.createForeignKey(UserAnalytics.USER_ANALYTICS, DSL.name("user_analytics_user_id_fkey"), arrayOf(UserAnalytics.USER_ANALYTICS.USER_ID), yayauheny.by.keys.USERS_PKEY, arrayOf(Users.USERS.ID), true, ForeignKeyRule.CASCADE, ForeignKeyRule.NO_ACTION)

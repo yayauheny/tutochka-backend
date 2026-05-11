@@ -98,7 +98,7 @@ class BackToListCacheIntegrationTest {
                 sampleItem("Test restroom B", 320.0)
             );
 
-        when(searchService.findNearby(lat, lon, UserService.DEFAULT_RADIUS, SearchService.DEFAULT_NEAREST_LIMIT))
+        when(searchService.findNearby(lat, lon, UserService.DEFAULT_RADIUS, SearchService.DEFAULT_NEAREST_LIMIT, locationCtx))
             .thenReturn(results);
 
         locationHandler.handle(locationUpdate, locationCtx);
@@ -107,7 +107,7 @@ class BackToListCacheIntegrationTest {
         UpdateContext backCtx = UpdateContext.from(backUpdate);
         backToListCallback.handle(backUpdate, backCtx);
 
-        verify(searchService).findNearby(lat, lon, UserService.DEFAULT_RADIUS, SearchService.DEFAULT_NEAREST_LIMIT);
+        verify(searchService).findNearby(lat, lon, UserService.DEFAULT_RADIUS, SearchService.DEFAULT_NEAREST_LIMIT, locationCtx);
         verify(sender).editOrReply(eq(backCtx), eq(formatterService.toiletsFound(2)), any(InlineKeyboardMarkup.class));
         assertEquals(1.0, registry.get("bot_back_list_cache_total").tag("outcome", "hit").counter().count());
     }
@@ -122,7 +122,7 @@ class BackToListCacheIntegrationTest {
         Update locationUpdate = createLocationUpdate(chatId, userId, lat, lon);
         UpdateContext locationCtx = UpdateContext.from(locationUpdate);
 
-        when(searchService.findNearby(lat, lon, UserService.DEFAULT_RADIUS, SearchService.DEFAULT_NEAREST_LIMIT))
+        when(searchService.findNearby(lat, lon, UserService.DEFAULT_RADIUS, SearchService.DEFAULT_NEAREST_LIMIT, locationCtx))
             .thenReturn(List.of());
 
         locationHandler.handle(locationUpdate, locationCtx);
@@ -133,7 +133,7 @@ class BackToListCacheIntegrationTest {
 
         verify(sender).sendText(eq(chatId), eq(Messages.NO_TOILETS_FOUND), any(InlineKeyboardMarkup.class));
         verify(sender).sendText(eq(chatId), eq(Messages.LOCATION_REQUEST), isNull(ReplyKeyboardMarkup.class));
-        verify(searchService).findNearby(lat, lon, UserService.DEFAULT_RADIUS, SearchService.DEFAULT_NEAREST_LIMIT);
+        verify(searchService).findNearby(lat, lon, UserService.DEFAULT_RADIUS, SearchService.DEFAULT_NEAREST_LIMIT, locationCtx);
         verify(sender, never()).editOrReply(eq(backCtx), any(), any());
         assertEquals(1.0, registry.get("bot_back_list_cache_total").tag("outcome", "miss").counter().count());
     }

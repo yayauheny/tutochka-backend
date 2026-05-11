@@ -10,8 +10,8 @@ import yayauheny.by.tables.references.CITIES
 
 object CityMapper {
     fun mapFromRecord(record: Record): CityResponseDto {
-        val lat = record.get("lat", Double::class.javaObjectType)
-        val lon = record.get("lon", Double::class.javaObjectType)
+        val lat = requireNotNull(record.get("lat", Double::class.javaObjectType)) { "City latitude is required" }
+        val lon = requireNotNull(record.get("lon", Double::class.javaObjectType)) { "City longitude is required" }
         return CityResponseDto(
             id = record[CITIES.ID]!!,
             countryId = record[CITIES.COUNTRY_ID]!!,

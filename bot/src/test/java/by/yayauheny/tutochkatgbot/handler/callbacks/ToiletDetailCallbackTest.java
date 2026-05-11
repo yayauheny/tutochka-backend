@@ -1,6 +1,7 @@
 package by.yayauheny.tutochkatgbot.handler.callbacks;
 
 import by.yayauheny.tutochkatgbot.bot.MessageSender;
+import yayauheny.by.contract.BackendClient;
 import yayauheny.by.model.enums.AccessibilityType;
 import yayauheny.by.model.enums.DataSourceType;
 import yayauheny.by.model.enums.FeeType;
@@ -33,6 +34,7 @@ import org.telegram.telegrambots.meta.api.objects.User;
 import org.telegram.telegrambots.meta.api.objects.chat.Chat;
 import org.telegram.telegrambots.meta.api.objects.message.Message;
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.InlineKeyboardMarkup;
+import yayauheny.by.model.analytics.AnalyticsEventRequest;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertThrows;
@@ -48,6 +50,8 @@ class ToiletDetailCallbackTest {
     private MessageSender sender;
     @Mock
     private SearchService searchService;
+    @Mock
+    private BackendClient backendClient;
 
     private FormatterService formatterService;
     private InlineKeyboardFactory inlineKeyboard;
@@ -58,7 +62,7 @@ class ToiletDetailCallbackTest {
         MockitoAnnotations.openMocks(this);
         formatterService = new FormatterService();
         inlineKeyboard = new InlineKeyboardFactory(formatterService);
-        handler = new ToiletDetailCallback(sender, searchService, formatterService, inlineKeyboard);
+        handler = new ToiletDetailCallback(sender, searchService, backendClient, formatterService, inlineKeyboard);
     }
 
     @Test
@@ -76,6 +80,7 @@ class ToiletDetailCallbackTest {
 
         verify(searchService).getById(restroomId.toString());
         verify(sender).editOrReply(eq(ctx), textCaptor.capture(), keyboardCaptor.capture());
+        verify(backendClient).trackProductEvent(org.mockito.ArgumentMatchers.any(AnalyticsEventRequest.class), eq(10L), eq(123L), eq("test-user-10"));
         assertThat(textCaptor.getValue()).contains("Test restroom");
         assertThat(keyboardCaptor.getValue().getKeyboard()).isNotEmpty();
         assertThat(keyboardCaptor.getValue().getKeyboard().stream().flatMap(row -> row.stream()).anyMatch(button -> button.getUrl() != null))
@@ -130,7 +135,7 @@ class ToiletDetailCallbackTest {
         message.setMessageId(1);
         message.setChat(Chat.builder().id(123L).type("private").build());
         callbackQuery.setMessage(message);
-        callbackQuery.setFrom(User.builder().id(10L).isBot(false).firstName("Test").build());
+        callbackQuery.setFrom(User.builder().id(10L).isBot(false).firstName("Test").userName("test-user-10").build());
         update.setCallbackQuery(callbackQuery);
         return update;
     }

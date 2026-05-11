@@ -45,6 +45,7 @@ buildscript {
 
 dependencies {
     implementation(project(":common"))
+    implementation(libs.tink)
 
     jooqGenerator(libs.postgresql)
     jooqGenerator(libs.postgis)

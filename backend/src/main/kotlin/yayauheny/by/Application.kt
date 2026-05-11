@@ -15,6 +15,7 @@ import org.koin.ktor.ext.inject
 import org.koin.ktor.plugin.Koin
 import org.koin.logger.slf4jLogger
 import yayauheny.by.common.plugins.configureErrorHandling
+import yayauheny.by.di.analyticsModule
 import yayauheny.by.config.DatabaseConfig
 import yayauheny.by.config.configureMetrics
 import yayauheny.by.config.configureRequestLogging
@@ -39,6 +40,7 @@ fun Application.module() {
             listOf(
                 databaseConfigModule,
                 serviceModule,
+                analyticsModule,
                 importModule,
                 controllerModule,
                 metricsModule

@@ -110,7 +110,7 @@ open class SubwayStations(
     /**
      * The column <code>public.subway_stations.external_ids</code>.
      */
-    val EXTERNAL_IDS: TableField<SubwayStationsRecord, JSONB?> = createField(DSL.name("external_ids"), SQLDataType.JSONB.defaultValue(DSL.field(DSL.raw("'{}'::jsonb"), SQLDataType.JSONB)), this, "")
+    val EXTERNAL_IDS: TableField<SubwayStationsRecord, JSONB?> = createField(DSL.name("external_ids"), SQLDataType.JSONB, this, "")
 
     /**
      * The column <code>public.subway_stations.coordinates</code>.

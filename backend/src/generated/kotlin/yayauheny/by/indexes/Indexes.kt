@@ -9,11 +9,14 @@ import org.jooq.Index
 import org.jooq.impl.DSL
 import org.jooq.impl.Internal
 
+import yayauheny.by.tables.AnalyticsEvents
 import yayauheny.by.tables.Buildings
 import yayauheny.by.tables.Cities
 import yayauheny.by.tables.RestroomImports
 import yayauheny.by.tables.Restrooms
 import yayauheny.by.tables.SubwayStations
+import yayauheny.by.tables.UserAnalytics
+import yayauheny.by.tables.Users
 
 
 
@@ -21,6 +24,10 @@ import yayauheny.by.tables.SubwayStations
 // INDEX definitions
 // -------------------------------------------------------------------------
 
+val IDX_ANALYTICS_EVENTS_COORDINATES_CREATED_AT: Index = Internal.createIndex(DSL.name("idx_analytics_events_coordinates_created_at"), AnalyticsEvents.ANALYTICS_EVENTS, arrayOf(AnalyticsEvents.ANALYTICS_EVENTS.LAT, AnalyticsEvents.ANALYTICS_EVENTS.LON, AnalyticsEvents.ANALYTICS_EVENTS.CREATED_AT), false)
+val IDX_ANALYTICS_EVENTS_CREATED_AT: Index = Internal.createIndex(DSL.name("idx_analytics_events_created_at"), AnalyticsEvents.ANALYTICS_EVENTS, arrayOf(AnalyticsEvents.ANALYTICS_EVENTS.CREATED_AT), false)
+val IDX_ANALYTICS_EVENTS_EVENT_CREATED_AT: Index = Internal.createIndex(DSL.name("idx_analytics_events_event_created_at"), AnalyticsEvents.ANALYTICS_EVENTS, arrayOf(AnalyticsEvents.ANALYTICS_EVENTS.EVENT, AnalyticsEvents.ANALYTICS_EVENTS.CREATED_AT), false)
+val IDX_ANALYTICS_EVENTS_USER_CREATED_AT: Index = Internal.createIndex(DSL.name("idx_analytics_events_user_created_at"), AnalyticsEvents.ANALYTICS_EVENTS, arrayOf(AnalyticsEvents.ANALYTICS_EVENTS.USER_ID, AnalyticsEvents.ANALYTICS_EVENTS.CREATED_AT), false)
 val IDX_BUILDINGS_COORDINATES: Index = Internal.createIndex(DSL.name("idx_buildings_coordinates"), Buildings.BUILDINGS, arrayOf(Buildings.BUILDINGS.COORDINATES), false)
 val IDX_BUILDINGS_EXTERNAL_IDS: Index = Internal.createIndex(DSL.name("idx_buildings_external_ids"), Buildings.BUILDINGS, arrayOf(Buildings.BUILDINGS.EXTERNAL_IDS), false)
 val IDX_CITIES_BOUNDS: Index = Internal.createIndex(DSL.name("idx_cities_bounds"), Cities.CITIES, arrayOf(Cities.CITIES.CITY_BOUNDS), false)
@@ -41,5 +48,9 @@ val IDX_RESTROOMS_HIDDEN: Index = Internal.createIndex(DSL.name("idx_restrooms_h
 val IDX_RESTROOMS_LOCATION_TYPE: Index = Internal.createIndex(DSL.name("idx_restrooms_location_type"), Restrooms.RESTROOMS, arrayOf(Restrooms.RESTROOMS.LOCATION_TYPE), false)
 val IDX_RESTROOMS_STATUS: Index = Internal.createIndex(DSL.name("idx_restrooms_status"), Restrooms.RESTROOMS, arrayOf(Restrooms.RESTROOMS.STATUS), false)
 val IDX_SUBWAY_STATIONS_COORDINATES: Index = Internal.createIndex(DSL.name("idx_subway_stations_coordinates"), SubwayStations.SUBWAY_STATIONS, arrayOf(SubwayStations.SUBWAY_STATIONS.COORDINATES), false)
+val IDX_USER_ANALYTICS_LAST_EVENT_AT: Index = Internal.createIndex(DSL.name("idx_user_analytics_last_event_at"), UserAnalytics.USER_ANALYTICS, arrayOf(UserAnalytics.USER_ANALYTICS.LAST_EVENT_AT), false)
+val IDX_USER_ANALYTICS_SEARCHES_COUNT: Index = Internal.createIndex(DSL.name("idx_user_analytics_searches_count"), UserAnalytics.USER_ANALYTICS, arrayOf(UserAnalytics.USER_ANALYTICS.SEARCHES_COUNT.desc()), false)
+val IDX_USERS_CREATED_AT: Index = Internal.createIndex(DSL.name("idx_users_created_at"), Users.USERS, arrayOf(Users.USERS.CREATED_AT), false)
+val IDX_USERS_UPDATED_AT: Index = Internal.createIndex(DSL.name("idx_users_updated_at"), Users.USERS, arrayOf(Users.USERS.UPDATED_AT), false)
 val UQ_RESTROOM_IMPORTS_PROVIDER_ENTITY_EXTERNAL: Index = Internal.createIndex(DSL.name("uq_restroom_imports_provider_entity_external"), RestroomImports.RESTROOM_IMPORTS, arrayOf(RestroomImports.RESTROOM_IMPORTS.PROVIDER, RestroomImports.RESTROOM_IMPORTS.ENTITY_TYPE, RestroomImports.RESTROOM_IMPORTS.EXTERNAL_ID), true)
 val UQ_RESTROOMS_ORIGIN: Index = Internal.createIndex(DSL.name("uq_restrooms_origin"), Restrooms.RESTROOMS, arrayOf(Restrooms.RESTROOMS.ORIGIN_PROVIDER, Restrooms.RESTROOMS.ORIGIN_ID), true)

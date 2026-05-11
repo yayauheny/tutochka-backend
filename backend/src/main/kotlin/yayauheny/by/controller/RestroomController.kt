@@ -9,12 +9,16 @@ import io.ktor.server.routing.get
 import io.ktor.server.routing.post
 import io.ktor.server.routing.put
 import io.ktor.server.routing.route
+import org.slf4j.LoggerFactory
+import yayauheny.by.analytics.api.getAnalyticsIdentityHeaders
+import yayauheny.by.analytics.service.AnalyticsService
 import yayauheny.by.common.errors.EntityNotFoundException
 import yayauheny.by.common.errors.ValidationException
 import yayauheny.by.config.ApiConstants
 import yayauheny.by.metrics.BackendSearchMetrics
 import yayauheny.by.metrics.SearchMetricBuckets
 import yayauheny.by.metrics.extractClientType
+import yayauheny.by.model.analytics.AnalyticsSource
 import yayauheny.by.model.dto.Coordinates
 import yayauheny.by.model.restroom.RestroomCreateDto
 import yayauheny.by.model.restroom.RestroomUpdateDto
@@ -35,8 +39,11 @@ import yayauheny.by.util.toPaginationRequest
 
 class RestroomController(
     private val restroomService: RestroomService,
-    private val backendSearchMetrics: BackendSearchMetrics
+    private val backendSearchMetrics: BackendSearchMetrics,
+    private val analyticsService: AnalyticsService
 ) {
+    private val log = LoggerFactory.getLogger(RestroomController::class.java)
+
     fun Route.restroomRoutes() {
         route("/restrooms") {
             get {
@@ -100,6 +107,12 @@ class RestroomController(
                         clientType = clientType,
                         qualityBucket = SearchMetricBuckets.qualityBucket(resultsCount, firstDistanceMeters)
                     )
+                    val identity = call.getAnalyticsIdentityHeaders(AnalyticsSource.TELEGRAM_BOT)
+                    runCatching {
+                        analyticsService.trackNearestRestroomsSearch(identity, resultsCount, lat, lon)
+                    }.onFailure { exception ->
+                        log.warn("Failed to track nearest restroom analytics", exception)
+                    }
 
                     call.respond(HttpStatusCode.OK, restrooms)
                 } catch (e: ValidationException) {

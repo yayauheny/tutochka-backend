@@ -1,6 +1,10 @@
 package by.yayauheny.tutochkatgbot.service;
 
 import by.yayauheny.tutochkatgbot.config.BackendProperties;
+import kotlinx.serialization.json.JsonElementKt;
+import kotlinx.serialization.json.JsonObject;
+import yayauheny.by.model.analytics.ProductAnalyticsEvent;
+import yayauheny.by.model.analytics.AnalyticsEventRequest;
 import yayauheny.by.model.restroom.NearestRestroomSlimDto;
 import yayauheny.by.model.restroom.RestroomResponseDto;
 import by.yayauheny.tutochkatgbot.integration.WebBackendClient;
@@ -24,8 +28,10 @@ import java.util.stream.Collectors;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.springframework.web.client.RestClientResponseException;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 
 class WebBackendClientHttpTest {
     private HttpServer server;
@@ -48,29 +54,113 @@ class WebBackendClientHttpTest {
         UUID restroomId = UUID.randomUUID();
         AtomicReference<String> requestMethod = new AtomicReference<>();
         AtomicReference<String> clientTypeHeader = new AtomicReference<>();
+        AtomicReference<String> tgUserIdHeader = new AtomicReference<>();
+        AtomicReference<String> tgChatIdHeader = new AtomicReference<>();
+        AtomicReference<String> tgUsernameHeader = new AtomicReference<>();
         AtomicReference<String> rawQuery = new AtomicReference<>();
 
         server.createContext("/api/v1/restrooms/nearest", exchange -> {
             requestMethod.set(exchange.getRequestMethod());
             clientTypeHeader.set(exchange.getRequestHeaders().getFirst("X-Client-Type"));
+            tgUserIdHeader.set(exchange.getRequestHeaders().getFirst("X-Tg-User-Id"));
+            tgChatIdHeader.set(exchange.getRequestHeaders().getFirst("X-Tg-Chat-Id"));
+            tgUsernameHeader.set(exchange.getRequestHeaders().getFirst("X-Tg-Username"));
             rawQuery.set(exchange.getRequestURI().getRawQuery());
             respond(exchange, 200, nearestResponseJson(restroomId));
         });
 
         WebBackendClient client = new WebBackendClient(properties(1, 0, 1_000));
 
-        List<NearestRestroomSlimDto> result = client.findNearest(53.9, 27.56, 5, 500);
+        List<NearestRestroomSlimDto> result = client.findNearest(53.9, 27.56, 5, 500, 10L, 123L, "test-user-10");
 
         assertThat(result).hasSize(1);
         assertThat(result.get(0).getId()).isEqualTo(restroomId);
         assertThat(result.get(0).getDisplayName()).isEqualTo("Test restroom");
         assertThat(requestMethod.get()).isEqualTo("GET");
         assertThat(clientTypeHeader.get()).isEqualTo("telegram_bot");
+        assertThat(tgUserIdHeader.get()).isEqualTo("10");
+        assertThat(tgChatIdHeader.get()).isEqualTo("123");
+        assertThat(tgUsernameHeader.get()).isEqualTo("test-user-10");
         assertThat(parseQuery(rawQuery.get()))
             .containsEntry("lat", "53.9")
             .containsEntry("lon", "27.56")
             .containsEntry("limit", "5")
             .containsEntry("distanceMeters", "500");
+    }
+
+    @Test
+    void trackProductEventShouldPostAnalyticsPayloadWithHeaders() {
+        AtomicReference<String> requestMethod = new AtomicReference<>();
+        AtomicReference<String> clientTypeHeader = new AtomicReference<>();
+        AtomicReference<String> tgUserIdHeader = new AtomicReference<>();
+        AtomicReference<String> tgChatIdHeader = new AtomicReference<>();
+        AtomicReference<String> tgUsernameHeader = new AtomicReference<>();
+        AtomicReference<String> body = new AtomicReference<>();
+
+        server.createContext("/api/v1/analytics/events", exchange -> {
+            requestMethod.set(exchange.getRequestMethod());
+            clientTypeHeader.set(exchange.getRequestHeaders().getFirst("X-Client-Type"));
+            tgUserIdHeader.set(exchange.getRequestHeaders().getFirst("X-Tg-User-Id"));
+            tgChatIdHeader.set(exchange.getRequestHeaders().getFirst("X-Tg-Chat-Id"));
+            tgUsernameHeader.set(exchange.getRequestHeaders().getFirst("X-Tg-Username"));
+            body.set(new String(exchange.getRequestBody().readAllBytes(), StandardCharsets.UTF_8));
+            respond(exchange, 202, "");
+        });
+
+        WebBackendClient client = new WebBackendClient(properties(1, 0, 1_000));
+
+        client.trackProductEvent(
+            new AnalyticsEventRequest(
+                ProductAnalyticsEvent.RESTROOM_DETAILS_OPENED,
+                null,
+                null,
+                null,
+                null,
+                new JsonObject(java.util.Map.of("restroom_id", JsonElementKt.JsonPrimitive("abc123")))
+            ),
+            10L,
+            123L,
+            "test-user-10"
+        );
+
+        assertThat(requestMethod.get()).isEqualTo("POST");
+        assertThat(clientTypeHeader.get()).isEqualTo("telegram_bot");
+        assertThat(tgUserIdHeader.get()).isEqualTo("10");
+        assertThat(tgChatIdHeader.get()).isEqualTo("123");
+        assertThat(tgUsernameHeader.get()).isEqualTo("test-user-10");
+        assertThat(body.get()).contains("\"restroom_id\":\"abc123\"");
+        assertThat(body.get()).contains("\"event\":\"restroom_details_opened\"");
+    }
+
+    @Test
+    void trackProductEventShouldNotRetryOnServerError() {
+        AtomicInteger attempts = new AtomicInteger();
+
+        server.createContext("/api/v1/analytics/events", exchange -> {
+            attempts.incrementAndGet();
+            respond(exchange, 500, "");
+        });
+
+        WebBackendClient client = new WebBackendClient(properties(3, 0, 1_000));
+
+        assertThrows(
+            RestClientResponseException.class,
+            () ->
+                client.trackProductEvent(
+                    new AnalyticsEventRequest(
+                        ProductAnalyticsEvent.RESTROOM_DETAILS_OPENED,
+                        null,
+                        null,
+                        null,
+                        null,
+                        new JsonObject(java.util.Map.of("restroom_id", JsonElementKt.JsonPrimitive("abc123")))
+                    ),
+                    10L,
+                    123L,
+                    "test-user-10"
+                )
+        );
+        assertThat(attempts.get()).isEqualTo(1);
     }
 
     @Test

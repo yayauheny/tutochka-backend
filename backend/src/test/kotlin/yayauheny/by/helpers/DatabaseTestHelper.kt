@@ -14,10 +14,13 @@ import yayauheny.by.model.enums.GenderType
 import yayauheny.by.model.enums.PlaceType
 import yayauheny.by.model.enums.RestroomStatus
 import yayauheny.by.tables.references.BUILDINGS
+import yayauheny.by.tables.references.ANALYTICS_EVENTS
 import yayauheny.by.tables.references.CITIES
 import yayauheny.by.tables.references.COUNTRIES
 import yayauheny.by.tables.references.RESTROOM_IMPORTS
 import yayauheny.by.tables.references.RESTROOMS
+import yayauheny.by.tables.references.USER_ANALYTICS
+import yayauheny.by.tables.references.USERS
 import yayauheny.by.util.pointExpr
 import yayauheny.by.util.toJSONB
 
@@ -231,6 +234,9 @@ object DatabaseTestHelper {
     fun truncateAllTables(dslContext: DSLContext) {
         dslContext.transaction { configuration ->
             val ctx = DSL.using(configuration)
+            ctx.deleteFrom(ANALYTICS_EVENTS).execute()
+            ctx.deleteFrom(USER_ANALYTICS).execute()
+            ctx.deleteFrom(USERS).execute()
             ctx.deleteFrom(RESTROOM_IMPORTS).execute()
             ctx.deleteFrom(RESTROOMS).execute()
             ctx.deleteFrom(BUILDINGS).execute()

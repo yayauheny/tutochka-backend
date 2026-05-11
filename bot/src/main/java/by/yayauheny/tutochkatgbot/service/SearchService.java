@@ -1,6 +1,7 @@
 package by.yayauheny.tutochkatgbot.service;
 
 import by.yayauheny.tutochkatgbot.metrics.BotMetrics;
+import by.yayauheny.tutochkatgbot.handler.UpdateContext;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Optional;
@@ -27,10 +28,23 @@ public class SearchService {
     }
 
     public List<NearestRestroomSlimDto> findNearby(double lat, double lon, int radiusMeters, int limit) {
+        return findNearby(lat, lon, radiusMeters, limit, null);
+    }
+
+    public List<NearestRestroomSlimDto> findNearby(
+        double lat,
+        double lon,
+        int radiusMeters,
+        int limit,
+        UpdateContext ctx
+    ) {
         long startedAt = System.nanoTime();
         Timer.Sample sample = botMetrics.startBackendTimer();
         try {
-            var result = backend.findNearest(lat, lon, limit, radiusMeters);
+            var result =
+                ctx == null
+                    ? backend.findNearest(lat, lon, limit, radiusMeters)
+                    : backend.findNearest(lat, lon, limit, radiusMeters, ctx.userId(), ctx.chatId(), ctx.username());
             botMetrics.incrementBackendRequest(BotMetrics.ENDPOINT_NEAREST, "success");
             var filtered = filterAndLimit(result, radiusMeters, limit);
             long durationMs = (System.nanoTime() - startedAt) / 1_000_000;

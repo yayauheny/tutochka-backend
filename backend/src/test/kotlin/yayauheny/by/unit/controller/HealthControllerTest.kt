@@ -25,6 +25,7 @@ import org.koin.dsl.module
 import org.koin.ktor.plugin.Koin
 import yayauheny.by.common.plugins.configureErrorHandling
 import yayauheny.by.config.configureRouting
+import yayauheny.by.analytics.api.AnalyticsController
 import yayauheny.by.controller.CityController
 import yayauheny.by.controller.CountryController
 import yayauheny.by.controller.HealthController
@@ -34,6 +35,7 @@ import yayauheny.by.helpers.assertJsonContentType
 import yayauheny.by.helpers.testGet
 import yayauheny.by.helpers.testJson
 import yayauheny.by.metrics.BackendSearchMetrics
+import yayauheny.by.analytics.service.AnalyticsService
 import yayauheny.by.service.CityService
 import yayauheny.by.service.CountryService
 import yayauheny.by.service.RestroomService
@@ -53,13 +55,15 @@ class HealthControllerTest {
                 single<CityService> { mockk<CityService>(relaxed = true) }
                 single<RestroomService> { mockk<RestroomService>(relaxed = true) }
                 single<ImportService> { mockk<ImportService>(relaxed = true) }
+                single<AnalyticsService> { mockk<AnalyticsService>(relaxed = true) }
             },
             module {
                 single<CountryController> { CountryController(get()) }
                 single<CityController> { CityController(get()) }
-                single<RestroomController> { RestroomController(get(), mockk<BackendSearchMetrics>(relaxed = true)) }
+                single<RestroomController> { RestroomController(get(), mockk<BackendSearchMetrics>(relaxed = true), get()) }
                 single<HealthController> { HealthController(get()) }
                 single<ImportController> { ImportController(get()) }
+                single<AnalyticsController> { AnalyticsController(get()) }
             }
         )
 

@@ -61,16 +61,16 @@ class LocationMessageHandlerTest {
 
     @Test
     void handleShouldSaveLocationBeforeSearchingAndStoreResults() throws Exception {
-        UpdateContext ctx = new UpdateContext(123L, 456L, null, true, 53.9, 27.56, false, null, 1);
+        UpdateContext ctx = new UpdateContext(123L, 456L, null, null, true, 53.9, 27.56, false, null, 1);
         List<NearestRestroomSlimDto> results = List.of(sampleItem("Test restroom"));
-        when(searchService.findNearby(53.9, 27.56, UserService.DEFAULT_RADIUS, SearchService.DEFAULT_NEAREST_LIMIT)).thenReturn(results);
+        when(searchService.findNearby(53.9, 27.56, UserService.DEFAULT_RADIUS, SearchService.DEFAULT_NEAREST_LIMIT, ctx)).thenReturn(results);
 
         handler.handle(new Update(), ctx);
 
         ArgumentCaptor<InlineKeyboardMarkup> keyboardCaptor = ArgumentCaptor.forClass(InlineKeyboardMarkup.class);
         InOrder order = inOrder(userService, searchService, sender, backListSnapshotCache);
         order.verify(userService).saveLocation(456L, 53.9, 27.56);
-        order.verify(searchService).findNearby(53.9, 27.56, UserService.DEFAULT_RADIUS, SearchService.DEFAULT_NEAREST_LIMIT);
+        order.verify(searchService).findNearby(53.9, 27.56, UserService.DEFAULT_RADIUS, SearchService.DEFAULT_NEAREST_LIMIT, ctx);
         order.verify(sender).sendText(eq(123L), eq(formatterService.toiletsFound(1)), keyboardCaptor.capture());
         order.verify(backListSnapshotCache).store(123L, 456L, UserService.DEFAULT_RADIUS, results);
 
@@ -79,13 +79,13 @@ class LocationMessageHandlerTest {
 
     @Test
     void handleShouldSendNoResultsFlowWithoutStoringCache() throws Exception {
-        UpdateContext ctx = new UpdateContext(123L, 456L, null, true, 53.9, 27.56, false, null, 1);
-        when(searchService.findNearby(53.9, 27.56, UserService.DEFAULT_RADIUS, SearchService.DEFAULT_NEAREST_LIMIT)).thenReturn(List.of());
+        UpdateContext ctx = new UpdateContext(123L, 456L, null, null, true, 53.9, 27.56, false, null, 1);
+        when(searchService.findNearby(53.9, 27.56, UserService.DEFAULT_RADIUS, SearchService.DEFAULT_NEAREST_LIMIT, ctx)).thenReturn(List.of());
 
         handler.handle(new Update(), ctx);
 
         verify(userService).saveLocation(456L, 53.9, 27.56);
-        verify(searchService).findNearby(53.9, 27.56, UserService.DEFAULT_RADIUS, SearchService.DEFAULT_NEAREST_LIMIT);
+        verify(searchService).findNearby(53.9, 27.56, UserService.DEFAULT_RADIUS, SearchService.DEFAULT_NEAREST_LIMIT, ctx);
         verify(sender).sendText(eq(123L), eq(Messages.NO_TOILETS_FOUND), org.mockito.ArgumentMatchers.any(InlineKeyboardMarkup.class));
         verify(sender).sendText(eq(123L), eq("Или попробуйте другую точку:"), org.mockito.ArgumentMatchers.any(org.telegram.telegrambots.meta.api.objects.replykeyboard.ReplyKeyboardMarkup.class));
         verify(backListSnapshotCache, never()).store(anyLong(), anyLong(), anyInt(), org.mockito.ArgumentMatchers.anyList());
@@ -93,27 +93,27 @@ class LocationMessageHandlerTest {
 
     @Test
     void handleShouldSendErrorWhenCoordinatesMissingWithoutSearching() throws Exception {
-        UpdateContext ctx = new UpdateContext(123L, 456L, null, true, null, null, false, null, 1);
+        UpdateContext ctx = new UpdateContext(123L, 456L, null, null, true, null, null, false, null, 1);
 
         handler.handle(new Update(), ctx);
 
         verify(sender).sendText(123L, Messages.SOMETHING_WENT_WRONG);
         verify(userService, never()).saveLocation(anyLong(), anyDouble(), anyDouble());
-        verify(searchService, never()).findNearby(anyDouble(), anyDouble(), anyInt(), anyInt());
+        verify(searchService, never()).findNearby(anyDouble(), anyDouble(), anyInt(), anyInt(), org.mockito.ArgumentMatchers.any(UpdateContext.class));
         verify(backListSnapshotCache, never()).store(anyLong(), anyLong(), anyInt(), org.mockito.ArgumentMatchers.anyList());
     }
 
     @Test
     void handleShouldPropagateSearchExceptionWithoutPartialResponse() throws Exception {
-        UpdateContext ctx = new UpdateContext(123L, 456L, null, true, 53.9, 27.56, false, null, 1);
-        when(searchService.findNearby(53.9, 27.56, UserService.DEFAULT_RADIUS, SearchService.DEFAULT_NEAREST_LIMIT))
+        UpdateContext ctx = new UpdateContext(123L, 456L, null, null, true, 53.9, 27.56, false, null, 1);
+        when(searchService.findNearby(53.9, 27.56, UserService.DEFAULT_RADIUS, SearchService.DEFAULT_NEAREST_LIMIT, ctx))
             .thenThrow(new RuntimeException("boom"));
 
         assertThrows(RuntimeException.class, () -> handler.handle(new Update(), ctx));
 
         InOrder order = inOrder(userService, searchService);
         order.verify(userService).saveLocation(456L, 53.9, 27.56);
-        order.verify(searchService).findNearby(53.9, 27.56, UserService.DEFAULT_RADIUS, SearchService.DEFAULT_NEAREST_LIMIT);
+        order.verify(searchService).findNearby(53.9, 27.56, UserService.DEFAULT_RADIUS, SearchService.DEFAULT_NEAREST_LIMIT, ctx);
 
         verify(sender, never()).sendText(anyLong(), anyString());
         verify(backListSnapshotCache, never()).store(anyLong(), anyLong(), anyInt(), org.mockito.ArgumentMatchers.anyList());

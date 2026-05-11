@@ -34,3 +34,10 @@ databaseChangeLog:
         - sqlFile:
             path: migration/20251206_update_restroom_imports_table.sql
             relativeToChangelogFile: true
+  - changeSet:
+      id: product-analytics-mvp
+      author: yayauheny
+      changes:
+        - sqlFile:
+            path: migration/20260511_product_analytics_mvp.sql
+            relativeToChangelogFile: true

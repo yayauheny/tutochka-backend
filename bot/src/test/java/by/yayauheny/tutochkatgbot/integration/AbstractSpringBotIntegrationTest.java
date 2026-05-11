@@ -133,6 +133,6 @@ public abstract class AbstractSpringBotIntegrationTest {
     }
 
     private User user(long id) {
-        return User.builder().id(id).isBot(false).firstName("Test").build();
+        return User.builder().id(id).isBot(false).firstName("Test").userName("test-user-" + id).build();
     }
 }

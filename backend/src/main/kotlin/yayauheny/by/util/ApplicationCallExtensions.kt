@@ -2,6 +2,8 @@ package yayauheny.by.util
 
 import io.ktor.server.application.ApplicationCall
 import io.ktor.server.request.header
+import java.math.BigDecimal
+import java.math.RoundingMode
 import java.util.UUID
 import yayauheny.by.common.errors.FieldError
 import yayauheny.by.common.errors.ValidationException
@@ -141,3 +143,7 @@ fun ApplicationCall.createPaginationFromQuery(
     defaultSize: Int = ApiConstants.DEFAULT_PAGE_SIZE,
     maxSize: Int = ApiConstants.MAX_PAGE_SIZE
 ): PaginationRequest = toPaginationRequest(defaultSize, maxSize)
+
+fun ApplicationCall.getRequestHeader(name: String): String? = request.headers[name]?.trim()?.takeIf { it.isNotEmpty() }
+
+fun Double.toBigDecimalRounded(): BigDecimal = BigDecimal.valueOf(this).setScale(2, RoundingMode.HALF_UP)

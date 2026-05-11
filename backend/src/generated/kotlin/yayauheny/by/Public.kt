@@ -16,6 +16,7 @@ import org.jooq.UDT
 import org.jooq.impl.DSL
 import org.jooq.impl.SchemaImpl
 
+import yayauheny.by.tables.AnalyticsEvents
 import yayauheny.by.tables.Buildings
 import yayauheny.by.tables.Cities
 import yayauheny.by.tables.Countries
@@ -39,6 +40,8 @@ import yayauheny.by.tables.StSquaregrid
 import yayauheny.by.tables.StSubdivide
 import yayauheny.by.tables.SubwayLines
 import yayauheny.by.tables.SubwayStations
+import yayauheny.by.tables.UserAnalytics
+import yayauheny.by.tables.Users
 import yayauheny.by.tables.records.PgpArmorHeadersRecord
 import yayauheny.by.tables.records.PostgisSrsAllRecord
 import yayauheny.by.tables.records.PostgisSrsCodesRecord
@@ -65,6 +68,11 @@ open class Public : SchemaImpl(DSL.name("public"), DefaultCatalog.DEFAULT_CATALO
          */
         val PUBLIC: Public = Public()
     }
+
+    /**
+     * The table <code>public.analytics_events</code>.
+     */
+    val ANALYTICS_EVENTS: AnalyticsEvents get() = AnalyticsEvents.ANALYTICS_EVENTS
 
     /**
      * The table <code>public.buildings</code>.
@@ -564,9 +572,20 @@ open class Public : SchemaImpl(DSL.name("public"), DefaultCatalog.DEFAULT_CATALO
      */
     val SUBWAY_STATIONS: SubwayStations get() = SubwayStations.SUBWAY_STATIONS
 
+    /**
+     * The table <code>public.user_analytics</code>.
+     */
+    val USER_ANALYTICS: UserAnalytics get() = UserAnalytics.USER_ANALYTICS
+
+    /**
+     * The table <code>public.users</code>.
+     */
+    val USERS: Users get() = Users.USERS
+
     override fun getCatalog(): Catalog = DefaultCatalog.DEFAULT_CATALOG
 
     override fun getTables(): List<Table<*>> = listOf(
+        AnalyticsEvents.ANALYTICS_EVENTS,
         Buildings.BUILDINGS,
         Cities.CITIES,
         Countries.COUNTRIES,
@@ -589,7 +608,9 @@ open class Public : SchemaImpl(DSL.name("public"), DefaultCatalog.DEFAULT_CATALO
         StSquaregrid.ST_SQUAREGRID,
         StSubdivide.ST_SUBDIVIDE,
         SubwayLines.SUBWAY_LINES,
-        SubwayStations.SUBWAY_STATIONS
+        SubwayStations.SUBWAY_STATIONS,
+        UserAnalytics.USER_ANALYTICS,
+        Users.USERS
     )
 
     override fun getUDTs(): List<UDT<*>> = listOf(

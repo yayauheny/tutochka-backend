@@ -83,13 +83,13 @@ class RadiusCallbackTest {
                     new Coordinates(lat + 0.001, lon + 0.001)
                 )
             );
-        when(searchService.findNearby(lat, lon, radius, SearchService.DEFAULT_NEAREST_LIMIT)).thenReturn(mockResults);
+        when(searchService.findNearby(lat, lon, radius, SearchService.DEFAULT_NEAREST_LIMIT, ctx)).thenReturn(mockResults);
         when(formatterService.toiletsFound(1)).thenReturn("Найдено 1 туалетов поблизости:");
 
         handler.handle(update, ctx);
 
         verify(userService).getSession(userId);
-        verify(searchService).findNearby(lat, lon, radius, SearchService.DEFAULT_NEAREST_LIMIT);
+        verify(searchService).findNearby(lat, lon, radius, SearchService.DEFAULT_NEAREST_LIMIT, ctx);
         verify(sender).editOrReply(eq(ctx), eq("Найдено 1 туалетов поблизости:"), any());
         verify(backListSnapshotCache).store(chatId, userId, radius, mockResults);
     }
@@ -111,7 +111,7 @@ class RadiusCallbackTest {
         handler.handle(update, ctx);
 
         verify(userService).getSession(userId);
-        verify(searchService, never()).findNearby(anyDouble(), anyDouble(), anyInt(), anyInt());
+        verify(searchService, never()).findNearby(anyDouble(), anyDouble(), anyInt(), anyInt(), any(UpdateContext.class));
 
         ArgumentCaptor<String> messageCaptor = ArgumentCaptor.forClass(String.class);
         verify(sender).editOrReply(eq(ctx), messageCaptor.capture(), isNull());

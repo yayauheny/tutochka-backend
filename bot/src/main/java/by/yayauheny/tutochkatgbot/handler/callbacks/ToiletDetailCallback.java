@@ -8,11 +8,16 @@ import by.yayauheny.tutochkatgbot.keyboard.InlineKeyboardFactory;
 import by.yayauheny.tutochkatgbot.messages.Messages;
 import by.yayauheny.tutochkatgbot.service.FormatterService;
 import by.yayauheny.tutochkatgbot.service.SearchService;
+import kotlinx.serialization.json.JsonElementKt;
+import kotlinx.serialization.json.JsonObject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.core.annotation.Order;
 import org.springframework.stereotype.Component;
 import org.telegram.telegrambots.meta.api.objects.Update;
+import yayauheny.by.contract.BackendClient;
+import yayauheny.by.model.analytics.ProductAnalyticsEvent;
+import yayauheny.by.model.analytics.AnalyticsEventRequest;
 
 /**
  * Handler for toilet detail callbacks (detail:<id>)
@@ -24,13 +29,16 @@ public class ToiletDetailCallback implements CallbackHandler {
 
     private final MessageSender sender;
     private final SearchService searchService;
+    private final BackendClient backendClient;
     private final FormatterService formatterService;
     private final InlineKeyboardFactory inlineKeyboard;
 
     public ToiletDetailCallback(MessageSender sender, SearchService searchService,
+                               BackendClient backendClient,
                                FormatterService formatterService, InlineKeyboardFactory inlineKeyboard) {
         this.sender = sender;
         this.searchService = searchService;
+        this.backendClient = backendClient;
         this.formatterService = formatterService;
         this.inlineKeyboard = inlineKeyboard;
     }
@@ -65,11 +73,29 @@ public class ToiletDetailCallback implements CallbackHandler {
         Double distanceMeters = toilet.getDistanceMeters() != null ? toilet.getDistanceMeters().doubleValue() : null;
         String text = formatterService.toiletDetail(toilet, distanceMeters);
         sender.editOrReply(ctx, text, inlineKeyboard.toiletDetail(toilet));
+        trackDetailsOpened(ctx, toiletId);
         log.info(
             "Handled detail callback: chatId={}, userId={}, restroomId={}, outcome=detail_sent",
             ctx.chatId(),
             ctx.userId(),
             toiletId
         );
+    }
+
+    private void trackDetailsOpened(UpdateContext ctx, String restroomId) {
+        try {
+            AnalyticsEventRequest request =
+                new AnalyticsEventRequest(
+                    ProductAnalyticsEvent.RESTROOM_DETAILS_OPENED,
+                    null,
+                    null,
+                    null,
+                    null,
+                    new JsonObject(java.util.Map.of("restroom_id", JsonElementKt.JsonPrimitive(restroomId)))
+                );
+            backendClient.trackProductEvent(request, ctx.userId(), ctx.chatId(), ctx.username());
+        } catch (Exception e) {
+            log.warn("Failed to track restroom details analytics", e);
+        }
     }
 }

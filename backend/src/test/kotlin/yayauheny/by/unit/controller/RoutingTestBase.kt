@@ -17,6 +17,7 @@ import org.koin.ktor.plugin.Koin
 import yayauheny.by.helpers.testJson
 import yayauheny.by.common.plugins.configureErrorHandling
 import yayauheny.by.config.configureRouting
+import yayauheny.by.analytics.api.AnalyticsController
 import yayauheny.by.controller.CityController
 import yayauheny.by.controller.CountryController
 import yayauheny.by.controller.HealthController
@@ -28,6 +29,7 @@ import yayauheny.by.service.CityService
 import yayauheny.by.service.CountryService
 import yayauheny.by.service.RestroomService
 import yayauheny.by.service.import.ImportService
+import yayauheny.by.analytics.service.AnalyticsService
 
 abstract class RoutingTestBase {
     protected val countryService = mockk<CountryService>()
@@ -50,13 +52,15 @@ abstract class RoutingTestBase {
                 single<RestroomService> { restroomService }
                 single<ImportService> { importService }
                 single<DSLContext> { dslContext }
+                single<AnalyticsService> { mockk(relaxed = true) }
             },
             module {
                 single { CountryController(get()) }
                 single { CityController(get()) }
-                single { RestroomController(get(), mockk<BackendSearchMetrics>(relaxed = true)) }
+                single { RestroomController(get(), mockk<BackendSearchMetrics>(relaxed = true), get()) }
                 single { HealthController(get()) }
                 single { ImportController(get()) }
+                single { AnalyticsController(get()) }
             }
         )
 

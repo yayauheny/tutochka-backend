@@ -124,7 +124,7 @@ open class Buildings(
     /**
      * The column <code>public.buildings.external_ids</code>.
      */
-    val EXTERNAL_IDS: TableField<BuildingsRecord, JSONB?> = createField(DSL.name("external_ids"), SQLDataType.JSONB.defaultValue(DSL.field(DSL.raw("'{}'::jsonb"), SQLDataType.JSONB)), this, "")
+    val EXTERNAL_IDS: TableField<BuildingsRecord, JSONB?> = createField(DSL.name("external_ids"), SQLDataType.JSONB, this, "")
 
     /**
      * The column <code>public.buildings.import_status</code>.

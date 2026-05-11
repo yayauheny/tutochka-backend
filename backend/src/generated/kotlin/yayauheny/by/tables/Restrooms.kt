@@ -192,7 +192,7 @@ open class Restrooms(
     /**
      * The column <code>public.restrooms.external_maps</code>.
      */
-    val EXTERNAL_MAPS: TableField<RestroomsRecord, JSONB?> = createField(DSL.name("external_maps"), SQLDataType.JSONB.defaultValue(DSL.field(DSL.raw("'{}'::jsonb"), SQLDataType.JSONB)), this, "")
+    val EXTERNAL_MAPS: TableField<RestroomsRecord, JSONB?> = createField(DSL.name("external_maps"), SQLDataType.JSONB, this, "")
 
     /**
      * The column <code>public.restrooms.data_source</code>.

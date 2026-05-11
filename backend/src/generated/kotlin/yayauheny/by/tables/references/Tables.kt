@@ -10,6 +10,7 @@ import org.jooq.Field
 import org.jooq.Geometry
 import org.jooq.Result
 
+import yayauheny.by.tables.AnalyticsEvents
 import yayauheny.by.tables.Buildings
 import yayauheny.by.tables.Cities
 import yayauheny.by.tables.Countries
@@ -33,6 +34,8 @@ import yayauheny.by.tables.StSquaregrid
 import yayauheny.by.tables.StSubdivide
 import yayauheny.by.tables.SubwayLines
 import yayauheny.by.tables.SubwayStations
+import yayauheny.by.tables.UserAnalytics
+import yayauheny.by.tables.Users
 import yayauheny.by.tables.records.PgpArmorHeadersRecord
 import yayauheny.by.tables.records.PostgisSrsAllRecord
 import yayauheny.by.tables.records.PostgisSrsCodesRecord
@@ -45,6 +48,11 @@ import yayauheny.by.tables.records.StSubdivideRecord
 import yayauheny.by.udt.records.GeometryDumpRecord
 
 
+
+/**
+ * The table <code>public.analytics_events</code>.
+ */
+val ANALYTICS_EVENTS: AnalyticsEvents = AnalyticsEvents.ANALYTICS_EVENTS
 
 /**
  * The table <code>public.buildings</code>.
@@ -543,3 +551,13 @@ val SUBWAY_LINES: SubwayLines = SubwayLines.SUBWAY_LINES
  * The table <code>public.subway_stations</code>.
  */
 val SUBWAY_STATIONS: SubwayStations = SubwayStations.SUBWAY_STATIONS
+
+/**
+ * The table <code>public.user_analytics</code>.
+ */
+val USER_ANALYTICS: UserAnalytics = UserAnalytics.USER_ANALYTICS
+
+/**
+ * The table <code>public.users</code>.
+ */
+val USERS: Users = Users.USERS

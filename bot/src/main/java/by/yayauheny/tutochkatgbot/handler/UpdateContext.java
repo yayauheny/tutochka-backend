@@ -10,6 +10,7 @@ import org.telegram.telegrambots.meta.api.objects.message.Message;
 public record UpdateContext(
     long chatId,
     long userId,
+    String username,
     String text,
     boolean hasLocation,
     Double latitude,
@@ -31,13 +32,14 @@ public record UpdateContext(
         } else if (update.hasCallbackQuery()) {
             return fromCallbackQuery(update.getCallbackQuery());
         } else {
-            return new UpdateContext(0, 0, null, false, null, null, false, null, null);
+            return new UpdateContext(0, 0, null, null, false, null, null, false, null, null);
         }
     }
     
     private static UpdateContext fromMessage(Message message) {
         long chatId = message.getChatId();
         long userId = extractUserId(message.getFrom());
+        String username = extractUsername(message.getFrom());
         String text = message.getText();
         Integer messageId = message.getMessageId();
         
@@ -46,6 +48,7 @@ public record UpdateContext(
         return new UpdateContext(
             chatId, 
             userId, 
+            username,
             text, 
             locationData.hasLocation(), 
             locationData.latitude(), 
@@ -59,12 +62,14 @@ public record UpdateContext(
     private static UpdateContext fromCallbackQuery(org.telegram.telegrambots.meta.api.objects.CallbackQuery callbackQuery) {
         long chatId = callbackQuery.getMessage().getChatId();
         long userId = extractUserId(callbackQuery.getFrom());
+        String username = extractUsername(callbackQuery.getFrom());
         String callbackData = callbackQuery.getData();
         Integer messageId = callbackQuery.getMessage().getMessageId();
         
         return new UpdateContext(
             chatId, 
             userId, 
+            username,
             null, 
             false, 
             null, 
@@ -80,6 +85,10 @@ public record UpdateContext(
             throw new IllegalArgumentException("User is null - this should not happen in normal bot scenarios");
         }
         return user.getId();
+    }
+
+    private static String extractUsername(org.telegram.telegrambots.meta.api.objects.User user) {
+        return user == null ? null : user.getUserName();
     }
     
     private static LocationData extractLocationData(Message message) {
