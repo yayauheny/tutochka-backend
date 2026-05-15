@@ -6,6 +6,7 @@ WORKDIR /app
 COPY gradlew ./
 COPY gradle/ gradle/
 COPY build.gradle.kts settings.gradle.kts libs.versions.toml gradle.properties ./
+COPY common/build.gradle.kts common/
 COPY bot/build.gradle.kts bot/
 COPY backend/build.gradle.kts backend/
 
@@ -14,6 +15,7 @@ RUN chmod +x ./gradlew
 RUN ./gradlew :bot:dependencies --no-daemon
 
 COPY bot/src bot/src
+COPY common/src common/src
 
 RUN ./gradlew :bot:bootJar --no-daemon -x test -x integrationTest \
     && cp "$(find /app/bot/build/libs -maxdepth 1 -type f -name '*.jar' ! -name '*-plain.jar' | head -n 1)" /app/app.jar
