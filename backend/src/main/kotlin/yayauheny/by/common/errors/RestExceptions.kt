@@ -24,6 +24,8 @@ class ValidationException : RestException {
     ) {
         this.errors = errors
     }
+
+    constructor(error: FieldError) : this(listOf(error))
 }
 
 class NotFoundException(
@@ -47,19 +49,11 @@ class ServiceUnavailableException(
     val retryAfter: Int? = null
 ) : RestException(HttpStatusCode.ServiceUnavailable, message, cause)
 
-/**
- * Базовое исключение для ошибок репозитория.
- * Используется для внутренних ошибок доступа к данным.
- */
 class RepositoryException(
     message: String,
     cause: Throwable? = null
 ) : Exception(message, cause)
 
-/**
- * Исключение, выбрасываемое когда сущность не найдена в репозитории.
- * Автоматически преобразуется в NotFoundException на уровне обработки ошибок.
- */
 class EntityNotFoundException(
     entityType: String,
     entityId: String? = null,

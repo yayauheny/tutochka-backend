@@ -16,13 +16,15 @@ import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.JsonPrimitive
 import kotlinx.serialization.json.buildJsonObject
 import kotlinx.serialization.modules.SerializersModule
-import kotlinx.serialization.modules.contextual
 import yayauheny.by.model.building.BuildingResponseDto
 import yayauheny.by.model.dto.Coordinates
 import yayauheny.by.model.enums.AccessibilityType
 import yayauheny.by.model.enums.DataSourceType
 import yayauheny.by.model.enums.FeeType
 import yayauheny.by.model.enums.ImportProvider
+import yayauheny.by.model.import.ImportBatchResponseDto
+import yayauheny.by.model.import.ImportStatus
+import yayauheny.by.model.import.ImportItemResultDto
 import yayauheny.by.model.enums.PlaceType
 import yayauheny.by.model.enums.RestroomStatus
 import yayauheny.by.model.restroom.NearestRestroomSlimDto
@@ -137,6 +139,40 @@ class ContractSerializationTest {
         assertEquals("\"public_toilet\"", encoded)
         assertEquals(PlaceType.PUBLIC, json.decodeFromString(PlaceType.serializer(), encoded))
         assertEquals(PlaceType.OTHER, PlaceType.fromCode("missing"))
+    }
+
+    @Test
+    fun importBatchResponseDto_roundTrips_with_item_results() {
+        val dto =
+            ImportBatchResponseDto(
+                importId = UUID.randomUUID(),
+                totalProcessed = 2,
+                successful = 1,
+                failed = 1,
+                results =
+                    listOf(
+                        ImportItemResultDto(
+                            index = 0,
+                            outcome = ImportStatus.CREATED,
+                            providerExternalId = "70000001062416076",
+                            restroomId = UUID.randomUUID(),
+                            buildingId = UUID.randomUUID()
+                        ),
+                        ImportItemResultDto(
+                            index = 1,
+                            outcome = ImportStatus.FAILED,
+                            providerExternalId = "broken-item",
+                            restroomId = null,
+                            buildingId = null,
+                            errorCode = "INVALID_PAYLOAD",
+                            errorMessage = "Missing required field: id"
+                        )
+                    )
+            )
+
+        val decoded = json.decodeFromString(ImportBatchResponseDto.serializer(), json.encodeToString(ImportBatchResponseDto.serializer(), dto))
+
+        assertEquals(dto, decoded)
     }
 
     private fun jsonObject(vararg pairs: Pair<String, JsonElement>): JsonObject =

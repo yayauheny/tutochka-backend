@@ -18,8 +18,12 @@ data class ImportBatchResult(
  */
 data class ImportItemResult(
     val index: Int,
+    val outcome: ImportStatus,
+    val providerExternalId: String? = null,
     val restroomId: UUID?,
     val buildingId: UUID?,
-    val success: Boolean,
+    val duplicateOfRestroomId: UUID? = null,
+    val duplicateReason: String? = null,
+    val errorCode: String? = null,
     val errorMessage: String? = null
 )

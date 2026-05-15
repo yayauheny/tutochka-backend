@@ -1,4 +1,4 @@
-package yayauheny.by.unit.service.import.twogis
+package yayauheny.by.unit.importing.provider.twogis
 
 import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
@@ -12,8 +12,8 @@ import kotlinx.serialization.json.buildJsonObject
 import kotlinx.serialization.json.put
 import org.junit.jupiter.api.DisplayName
 import org.junit.jupiter.api.Test
-import yayauheny.by.service.import.InvalidImportPayload
-import yayauheny.by.service.import.twogis.TwoGisScrapedParser
+import yayauheny.by.importing.exception.InvalidImportPayload
+import yayauheny.by.importing.provider.twogis.TwoGisScrapedParser
 
 @DisplayName("TwoGisScrapedParser Tests")
 class TwoGisScrapedParserTest {
@@ -132,7 +132,7 @@ class TwoGisScrapedParserTest {
     }
 
     @Test
-    fun `should use Туалет when title is missing even if rubrics present`() {
+    fun `should preserve missing title as null`() {
         val json =
             buildJsonObject {
                 put("id", "12345")
@@ -151,15 +151,14 @@ class TwoGisScrapedParserTest {
             }
 
         val place = parser.parse(json)
-        assertEquals("Туалет", place.title)
+        assertNull(place.title)
     }
 
     @Test
-    fun `should use default Туалет when title and rubrics are missing`() {
+    fun `should preserve missing title and address fields as null`() {
         val json =
             buildJsonObject {
                 put("id", "12345")
-                put("address", "Test Street")
                 put(
                     "location",
                     buildJsonObject {
@@ -170,11 +169,12 @@ class TwoGisScrapedParserTest {
             }
 
         val place = parser.parse(json)
-        assertEquals("Туалет", place.title)
+        assertNull(place.title)
+        assertNull(place.address)
     }
 
     @Test
-    fun `should return empty address when address street houseNumber all missing`() {
+    fun `should preserve missing address street houseNumber as null`() {
         val json =
             buildJsonObject {
                 put("id", "12345")
@@ -189,11 +189,13 @@ class TwoGisScrapedParserTest {
             }
 
         val place = parser.parse(json)
-        assertEquals("", place.address)
+        assertNull(place.address)
+        assertNull(place.street)
+        assertNull(place.houseNumber)
     }
 
     @Test
-    fun `should build address from street and houseNumber when address is missing`() {
+    fun `should preserve street and houseNumber when address is missing`() {
         val json =
             buildJsonObject {
                 put("id", "12345")
@@ -210,7 +212,9 @@ class TwoGisScrapedParserTest {
             }
 
         val place = parser.parse(json)
-        assertEquals("Рудобельская, 3", place.address)
+        assertNull(place.address)
+        assertEquals("Рудобельская", place.street)
+        assertEquals("3", place.houseNumber)
     }
 
     @Test
@@ -228,7 +232,7 @@ class TwoGisScrapedParserTest {
     }
 
     @Test
-    fun `should use empty string for null address`() {
+    fun `should preserve null address`() {
         val json =
             buildJsonObject {
                 put("id", "12345")
@@ -244,7 +248,7 @@ class TwoGisScrapedParserTest {
             }
 
         val place = parser.parse(json)
-        assertEquals("", place.address)
+        assertNull(place.address)
     }
 
     @Test

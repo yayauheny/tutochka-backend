@@ -152,35 +152,44 @@ class SubwayRepositoryImpl(
         lon: Double
     ): Boolean =
         withContext(Dispatchers.IO) {
-            val nearestStationSelect =
-                ctx
-                    .select(SUBWAY_STATIONS.ID)
-                    .from(SUBWAY_STATIONS)
-                    .join(SUBWAY_LINES)
-                    .on(SUBWAY_STATIONS.SUBWAY_LINE_ID.eq(SUBWAY_LINES.ID))
-                    .where(
-                        SUBWAY_LINES.CITY_ID
-                            .eq(RESTROOMS.CITY_ID)
-                            .and(SUBWAY_STATIONS.IS_DELETED.isFalse)
-                            .and(SUBWAY_LINES.IS_DELETED.isFalse)
-                    ).orderBy(SUBWAY_STATIONS.COORDINATES.knnOrderTo(lat, lon))
-                    .limit(1)
-
-            val nearestStationField = DSL.field(nearestStationSelect)
-
-            val rowsUpdated =
-                ctx
-                    .update(RESTROOMS)
-                    .set(RESTROOMS.SUBWAY_STATION_ID, nearestStationField)
-                    .set(RESTROOMS.UPDATED_AT, Instant.now())
-                    .where(
-                        RESTROOMS.ID
-                            .eq(restroomId)
-                            .and(RESTROOMS.SUBWAY_STATION_ID.isDistinctFrom(nearestStationField))
-                    ).execute()
-
-            rowsUpdated > 0
+            setNearestStationForRestroomInTx(ctx, restroomId, lat, lon)
         }
+
+    fun setNearestStationForRestroomInTx(
+        txCtx: DSLContext,
+        restroomId: UUID,
+        lat: Double,
+        lon: Double
+    ): Boolean {
+        val nearestStationSelect =
+            txCtx
+                .select(SUBWAY_STATIONS.ID)
+                .from(SUBWAY_STATIONS)
+                .join(SUBWAY_LINES)
+                .on(SUBWAY_STATIONS.SUBWAY_LINE_ID.eq(SUBWAY_LINES.ID))
+                .where(
+                    SUBWAY_LINES.CITY_ID
+                        .eq(RESTROOMS.CITY_ID)
+                        .and(SUBWAY_STATIONS.IS_DELETED.isFalse)
+                        .and(SUBWAY_LINES.IS_DELETED.isFalse)
+                ).orderBy(SUBWAY_STATIONS.COORDINATES.knnOrderTo(lat, lon))
+                .limit(1)
+
+        val nearestStationField = DSL.field(nearestStationSelect)
+
+        val rowsUpdated =
+            txCtx
+                .update(RESTROOMS)
+                .set(RESTROOMS.SUBWAY_STATION_ID, nearestStationField)
+                .set(RESTROOMS.UPDATED_AT, Instant.now())
+                .where(
+                    RESTROOMS.ID
+                        .eq(restroomId)
+                        .and(RESTROOMS.SUBWAY_STATION_ID.isDistinctFrom(nearestStationField))
+                ).execute()
+
+        return rowsUpdated > 0
+    }
 
     override suspend fun batchUpdateStationsForCity(
         cityId: UUID,

@@ -5,7 +5,7 @@
 ## Critical
 
 - [ ] **Import endpoints открыты без auth-слоя**
-   Файлы: `backend/src/main/kotlin/yayauheny/by/Application.kt:35-73`, `backend/src/main/kotlin/yayauheny/by/controller/ImportController.kt:30-151`, `backend/src/main/resources/openapi.yaml:72-168`.
+   Файлы: `backend/src/main/kotlin/yayauheny/by/Application.kt:35-73`, `backend/src/main/kotlin/yayauheny/by/importing/api/ImportController.kt`, `backend/src/main/resources/openapi.yaml:72-168`.
 
    Проблема: приложение не устанавливает auth-плагин, а `ImportController` полагается только на заголовки и валидацию тела. Это означает, что write-endpoint для импорта доступен без отдельной проверки прав.
 
@@ -23,7 +23,7 @@
    Что делать: переписать транзакционный helper на coroutine-friendly паттерн без `runBlocking` внутри transaction block и без `!!` на возврате результата.
 
 - [ ] **Большой batch import выполняется как один длинный sync-request с множеством round-trip к БД**
-   Файлы: `backend/src/main/kotlin/yayauheny/by/controller/ImportController.kt:81-120`, `backend/src/main/kotlin/yayauheny/by/service/import/ImportService.kt:84-124`, `backend/src/main/kotlin/yayauheny/by/service/import/twogis/TwoGisScrapedImportStrategy.kt:90-148`, `backend/src/main/kotlin/yayauheny/by/service/import/yandex/YandexMapsScrapedImportStrategy.kt:81-123`.
+   Файлы: `backend/src/main/kotlin/yayauheny/by/importing/api/ImportController.kt`, `backend/src/main/kotlin/yayauheny/by/importing/service/ImportService.kt`, `backend/src/main/kotlin/yayauheny/by/importing/service/ImportBatchProcessor.kt`, `backend/src/main/kotlin/yayauheny/by/importing/service/ImportPipeline.kt`.
 
    Проблема: batch обрабатывается синхронно в рамках одного HTTP-запроса и одной транзакции, при этом для каждого элемента выполняется серия отдельных SQL-операций (create pending, lookup/update/insert, mark success и т.д.).
 
@@ -70,7 +70,7 @@
    Что делать: перевести фильтры на структурированные query params или body payload и отразить их в OpenAPI-схеме.
 
 - [ ] **Controllers смешивают transport, validation, metrics и response shaping**
-   Файлы: `backend/src/main/kotlin/yayauheny/by/controller/RestroomController.kt:36-154`, `backend/src/main/kotlin/yayauheny/by/controller/CityController.kt:27-96`, `backend/src/main/kotlin/yayauheny/by/controller/CountryController.kt:22-75`, `backend/src/main/kotlin/yayauheny/by/controller/ImportController.kt:30-151`.
+   Файлы: `backend/src/main/kotlin/yayauheny/by/controller/RestroomController.kt:36-154`, `backend/src/main/kotlin/yayauheny/by/controller/CityController.kt:27-96`, `backend/src/main/kotlin/yayauheny/by/controller/CountryController.kt:22-75`, `backend/src/main/kotlin/yayauheny/by/importing/api/ImportController.kt`.
 
    Проблема: в контроллерах живут и маршрутизация, и валидация, и логирование, и часть сборки response DTO. В `ImportController` single и batch ветки ещё и почти полностью дублируют друг друга.
 
@@ -79,22 +79,22 @@
    Что делать: оставить контроллерам только вход и выход, а валидацию, assembly и повторяющиеся сценарии вынести в сервисы или отдельные assemblers.
 
 - [ ] **ImportService смешивает orchestration с broad exception handling**
-   Файл: `backend/src/main/kotlin/yayauheny/by/service/import/ImportService.kt:27-125`.
+   Файл: `backend/src/main/kotlin/yayauheny/by/importing/service/ImportService.kt`.
 
-   Проблема: `import()` ловит `Throwable`, а `importBatch()` предполагает, что `batchResults.size == importIds.size` и потом индексирует оба списка синхронно.
+   Проблема: `import()` всё ещё ловит `Throwable` вокруг single-item flow и вручную помечает inbox row как failed.
 
-   Почему это плохо: catch-all на уровне сервиса может скрыть cancellation и другие нештатные ошибки. Индексная синхронизация списков хрупка, если стратегия вернёт другой набор результатов или частичный провал.
+   Почему это плохо: catch-all на уровне сервиса может скрыть cancellation и другие нештатные ошибки, даже если batch orchestration уже вынесена в `ImportBatchProcessor`.
 
-   Что делать: сузить перехват исключений, явно обрабатывать partial failure и проверить, что стратегия возвращает ожидаемую кардинальность результатов.
+   Что делать: сузить перехват исключений до import-domain ошибок и оставить неожиданные runtime failures выше по стеку.
 
 - [ ] **Provider-specific import pipeline слишком жёстко привязан к concrete classes**
-   Файлы: `backend/src/main/kotlin/yayauheny/by/service/import/twogis/TwoGisScrapedImportStrategy.kt:56-182`, `backend/src/main/kotlin/yayauheny/by/service/import/twogis/TwoGisScrapedParser.kt:25-75`, `backend/src/main/kotlin/yayauheny/by/service/import/yandex/YandexMapsScrapedParser.kt:13-93`, `backend/src/main/kotlin/yayauheny/by/service/import/twogis/TwoGisScrapedNormalizer.kt:30-161`, `backend/src/main/kotlin/yayauheny/by/service/import/yandex/YandexMapsScrapedNormalizer.kt:21-192`, `backend/src/main/kotlin/yayauheny/by/di/DatabaseConfigModule.kt:23-41`, `backend/src/main/kotlin/yayauheny/by/di/ImportModule.kt:16-54`.
+   Файлы: `backend/src/main/kotlin/yayauheny/by/importing/service/ImportBatchProcessor.kt`, `backend/src/main/kotlin/yayauheny/by/importing/service/ImportPipeline.kt`, `backend/src/main/kotlin/yayauheny/by/importing/provider/twogis/TwoGisImportAdapter.kt`, `backend/src/main/kotlin/yayauheny/by/importing/provider/yandex/YandexImportAdapter.kt`, `backend/src/main/kotlin/yayauheny/by/importing/repository/RestroomImportRepositoryImpl.kt`, `backend/src/main/kotlin/yayauheny/by/importing/repository/BuildingImportRepositoryImpl.kt`.
 
-   Проблема: стратегия импорта создаёт concrete repositories прямо внутри транзакции, а parser/normalizer логика дублируется по провайдерам и держится на эвристиках и string matching.
+   Проблема: runtime уже разделён на adapter + pipeline, но import repositories всё ещё переиспользуют helper-методы из domain repository impls, а provider normalizers по-прежнему содержат эвристики и string matching, которые трудно переиспользовать между источниками.
 
-   Почему это плохо: pipeline трудно менять, сложно тестировать по частям и почти невозможно переиспользовать между источниками данных без новой копии оркестрации.
+   Почему это плохо: интерфейсные границы стали чище, но SQL ownership и normalization rules всё ещё частично связаны с concrete implementation details.
 
-   Что делать: держать repositories за инжектируемыми абстракциями, а общие этапы нормализации вынести в shared pipeline с тонкими provider-specific адаптерами.
+   Что делать: полностью вынести import SQL из domain repository impl helpers, а повторяющиеся normalization rules держать в importing-local shared helpers, а не размазывать по provider normalizers.
 
 - [ ] **Repository и mapper классы слишком большие и дублируют projection/mapping logic**
    Файлы: `backend/src/main/kotlin/yayauheny/by/repository/impl/RestroomRepositoryImpl.kt:46-500`, `backend/src/main/kotlin/yayauheny/by/common/mapper/RestroomMapper.kt:28-239`, `backend/src/main/kotlin/yayauheny/by/repository/impl/CityRepositoryImpl.kt:31-320`, `backend/src/main/kotlin/yayauheny/by/repository/impl/CountryRepositoryImpl.kt:24-186`, `backend/src/main/kotlin/yayauheny/by/repository/impl/BuildingRepositoryImpl.kt:28-242`.
@@ -133,9 +133,9 @@
    Что делать: синхронизировать OpenAPI с runtime и добавить contract-test в CI, который валидирует defaults, префиксы роутов и фактические status-коды.
 
 - [ ] **Batch import не ограничен по объёму запроса**
-   Файлы: `backend/src/main/kotlin/yayauheny/by/controller/ImportController.kt:84-96,138-147`, `backend/src/main/kotlin/yayauheny/by/service/validation/ImportValidators.kt:13-20`, `backend/src/main/kotlin/yayauheny/by/service/import/ImportService.kt:79-124`.
+   Файлы: `backend/src/main/kotlin/yayauheny/by/importing/api/ImportController.kt`, `backend/src/main/kotlin/yayauheny/by/service/validation/ImportValidators.kt:13-20`, `backend/src/main/kotlin/yayauheny/by/importing/service/ImportService.kt`.
 
-   Проблема: batch-путь проверяет только "не пусто", но не ограничивает число `items` и общий размер payload.
+   Проблема: batch-путь уже ограничивает число `items`, но всё ещё не ограничивает общий размер request body и остаётся synchronous HTTP ingestion path.
 
    Почему это плохо: один большой запрос может занять много памяти, удерживать длинную транзакцию и деградировать весь ingestion pipeline.
 
@@ -160,25 +160,25 @@
    Что делать: задать стабильный дефолтный сорт (например, по primary key + createdAt) для всех paginated endpoint-ов.
 
 - [ ] **Идемпотентность импорта реализована неатомарно (check-then-insert/update)**
-   Файлы: `backend/src/main/kotlin/yayauheny/by/service/import/twogis/TwoGisScrapedImportStrategy.kt:98-135`, `backend/src/main/kotlin/yayauheny/by/service/import/yandex/YandexMapsScrapedImportStrategy.kt:91-103`, `backend/src/main/resources/db/changelog/migration/1757246414_init_tables.sql:143-145`.
+   Файлы: `backend/src/main/kotlin/yayauheny/by/importing/repository/RestroomImportRepositoryImpl.kt`, `backend/src/main/kotlin/yayauheny/by/repository/impl/RestroomRepositoryImpl.kt`, `backend/src/main/resources/db/changelog/migration/1757246414_init_tables.sql:143-145`.
 
-   Проблема: стратегия сначала делает `findByOrigin`, потом `save`/`update` в отдельных шагах. При конкурентных ретраях одинакового payload это не атомарный upsert-path.
+   Проблема: generic pipeline уже безопаснее, но часть lookup + upsert sequencing всё ещё зависит от нескольких шагов в repository helpers и требует аккуратной concurrency-проверки.
 
    Почему это плохо: при гонке два воркера могут одновременно не увидеть запись и попытаться вставить одну и ту же сущность; один из них упрётся в unique constraint и запрос завершится ошибкой вместо идемпотентного результата.
 
    Что делать: заменить на атомарный `INSERT ... ON CONFLICT (origin_provider, origin_id) DO UPDATE ... RETURNING id` и покрыть concurrency-тестом.
 
 - [ ] **Очередь `restroom_imports` имеет поля для дедупа, но они фактически не используются**
-   Файлы: `backend/src/main/resources/db/changelog/migration/20251206_update_restroom_imports_table.sql:3-15`, `backend/src/main/kotlin/yayauheny/by/repository/impl/RestroomImportRepositoryImpl.kt:30-38,86-94`.
+   Файлы: `backend/src/main/resources/db/changelog/migration/20251206_update_restroom_imports_table.sql:3-15`, `backend/src/main/kotlin/yayauheny/by/importing/repository/ImportInboxRepositoryImpl.kt`.
 
-   Проблема: в схеме есть `entity_type`, `external_id`, `payload_hash`, unique index по `(provider, entity_type, external_id)`, но при `createPending*` эти поля не заполняются.
+   Проблема: поля now заполняются и inbox работает как upserted audit row, но subsystem всё ещё использует один inbox table и не имеет отдельного retry/queue execution layer.
 
-   Почему это плохо: один и тот же источник можно загрузить повторно бесконечно, и это не будет отсечено на уровне import inbox.
+   Почему это плохо: audit и idempotency уже есть, но operational retry semantics всё ещё ограничены synchronous request flow.
 
-   Что делать: вычислять и сохранять `external_id`/`payload_hash`, использовать `ON CONFLICT DO NOTHING/UPDATE` для createPending и отдельно хранить idempotency key запроса.
+   Что делать: сохранить текущий upserted inbox и при необходимости добавить explicit retry worker semantics поверх него вместо перегрузки HTTP entrypoint.
 
 - [ ] **Нет межпровайдерной дедупликации одинаковых туалетов**
-   Файлы: `backend/src/main/resources/db/changelog/migration/1757246414_init_tables.sql:131-145`, `backend/src/main/kotlin/yayauheny/by/service/import/twogis/TwoGisScrapedImportStrategy.kt:98-103`, `backend/src/main/kotlin/yayauheny/by/service/import/yandex/YandexMapsScrapedImportStrategy.kt:91-95`, `backend/src/main/kotlin/yayauheny/by/repository/impl/RestroomRepositoryImpl.kt:444-482`.
+   Файлы: `backend/src/main/resources/db/changelog/migration/1757246414_init_tables.sql:131-145`, `backend/src/main/kotlin/yayauheny/by/importing/service/ImportPipeline.kt`, `backend/src/main/kotlin/yayauheny/by/repository/impl/RestroomRepositoryImpl.kt`.
 
    Проблема: dedup идёт только по `(origin_provider, origin_id)`, то есть один и тот же физический туалет из 2GIS и Yandex создаст две разные записи.
 
@@ -225,7 +225,7 @@
    Что делать: оставить это только если именно такой semantics нужен оркестратору. Иначе разделить лёгкий liveness и более дорогой readiness.
 
 - [ ] **Yandex normalizer теряет часть расписаний, если нет структурного `workingHours`**
-   Файл: `backend/src/main/kotlin/yayauheny/by/service/import/yandex/YandexMapsScrapedNormalizer.kt:178-190`.
+   Файл: `backend/src/main/kotlin/yayauheny/by/importing/provider/yandex/YandexMapsScrapedNormalizer.kt`.
 
    Проблема: `buildRawSchedule` возвращает `null`, если массив `workingHours` пуст, даже когда у провайдера есть текстовый `openingHoursText`.
 

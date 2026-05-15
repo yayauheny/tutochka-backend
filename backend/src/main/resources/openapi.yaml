@@ -90,8 +90,8 @@ paths:
             enum: [TWO_GIS_SCRAPED_PLACE_JSON, YANDEX_MAPS_SCRAPED_PLACE_JSON, MANUAL]
         - name: Import-City-Id
           in: header
-          required: true
-          description: City ID
+          required: false
+          description: Optional city ID override
           schema:
             type: string
             format: uuid
@@ -142,8 +142,8 @@ paths:
             enum: [TWO_GIS_SCRAPED_PLACE_JSON, YANDEX_MAPS_SCRAPED_PLACE_JSON, MANUAL]
         - name: Import-City-Id
           in: header
-          required: true
-          description: City ID
+          required: false
+          description: Optional city ID override
           schema:
             type: string
             format: uuid
@@ -152,7 +152,12 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/ImportRequestDto'
+              oneOf:
+                - $ref: '#/components/schemas/ImportRequestDto'
+                - type: array
+                  items:
+                    type: object
+                    additionalProperties: true
       responses:
         '201':
           description: Batch import completed
@@ -757,6 +762,49 @@ components:
         failed:
           type: integer
           description: Failed items
+        results:
+          type: array
+          items:
+            $ref: '#/components/schemas/ImportItemResultDto'
+
+    ImportItemResultDto:
+      type: object
+      properties:
+        index:
+          type: integer
+          description: Index of the item in the batch
+        outcome:
+          type: string
+          enum:
+            - CREATED
+            - UPDATED
+            - LINKED_DUPLICATE
+            - SKIPPED_DUPLICATE
+            - FAILED
+        providerExternalId:
+          type: string
+          nullable: true
+        restroomId:
+          type: string
+          format: uuid
+          nullable: true
+        buildingId:
+          type: string
+          format: uuid
+          nullable: true
+        duplicateOfRestroomId:
+          type: string
+          format: uuid
+          nullable: true
+        duplicateReason:
+          type: string
+          nullable: true
+        errorCode:
+          type: string
+          nullable: true
+        errorMessage:
+          type: string
+          nullable: true
 
     CountryCreateDto:
       type: object

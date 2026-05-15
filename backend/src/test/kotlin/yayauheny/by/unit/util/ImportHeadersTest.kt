@@ -4,6 +4,7 @@ import io.ktor.http.Headers
 import io.ktor.http.headersOf
 import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
+import kotlin.test.assertNull
 import org.junit.jupiter.api.Test
 import yayauheny.by.common.errors.ValidationException
 import yayauheny.by.model.enums.ImportPayloadType
@@ -28,7 +29,22 @@ class ImportHeadersTest {
     }
 
     @Test
-    fun `getImportHeaders should fail when required header is missing`() {
+    fun `getImportHeaders should allow missing city header`() {
+        val headers =
+            Headers.build {
+                append("Import-Provider", "YANDEX_MAPS")
+                append("Import-Payload-Type", "YANDEX_MAPS_SCRAPED_PLACE_JSON")
+            }
+
+        val importHeaders = headers.getImportHeaders()
+
+        assertEquals(ImportProvider.YANDEX_MAPS, importHeaders.provider)
+        assertEquals(ImportPayloadType.YANDEX_MAPS_SCRAPED_PLACE_JSON, importHeaders.payloadType)
+        assertNull(importHeaders.cityId)
+    }
+
+    @Test
+    fun `getImportHeaders should fail when required provider header is missing`() {
         val headers = headersOf("Import-Payload-Type", "YANDEX_MAPS_SCRAPED_PLACE_JSON")
 
         assertFailsWith<ValidationException> {

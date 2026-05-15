@@ -15,6 +15,7 @@ import yayauheny.by.tables.AnalyticsEvents
 import yayauheny.by.tables.Buildings
 import yayauheny.by.tables.Cities
 import yayauheny.by.tables.Countries
+import yayauheny.by.tables.RestroomDuplicateSuspicions
 import yayauheny.by.tables.RestroomImports
 import yayauheny.by.tables.Restrooms
 import yayauheny.by.tables.SpatialRefSys
@@ -26,6 +27,7 @@ import yayauheny.by.tables.records.AnalyticsEventsRecord
 import yayauheny.by.tables.records.BuildingsRecord
 import yayauheny.by.tables.records.CitiesRecord
 import yayauheny.by.tables.records.CountriesRecord
+import yayauheny.by.tables.records.RestroomDuplicateSuspicionsRecord
 import yayauheny.by.tables.records.RestroomImportsRecord
 import yayauheny.by.tables.records.RestroomsRecord
 import yayauheny.by.tables.records.SpatialRefSysRecord
@@ -47,6 +49,7 @@ val CITIES_UNIQUE_COUNTRY_NAME_EN: UniqueKey<CitiesRecord> = Internal.createUniq
 val CITIES_UNIQUE_COUNTRY_NAME_RU: UniqueKey<CitiesRecord> = Internal.createUniqueKey(Cities.CITIES, DSL.name("cities_unique_country_name_ru"), arrayOf(Cities.CITIES.COUNTRY_ID, Cities.CITIES.NAME_RU), true)
 val COUNTRIES_CODE_KEY: UniqueKey<CountriesRecord> = Internal.createUniqueKey(Countries.COUNTRIES, DSL.name("countries_code_key"), arrayOf(Countries.COUNTRIES.CODE), true)
 val COUNTRIES_PKEY: UniqueKey<CountriesRecord> = Internal.createUniqueKey(Countries.COUNTRIES, DSL.name("countries_pkey"), arrayOf(Countries.COUNTRIES.ID), true)
+val RESTROOM_DUPLICATE_SUSPICIONS_PKEY: UniqueKey<RestroomDuplicateSuspicionsRecord> = Internal.createUniqueKey(RestroomDuplicateSuspicions.RESTROOM_DUPLICATE_SUSPICIONS, DSL.name("restroom_duplicate_suspicions_pkey"), arrayOf(RestroomDuplicateSuspicions.RESTROOM_DUPLICATE_SUSPICIONS.ID), true)
 val RESTROOM_IMPORTS_PKEY: UniqueKey<RestroomImportsRecord> = Internal.createUniqueKey(RestroomImports.RESTROOM_IMPORTS, DSL.name("restroom_imports_pkey"), arrayOf(RestroomImports.RESTROOM_IMPORTS.ID), true)
 val RESTROOMS_PKEY: UniqueKey<RestroomsRecord> = Internal.createUniqueKey(Restrooms.RESTROOMS, DSL.name("restrooms_pkey"), arrayOf(Restrooms.RESTROOMS.ID), true)
 val SPATIAL_REF_SYS_PKEY: UniqueKey<SpatialRefSysRecord> = Internal.createUniqueKey(SpatialRefSys.SPATIAL_REF_SYS, DSL.name("spatial_ref_sys_pkey"), arrayOf(SpatialRefSys.SPATIAL_REF_SYS.SRID), true)
@@ -63,6 +66,8 @@ val USERS_TG_USER_ID_KEY: UniqueKey<UsersRecord> = Internal.createUniqueKey(User
 val ANALYTICS_EVENTS__ANALYTICS_EVENTS_USER_ID_FKEY: ForeignKey<AnalyticsEventsRecord, UsersRecord> = Internal.createForeignKey(AnalyticsEvents.ANALYTICS_EVENTS, DSL.name("analytics_events_user_id_fkey"), arrayOf(AnalyticsEvents.ANALYTICS_EVENTS.USER_ID), yayauheny.by.keys.USERS_PKEY, arrayOf(Users.USERS.ID), true, ForeignKeyRule.SET_NULL, ForeignKeyRule.NO_ACTION)
 val BUILDINGS__BUILDINGS_CITY_ID_FKEY: ForeignKey<BuildingsRecord, CitiesRecord> = Internal.createForeignKey(Buildings.BUILDINGS, DSL.name("buildings_city_id_fkey"), arrayOf(Buildings.BUILDINGS.CITY_ID), yayauheny.by.keys.CITIES_PKEY, arrayOf(Cities.CITIES.ID), true, ForeignKeyRule.CASCADE, ForeignKeyRule.NO_ACTION)
 val CITIES__CITIES_COUNTRY_ID_FKEY: ForeignKey<CitiesRecord, CountriesRecord> = Internal.createForeignKey(Cities.CITIES, DSL.name("cities_country_id_fkey"), arrayOf(Cities.CITIES.COUNTRY_ID), yayauheny.by.keys.COUNTRIES_PKEY, arrayOf(Countries.COUNTRIES.ID), true, ForeignKeyRule.CASCADE, ForeignKeyRule.NO_ACTION)
+val RESTROOM_DUPLICATE_SUSPICIONS__RESTROOM_DUPLICATE_SUSPICIONS_CANDIDATE_RESTROOM_ID_FKEY: ForeignKey<RestroomDuplicateSuspicionsRecord, RestroomsRecord> = Internal.createForeignKey(RestroomDuplicateSuspicions.RESTROOM_DUPLICATE_SUSPICIONS, DSL.name("restroom_duplicate_suspicions_candidate_restroom_id_fkey"), arrayOf(RestroomDuplicateSuspicions.RESTROOM_DUPLICATE_SUSPICIONS.CANDIDATE_RESTROOM_ID), yayauheny.by.keys.RESTROOMS_PKEY, arrayOf(Restrooms.RESTROOMS.ID), true, ForeignKeyRule.CASCADE, ForeignKeyRule.NO_ACTION)
+val RESTROOM_DUPLICATE_SUSPICIONS__RESTROOM_DUPLICATE_SUSPICIONS_EXISTING_RESTROOM_ID_FKEY: ForeignKey<RestroomDuplicateSuspicionsRecord, RestroomsRecord> = Internal.createForeignKey(RestroomDuplicateSuspicions.RESTROOM_DUPLICATE_SUSPICIONS, DSL.name("restroom_duplicate_suspicions_existing_restroom_id_fkey"), arrayOf(RestroomDuplicateSuspicions.RESTROOM_DUPLICATE_SUSPICIONS.EXISTING_RESTROOM_ID), yayauheny.by.keys.RESTROOMS_PKEY, arrayOf(Restrooms.RESTROOMS.ID), true, ForeignKeyRule.CASCADE, ForeignKeyRule.NO_ACTION)
 val RESTROOM_IMPORTS__RESTROOM_IMPORTS_BUILDING_ID_FKEY: ForeignKey<RestroomImportsRecord, BuildingsRecord> = Internal.createForeignKey(RestroomImports.RESTROOM_IMPORTS, DSL.name("restroom_imports_building_id_fkey"), arrayOf(RestroomImports.RESTROOM_IMPORTS.BUILDING_ID), yayauheny.by.keys.BUILDINGS_PKEY, arrayOf(Buildings.BUILDINGS.ID), true, ForeignKeyRule.SET_NULL, ForeignKeyRule.NO_ACTION)
 val RESTROOM_IMPORTS__RESTROOM_IMPORTS_CITY_ID_FKEY: ForeignKey<RestroomImportsRecord, CitiesRecord> = Internal.createForeignKey(RestroomImports.RESTROOM_IMPORTS, DSL.name("restroom_imports_city_id_fkey"), arrayOf(RestroomImports.RESTROOM_IMPORTS.CITY_ID), yayauheny.by.keys.CITIES_PKEY, arrayOf(Cities.CITIES.ID), true, ForeignKeyRule.SET_NULL, ForeignKeyRule.NO_ACTION)
 val RESTROOM_IMPORTS__RESTROOM_IMPORTS_RESTROOM_ID_FKEY: ForeignKey<RestroomImportsRecord, RestroomsRecord> = Internal.createForeignKey(RestroomImports.RESTROOM_IMPORTS, DSL.name("restroom_imports_restroom_id_fkey"), arrayOf(RestroomImports.RESTROOM_IMPORTS.RESTROOM_ID), yayauheny.by.keys.RESTROOMS_PKEY, arrayOf(Restrooms.RESTROOMS.ID), true, ForeignKeyRule.SET_NULL, ForeignKeyRule.NO_ACTION)

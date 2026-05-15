@@ -4,8 +4,10 @@ import java.time.Instant
 import java.util.UUID
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
+import org.jooq.Condition
 import org.jooq.DSLContext
 import org.jooq.Field
+import org.jooq.JSONB
 import org.jooq.impl.DSL
 import org.jooq.impl.SQLDataType
 import org.slf4j.LoggerFactory
@@ -25,6 +27,7 @@ import yayauheny.by.model.enums.RestroomStatus
 import yayauheny.by.model.restroom.RestroomCreateDto
 import yayauheny.by.model.restroom.RestroomResponseDto
 import yayauheny.by.model.restroom.RestroomUpdateDto
+import yayauheny.by.importing.model.ImportOriginKey
 import yayauheny.by.util.ScheduleUtils
 import yayauheny.by.repository.RestroomRepository
 import yayauheny.by.service.import.schedule.ScheduleMappingService
@@ -47,7 +50,13 @@ class RestroomRepositoryImpl(
     private val ctx: DSLContext,
     private val scheduleMappingService: ScheduleMappingService? = null
 ) : RestroomRepository {
+    data class ImportedRestroomUpsertResult(
+        val restroom: RestroomResponseDto,
+        val created: Boolean
+    )
+
     private val logger = LoggerFactory.getLogger(RestroomRepositoryImpl::class.java)
+    private val restroomMatchKeyField = DSL.field(DSL.name("restroom_match_key"), SQLDataType.VARCHAR(64))
     private val restroomFields =
         mapOf(
             "id" to
@@ -441,44 +450,55 @@ class RestroomRepositoryImpl(
             )
         }
 
-    override suspend fun findByExternalMap(
+    suspend fun findByExternalMap(
         provider: String,
         externalId: String
     ): RestroomResponseDto? =
         withContext(Dispatchers.IO) {
-            ctx
-                .select(*getAllRestroomsFieldsWithCoordinates().toTypedArray())
-                .from(RESTROOMS)
-                .where(
-                    RESTROOMS.IS_DELETED.isFalse
-                        .and(
-                            DSL.condition(
-                                "{0} @> jsonb_build_object({1}, {2})",
-                                RESTROOMS.EXTERNAL_MAPS,
-                                provider,
-                                externalId
-                            )
-                        )
-                ).orderBy(RESTROOMS.CREATED_AT.desc(), RESTROOMS.ID.desc())
-                .limit(1)
-                .fetchOne()
-                ?.let { RestroomMapper.mapFromRecord(it) }
+            findByExternalMapsInTx(ctx, provider, listOf(externalId)).firstOrNull()
         }
 
-    override suspend fun findByOrigin(
+    suspend fun findByOrigin(
         originProvider: ImportProvider,
         originId: String
     ): RestroomResponseDto? =
         withContext(Dispatchers.IO) {
-            ctx
-                .select(*getAllRestroomsFieldsWithCoordinates().toTypedArray())
-                .from(RESTROOMS)
-                .where(
-                    RESTROOMS.IS_DELETED.isFalse
-                        .and(RESTROOMS.ORIGIN_PROVIDER.eq(originProvider.name))
-                        .and(RESTROOMS.ORIGIN_ID.eq(originId))
-                ).fetchOne()
-                ?.let { RestroomMapper.mapFromRecord(it) }
+            findByOriginsInTx(ctx, listOf(ImportOriginKey(originProvider, originId))).firstOrNull()
+        }
+
+    suspend fun findByOrigins(origins: Collection<ImportOriginKey>): List<RestroomResponseDto> =
+        withContext(Dispatchers.IO) {
+            findByOriginsInTx(ctx, origins)
+        }
+
+    suspend fun findByExternalMaps(
+        provider: String,
+        externalIds: Collection<String>
+    ): List<RestroomResponseDto> =
+        withContext(Dispatchers.IO) {
+            findByExternalMapsInTx(ctx, provider, externalIds)
+        }
+
+    suspend fun findByMatchKeys(matchKeys: Collection<String>): List<RestroomResponseDto> =
+        withContext(Dispatchers.IO) {
+            findByMatchKeysInTx(ctx, matchKeys)
+        }
+
+    suspend fun upsertImportedRestroom(
+        createDto: RestroomCreateDto,
+        matchKey: String?
+    ): ImportedRestroomUpsertResult =
+        withContext(Dispatchers.IO) {
+            upsertImportedRestroomInTx(ctx, createDto, matchKey)
+        }
+
+    suspend fun linkExternalMap(
+        restroomId: UUID,
+        provider: String,
+        externalId: String
+    ): RestroomResponseDto =
+        withContext(Dispatchers.IO) {
+            linkExternalMapInTx(ctx, restroomId, provider, externalId)
         }
 
     private fun computeIsOpen(
@@ -497,4 +517,195 @@ class RestroomRepositoryImpl(
             null
         }
     }
+
+    fun findByOriginsInTx(
+        txCtx: DSLContext,
+        origins: Collection<ImportOriginKey>
+    ): List<RestroomResponseDto> {
+        if (origins.isEmpty()) {
+            return emptyList()
+        }
+
+        val condition =
+            origins
+                .map { origin ->
+                    RESTROOMS.ORIGIN_PROVIDER
+                        .eq(origin.provider.name)
+                        .and(RESTROOMS.ORIGIN_ID.eq(origin.originId))
+                }.reduce(Condition::or)
+
+        return txCtx
+            .select(*getAllRestroomsFieldsWithCoordinates().toTypedArray())
+            .from(RESTROOMS)
+            .where(RESTROOMS.IS_DELETED.isFalse.and(condition))
+            .fetch()
+            .map(RestroomMapper::mapFromRecord)
+    }
+
+    fun findByExternalMapsInTx(
+        txCtx: DSLContext,
+        provider: String,
+        externalIds: Collection<String>
+    ): List<RestroomResponseDto> {
+        if (externalIds.isEmpty()) {
+            return emptyList()
+        }
+
+        val providerExternalIdField =
+            DSL.field(
+                "({0} ->> {1})",
+                SQLDataType.VARCHAR,
+                RESTROOMS.EXTERNAL_MAPS,
+                DSL.inline(provider)
+            )
+
+        return txCtx
+            .select(*getAllRestroomsFieldsWithCoordinates().toTypedArray())
+            .from(RESTROOMS)
+            .where(
+                RESTROOMS.IS_DELETED.isFalse
+                    .and(providerExternalIdField.`in`(externalIds))
+            ).fetch()
+            .map(RestroomMapper::mapFromRecord)
+    }
+
+    fun findByMatchKeysInTx(
+        txCtx: DSLContext,
+        matchKeys: Collection<String>
+    ): List<RestroomResponseDto> {
+        if (matchKeys.isEmpty()) {
+            return emptyList()
+        }
+
+        return txCtx
+            .select(*getAllRestroomsFieldsWithCoordinates().toTypedArray())
+            .from(RESTROOMS)
+            .where(
+                RESTROOMS.IS_DELETED.isFalse
+                    .and(restroomMatchKeyField.`in`(matchKeys))
+            ).fetch()
+            .map(RestroomMapper::mapFromRecord)
+    }
+
+    fun upsertImportedRestroomInTx(
+        txCtx: DSLContext,
+        createDto: RestroomCreateDto,
+        matchKey: String?
+    ): ImportedRestroomUpsertResult {
+        val id = UUID.randomUUID()
+        val now = Instant.now()
+        val insertedField = DSL.field("xmax = 0", SQLDataType.BOOLEAN).`as`("inserted")
+        val providerKey = providerKey(createDto.originProvider)
+        val providerExternalId = createDto.originId
+        val externalMapsField: Field<JSONB?> =
+            if (providerKey != null && providerExternalId != null) {
+                mergeProviderJsonField(RESTROOMS.EXTERNAL_MAPS, providerKey, providerExternalId)
+            } else {
+                DSL.inline(createDto.externalMaps.toJSONB(), SQLDataType.JSONB)
+            }
+
+        val insertStep = buildInsertQuery(txCtx, createDto, id, now)
+        val insertWithMatchKey =
+            if (matchKey != null) {
+                insertStep.set(restroomMatchKeyField, matchKey)
+            } else {
+                insertStep
+            }
+        val updateStep =
+            insertWithMatchKey
+                .onConflict(RESTROOMS.ORIGIN_PROVIDER, RESTROOMS.ORIGIN_ID)
+                .doUpdate()
+                .set(RESTROOMS.CITY_ID, createDto.cityId)
+                .set(RESTROOMS.BUILDING_ID, createDto.buildingId)
+                .set(RESTROOMS.SUBWAY_STATION_ID, createDto.subwayStationId)
+                .set(RESTROOMS.NAME, createDto.name)
+                .set(RESTROOMS.ADDRESS, createDto.address.takeIf { !it.isNullOrBlank() && it != "null" })
+                .set(RESTROOMS.PHONES, createDto.phones.toJSONB())
+                .set(RESTROOMS.WORK_TIME, createDto.workTime.toJSONB())
+                .set(RESTROOMS.FEE_TYPE, createDto.feeType?.name)
+                .set(RESTROOMS.GENDER_TYPE, createDto.genderType?.name)
+                .set(RESTROOMS.ACCESSIBILITY_TYPE, createDto.accessibilityType.name)
+                .set(RESTROOMS.PLACE_TYPE, createDto.placeType.code)
+                .set(RESTROOMS.COORDINATES, pointExpr(createDto.coordinates.lon, createDto.coordinates.lat, RESTROOMS.COORDINATES))
+                .set(RESTROOMS.DATA_SOURCE, createDto.dataSource.name)
+                .set(RESTROOMS.STATUS, createDto.status.name)
+                .set(RESTROOMS.AMENITIES, createDto.amenities.toJSONB())
+                .set(RESTROOMS.EXTERNAL_MAPS, externalMapsField)
+                .set(RESTROOMS.ACCESS_NOTE, createDto.accessNote)
+                .set(RESTROOMS.DIRECTION_GUIDE, createDto.directionGuide)
+                .set(RESTROOMS.INHERIT_BUILDING_SCHEDULE, createDto.inheritBuildingSchedule)
+                .set(RESTROOMS.HAS_PHOTOS, createDto.hasPhotos)
+                .set(RESTROOMS.LOCATION_TYPE, createDto.locationType.name)
+                .set(RESTROOMS.IS_HIDDEN, createDto.isHidden)
+                .set(RESTROOMS.UPDATED_AT, now)
+        val record =
+            (
+                if (matchKey != null) {
+                    updateStep.set(restroomMatchKeyField, matchKey)
+                } else {
+                    updateStep
+                }
+            ).returningResult(*((getAllRestroomsFieldsWithCoordinates()) + insertedField).toTypedArray())
+                .fetchOne()
+                ?: throw EntityNotFoundException("Туалет", "не удалось сохранить")
+
+        val restroom = RestroomMapper.mapFromRecord(record)
+        val created = record.get("inserted", Boolean::class.java) ?: false
+        return ImportedRestroomUpsertResult(restroom = restroom, created = created)
+    }
+
+    fun linkExternalMapInTx(
+        txCtx: DSLContext,
+        restroomId: UUID,
+        provider: String,
+        externalId: String
+    ): RestroomResponseDto {
+        txCtx
+            .update(RESTROOMS)
+            .set(RESTROOMS.EXTERNAL_MAPS, mergeProviderJsonField(RESTROOMS.EXTERNAL_MAPS, provider, externalId))
+            .set(RESTROOMS.UPDATED_AT, Instant.now())
+            .where(RESTROOMS.ID.eq(restroomId).and(RESTROOMS.IS_DELETED.isFalse))
+            .execute()
+
+        return txCtx
+            .select(*getAllRestroomsFieldsWithCoordinates().toTypedArray())
+            .from(RESTROOMS)
+            .where(RESTROOMS.ID.eq(restroomId).and(RESTROOMS.IS_DELETED.isFalse))
+            .fetchOne()
+            ?.let(RestroomMapper::mapFromRecord)
+            ?: throw EntityNotFoundException("Туалет", restroomId.toString())
+    }
+
+    fun findByIdInTx(
+        txCtx: DSLContext,
+        restroomId: UUID
+    ): RestroomResponseDto? =
+        txCtx
+            .select(*getAllRestroomsFieldsWithCoordinates().toTypedArray())
+            .from(RESTROOMS)
+            .where(RESTROOMS.ID.eq(restroomId).and(RESTROOMS.IS_DELETED.isFalse))
+            .fetchOne()
+            ?.let(RestroomMapper::mapFromRecord)
+
+    private fun mergeProviderJsonField(
+        field: org.jooq.TableField<*, JSONB?>,
+        provider: String,
+        externalId: String
+    ) = DSL.field(
+        "COALESCE({0}, '{}'::jsonb) || jsonb_build_object({1}, {2})",
+        SQLDataType.JSONB,
+        field,
+        DSL.inline(provider),
+        DSL.inline(externalId)
+    )
+
+    private fun providerKey(provider: ImportProvider): String? =
+        when (provider) {
+            ImportProvider.TWO_GIS -> "2gis"
+            ImportProvider.YANDEX_MAPS -> "yandex"
+            ImportProvider.GOOGLE_MAPS -> "google"
+            ImportProvider.OSM -> "osm"
+            ImportProvider.USER,
+            ImportProvider.MANUAL -> null
+        }
 }

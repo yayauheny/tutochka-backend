@@ -80,6 +80,20 @@ fun Field<*>.withinDistanceOf(
         meters
     )
 
+fun Field<*>.withinGeographyDistanceOf(
+    lat: Double,
+    lon: Double,
+    meters: Double
+): Condition =
+    DSL.condition(
+        "ST_DWithin(({0})::geometry::geography, ST_SetSRID(ST_MakePoint({1},{2}),{3})::geography, {4})",
+        this,
+        lon,
+        lat,
+        SRID,
+        meters
+    )
+
 /** Преобразует GeoJSON строку в geometry с SRID 4326 */
 fun <T> geomFromGeoJson(
     geoJson: String,

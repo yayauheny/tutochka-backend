@@ -41,3 +41,39 @@ databaseChangeLog:
         - sqlFile:
             path: migration/20260511_product_analytics_mvp.sql
             relativeToChangelogFile: true
+  - changeSet:
+      id: twogis-import-hardening-v1
+      author: yayauheny
+      changes:
+        - sqlFile:
+            path: migration/20260512_twogis_import_hardening_v1.sql
+            relativeToChangelogFile: true
+  - changeSet:
+      id: restroom-match-key-unique-index
+      author: yayauheny
+      runInTransaction: false
+      changes:
+        - sqlFile:
+            path: migration/20260514_add_restroom_match_key_unique_index.sql
+            relativeToChangelogFile: true
+  - changeSet:
+      id: building-match-key-unique-index
+      author: yayauheny
+      changes:
+        - sqlFile:
+            path: migration/20260515_fix_building_match_key_unique_index.sql
+            relativeToChangelogFile: true
+  - changeSet:
+      id: building-external-id-indexes
+      author: yayauheny
+      changes:
+        - sqlFile:
+            path: migration/20260515_fix_building_external_id_indexes.sql
+            relativeToChangelogFile: true
+  - changeSet:
+      id: seed-observed-countries-and-cities
+      author: yayauheny
+      changes:
+        - sqlFile:
+            path: migration/20260515_seed_observed_countries_and_cities.sql
+            relativeToChangelogFile: true

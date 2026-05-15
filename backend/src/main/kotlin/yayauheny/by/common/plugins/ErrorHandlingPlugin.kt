@@ -17,10 +17,10 @@ import yayauheny.by.common.errors.ErrorResponse
 import yayauheny.by.common.errors.RepositoryException
 import yayauheny.by.common.errors.RestException
 import yayauheny.by.common.errors.ValidationException
-import yayauheny.by.service.import.CityNotFound
-import yayauheny.by.service.import.InvalidImportPayload
-import yayauheny.by.service.import.UnsupportedImportProvider
-import yayauheny.by.service.import.UnsupportedPayloadType
+import yayauheny.by.importing.exception.CityNotFound
+import yayauheny.by.importing.exception.InvalidImportPayload
+import yayauheny.by.importing.exception.UnsupportedImportProvider
+import yayauheny.by.importing.exception.UnsupportedPayloadType
 
 private val logger = LoggerFactory.getLogger("ErrorHandling")
 

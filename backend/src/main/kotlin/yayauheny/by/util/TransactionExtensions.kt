@@ -6,6 +6,9 @@ import org.jooq.DSLContext
 import org.jooq.exception.DataAccessException
 import org.jooq.impl.DSL
 import org.postgresql.util.PSQLException
+import kotlin.coroutines.Continuation
+import kotlin.coroutines.EmptyCoroutineContext
+import kotlin.coroutines.startCoroutine
 import yayauheny.by.common.errors.EntityNotFoundException
 
 /**
@@ -23,15 +26,24 @@ import yayauheny.by.common.errors.EntityNotFoundException
 suspend fun <T> DSLContext.transactionSuspend(block: suspend (DSLContext) -> T): T {
     return withContext(Dispatchers.IO) {
         try {
-            var result: T? = null
-            transaction { configuration ->
+            transactionResult { configuration ->
                 val txCtx = DSL.using(configuration)
-                result =
-                    kotlinx.coroutines.runBlocking {
-                        block(txCtx)
+                var outcome: Result<T>? = null
+
+                block.startCoroutine(
+                    txCtx,
+                    object : Continuation<T> {
+                        override val context = EmptyCoroutineContext
+
+                        override fun resumeWith(result: Result<T>) {
+                            outcome = result
+                        }
                     }
+                )
+
+                val resolvedOutcome = outcome ?: error("transactionSuspend block must not suspend")
+                resolvedOutcome.getOrThrow()
             }
-            result!!
         } catch (e: DataAccessException) {
             val cause = e.cause
             when {

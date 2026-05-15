@@ -1,4 +1,4 @@
-package yayauheny.by.unit.service.import.twogis
+package yayauheny.by.unit.importing.provider.twogis
 
 import java.util.UUID
 import kotlin.test.assertEquals
@@ -6,19 +6,20 @@ import kotlin.test.assertNotNull
 import kotlin.test.assertNull
 import org.junit.jupiter.api.DisplayName
 import org.junit.jupiter.api.Test
+import yayauheny.by.importing.model.ImportAdapterContext
+import yayauheny.by.importing.provider.twogis.TwoGisScrapedParser
+import yayauheny.by.importing.provider.twogis.TwoGisScrapedLocation
+import yayauheny.by.importing.provider.twogis.TwoGisScrapedPlace
 import yayauheny.by.model.enums.FeeType
 import yayauheny.by.model.enums.ImportPayloadType
+import yayauheny.by.model.enums.LocationType
 import yayauheny.by.model.enums.PlaceType
 import yayauheny.by.model.enums.RestroomStatus
-import yayauheny.by.model.enums.LocationType
-import yayauheny.by.model.import.twogis.TwoGisScrapedLocation
-import yayauheny.by.model.import.twogis.TwoGisScrapedPlace
-import yayauheny.by.service.import.twogis.TwoGisScrapedNormalizer
 
-@DisplayName("TwoGisScrapedNormalizer Tests")
+@DisplayName("TwoGisScrapedPlace toCommonModel Tests")
 class TwoGisScrapedNormalizerTest {
-    private val normalizer = TwoGisScrapedNormalizer()
     private val cityId = UUID.randomUUID()
+    private val parser = TwoGisScrapedParser()
 
     @Test
     fun `should normalize standalone toilet`() {
@@ -34,7 +35,7 @@ class TwoGisScrapedNormalizerTest {
                 rubrics = emptyList()
             )
 
-        val candidate = normalizer.normalize(cityId, place, ImportPayloadType.TWO_GIS_SCRAPED_PLACE_JSON)
+        val candidate = parser.toCommonModel(place, ImportAdapterContext(ImportPayloadType.TWO_GIS_SCRAPED_PLACE_JSON, cityId))
 
         assertEquals(LocationType.STANDALONE, candidate.locationType)
         assertEquals(PlaceType.PUBLIC, candidate.placeType)
@@ -60,7 +61,7 @@ class TwoGisScrapedNormalizerTest {
                 rubrics = emptyList()
             )
 
-        val candidate = normalizer.normalize(cityId, place, ImportPayloadType.TWO_GIS_SCRAPED_PLACE_JSON)
+        val candidate = parser.toCommonModel(place, ImportAdapterContext(ImportPayloadType.TWO_GIS_SCRAPED_PLACE_JSON, cityId))
 
         assertEquals(LocationType.INSIDE_BUILDING, candidate.locationType)
         assertEquals(PlaceType.MALL, candidate.placeType)
@@ -84,7 +85,7 @@ class TwoGisScrapedNormalizerTest {
                 rubrics = listOf("Кафе")
             )
 
-        val candidate = normalizer.normalize(cityId, place, ImportPayloadType.TWO_GIS_SCRAPED_PLACE_JSON)
+        val candidate = parser.toCommonModel(place, ImportAdapterContext(ImportPayloadType.TWO_GIS_SCRAPED_PLACE_JSON, cityId))
 
         assertEquals(LocationType.INSIDE_BUILDING, candidate.locationType)
         assertEquals(PlaceType.RESTAURANT, candidate.placeType)
@@ -106,7 +107,7 @@ class TwoGisScrapedNormalizerTest {
                 rubrics = listOf("Туалеты")
             )
 
-        val candidate = normalizer.normalize(cityId, place, ImportPayloadType.TWO_GIS_SCRAPED_PLACE_JSON)
+        val candidate = parser.toCommonModel(place, ImportAdapterContext(ImportPayloadType.TWO_GIS_SCRAPED_PLACE_JSON, cityId))
 
         assertEquals(LocationType.STANDALONE, candidate.locationType)
         assertEquals(PlaceType.PUBLIC, candidate.placeType)
@@ -127,7 +128,7 @@ class TwoGisScrapedNormalizerTest {
                 rubrics = emptyList()
             )
 
-        val candidate = normalizer.normalize(cityId, place, ImportPayloadType.TWO_GIS_SCRAPED_PLACE_JSON)
+        val candidate = parser.toCommonModel(place, ImportAdapterContext(ImportPayloadType.TWO_GIS_SCRAPED_PLACE_JSON, cityId))
 
         assertEquals(LocationType.UNKNOWN, candidate.locationType)
         assertEquals(PlaceType.OTHER, candidate.placeType)
@@ -147,7 +148,7 @@ class TwoGisScrapedNormalizerTest {
                 rubrics = emptyList()
             )
 
-        val candidate = normalizer.normalize(cityId, place, ImportPayloadType.TWO_GIS_SCRAPED_PLACE_JSON)
+        val candidate = parser.toCommonModel(place, ImportAdapterContext(ImportPayloadType.TWO_GIS_SCRAPED_PLACE_JSON, cityId))
 
         assertEquals(FeeType.PAID, candidate.feeType)
     }
@@ -166,7 +167,7 @@ class TwoGisScrapedNormalizerTest {
                 rubrics = emptyList()
             )
 
-        val candidate = normalizer.normalize(cityId, place, ImportPayloadType.TWO_GIS_SCRAPED_PLACE_JSON)
+        val candidate = parser.toCommonModel(place, ImportAdapterContext(ImportPayloadType.TWO_GIS_SCRAPED_PLACE_JSON, cityId))
 
         assertEquals(FeeType.FREE, candidate.feeType)
     }
@@ -185,7 +186,7 @@ class TwoGisScrapedNormalizerTest {
                 rubrics = emptyList()
             )
 
-        val candidate = normalizer.normalize(cityId, place, ImportPayloadType.TWO_GIS_SCRAPED_PLACE_JSON)
+        val candidate = parser.toCommonModel(place, ImportAdapterContext(ImportPayloadType.TWO_GIS_SCRAPED_PLACE_JSON, cityId))
 
         assertEquals(FeeType.UNKNOWN, candidate.feeType)
     }
@@ -204,7 +205,7 @@ class TwoGisScrapedNormalizerTest {
                 rubrics = emptyList()
             )
 
-        val candidate = normalizer.normalize(cityId, place, ImportPayloadType.TWO_GIS_SCRAPED_PLACE_JSON)
+        val candidate = parser.toCommonModel(place, ImportAdapterContext(ImportPayloadType.TWO_GIS_SCRAPED_PLACE_JSON, cityId))
 
         assertEquals(RestroomStatus.INACTIVE, candidate.status)
     }
@@ -228,7 +229,7 @@ class TwoGisScrapedNormalizerTest {
                 rubrics = emptyList()
             )
 
-        val candidate = normalizer.normalize(cityId, place, ImportPayloadType.TWO_GIS_SCRAPED_PLACE_JSON)
+        val candidate = parser.toCommonModel(place, ImportAdapterContext(ImportPayloadType.TWO_GIS_SCRAPED_PLACE_JSON, cityId))
 
         assertNotNull(candidate.amenities)
         val amenities = candidate.amenities

@@ -43,15 +43,20 @@ import yayauheny.by.indexes.IDX_RESTROOMS_EXTERNAL_MAPS
 import yayauheny.by.indexes.IDX_RESTROOMS_FILTERS
 import yayauheny.by.indexes.IDX_RESTROOMS_HIDDEN
 import yayauheny.by.indexes.IDX_RESTROOMS_LOCATION_TYPE
+import yayauheny.by.indexes.IDX_RESTROOMS_MATCH_KEY
 import yayauheny.by.indexes.IDX_RESTROOMS_STATUS
+import yayauheny.by.indexes.RESTROOMS_RESTROOM_MATCH_KEY_UNIQUE_IDX
 import yayauheny.by.indexes.UQ_RESTROOMS_ORIGIN
 import yayauheny.by.keys.RESTROOMS_PKEY
 import yayauheny.by.keys.RESTROOMS__RESTROOMS_BUILDING_ID_FKEY
 import yayauheny.by.keys.RESTROOMS__RESTROOMS_CITY_ID_FKEY
 import yayauheny.by.keys.RESTROOMS__RESTROOMS_SUBWAY_STATION_ID_FKEY
+import yayauheny.by.keys.RESTROOM_DUPLICATE_SUSPICIONS__RESTROOM_DUPLICATE_SUSPICIONS_CANDIDATE_RESTROOM_ID_FKEY
+import yayauheny.by.keys.RESTROOM_DUPLICATE_SUSPICIONS__RESTROOM_DUPLICATE_SUSPICIONS_EXISTING_RESTROOM_ID_FKEY
 import yayauheny.by.keys.RESTROOM_IMPORTS__RESTROOM_IMPORTS_RESTROOM_ID_FKEY
 import yayauheny.by.tables.Buildings.BuildingsPath
 import yayauheny.by.tables.Cities.CitiesPath
+import yayauheny.by.tables.RestroomDuplicateSuspicions.RestroomDuplicateSuspicionsPath
 import yayauheny.by.tables.RestroomImports.RestroomImportsPath
 import yayauheny.by.tables.SubwayStations.SubwayStationsPath
 import yayauheny.by.tables.records.RestroomsRecord
@@ -249,6 +254,11 @@ open class Restrooms(
      */
     val DELETED_AT: TableField<RestroomsRecord, Instant?> = createField(DSL.name("deleted_at"), SQLDataType.INSTANT, this, "")
 
+    /**
+     * The column <code>public.restrooms.restroom_match_key</code>.
+     */
+    val RESTROOM_MATCH_KEY: TableField<RestroomsRecord, String?> = createField(DSL.name("restroom_match_key"), SQLDataType.VARCHAR(64), this, "")
+
     private constructor(alias: Name, aliased: Table<RestroomsRecord>?): this(alias, null, null, null, aliased, null, null)
     private constructor(alias: Name, aliased: Table<RestroomsRecord>?, parameters: Array<Field<*>?>?): this(alias, null, null, null, aliased, parameters, null)
     private constructor(alias: Name, aliased: Table<RestroomsRecord>?, where: Condition?): this(alias, null, null, null, aliased, null, where)
@@ -281,7 +291,7 @@ open class Restrooms(
         override fun `as`(alias: Table<*>): RestroomsPath = RestroomsPath(alias.qualifiedName, this)
     }
     override fun getSchema(): Schema? = if (aliased()) null else Public.PUBLIC
-    override fun getIndexes(): List<Index> = listOf(IDX_RESTROOMS_BUILDING_ID, IDX_RESTROOMS_CITY_ID, IDX_RESTROOMS_COORDINATES, IDX_RESTROOMS_EXTERNAL_MAPS, IDX_RESTROOMS_FILTERS, IDX_RESTROOMS_HIDDEN, IDX_RESTROOMS_LOCATION_TYPE, IDX_RESTROOMS_STATUS, UQ_RESTROOMS_ORIGIN)
+    override fun getIndexes(): List<Index> = listOf(IDX_RESTROOMS_BUILDING_ID, IDX_RESTROOMS_CITY_ID, IDX_RESTROOMS_COORDINATES, IDX_RESTROOMS_EXTERNAL_MAPS, IDX_RESTROOMS_FILTERS, IDX_RESTROOMS_HIDDEN, IDX_RESTROOMS_LOCATION_TYPE, IDX_RESTROOMS_MATCH_KEY, IDX_RESTROOMS_STATUS, RESTROOMS_RESTROOM_MATCH_KEY_UNIQUE_IDX, UQ_RESTROOMS_ORIGIN)
     override fun getPrimaryKey(): UniqueKey<RestroomsRecord> = RESTROOMS_PKEY
     override fun getReferences(): List<ForeignKey<RestroomsRecord, *>> = listOf(RESTROOMS__RESTROOMS_BUILDING_ID_FKEY, RESTROOMS__RESTROOMS_CITY_ID_FKEY, RESTROOMS__RESTROOMS_SUBWAY_STATION_ID_FKEY)
 
@@ -303,6 +313,40 @@ open class Restrooms(
      */
     fun subwayStations(): SubwayStationsPath = subwayStations
     val subwayStations: SubwayStationsPath by lazy { SubwayStationsPath(this, RESTROOMS__RESTROOMS_SUBWAY_STATION_ID_FKEY, null) }
+
+    private lateinit var _restroomDuplicateSuspicionsCandidateRestroomIdFkey: RestroomDuplicateSuspicionsPath
+
+    /**
+     * Get the implicit to-many join path to the
+     * <code>public.restroom_duplicate_suspicions</code> table, via the
+     * <code>restroom_duplicate_suspicions_candidate_restroom_id_fkey</code> key
+     */
+    fun restroomDuplicateSuspicionsCandidateRestroomIdFkey(): RestroomDuplicateSuspicionsPath {
+        if (!this::_restroomDuplicateSuspicionsCandidateRestroomIdFkey.isInitialized)
+            _restroomDuplicateSuspicionsCandidateRestroomIdFkey = RestroomDuplicateSuspicionsPath(this, null, RESTROOM_DUPLICATE_SUSPICIONS__RESTROOM_DUPLICATE_SUSPICIONS_CANDIDATE_RESTROOM_ID_FKEY.inverseKey)
+
+        return _restroomDuplicateSuspicionsCandidateRestroomIdFkey;
+    }
+
+    val restroomDuplicateSuspicionsCandidateRestroomIdFkey: RestroomDuplicateSuspicionsPath
+        get(): RestroomDuplicateSuspicionsPath = restroomDuplicateSuspicionsCandidateRestroomIdFkey()
+
+    private lateinit var _restroomDuplicateSuspicionsExistingRestroomIdFkey: RestroomDuplicateSuspicionsPath
+
+    /**
+     * Get the implicit to-many join path to the
+     * <code>public.restroom_duplicate_suspicions</code> table, via the
+     * <code>restroom_duplicate_suspicions_existing_restroom_id_fkey</code> key
+     */
+    fun restroomDuplicateSuspicionsExistingRestroomIdFkey(): RestroomDuplicateSuspicionsPath {
+        if (!this::_restroomDuplicateSuspicionsExistingRestroomIdFkey.isInitialized)
+            _restroomDuplicateSuspicionsExistingRestroomIdFkey = RestroomDuplicateSuspicionsPath(this, null, RESTROOM_DUPLICATE_SUSPICIONS__RESTROOM_DUPLICATE_SUSPICIONS_EXISTING_RESTROOM_ID_FKEY.inverseKey)
+
+        return _restroomDuplicateSuspicionsExistingRestroomIdFkey;
+    }
+
+    val restroomDuplicateSuspicionsExistingRestroomIdFkey: RestroomDuplicateSuspicionsPath
+        get(): RestroomDuplicateSuspicionsPath = restroomDuplicateSuspicionsExistingRestroomIdFkey()
 
     private lateinit var _restroomImports: RestroomImportsPath
 

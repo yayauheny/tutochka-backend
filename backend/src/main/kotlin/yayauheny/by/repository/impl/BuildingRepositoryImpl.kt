@@ -4,8 +4,13 @@ import java.time.Instant
 import java.util.UUID
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
+import kotlinx.serialization.json.JsonObject
+import kotlinx.serialization.json.JsonPrimitive
+import kotlinx.serialization.json.buildJsonObject
 import org.jooq.DSLContext
+import org.jooq.JSONB
 import org.jooq.impl.DSL
+import org.jooq.impl.SQLDataType
 import yayauheny.by.common.errors.EntityNotFoundException
 import yayauheny.by.common.mapper.BuildingMapper
 import yayauheny.by.common.query.FieldMeta
@@ -24,10 +29,17 @@ import yayauheny.by.tables.references.BUILDINGS
 import yayauheny.by.util.latAlias
 import yayauheny.by.util.lonAlias
 import yayauheny.by.util.transactionSuspend
+import yayauheny.by.util.toJSONB
 
 class BuildingRepositoryImpl(
     private val ctx: DSLContext
 ) : BuildingRepository {
+    data class ImportedBuildingUpsertResult(
+        val building: BuildingResponseDto,
+        val created: Boolean
+    )
+
+    private val buildingMatchKeyField = DSL.field(DSL.name("building_match_key"), SQLDataType.VARCHAR(64))
     private val buildingFields =
         mapOf(
             "id" to
@@ -178,27 +190,44 @@ class BuildingRepositoryImpl(
                 ?.let { BuildingMapper.mapFromRecord(it) }
         }
 
-    override suspend fun findByExternalId(
+    suspend fun findByExternalId(
         provider: String,
         externalId: String
     ): BuildingResponseDto? =
         withContext(Dispatchers.IO) {
-            ctx
-                .select(*projection())
-                .from(BUILDINGS)
-                .where(
-                    notDeletedCondition().and(
-                        DSL.condition(
-                            "{0} @> jsonb_build_object({1}, {2})",
-                            BUILDINGS.EXTERNAL_IDS,
-                            provider,
-                            externalId
-                        )
-                    )
-                ).orderBy(BUILDINGS.CREATED_AT.desc(), BUILDINGS.ID.desc())
-                .limit(1)
-                .fetchOne()
-                ?.let { BuildingMapper.mapFromRecord(it) }
+            findByExternalIdsInTx(ctx, provider, listOf(externalId)).firstOrNull()
+        }
+
+    suspend fun findByExternalIds(
+        provider: String,
+        externalIds: Collection<String>
+    ): List<BuildingResponseDto> =
+        withContext(Dispatchers.IO) {
+            findByExternalIdsInTx(ctx, provider, externalIds)
+        }
+
+    suspend fun findByMatchKeys(matchKeys: Collection<String>): List<BuildingResponseDto> =
+        withContext(Dispatchers.IO) {
+            findByMatchKeysInTx(ctx, matchKeys)
+        }
+
+    suspend fun upsertImportedBuilding(
+        provider: String,
+        externalId: String,
+        createDto: BuildingCreateDto,
+        matchKey: String?
+    ): ImportedBuildingUpsertResult =
+        withContext(Dispatchers.IO) {
+            upsertImportedBuildingInTx(ctx, provider, externalId, createDto, matchKey)
+        }
+
+    suspend fun linkExternalId(
+        buildingId: UUID,
+        provider: String,
+        externalId: String
+    ): BuildingResponseDto =
+        withContext(Dispatchers.IO) {
+            linkExternalIdInTx(ctx, buildingId, provider, externalId)
         }
 
     override suspend fun save(createDto: BuildingCreateDto): BuildingResponseDto =
@@ -239,4 +268,151 @@ class BuildingRepositoryImpl(
                     .execute()
             deleted > 0
         }
+
+    fun findByExternalIdsInTx(
+        txCtx: DSLContext,
+        provider: String,
+        externalIds: Collection<String>
+    ): List<BuildingResponseDto> {
+        if (externalIds.isEmpty()) {
+            return emptyList()
+        }
+
+        val providerExternalIdField =
+            DSL.field(
+                "({0} ->> {1})",
+                SQLDataType.VARCHAR,
+                BUILDINGS.EXTERNAL_IDS,
+                DSL.inline(provider)
+            )
+
+        return txCtx
+            .select(*projection())
+            .from(BUILDINGS)
+            .where(
+                notDeletedCondition().and(
+                    providerExternalIdField.`in`(externalIds)
+                )
+            ).fetch()
+            .map(BuildingMapper::mapFromRecord)
+    }
+
+    fun findByMatchKeysInTx(
+        txCtx: DSLContext,
+        matchKeys: Collection<String>
+    ): List<BuildingResponseDto> {
+        if (matchKeys.isEmpty()) {
+            return emptyList()
+        }
+
+        return txCtx
+            .select(*projection())
+            .from(BUILDINGS)
+            .where(
+                notDeletedCondition().and(buildingMatchKeyField.`in`(matchKeys))
+            ).fetch()
+            .map(BuildingMapper::mapFromRecord)
+    }
+
+    fun upsertImportedBuildingInTx(
+        txCtx: DSLContext,
+        provider: String,
+        externalId: String,
+        createDto: BuildingCreateDto,
+        matchKey: String?
+    ): ImportedBuildingUpsertResult {
+        val now = Instant.now()
+        val id = UUID.randomUUID()
+        val providerExternalIds = mergeProviderJson(null, provider, externalId)
+        val insertedField = DSL.field("xmax = 0", SQLDataType.BOOLEAN).`as`("inserted")
+
+        val insertStep =
+            txCtx
+                .insertInto(BUILDINGS)
+                .set(BUILDINGS.ID, id)
+                .set(BUILDINGS.CITY_ID, createDto.cityId)
+                .set(BUILDINGS.NAME, createDto.name)
+                .set(BUILDINGS.ADDRESS, createDto.address.takeIf { it.isNotBlank() })
+                .set(BUILDINGS.BUILDING_TYPE, createDto.buildingType?.code)
+                .set(BUILDINGS.WORK_TIME, createDto.workTime.toJSONB())
+                .set(
+                    BUILDINGS.COORDINATES,
+                    yayauheny.by.util.pointExpr(createDto.coordinates.lon, createDto.coordinates.lat, BUILDINGS.COORDINATES)
+                ).set(BUILDINGS.EXTERNAL_IDS, providerExternalIds.toJSONB())
+                .set(BUILDINGS.IMPORT_STATUS, createDto.importStatus.name)
+                .set(BUILDINGS.CREATED_AT, now)
+                .set(BUILDINGS.UPDATED_AT, now)
+        val insertWithMatchKey =
+            if (matchKey != null) {
+                insertStep.set(buildingMatchKeyField, matchKey)
+            } else {
+                insertStep
+            }
+        val updateStep =
+            insertWithMatchKey
+                .onConflict(buildingMatchKeyField)
+                .doUpdate()
+                .set(BUILDINGS.CITY_ID, createDto.cityId)
+                .set(BUILDINGS.NAME, createDto.name)
+                .set(BUILDINGS.ADDRESS, createDto.address.takeIf { it.isNotBlank() })
+                .set(BUILDINGS.BUILDING_TYPE, createDto.buildingType?.code)
+                .set(BUILDINGS.WORK_TIME, createDto.workTime.toJSONB())
+                .set(
+                    BUILDINGS.COORDINATES,
+                    yayauheny.by.util.pointExpr(createDto.coordinates.lon, createDto.coordinates.lat, BUILDINGS.COORDINATES)
+                ).set(BUILDINGS.EXTERNAL_IDS, mergeProviderJsonField(BUILDINGS.EXTERNAL_IDS, provider, externalId))
+                .set(BUILDINGS.UPDATED_AT, now)
+        val record =
+            (
+                if (matchKey != null) {
+                    updateStep.set(buildingMatchKeyField, matchKey)
+                } else {
+                    updateStep
+                }
+            ).returningResult(*((projection().toList()) + insertedField).toTypedArray())
+                .fetchOne()
+                ?: throw EntityNotFoundException("Здание", "не удалось сохранить")
+
+        val building = BuildingMapper.mapFromRecord(record)
+        val created = record.get("inserted", Boolean::class.java) ?: false
+        return ImportedBuildingUpsertResult(building = building, created = created)
+    }
+
+    fun linkExternalIdInTx(
+        txCtx: DSLContext,
+        buildingId: UUID,
+        provider: String,
+        externalId: String
+    ): BuildingResponseDto {
+        txCtx
+            .update(BUILDINGS)
+            .set(BUILDINGS.EXTERNAL_IDS, mergeProviderJsonField(BUILDINGS.EXTERNAL_IDS, provider, externalId))
+            .set(BUILDINGS.UPDATED_AT, Instant.now())
+            .where(BUILDINGS.ID.eq(buildingId).and(notDeletedCondition()))
+            .execute()
+
+        return fetchById(txCtx, buildingId) ?: throw EntityNotFoundException("Здание", buildingId.toString())
+    }
+
+    private fun mergeProviderJson(
+        current: JsonObject?,
+        provider: String,
+        externalId: String
+    ): JsonObject =
+        buildJsonObject {
+            current?.forEach { (key, value) -> put(key, value) }
+            put(provider, JsonPrimitive(externalId))
+        }
+
+    private fun mergeProviderJsonField(
+        field: org.jooq.TableField<*, JSONB?>,
+        provider: String,
+        externalId: String
+    ) = DSL.field(
+        "COALESCE({0}, '{}'::jsonb) || jsonb_build_object({1}, {2})",
+        SQLDataType.JSONB,
+        field,
+        DSL.inline(provider),
+        DSL.inline(externalId)
+    )
 }

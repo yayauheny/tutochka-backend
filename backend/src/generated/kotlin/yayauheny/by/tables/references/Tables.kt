@@ -21,6 +21,7 @@ import yayauheny.by.tables.PostgisSrs
 import yayauheny.by.tables.PostgisSrsAll
 import yayauheny.by.tables.PostgisSrsCodes
 import yayauheny.by.tables.PostgisSrsSearch
+import yayauheny.by.tables.RestroomDuplicateSuspicions
 import yayauheny.by.tables.RestroomImports
 import yayauheny.by.tables.Restrooms
 import yayauheny.by.tables.SpatialRefSys
@@ -241,6 +242,11 @@ fun POSTGIS_SRS_SEARCH(
     bounds,
     authname
 )
+
+/**
+ * The table <code>public.restroom_duplicate_suspicions</code>.
+ */
+val RESTROOM_DUPLICATE_SUSPICIONS: RestroomDuplicateSuspicions = RestroomDuplicateSuspicions.RESTROOM_DUPLICATE_SUSPICIONS
 
 /**
  * The table <code>public.restroom_imports</code>.

@@ -15,6 +15,17 @@ jobs:
       - name: Checkout
         uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
 
+      - name: Extract backend image metadata
+        id: backend-meta
+        uses: docker/metadata-action@v5
+        with:
+          images: ghcr.io/yayauheny/tutochka-backend
+          tags: |
+            type=raw,value=prod,enable={{is_default_branch}}
+            type=sha
+        env:
+          DOCKER_METADATA_SHORT_SHA_LENGTH: 12
+
       - name: Log in to GHCR
         uses: docker/login-action@c94ce9fb468520275223c153574b00df6fe4bcc9 # v3
         with:
@@ -33,8 +44,8 @@ jobs:
           context: .
           file: backend/Dockerfile
           push: true
-          tags: |
-            ghcr.io/yayauheny/tutochka-backend:latest
+          tags: ${{ steps.backend-meta.outputs.tags }}
+          labels: ${{ steps.backend-meta.outputs.labels }}
 
   build-bot-image:
     runs-on: ubuntu-latest
@@ -45,6 +56,17 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
+
+      - name: Extract bot image metadata
+        id: bot-meta
+        uses: docker/metadata-action@v5
+        with:
+          images: ghcr.io/yayauheny/tutochka-bot
+          tags: |
+            type=raw,value=prod,enable={{is_default_branch}}
+            type=sha
+        env:
+          DOCKER_METADATA_SHORT_SHA_LENGTH: 12
 
       - name: Log in to GHCR
         uses: docker/login-action@c94ce9fb468520275223c153574b00df6fe4bcc9 # v3
@@ -64,5 +86,5 @@ jobs:
           context: .
           file: bot/Dockerfile
           push: true
-          tags: |
-            ghcr.io/yayauheny/tutochka-bot:latest
+          tags: ${{ steps.bot-meta.outputs.tags }}
+          labels: ${{ steps.bot-meta.outputs.labels }}

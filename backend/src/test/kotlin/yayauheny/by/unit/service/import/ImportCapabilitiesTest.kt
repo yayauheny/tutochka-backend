@@ -1,14 +1,14 @@
-package yayauheny.by.unit.service.import
+package yayauheny.by.unit.importing.provider
 
 import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
 import kotlin.test.assertTrue
 import org.junit.jupiter.api.DisplayName
 import org.junit.jupiter.api.Test
+import yayauheny.by.importing.exception.UnsupportedPayloadType
+import yayauheny.by.importing.provider.ImportCapabilities
 import yayauheny.by.model.enums.ImportPayloadType
 import yayauheny.by.model.enums.ImportProvider
-import yayauheny.by.service.import.ImportCapabilities
-import yayauheny.by.service.import.UnsupportedPayloadType
 
 @DisplayName("ImportCapabilities Tests")
 class ImportCapabilitiesTest {

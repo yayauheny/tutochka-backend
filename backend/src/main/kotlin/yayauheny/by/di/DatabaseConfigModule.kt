@@ -10,12 +10,10 @@ import yayauheny.by.repository.BuildingRepository
 import yayauheny.by.repository.CityRepository
 import yayauheny.by.repository.CountryRepository
 import yayauheny.by.repository.RestroomRepository
-import yayauheny.by.repository.RestroomImportRepository
 import yayauheny.by.repository.SubwayRepository
 import yayauheny.by.repository.impl.BuildingRepositoryImpl
 import yayauheny.by.repository.impl.CityRepositoryImpl
 import yayauheny.by.repository.impl.CountryRepositoryImpl
-import yayauheny.by.repository.impl.RestroomImportRepositoryImpl
 import yayauheny.by.repository.impl.RestroomRepositoryImpl
 import yayauheny.by.repository.impl.SubwayRepositoryImpl
 import yayauheny.by.service.import.schedule.ScheduleMappingService
@@ -37,5 +35,4 @@ val databaseConfigModule =
         }
         single<BuildingRepository> { BuildingRepositoryImpl(get()) }
         single<SubwayRepository> { SubwayRepositoryImpl(get()) }
-        single<RestroomImportRepository> { RestroomImportRepositoryImpl(get()) }
     }

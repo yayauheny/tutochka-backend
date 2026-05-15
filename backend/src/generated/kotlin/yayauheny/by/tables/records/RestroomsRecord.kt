@@ -149,6 +149,10 @@ open class RestroomsRecord() : UpdatableRecordImpl<RestroomsRecord>(Restrooms.RE
         set(value): Unit = set(30, value)
         get(): Instant? = get(30) as Instant?
 
+    open var restroomMatchKey: String?
+        set(value): Unit = set(31, value)
+        get(): String? = get(31) as String?
+
     // -------------------------------------------------------------------------
     // Primary key information
     // -------------------------------------------------------------------------
@@ -158,7 +162,7 @@ open class RestroomsRecord() : UpdatableRecordImpl<RestroomsRecord>(Restrooms.RE
     /**
      * Create a detached, initialised RestroomsRecord
      */
-    constructor(id: UUID? = null, cityId: UUID? = null, buildingId: UUID? = null, subwayStationId: UUID? = null, name: String? = null, placeType: String? = null, address: String? = null, directionGuide: String? = null, accessNote: String? = null, feeType: String? = null, genderType: String? = null, accessibilityType: String? = null, status: String? = null, phones: JSONB? = null, workTime: JSONB? = null, inheritBuildingSchedule: Boolean? = null, amenities: JSONB? = null, hasPhotos: Boolean? = null, coordinates: Geometry? = null, externalMaps: JSONB? = null, dataSource: String? = null, locationType: String? = null, isHidden: Boolean? = null, hiddenReason: String? = null, hiddenAt: Instant? = null, originProvider: String? = null, originId: String? = null, isDeleted: Boolean? = null, createdAt: Instant? = null, updatedAt: Instant? = null, deletedAt: Instant? = null): this() {
+    constructor(id: UUID? = null, cityId: UUID? = null, buildingId: UUID? = null, subwayStationId: UUID? = null, name: String? = null, placeType: String? = null, address: String? = null, directionGuide: String? = null, accessNote: String? = null, feeType: String? = null, genderType: String? = null, accessibilityType: String? = null, status: String? = null, phones: JSONB? = null, workTime: JSONB? = null, inheritBuildingSchedule: Boolean? = null, amenities: JSONB? = null, hasPhotos: Boolean? = null, coordinates: Geometry? = null, externalMaps: JSONB? = null, dataSource: String? = null, locationType: String? = null, isHidden: Boolean? = null, hiddenReason: String? = null, hiddenAt: Instant? = null, originProvider: String? = null, originId: String? = null, isDeleted: Boolean? = null, createdAt: Instant? = null, updatedAt: Instant? = null, deletedAt: Instant? = null, restroomMatchKey: String? = null): this() {
         this.id = id
         this.cityId = cityId
         this.buildingId = buildingId
@@ -190,6 +194,7 @@ open class RestroomsRecord() : UpdatableRecordImpl<RestroomsRecord>(Restrooms.RE
         this.createdAt = createdAt
         this.updatedAt = updatedAt
         this.deletedAt = deletedAt
+        this.restroomMatchKey = restroomMatchKey
         resetTouchedOnNotNull()
     }
 }

@@ -27,6 +27,7 @@ user.gradle
 target/
 build/
 out/
+docker/postgres-data/
 
 *.DS_Store
 *.class
@@ -378,6 +379,7 @@ docker/.env
 docker/.env.*
 docker/env.*
 docker/env.local
+!docker/env.local.example
 
 # =============================================================================
 # Credentials & API Keys

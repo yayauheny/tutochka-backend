@@ -25,7 +25,8 @@ services:
       - tutochka_net
 
   backend:
-    image: ghcr.io/yayauheny/tutochka-backend:${TAG:-latest}
+    image: ghcr.io/yayauheny/tutochka-backend:${BACKEND_TAG:-prod}
+    pull_policy: always
     platform: linux/amd64
     container_name: tutochka_backend
     restart: always
@@ -72,7 +73,8 @@ services:
         max-file: "5"
 
   bot:
-    image: ghcr.io/yayauheny/tutochka-bot:${TAG:-latest}
+    image: ghcr.io/yayauheny/tutochka-bot:${BOT_TAG:-prod}
+    pull_policy: always
     platform: linux/amd64
     container_name: tutochka_bot
     restart: always

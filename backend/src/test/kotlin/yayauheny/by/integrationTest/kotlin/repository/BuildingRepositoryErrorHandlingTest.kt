@@ -10,6 +10,8 @@ import kotlin.test.assertTrue
 import kotlinx.coroutines.test.runTest
 import kotlinx.serialization.json.JsonPrimitive
 import kotlinx.serialization.json.buildJsonObject
+import kotlinx.serialization.json.jsonPrimitive
+import org.jooq.impl.DSL
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.DisplayName
 import org.junit.jupiter.api.Nested
@@ -18,6 +20,7 @@ import org.junit.jupiter.api.Test
 import org.postgresql.util.PSQLException
 import yayauheny.by.common.errors.EntityNotFoundException
 import yayauheny.by.helpers.DatabaseTestHelper
+import yayauheny.by.importing.dedup.MatchKeyGenerator
 import yayauheny.by.helpers.TestDataHelpers
 import yayauheny.by.repository.impl.BuildingRepositoryImpl
 import yayauheny.by.tables.references.BUILDINGS
@@ -200,6 +203,50 @@ class BuildingRepositoryErrorHandlingTest : BaseIntegrationTest() {
                 assertTrue(deleteResult, "deleteById should return true")
                 val foundBuilding = repository.findById(savedBuilding.id)
                 assertNull(foundBuilding, "Deleted building should not be found")
+            }
+
+        @Test
+        @DisplayName("GIVEN Yandex building match key WHEN upsertImportedBuildingInTx THEN return saved building")
+        fun given_yandex_building_match_key_when_upsert_imported_building_then_return_saved_building() =
+            runTest {
+                val testEnv = DatabaseTestHelper.createTestEnvironment(dslContext)
+                val address = "123 Test Street"
+                val lat = 53.9006
+                val lon = 27.5590
+                val matchKey = MatchKeyGenerator.buildingMatchKey(testEnv.cityId, address, lat, lon)
+                val buildingDto =
+                    TestDataHelpers.createBuildingCreateDto(
+                        cityId = testEnv.cityId,
+                        address = address,
+                        lat = lat,
+                        lon = lon,
+                        externalIds =
+                            buildJsonObject {
+                                put("yandex", JsonPrimitive("yandex-building-123"))
+                            }
+                    )
+
+                val result =
+                    dslContext.transactionResult { configuration ->
+                        val txCtx = DSL.using(configuration)
+                        repository.upsertImportedBuildingInTx(
+                            txCtx = txCtx,
+                            provider = "yandex",
+                            externalId = "yandex-building-123",
+                            createDto = buildingDto,
+                            matchKey = matchKey
+                        )
+                    }
+
+                assertTrue(result.created)
+                assertNotNull(result.building.id)
+                assertEquals(
+                    "yandex-building-123",
+                    result.building.externalIds
+                        ?.get("yandex")
+                        ?.jsonPrimitive
+                        ?.content
+                )
             }
     }
 

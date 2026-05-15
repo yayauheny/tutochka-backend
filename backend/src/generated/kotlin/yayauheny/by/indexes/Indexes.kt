@@ -12,6 +12,7 @@ import org.jooq.impl.Internal
 import yayauheny.by.tables.AnalyticsEvents
 import yayauheny.by.tables.Buildings
 import yayauheny.by.tables.Cities
+import yayauheny.by.tables.RestroomDuplicateSuspicions
 import yayauheny.by.tables.RestroomImports
 import yayauheny.by.tables.Restrooms
 import yayauheny.by.tables.SubwayStations
@@ -33,6 +34,8 @@ val IDX_BUILDINGS_EXTERNAL_IDS: Index = Internal.createIndex(DSL.name("idx_build
 val IDX_CITIES_BOUNDS: Index = Internal.createIndex(DSL.name("idx_cities_bounds"), Cities.CITIES, arrayOf(Cities.CITIES.CITY_BOUNDS), false)
 val IDX_CITIES_COORDINATES: Index = Internal.createIndex(DSL.name("idx_cities_coordinates"), Cities.CITIES, arrayOf(Cities.CITIES.COORDINATES), false)
 val IDX_CITIES_COUNTRY_ID: Index = Internal.createIndex(DSL.name("idx_cities_country_id"), Cities.CITIES, arrayOf(Cities.CITIES.COUNTRY_ID), false)
+val IDX_RESTROOM_DUPLICATE_SUSPICIONS_CANDIDATE: Index = Internal.createIndex(DSL.name("idx_restroom_duplicate_suspicions_candidate"), RestroomDuplicateSuspicions.RESTROOM_DUPLICATE_SUSPICIONS, arrayOf(RestroomDuplicateSuspicions.RESTROOM_DUPLICATE_SUSPICIONS.CANDIDATE_RESTROOM_ID), false)
+val IDX_RESTROOM_DUPLICATE_SUSPICIONS_EXISTING: Index = Internal.createIndex(DSL.name("idx_restroom_duplicate_suspicions_existing"), RestroomDuplicateSuspicions.RESTROOM_DUPLICATE_SUSPICIONS, arrayOf(RestroomDuplicateSuspicions.RESTROOM_DUPLICATE_SUSPICIONS.EXISTING_RESTROOM_ID), false)
 val IDX_RESTROOM_IMPORTS_BUILDING_ID: Index = Internal.createIndex(DSL.name("idx_restroom_imports_building_id"), RestroomImports.RESTROOM_IMPORTS, arrayOf(RestroomImports.RESTROOM_IMPORTS.BUILDING_ID), false)
 val IDX_RESTROOM_IMPORTS_CREATED_AT: Index = Internal.createIndex(DSL.name("idx_restroom_imports_created_at"), RestroomImports.RESTROOM_IMPORTS, arrayOf(RestroomImports.RESTROOM_IMPORTS.CREATED_AT), false)
 val IDX_RESTROOM_IMPORTS_PROVIDER_CITY_STATUS: Index = Internal.createIndex(DSL.name("idx_restroom_imports_provider_city_status"), RestroomImports.RESTROOM_IMPORTS, arrayOf(RestroomImports.RESTROOM_IMPORTS.PROVIDER, RestroomImports.RESTROOM_IMPORTS.CITY_ID, RestroomImports.RESTROOM_IMPORTS.STATUS), false)
@@ -46,11 +49,14 @@ val IDX_RESTROOMS_EXTERNAL_MAPS: Index = Internal.createIndex(DSL.name("idx_rest
 val IDX_RESTROOMS_FILTERS: Index = Internal.createIndex(DSL.name("idx_restrooms_filters"), Restrooms.RESTROOMS, arrayOf(Restrooms.RESTROOMS.FEE_TYPE, Restrooms.RESTROOMS.GENDER_TYPE, Restrooms.RESTROOMS.ACCESSIBILITY_TYPE, Restrooms.RESTROOMS.PLACE_TYPE), false)
 val IDX_RESTROOMS_HIDDEN: Index = Internal.createIndex(DSL.name("idx_restrooms_hidden"), Restrooms.RESTROOMS, arrayOf(Restrooms.RESTROOMS.IS_HIDDEN), false)
 val IDX_RESTROOMS_LOCATION_TYPE: Index = Internal.createIndex(DSL.name("idx_restrooms_location_type"), Restrooms.RESTROOMS, arrayOf(Restrooms.RESTROOMS.LOCATION_TYPE), false)
+val IDX_RESTROOMS_MATCH_KEY: Index = Internal.createIndex(DSL.name("idx_restrooms_match_key"), Restrooms.RESTROOMS, arrayOf(Restrooms.RESTROOMS.RESTROOM_MATCH_KEY), false)
 val IDX_RESTROOMS_STATUS: Index = Internal.createIndex(DSL.name("idx_restrooms_status"), Restrooms.RESTROOMS, arrayOf(Restrooms.RESTROOMS.STATUS), false)
 val IDX_SUBWAY_STATIONS_COORDINATES: Index = Internal.createIndex(DSL.name("idx_subway_stations_coordinates"), SubwayStations.SUBWAY_STATIONS, arrayOf(SubwayStations.SUBWAY_STATIONS.COORDINATES), false)
 val IDX_USER_ANALYTICS_LAST_EVENT_AT: Index = Internal.createIndex(DSL.name("idx_user_analytics_last_event_at"), UserAnalytics.USER_ANALYTICS, arrayOf(UserAnalytics.USER_ANALYTICS.LAST_EVENT_AT), false)
 val IDX_USER_ANALYTICS_SEARCHES_COUNT: Index = Internal.createIndex(DSL.name("idx_user_analytics_searches_count"), UserAnalytics.USER_ANALYTICS, arrayOf(UserAnalytics.USER_ANALYTICS.SEARCHES_COUNT.desc()), false)
 val IDX_USERS_CREATED_AT: Index = Internal.createIndex(DSL.name("idx_users_created_at"), Users.USERS, arrayOf(Users.USERS.CREATED_AT), false)
 val IDX_USERS_UPDATED_AT: Index = Internal.createIndex(DSL.name("idx_users_updated_at"), Users.USERS, arrayOf(Users.USERS.UPDATED_AT), false)
+val RESTROOMS_RESTROOM_MATCH_KEY_UNIQUE_IDX: Index = Internal.createIndex(DSL.name("restrooms_restroom_match_key_unique_idx"), Restrooms.RESTROOMS, arrayOf(Restrooms.RESTROOMS.RESTROOM_MATCH_KEY), true)
+val UQ_BUILDINGS_MATCH_KEY: Index = Internal.createIndex(DSL.name("uq_buildings_match_key"), Buildings.BUILDINGS, arrayOf(Buildings.BUILDINGS.BUILDING_MATCH_KEY), true)
 val UQ_RESTROOM_IMPORTS_PROVIDER_ENTITY_EXTERNAL: Index = Internal.createIndex(DSL.name("uq_restroom_imports_provider_entity_external"), RestroomImports.RESTROOM_IMPORTS, arrayOf(RestroomImports.RESTROOM_IMPORTS.PROVIDER, RestroomImports.RESTROOM_IMPORTS.ENTITY_TYPE, RestroomImports.RESTROOM_IMPORTS.EXTERNAL_ID), true)
 val UQ_RESTROOMS_ORIGIN: Index = Internal.createIndex(DSL.name("uq_restrooms_origin"), Restrooms.RESTROOMS, arrayOf(Restrooms.RESTROOMS.ORIGIN_PROVIDER, Restrooms.RESTROOMS.ORIGIN_ID), true)

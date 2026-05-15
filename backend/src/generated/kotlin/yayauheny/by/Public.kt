@@ -27,6 +27,7 @@ import yayauheny.by.tables.PostgisSrs
 import yayauheny.by.tables.PostgisSrsAll
 import yayauheny.by.tables.PostgisSrsCodes
 import yayauheny.by.tables.PostgisSrsSearch
+import yayauheny.by.tables.RestroomDuplicateSuspicions
 import yayauheny.by.tables.RestroomImports
 import yayauheny.by.tables.Restrooms
 import yayauheny.by.tables.SpatialRefSys
@@ -261,6 +262,11 @@ open class Public : SchemaImpl(DSL.name("public"), DefaultCatalog.DEFAULT_CATALO
         bounds,
         authname
     )
+
+    /**
+     * The table <code>public.restroom_duplicate_suspicions</code>.
+     */
+    val RESTROOM_DUPLICATE_SUSPICIONS: RestroomDuplicateSuspicions get() = RestroomDuplicateSuspicions.RESTROOM_DUPLICATE_SUSPICIONS
 
     /**
      * The table <code>public.restroom_imports</code>.
@@ -596,6 +602,7 @@ open class Public : SchemaImpl(DSL.name("public"), DefaultCatalog.DEFAULT_CATALO
         PostgisSrsAll.POSTGIS_SRS_ALL,
         PostgisSrsCodes.POSTGIS_SRS_CODES,
         PostgisSrsSearch.POSTGIS_SRS_SEARCH,
+        RestroomDuplicateSuspicions.RESTROOM_DUPLICATE_SUSPICIONS,
         RestroomImports.RESTROOM_IMPORTS,
         Restrooms.RESTROOMS,
         SpatialRefSys.SPATIAL_REF_SYS,

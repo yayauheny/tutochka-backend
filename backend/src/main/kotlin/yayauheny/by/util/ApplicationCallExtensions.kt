@@ -28,26 +28,26 @@ data class ImportHeaders(
 fun Headers.getImportHeaders(): ImportHeaders {
     val providerRaw =
         getRequestHeader(HEADER_IMPORT_PROVIDER)
-            ?: throw ValidationException(listOf(FieldError(HEADER_IMPORT_PROVIDER, "Header is required")))
+            ?: throw ValidationException(FieldError(HEADER_IMPORT_PROVIDER, "Header is required"))
     val payloadTypeRaw =
         getRequestHeader(HEADER_IMPORT_PAYLOAD_TYPE)
-            ?: throw ValidationException(listOf(FieldError(HEADER_IMPORT_PAYLOAD_TYPE, "Header is required")))
+            ?: throw ValidationException(FieldError(HEADER_IMPORT_PAYLOAD_TYPE, "Header is required"))
     val cityIdRaw = getRequestHeader(HEADER_IMPORT_CITY_ID)
 
     val provider =
         runCatching { ImportProvider.valueOf(providerRaw) }.getOrElse {
-            throw ValidationException(listOf(FieldError(HEADER_IMPORT_PROVIDER, "Invalid value: $providerRaw")))
+            throw ValidationException(FieldError(HEADER_IMPORT_PROVIDER, "Invalid value: $providerRaw"))
         }
     val payloadType =
         runCatching { ImportPayloadType.valueOf(payloadTypeRaw) }.getOrElse {
-            throw ValidationException(listOf(FieldError(HEADER_IMPORT_PAYLOAD_TYPE, "Invalid value: $payloadTypeRaw")))
+            throw ValidationException(FieldError(HEADER_IMPORT_PAYLOAD_TYPE, "Invalid value: $payloadTypeRaw"))
         }
     val cityId =
         when {
             cityIdRaw.isNullOrBlank() -> null
             else ->
                 runCatching { UUID.fromString(cityIdRaw) }.getOrElse {
-                    throw ValidationException(listOf(FieldError(HEADER_IMPORT_CITY_ID, "Invalid UUID: $cityIdRaw")))
+                    throw ValidationException(FieldError(HEADER_IMPORT_CITY_ID, "Invalid UUID: $cityIdRaw"))
                 }
         }
     return ImportHeaders(provider, payloadType, cityId)

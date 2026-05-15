@@ -1,17 +1,18 @@
-package yayauheny.by.unit.service.import.yandex
+package yayauheny.by.unit.importing.provider.yandex
 
 import kotlin.test.assertEquals
 import org.junit.jupiter.api.DisplayName
 import org.junit.jupiter.api.Test
+import yayauheny.by.importing.model.ImportAdapterContext
+import yayauheny.by.importing.provider.yandex.YandexMapsScrapedParser
+import yayauheny.by.importing.provider.yandex.YandexMapsScrapedLocation
+import yayauheny.by.importing.provider.yandex.YandexMapsScrapedPlace
 import yayauheny.by.model.enums.FeeType
 import yayauheny.by.model.enums.ImportPayloadType
-import yayauheny.by.model.import.yandex.YandexMapsScrapedLocation
-import yayauheny.by.model.import.yandex.YandexMapsScrapedPlace
-import yayauheny.by.service.import.yandex.YandexMapsScrapedNormalizer
 
-@DisplayName("YandexMapsScrapedNormalizer Tests")
+@DisplayName("YandexMapsScrapedPlace toCommonModel Tests")
 class YandexMapsScrapedNormalizerTest {
-    private val normalizer = YandexMapsScrapedNormalizer()
+    private val parser = YandexMapsScrapedParser()
 
     @Test
     fun `should detect free toilet before paid keyword`() {
@@ -23,7 +24,11 @@ class YandexMapsScrapedNormalizerTest {
                 features = listOf("бесплатный туалет")
             )
 
-        val candidate = normalizer.normalize(java.util.UUID.randomUUID(), place, ImportPayloadType.YANDEX_MAPS_SCRAPED_PLACE_JSON)
+        val candidate =
+            parser.toCommonModel(
+                place,
+                ImportAdapterContext(ImportPayloadType.YANDEX_MAPS_SCRAPED_PLACE_JSON, java.util.UUID.randomUUID())
+            )
 
         assertEquals(FeeType.FREE, candidate.feeType)
     }
@@ -38,7 +43,11 @@ class YandexMapsScrapedNormalizerTest {
                 features = listOf("платный туалет")
             )
 
-        val candidate = normalizer.normalize(java.util.UUID.randomUUID(), place, ImportPayloadType.YANDEX_MAPS_SCRAPED_PLACE_JSON)
+        val candidate =
+            parser.toCommonModel(
+                place,
+                ImportAdapterContext(ImportPayloadType.YANDEX_MAPS_SCRAPED_PLACE_JSON, java.util.UUID.randomUUID())
+            )
 
         assertEquals(FeeType.PAID, candidate.feeType)
     }

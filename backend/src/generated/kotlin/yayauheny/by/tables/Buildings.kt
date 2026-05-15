@@ -39,6 +39,7 @@ import org.jooq.impl.TableImpl
 import yayauheny.by.Public
 import yayauheny.by.indexes.IDX_BUILDINGS_COORDINATES
 import yayauheny.by.indexes.IDX_BUILDINGS_EXTERNAL_IDS
+import yayauheny.by.indexes.UQ_BUILDINGS_MATCH_KEY
 import yayauheny.by.keys.BUILDINGS_PKEY
 import yayauheny.by.keys.BUILDINGS__BUILDINGS_CITY_ID_FKEY
 import yayauheny.by.keys.RESTROOMS__RESTROOMS_BUILDING_ID_FKEY
@@ -151,6 +152,11 @@ open class Buildings(
      */
     val DELETED_AT: TableField<BuildingsRecord, Instant?> = createField(DSL.name("deleted_at"), SQLDataType.INSTANT, this, "")
 
+    /**
+     * The column <code>public.buildings.building_match_key</code>.
+     */
+    val BUILDING_MATCH_KEY: TableField<BuildingsRecord, String?> = createField(DSL.name("building_match_key"), SQLDataType.VARCHAR(64), this, "")
+
     private constructor(alias: Name, aliased: Table<BuildingsRecord>?): this(alias, null, null, null, aliased, null, null)
     private constructor(alias: Name, aliased: Table<BuildingsRecord>?, parameters: Array<Field<*>?>?): this(alias, null, null, null, aliased, parameters, null)
     private constructor(alias: Name, aliased: Table<BuildingsRecord>?, where: Condition?): this(alias, null, null, null, aliased, null, where)
@@ -183,7 +189,7 @@ open class Buildings(
         override fun `as`(alias: Table<*>): BuildingsPath = BuildingsPath(alias.qualifiedName, this)
     }
     override fun getSchema(): Schema? = if (aliased()) null else Public.PUBLIC
-    override fun getIndexes(): List<Index> = listOf(IDX_BUILDINGS_COORDINATES, IDX_BUILDINGS_EXTERNAL_IDS)
+    override fun getIndexes(): List<Index> = listOf(IDX_BUILDINGS_COORDINATES, IDX_BUILDINGS_EXTERNAL_IDS, UQ_BUILDINGS_MATCH_KEY)
     override fun getPrimaryKey(): UniqueKey<BuildingsRecord> = BUILDINGS_PKEY
     override fun getReferences(): List<ForeignKey<BuildingsRecord, *>> = listOf(BUILDINGS__BUILDINGS_CITY_ID_FKEY)
 
