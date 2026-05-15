@@ -5,6 +5,7 @@ COPY gradlew gradlew.bat ./
 COPY gradle/ gradle/
 COPY build.gradle.kts settings.gradle.kts libs.versions.toml gradle.properties ./
 COPY backend/build.gradle.kts backend/
+COPY common/build.gradle.kts common/
 COPY bot/build.gradle.kts bot/
 
 RUN chmod +x ./gradlew
@@ -26,6 +27,7 @@ RUN echo "=== RESOLVE DEPENDENCIES ===" \
         --warning-mode all
 
 COPY backend/src backend/src
+COPY common/src common/src
 
 RUN echo "=== FILES AFTER SOURCES COPY ===" \
     && find backend -maxdepth 5 -type f | sort | sed -n '1,300p'
