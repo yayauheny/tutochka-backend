@@ -18,24 +18,27 @@ import yayauheny.by.helpers.testJson
 import yayauheny.by.common.plugins.configureErrorHandling
 import yayauheny.by.config.configureRouting
 import yayauheny.by.analytics.api.AnalyticsController
+import yayauheny.by.analytics.api.PublicAnalyticsController
 import yayauheny.by.controller.CityController
 import yayauheny.by.controller.CountryController
 import yayauheny.by.controller.HealthController
-import yayauheny.by.controller.ImportController
 import yayauheny.by.controller.RestroomController
+import yayauheny.by.importing.api.ImportController
+import yayauheny.by.importing.service.ImportService
 import yayauheny.by.metrics.BackendSearchMetrics
 import org.jooq.DSLContext
 import yayauheny.by.service.CityService
 import yayauheny.by.service.CountryService
 import yayauheny.by.service.RestroomService
-import yayauheny.by.service.import.ImportService
 import yayauheny.by.analytics.service.AnalyticsService
+import yayauheny.by.analytics.service.PublicAnalyticsService
 
 abstract class RoutingTestBase {
     protected val countryService = mockk<CountryService>()
     protected val cityService = mockk<CityService>()
     protected val restroomService = mockk<RestroomService>()
     protected val importService = mockk<ImportService>(relaxed = true)
+    protected val publicAnalyticsService = mockk<PublicAnalyticsService>(relaxed = true)
     private val dslContext =
         mockk<DSLContext>(relaxed = true) {
             val mockSelectStep = mockk<SelectSelectStep<Record1<Any>>>(relaxed = true)
@@ -53,6 +56,7 @@ abstract class RoutingTestBase {
                 single<ImportService> { importService }
                 single<DSLContext> { dslContext }
                 single<AnalyticsService> { mockk(relaxed = true) }
+                single<PublicAnalyticsService> { publicAnalyticsService }
             },
             module {
                 single { CountryController(get()) }
@@ -61,6 +65,7 @@ abstract class RoutingTestBase {
                 single { HealthController(get()) }
                 single { ImportController(get()) }
                 single { AnalyticsController(get()) }
+                single { PublicAnalyticsController(get()) }
             }
         )
 

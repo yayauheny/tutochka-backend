@@ -1,0 +1,971 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ТуТочка Analytics</title>
+    <style>
+        :root {
+            --bg: #090c12;
+            --bg-elevated: rgba(17, 23, 34, 0.88);
+            --bg-panel: rgba(20, 27, 40, 0.78);
+            --bg-soft: rgba(28, 36, 52, 0.72);
+            --text: #f5f7fb;
+            --muted: #9aa6bf;
+            --muted-strong: #c6cfdf;
+            --border: rgba(255, 255, 255, 0.08);
+            --border-strong: rgba(255, 255, 255, 0.14);
+            --shadow: 0 24px 80px rgba(0, 0, 0, 0.45);
+            --radius-shell: 28px;
+            --radius-panel: 22px;
+            --radius-chip: 999px;
+            --blue: #64b7ff;
+            --blue-strong: #3e8ff7;
+            --orange: #ff8b4d;
+            --green: #41d38d;
+            --red: #ff6b7d;
+            --grid: rgba(255, 255, 255, 0.08);
+            --glass: blur(20px);
+            --font: Inter, "SF Pro Display", "Segoe UI", sans-serif;
+        }
+
+        * {
+            box-sizing: border-box;
+        }
+
+        html, body {
+            margin: 0;
+            min-height: 100%;
+            background:
+                radial-gradient(circle at 15% 15%, rgba(72, 127, 255, 0.20), transparent 28%),
+                radial-gradient(circle at 85% 20%, rgba(255, 138, 76, 0.12), transparent 24%),
+                radial-gradient(circle at 50% 85%, rgba(35, 214, 145, 0.10), transparent 28%),
+                linear-gradient(180deg, #090c12 0%, #0c1119 100%);
+            color: var(--text);
+            font-family: var(--font);
+        }
+
+        body {
+            padding: 32px 18px 48px;
+        }
+
+        .page {
+            max-width: 1380px;
+            margin: 0 auto;
+        }
+
+        .page-note {
+            margin: 0 0 12px 14px;
+            color: #cfc4ff;
+            font-size: 0.95rem;
+            letter-spacing: 0.02em;
+            font-family: "Bradley Hand", "Comic Sans MS", cursive;
+            opacity: 0.9;
+        }
+
+        .browser-shell {
+            position: relative;
+            border-radius: var(--radius-shell);
+            border: 1px solid var(--border-strong);
+            background: linear-gradient(180deg, rgba(18, 23, 33, 0.92), rgba(12, 17, 25, 0.95));
+            box-shadow: var(--shadow);
+            overflow: hidden;
+        }
+
+        .browser-topbar {
+            display: grid;
+            grid-template-columns: 120px 1fr 120px;
+            align-items: center;
+            padding: 14px 18px;
+            border-bottom: 1px solid var(--border);
+            background: rgba(255, 255, 255, 0.03);
+        }
+
+        .browser-dots {
+            display: flex;
+            gap: 8px;
+        }
+
+        .browser-dot {
+            width: 11px;
+            height: 11px;
+            border-radius: 50%;
+            display: inline-block;
+        }
+
+        .browser-dot.red { background: #ff5f57; }
+        .browser-dot.yellow { background: #febc2e; }
+        .browser-dot.green { background: #28c840; }
+
+        .browser-url {
+            justify-self: center;
+            padding: 10px 18px;
+            border-radius: var(--radius-chip);
+            border: 1px solid rgba(255, 255, 255, 0.06);
+            background: rgba(255, 255, 255, 0.04);
+            color: var(--muted-strong);
+            font-size: 0.94rem;
+            letter-spacing: 0.01em;
+        }
+
+        .browser-expand {
+            justify-self: end;
+            width: 38px;
+            height: 38px;
+            border-radius: 12px;
+            border: 1px solid var(--border);
+            background: rgba(255, 255, 255, 0.04);
+            display: grid;
+            place-items: center;
+            color: var(--muted);
+        }
+
+        .dashboard {
+            padding: 24px;
+        }
+
+        .controls {
+            display: flex;
+            flex-wrap: wrap;
+            align-items: center;
+            justify-content: space-between;
+            gap: 16px;
+            margin-bottom: 22px;
+        }
+
+        .brand {
+            display: flex;
+            align-items: center;
+            gap: 14px;
+        }
+
+        .brand-mark {
+            width: 42px;
+            height: 42px;
+            border-radius: 14px;
+            background: linear-gradient(135deg, rgba(71, 144, 255, 0.95), rgba(66, 214, 212, 0.75));
+            display: grid;
+            place-items: center;
+            font-weight: 800;
+            box-shadow: 0 18px 32px rgba(71, 144, 255, 0.28);
+        }
+
+        .brand-copy h1 {
+            margin: 0;
+            font-size: 1.15rem;
+        }
+
+        .brand-copy p {
+            margin: 4px 0 0;
+            font-size: 0.88rem;
+            color: var(--muted);
+        }
+
+        .filters {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 12px;
+        }
+
+        .chip {
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+            min-height: 42px;
+            padding: 0 14px;
+            border-radius: 15px;
+            border: 1px solid var(--border);
+            background: rgba(255, 255, 255, 0.035);
+            color: var(--muted-strong);
+            font-size: 0.92rem;
+        }
+
+        .chip button {
+            all: unset;
+            cursor: pointer;
+            width: 18px;
+            height: 18px;
+            display: inline-grid;
+            place-items: center;
+            color: var(--muted-strong);
+        }
+
+        .kpi-grid {
+            display: grid;
+            grid-template-columns: repeat(4, minmax(0, 1fr));
+            gap: 14px;
+            margin-bottom: 18px;
+        }
+
+        .panel {
+            position: relative;
+            border-radius: var(--radius-panel);
+            border: 1px solid var(--border);
+            background: var(--bg-panel);
+            backdrop-filter: var(--glass);
+            box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.02);
+            transition: transform 180ms ease, border-color 180ms ease, background 180ms ease;
+        }
+
+        .panel:hover {
+            transform: translateY(-2px);
+            border-color: rgba(255, 255, 255, 0.16);
+            background: rgba(24, 32, 46, 0.84);
+        }
+
+        .kpi-card {
+            padding: 18px;
+            min-height: 138px;
+            animation: fade-up 520ms ease both;
+        }
+
+        .kpi-label {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            color: var(--muted);
+            font-size: 0.9rem;
+            margin-bottom: 18px;
+        }
+
+        .indicator {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: var(--blue);
+            box-shadow: 0 0 0 4px rgba(100, 183, 255, 0.12);
+        }
+
+        .kpi-value {
+            font-size: clamp(1.8rem, 2vw, 2.35rem);
+            font-weight: 700;
+            letter-spacing: -0.03em;
+        }
+
+        .kpi-footer {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 12px;
+            margin-top: 14px;
+        }
+
+        .trend {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            font-weight: 600;
+            font-size: 0.92rem;
+        }
+
+        .trend.up { color: var(--green); }
+        .trend.down { color: var(--red); }
+        .trend.flat { color: var(--muted); }
+
+        .trend-period {
+            color: var(--muted);
+            font-size: 0.85rem;
+        }
+
+        .supporting-stats {
+            display: grid;
+            grid-template-columns: repeat(6, minmax(0, 1fr));
+            gap: 12px;
+            margin-bottom: 18px;
+        }
+
+        .mini-stat {
+            padding: 16px 18px;
+            background: rgba(255, 255, 255, 0.03);
+        }
+
+        .mini-stat span {
+            display: block;
+            color: var(--muted);
+            font-size: 0.84rem;
+            margin-bottom: 10px;
+        }
+
+        .mini-stat strong {
+            font-size: 1.15rem;
+            letter-spacing: -0.02em;
+        }
+
+        .hero-panel {
+            padding: 20px 20px 14px;
+            margin-bottom: 18px;
+        }
+
+        .hero-header {
+            display: flex;
+            flex-wrap: wrap;
+            align-items: baseline;
+            justify-content: space-between;
+            gap: 12px;
+            margin-bottom: 16px;
+        }
+
+        .hero-title h2,
+        .section-header h3 {
+            margin: 0;
+            font-size: 1.08rem;
+        }
+
+        .hero-title p,
+        .section-header p {
+            margin: 6px 0 0;
+            color: var(--muted);
+            font-size: 0.9rem;
+        }
+
+        .legend {
+            display: flex;
+            gap: 14px;
+            flex-wrap: wrap;
+        }
+
+        .legend-item {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            color: var(--muted-strong);
+            font-size: 0.88rem;
+        }
+
+        .legend-line,
+        .legend-bar {
+            display: inline-block;
+            width: 24px;
+            height: 4px;
+            border-radius: 999px;
+        }
+
+        .legend-line { background: var(--blue); }
+        .legend-bar {
+            width: 10px;
+            height: 10px;
+            background: var(--orange);
+            border-radius: 4px;
+        }
+
+        .chart-wrap {
+            position: relative;
+            padding: 16px 14px 8px;
+            border-radius: 20px;
+            background: linear-gradient(180deg, rgba(255, 255, 255, 0.025), rgba(255, 255, 255, 0.01));
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            overflow-x: auto;
+        }
+
+        .chart-meta {
+            display: flex;
+            justify-content: space-between;
+            gap: 12px;
+            margin-bottom: 14px;
+            color: var(--muted);
+            font-size: 0.84rem;
+        }
+
+        #hero-chart {
+            width: 100%;
+            min-width: 900px;
+            height: 380px;
+            display: block;
+        }
+
+        .lower-grid {
+            display: grid;
+            grid-template-columns: 1.2fr 1fr 1fr;
+            gap: 16px;
+        }
+
+        .section-card {
+            padding: 18px;
+            animation: fade-up 620ms ease both;
+        }
+
+        .tabs {
+            display: inline-flex;
+            gap: 8px;
+            margin-top: 12px;
+            flex-wrap: wrap;
+        }
+
+        .tab {
+            padding: 8px 12px;
+            border-radius: 999px;
+            border: 1px solid rgba(255, 255, 255, 0.06);
+            color: var(--muted);
+            font-size: 0.82rem;
+            background: rgba(255, 255, 255, 0.03);
+        }
+
+        .tab.active {
+            color: var(--text);
+            background: rgba(76, 136, 255, 0.14);
+            border-color: rgba(76, 136, 255, 0.22);
+        }
+
+        .table-list,
+        .event-list,
+        .outcome-list {
+            margin: 18px 0 0;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .list-row {
+            display: grid;
+            grid-template-columns: minmax(0, 1fr) auto;
+            gap: 14px;
+            align-items: center;
+            padding: 12px 14px;
+            border-radius: 16px;
+            border: 1px solid rgba(255, 255, 255, 0.04);
+            background: rgba(255, 255, 255, 0.025);
+            transition: transform 180ms ease, border-color 180ms ease, background 180ms ease;
+        }
+
+        .list-row:hover {
+            transform: translateY(-2px);
+            border-color: rgba(100, 183, 255, 0.18);
+            background: rgba(100, 183, 255, 0.06);
+        }
+
+        .row-title {
+            font-size: 0.95rem;
+            color: var(--text);
+        }
+
+        .row-subtitle {
+            margin-top: 4px;
+            color: var(--muted);
+            font-size: 0.82rem;
+        }
+
+        .row-value {
+            font-weight: 700;
+            letter-spacing: -0.02em;
+        }
+
+        .progress {
+            margin-top: 10px;
+            height: 8px;
+            border-radius: 999px;
+            background: rgba(255, 255, 255, 0.05);
+            overflow: hidden;
+        }
+
+        .progress > span {
+            display: block;
+            height: 100%;
+            border-radius: inherit;
+            background: linear-gradient(90deg, rgba(100, 183, 255, 0.95), rgba(62, 143, 247, 0.65));
+        }
+
+        .outcome-bar {
+            height: 10px;
+            border-radius: 999px;
+            background: rgba(255, 255, 255, 0.05);
+            overflow: hidden;
+        }
+
+        .outcome-bar > span {
+            display: block;
+            height: 100%;
+            border-radius: inherit;
+        }
+
+        .empty-state {
+            padding: 20px;
+            border-radius: 18px;
+            border: 1px dashed rgba(255, 255, 255, 0.12);
+            color: var(--muted);
+            text-align: center;
+        }
+
+        .footer-note {
+            display: flex;
+            justify-content: space-between;
+            gap: 12px;
+            flex-wrap: wrap;
+            margin-top: 16px;
+            color: var(--muted);
+            font-size: 0.82rem;
+        }
+
+        .loading,
+        .error {
+            min-height: 420px;
+            display: grid;
+            place-items: center;
+            color: var(--muted);
+        }
+
+        .error strong {
+            color: var(--text);
+            display: block;
+            margin-bottom: 8px;
+        }
+
+        @keyframes fade-up {
+            from {
+                opacity: 0;
+                transform: translateY(12px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        @media (max-width: 1160px) {
+            .kpi-grid {
+                grid-template-columns: repeat(2, minmax(0, 1fr));
+            }
+
+            .supporting-stats,
+            .lower-grid {
+                grid-template-columns: repeat(2, minmax(0, 1fr));
+            }
+
+            .lower-grid > :first-child {
+                grid-column: 1 / -1;
+            }
+        }
+
+        @media (max-width: 760px) {
+            body {
+                padding: 18px 12px 24px;
+            }
+
+            .browser-topbar {
+                grid-template-columns: auto 1fr auto;
+                gap: 10px;
+            }
+
+            .browser-url {
+                font-size: 0.82rem;
+                overflow: hidden;
+                text-overflow: ellipsis;
+                white-space: nowrap;
+            }
+
+            .dashboard {
+                padding: 16px;
+            }
+
+            .kpi-grid,
+            .supporting-stats,
+            .lower-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .chart-wrap {
+                padding: 12px 8px 4px;
+            }
+
+            #hero-chart {
+                min-width: 760px;
+                height: 320px;
+            }
+        }
+    </style>
+</head>
+<body>
+<div class="page">
+    <p class="page-note">Interactive analytics demo</p>
+    <div class="browser-shell">
+        <div class="browser-topbar">
+            <div class="browser-dots">
+                <span class="browser-dot red"></span>
+                <span class="browser-dot yellow"></span>
+                <span class="browser-dot green"></span>
+            </div>
+            <div class="browser-url">https://tutochka.by/analytics</div>
+            <div class="browser-expand" aria-hidden="true">
+                <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+                    <path d="M5 2H2v3M11 2h3v3M5 14H2v-3M14 11v3h-3" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+                </svg>
+            </div>
+        </div>
+        <div class="dashboard" id="app">
+            <div class="loading">Loading public analytics…</div>
+        </div>
+    </div>
+</div>
+
+<script>
+    const app = document.getElementById("app");
+    const numberFormatter = new Intl.NumberFormat("en-US");
+    const compactFormatter = new Intl.NumberFormat("en-US", { notation: "compact", maximumFractionDigits: 1 });
+    const percentFormatter = new Intl.NumberFormat("en-US", { minimumFractionDigits: 1, maximumFractionDigits: 1 });
+    const percentValueFormatter = new Intl.NumberFormat("en-US", { minimumFractionDigits: 1, maximumFractionDigits: 1 });
+    const decimalFormatter = new Intl.NumberFormat("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+
+    const countKpiKeys = new Set([
+        "new_users_30d",
+        "searches_30d",
+        "daily_active_users",
+        "monthly_active_users",
+        "details_opened_30d",
+        "route_clicks_30d"
+    ]);
+
+    function formatKpiValue(key, value) {
+        if (key === "success_rate") {
+            return `${percentValueFormatter.format(value)}%`;
+        }
+        if (key === "avg_results_per_search") {
+            return decimalFormatter.format(value);
+        }
+        if (countKpiKeys.has(key)) {
+            return numberFormatter.format(Math.round(value));
+        }
+        return decimalFormatter.format(value);
+    }
+
+    function formatCompact(value) {
+        if (value < 1000) {
+            return numberFormatter.format(value);
+        }
+        return compactFormatter.format(value);
+    }
+
+    function buildTrend(kpi) {
+        const arrow = kpi.trend === "up" ? "↗" : kpi.trend === "down" ? "↘" : "→";
+        const className = `trend ${kpi.trend}`;
+        const amount = `${kpi.changePct >= 0 ? "+" : ""}${percentFormatter.format(kpi.changePct)}%`;
+        return `
+            <span class="${className}">
+                <span>${arrow}</span>
+                <span>${amount}</span>
+            </span>
+        `;
+    }
+
+    function renderDashboard(data) {
+        const searchOutcome30d = data.dailySeries.reduce((acc, point) => {
+            acc.successful += point.successfulSearches;
+            acc.empty += point.emptySearches;
+            acc.searches += point.searches;
+            return acc;
+        }, { successful: 0, empty: 0, searches: 0 });
+
+        app.innerHTML = `
+            <div class="controls">
+                <div class="brand">
+                    <div class="brand-mark">Т</div>
+                    <div class="brand-copy">
+                        <h1>ТуТочка Analytics</h1>
+                        <p>Safe public metrics from the live analytics service</p>
+                    </div>
+                </div>
+                <div class="filters">
+                    <div class="chip">Last 30 days</div>
+                    <div class="chip">Daily</div>
+                    <div class="chip">Timezone: ${data.timezone}</div>
+                    <div class="chip">
+                        <span>Refresh</span>
+                        <button id="refresh-button" aria-label="Refresh analytics">
+                            <svg width="14" height="14" viewBox="0 0 16 16" fill="none">
+                                <path d="M13.5 8A5.5 5.5 0 1 1 12 4.2M13.5 2.8v3.5H10" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+                            </svg>
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <div class="kpi-grid">
+                ${data.headlineKpis.map((kpi, index) => `
+                    <article class="panel kpi-card" style="animation-delay:${index * 60}ms">
+                        <div class="kpi-label">
+                            <span class="indicator"></span>
+                            <span>${kpi.label}</span>
+                        </div>
+                        <div class="kpi-value">${formatKpiValue(kpi.key, kpi.value)}</div>
+                        <div class="kpi-footer">
+                            ${buildTrend(kpi)}
+                            <span class="trend-period">${kpi.period}</span>
+                        </div>
+                    </article>
+                `).join("")}
+            </div>
+
+            <div class="supporting-stats">
+                ${[
+                    ["Total users", data.summary.totalUsers],
+                    ["Searches today", data.summary.searchesToday],
+                    ["Searches in 7 days", data.summary.searches7d],
+                    ["Searches in 30 days", data.summary.searches30d],
+                    ["Successful searches", data.summary.successfulSearches],
+                    ["Empty searches", data.summary.emptySearches]
+                ].map(([label, value]) => `
+                    <div class="panel mini-stat">
+                        <span>${label}</span>
+                        <strong>${numberFormatter.format(value)}</strong>
+                    </div>
+                `).join("")}
+            </div>
+
+            <section class="panel hero-panel">
+                <div class="hero-header">
+                    <div class="hero-title">
+                        <h2>Daily product activity</h2>
+                        <p>Active users and toilet searches for the last 30 days</p>
+                    </div>
+                    <div class="legend">
+                        <span class="legend-item"><span class="legend-line"></span>Active users</span>
+                        <span class="legend-item"><span class="legend-bar"></span>Searches</span>
+                    </div>
+                </div>
+                <div class="chart-wrap">
+                    <div class="chart-meta">
+                        <span>Generated ${new Date(data.generatedAt).toLocaleString("en-US")}</span>
+                        <span>${numberFormatter.format(data.summary.dailyActiveUsers)} DAU · ${numberFormatter.format(data.summary.monthlyActiveUsers)} MAU</span>
+                    </div>
+                    <svg id="hero-chart" viewBox="0 0 980 380" preserveAspectRatio="none" aria-label="Daily analytics chart"></svg>
+                </div>
+                <div class="footer-note">
+                    <span>Total searches: ${numberFormatter.format(data.summary.totalSearches)}</span>
+                    <span>Success rate: ${percentValueFormatter.format(data.summary.successRate)}%</span>
+                    <span>Avg results/search: ${decimalFormatter.format(data.summary.averageResultsPerSearch)}</span>
+                </div>
+            </section>
+
+            <section class="lower-grid">
+                <article class="panel section-card">
+                    <div class="section-header">
+                        <h3>Product events</h3>
+                        <p>All-time grouped event totals with small segments hidden</p>
+                    </div>
+                    <div class="tabs">
+                        <span class="tab active">Event</span>
+                        <span class="tab">All time</span>
+                    </div>
+                    <div class="event-list">
+                        ${renderEventTotals(data.eventTotals)}
+                    </div>
+                </article>
+
+                <article class="panel section-card">
+                    <div class="section-header">
+                        <h3>Monthly growth</h3>
+                        <p>New users, active users, and searches for the last 6 months</p>
+                    </div>
+                    <div class="tabs">
+                        <span class="tab active">Month</span>
+                        <span class="tab">Growth</span>
+                    </div>
+                    <div class="table-list">
+                        ${renderMonthlySeries(data.monthlySeries)}
+                    </div>
+                </article>
+
+                <article class="panel section-card">
+                    <div class="section-header">
+                        <h3>Search outcomes</h3>
+                        <p>Last 30 days of search quality and engagement signals</p>
+                    </div>
+                    <div class="tabs">
+                        <span class="tab active">Searches</span>
+                        <span class="tab">Results</span>
+                    </div>
+                    <div class="outcome-list">
+                        ${renderOutcome("Successful searches", searchOutcome30d.successful, searchOutcome30d.searches, "linear-gradient(90deg, rgba(65, 211, 141, 0.95), rgba(65, 211, 141, 0.5))")}
+                        ${renderOutcome("No-results searches", searchOutcome30d.empty, searchOutcome30d.searches, "linear-gradient(90deg, rgba(255, 107, 125, 0.95), rgba(255, 107, 125, 0.5))")}
+                        ${renderOutcome("Route clicks", data.summary.routeClicks, Math.max(data.summary.detailsOpened, data.summary.routeClicks), "linear-gradient(90deg, rgba(255, 139, 77, 0.95), rgba(255, 139, 77, 0.5))")}
+                        ${renderOutcome("Details opened", data.summary.detailsOpened, Math.max(data.summary.detailsOpened, data.summary.routeClicks), "linear-gradient(90deg, rgba(100, 183, 255, 0.95), rgba(100, 183, 255, 0.5))")}
+                    </div>
+                </article>
+            </section>
+        `;
+
+        document.getElementById("refresh-button").addEventListener("click", () => loadAnalytics(true));
+        renderHeroChart(data.dailySeries);
+    }
+
+    function renderEventTotals(events) {
+        if (!events.length) {
+            return `<div class="empty-state">No public event groups are large enough to show yet.</div>`;
+        }
+
+        const maxCount = Math.max(...events.map((item) => item.count), 1);
+        return events.map((item) => `
+            <div class="list-row">
+                <div>
+                    <div class="row-title">${item.label}</div>
+                    <div class="progress"><span style="width:${(item.count / maxCount) * 100}%"></span></div>
+                </div>
+                <div class="row-value">${formatCompact(item.count)}</div>
+            </div>
+        `).join("");
+    }
+
+    function renderMonthlySeries(series) {
+        const maxSearches = Math.max(...series.map((item) => item.searches), 1);
+        return series.map((item) => `
+            <div class="list-row">
+                <div>
+                    <div class="row-title">${formatMonth(item.month)}</div>
+                    <div class="row-subtitle">${numberFormatter.format(item.newUsers)} new users · ${numberFormatter.format(item.activeUsers)} active users</div>
+                    <div class="progress"><span style="width:${(item.searches / maxSearches) * 100}%"></span></div>
+                </div>
+                <div class="row-value">${formatCompact(item.searches)}</div>
+            </div>
+        `).join("");
+    }
+
+    function renderOutcome(label, value, total, gradient) {
+        const percent = total > 0 ? (value / total) * 100 : 0;
+        return `
+            <div class="list-row">
+                <div>
+                    <div class="row-title">${label}</div>
+                    <div class="outcome-bar"><span style="width:${percent}%; background:${gradient}"></span></div>
+                </div>
+                <div class="row-value">${numberFormatter.format(value)}</div>
+            </div>
+        `;
+    }
+
+    function renderHeroChart(points) {
+        const svg = document.getElementById("hero-chart");
+        const width = 980;
+        const height = 380;
+        const padding = { top: 28, right: 30, bottom: 40, left: 50 };
+        const innerWidth = width - padding.left - padding.right;
+        const innerHeight = height - padding.top - padding.bottom;
+        const maxUsers = Math.max(...points.map((point) => point.activeUsers), 1);
+        const maxSearches = Math.max(...points.map((point) => point.searches), 1);
+        const combinedMax = Math.max(maxUsers, maxSearches, 1);
+        const step = points.length > 1 ? innerWidth / (points.length - 1) : innerWidth;
+        const barWidth = Math.max(8, Math.min(18, innerWidth / (points.length * 1.6)));
+
+        const yForValue = (value) => padding.top + innerHeight - (value / combinedMax) * innerHeight;
+        const xForIndex = (index) => padding.left + (step * index);
+
+        const grid = Array.from({ length: 5 }, (_, index) => {
+            const ratio = index / 4;
+            const y = padding.top + innerHeight * ratio;
+            const value = Math.round(combinedMax * (1 - ratio));
+            return `
+                <line x1="${padding.left}" y1="${y}" x2="${width - padding.right}" y2="${y}" stroke="rgba(255,255,255,0.08)" stroke-dasharray="6 8"/>
+                <text x="${padding.left - 12}" y="${y + 4}" fill="rgba(154,166,191,0.9)" font-size="11" text-anchor="end">${formatCompact(value)}</text>
+            `;
+        }).join("");
+
+        const linePoints = points.map((point, index) => `${xForIndex(index)},${yForValue(point.activeUsers)}`).join(" ");
+        const areaPath = points.map((point, index) => `${index === 0 ? "M" : "L"} ${xForIndex(index)} ${yForValue(point.activeUsers)}`).join(" ");
+        const areaClosed = `${areaPath} L ${xForIndex(points.length - 1)} ${padding.top + innerHeight} L ${xForIndex(0)} ${padding.top + innerHeight} Z`;
+
+        const bars = points.map((point, index) => {
+            const x = xForIndex(index) - (barWidth / 2);
+            const y = yForValue(point.searches);
+            const barHeight = padding.top + innerHeight - y;
+            return `<rect x="${x}" y="${y}" width="${barWidth}" height="${Math.max(barHeight, 2)}" rx="6" fill="rgba(255,139,77,0.78)"></rect>`;
+        }).join("");
+
+        const markerIndex = points.reduce((bestIndex, point, index) =>
+            point.activeUsers > points[bestIndex].activeUsers ? index : bestIndex, 0
+        );
+        const markerPoint = points[markerIndex] || points[0];
+        const markerX = xForIndex(markerIndex);
+        const markerY = yForValue(markerPoint ? markerPoint.activeUsers : 0);
+
+        const labels = points.map((point, index) => {
+            if (index % 4 !== 0 && index !== points.length - 1) {
+                return "";
+            }
+            return `
+                <text x="${xForIndex(index)}" y="${height - 14}" fill="rgba(154,166,191,0.9)" font-size="11" text-anchor="middle">
+                    ${formatDay(point.date)}
+                </text>
+            `;
+        }).join("");
+
+        const pointMarkers = points.filter((_, index) => index % 7 === 0 || index === markerIndex).map((point, index, arr) => {
+            const actualIndex = index === arr.length - 1 ? markerIndex : points.indexOf(point);
+            return `
+                <circle cx="${xForIndex(actualIndex)}" cy="${yForValue(point.activeUsers)}" r="4.5" fill="#090c12" stroke="rgba(100,183,255,0.95)" stroke-width="2"></circle>
+            `;
+        }).join("");
+
+        svg.innerHTML = `
+            <defs>
+                <linearGradient id="line-gradient" x1="0%" y1="0%" x2="100%" y2="0%">
+                    <stop offset="0%" stop-color="rgba(100,183,255,0.95)"></stop>
+                    <stop offset="100%" stop-color="rgba(62,143,247,0.9)"></stop>
+                </linearGradient>
+                <linearGradient id="area-gradient" x1="0%" y1="0%" x2="0%" y2="100%">
+                    <stop offset="0%" stop-color="rgba(100,183,255,0.24)"></stop>
+                    <stop offset="100%" stop-color="rgba(100,183,255,0)"></stop>
+                </linearGradient>
+            </defs>
+            ${grid}
+            ${bars}
+            <path d="${areaClosed}" fill="url(#area-gradient)"></path>
+            <polyline
+                fill="none"
+                stroke="url(#line-gradient)"
+                stroke-width="4"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                points="${linePoints}">
+                <animate attributeName="stroke-dasharray" from="0 1800" to="1800 0" dur="1.2s" fill="freeze"></animate>
+            </polyline>
+            ${pointMarkers}
+            <line x1="${markerX}" y1="${markerY}" x2="${markerX}" y2="${padding.top + innerHeight}" stroke="rgba(255,255,255,0.12)" stroke-dasharray="4 8"></line>
+            <g transform="translate(${Math.min(markerX + 12, width - 160)}, ${Math.max(markerY - 62, padding.top + 6)})">
+                <rect width="130" height="48" rx="14" fill="#070a10" stroke="rgba(255,255,255,0.1)"></rect>
+                <text x="12" y="18" fill="rgba(154,166,191,0.95)" font-size="11">Peak day</text>
+                <text x="12" y="34" fill="#f5f7fb" font-size="13" font-weight="600">usage spike</text>
+            </g>
+            ${labels}
+        `;
+    }
+
+    function formatDay(dateString) {
+        const date = new Date(`${dateString}T00:00:00`);
+        return date.toLocaleDateString("en-US", { day: "2-digit", month: "short" });
+    }
+
+    function formatMonth(monthString) {
+        const [year, month] = monthString.split("-").map(Number);
+        return new Date(year, month - 1, 1).toLocaleDateString("en-US", { month: "short", year: "numeric" });
+    }
+
+    async function loadAnalytics(force = false) {
+        if (force) {
+            app.innerHTML = `<div class="loading">Refreshing analytics…</div>`;
+        }
+
+        try {
+            const response = await fetch("/api/v1/public/analytics", {
+                headers: { "Accept": "application/json" },
+                cache: "no-store"
+            });
+
+            if (!response.ok) {
+                throw new Error(`Request failed with status ${response.status}`);
+            }
+
+            const data = await response.json();
+            renderDashboard(data);
+        } catch (error) {
+            app.innerHTML = `
+                <div class="error">
+                    <div>
+                        <strong>Analytics are temporarily unavailable</strong>
+                        <div>${error.message}</div>
+                    </div>
+                </div>
+            `;
+        }
+    }
+
+    loadAnalytics();
+</script>
+</body>
+</html>

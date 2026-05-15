@@ -21,18 +21,21 @@ import org.koin.dsl.module
 import org.koin.ktor.plugin.Koin
 import yayauheny.by.common.plugins.configureErrorHandling
 import yayauheny.by.analytics.api.AnalyticsController
+import yayauheny.by.analytics.api.PublicAnalyticsController
 import yayauheny.by.config.configureMetrics
 import yayauheny.by.config.configureRouting
 import yayauheny.by.helpers.testJson
+import yayauheny.by.importing.api.ImportController
+import yayauheny.by.importing.service.ImportService
 import yayauheny.by.metrics.BackendSearchMetrics
 import yayauheny.by.analytics.service.AnalyticsService
+import yayauheny.by.analytics.service.PublicAnalyticsService
 import yayauheny.by.model.dto.Coordinates
 import yayauheny.by.model.enums.FeeType
 import yayauheny.by.model.restroom.NearestRestroomSlimDto
 import yayauheny.by.service.CityService
 import yayauheny.by.service.CountryService
 import yayauheny.by.service.RestroomService
-import yayauheny.by.service.import.ImportService
 
 @Tag("integration")
 class RestroomMetricsIntegrationTest {
@@ -73,14 +76,16 @@ class RestroomMetricsIntegrationTest {
                             single<PrometheusMeterRegistry> { registry }
                             single<BackendSearchMetrics> { backendSearchMetrics }
                             single<AnalyticsService> { mockk(relaxed = true) }
+                            single<PublicAnalyticsService> { mockk(relaxed = true) }
                         },
                         module {
                             single { yayauheny.by.controller.CountryController(get()) }
                             single { yayauheny.by.controller.CityController(get()) }
                             single { yayauheny.by.controller.RestroomController(get(), get(), get()) }
                             single { yayauheny.by.controller.HealthController(get()) }
-                            single { yayauheny.by.controller.ImportController(get()) }
+                            single { ImportController(get()) }
                             single { AnalyticsController(get()) }
+                            single { PublicAnalyticsController(get()) }
                         }
                     )
                 }
@@ -133,14 +138,16 @@ class RestroomMetricsIntegrationTest {
                             single<PrometheusMeterRegistry> { registry }
                             single<BackendSearchMetrics> { backendSearchMetrics }
                             single<AnalyticsService> { mockk(relaxed = true) }
+                            single<PublicAnalyticsService> { mockk(relaxed = true) }
                         },
                         module {
                             single { yayauheny.by.controller.CountryController(get()) }
                             single { yayauheny.by.controller.CityController(get()) }
                             single { yayauheny.by.controller.RestroomController(get(), get(), get()) }
                             single { yayauheny.by.controller.HealthController(get()) }
-                            single { yayauheny.by.controller.ImportController(get()) }
+                            single { ImportController(get()) }
                             single { AnalyticsController(get()) }
+                            single { PublicAnalyticsController(get()) }
                         }
                     )
                 }
@@ -203,14 +210,16 @@ class RestroomMetricsIntegrationTest {
                             single<PrometheusMeterRegistry> { registry }
                             single<BackendSearchMetrics> { backendSearchMetrics }
                             single<AnalyticsService> { analyticsService }
+                            single<PublicAnalyticsService> { mockk(relaxed = true) }
                         },
                         module {
                             single { yayauheny.by.controller.CountryController(get()) }
                             single { yayauheny.by.controller.CityController(get()) }
                             single { yayauheny.by.controller.RestroomController(get(), get(), get()) }
                             single { yayauheny.by.controller.HealthController(get()) }
-                            single { yayauheny.by.controller.ImportController(get()) }
+                            single { ImportController(get()) }
                             single { AnalyticsController(get()) }
+                            single { PublicAnalyticsController(get()) }
                         }
                     )
                 }

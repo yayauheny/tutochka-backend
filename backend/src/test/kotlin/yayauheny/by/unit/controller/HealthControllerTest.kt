@@ -26,20 +26,22 @@ import org.koin.ktor.plugin.Koin
 import yayauheny.by.common.plugins.configureErrorHandling
 import yayauheny.by.config.configureRouting
 import yayauheny.by.analytics.api.AnalyticsController
+import yayauheny.by.analytics.api.PublicAnalyticsController
 import yayauheny.by.controller.CityController
 import yayauheny.by.controller.CountryController
 import yayauheny.by.controller.HealthController
-import yayauheny.by.controller.ImportController
 import yayauheny.by.controller.RestroomController
 import yayauheny.by.helpers.assertJsonContentType
 import yayauheny.by.helpers.testGet
 import yayauheny.by.helpers.testJson
+import yayauheny.by.importing.api.ImportController
+import yayauheny.by.importing.service.ImportService
 import yayauheny.by.metrics.BackendSearchMetrics
 import yayauheny.by.analytics.service.AnalyticsService
+import yayauheny.by.analytics.service.PublicAnalyticsService
 import yayauheny.by.service.CityService
 import yayauheny.by.service.CountryService
 import yayauheny.by.service.RestroomService
-import yayauheny.by.service.import.ImportService
 
 @DisplayName("HealthController Tests")
 class HealthControllerTest {
@@ -56,6 +58,7 @@ class HealthControllerTest {
                 single<RestroomService> { mockk<RestroomService>(relaxed = true) }
                 single<ImportService> { mockk<ImportService>(relaxed = true) }
                 single<AnalyticsService> { mockk<AnalyticsService>(relaxed = true) }
+                single<PublicAnalyticsService> { mockk<PublicAnalyticsService>(relaxed = true) }
             },
             module {
                 single<CountryController> { CountryController(get()) }
@@ -64,6 +67,7 @@ class HealthControllerTest {
                 single<HealthController> { HealthController(get()) }
                 single<ImportController> { ImportController(get()) }
                 single<AnalyticsController> { AnalyticsController(get()) }
+                single<PublicAnalyticsController> { PublicAnalyticsController(get()) }
             }
         )
 

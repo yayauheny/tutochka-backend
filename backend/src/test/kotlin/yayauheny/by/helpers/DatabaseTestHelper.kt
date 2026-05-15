@@ -11,8 +11,11 @@ import yayauheny.by.model.enums.AccessibilityType
 import yayauheny.by.model.enums.DataSourceType
 import yayauheny.by.model.enums.FeeType
 import yayauheny.by.model.enums.GenderType
+import yayauheny.by.model.enums.LocationType
 import yayauheny.by.model.enums.PlaceType
 import yayauheny.by.model.enums.RestroomStatus
+import yayauheny.by.importing.dedup.MatchKeyGenerator
+import yayauheny.by.model.analytics.AnalyticsSource
 import yayauheny.by.tables.references.BUILDINGS
 import yayauheny.by.tables.references.ANALYTICS_EVENTS
 import yayauheny.by.tables.references.CITIES
@@ -62,6 +65,23 @@ data class TestRestroomData(
     val directionGuide: String? = "Находится на первом этаже, рядом с главным входом",
     val inheritBuildingSchedule: Boolean = false,
     val hasPhotos: Boolean = true
+)
+
+data class TestAnalyticsUserData(
+    val tgUserId: String = "enc-user-${UUID.randomUUID()}",
+    val tgChatId: String = "enc-chat-${UUID.randomUUID()}",
+    val source: String = AnalyticsSource.TELEGRAM_BOT.value,
+    val username: String? = null,
+    val createdAt: Instant = Instant.now(),
+    val updatedAt: Instant = createdAt
+)
+
+data class TestAnalyticsEventData(
+    val event: String,
+    val userId: UUID? = null,
+    val source: String = AnalyticsSource.TELEGRAM_BOT.value,
+    val resultsCount: Int? = null,
+    val createdAt: Instant = Instant.now()
 )
 
 object DatabaseTestHelper {
@@ -125,6 +145,23 @@ object DatabaseTestHelper {
         inheritBuildingSchedule,
         hasPhotos
     )
+
+    fun createTestAnalyticsUserData(
+        tgUserId: String = "enc-user-${UUID.randomUUID()}",
+        tgChatId: String = "enc-chat-${UUID.randomUUID()}",
+        source: String = AnalyticsSource.TELEGRAM_BOT.value,
+        username: String? = null,
+        createdAt: Instant = Instant.now(),
+        updatedAt: Instant = createdAt
+    ) = TestAnalyticsUserData(tgUserId, tgChatId, source, username, createdAt, updatedAt)
+
+    fun createTestAnalyticsEventData(
+        event: String,
+        userId: UUID? = null,
+        source: String = AnalyticsSource.TELEGRAM_BOT.value,
+        resultsCount: Int? = null,
+        createdAt: Instant = Instant.now()
+    ) = TestAnalyticsEventData(event, userId, source, resultsCount, createdAt)
 
     fun insertTestCountry(
         dslContext: DSLContext,
@@ -223,6 +260,144 @@ object DatabaseTestHelper {
                 .fetchOne()
                 ?.getValue(RESTROOMS.ID)
                 ?: error("Failed to insert test restroom")
+        }
+
+    fun insertTestBuilding(
+        dslContext: DSLContext,
+        cityId: UUID,
+        address: String,
+        name: String? = null,
+        lat: Double,
+        lon: Double
+    ): UUID =
+        dslContext.transactionResult { configuration ->
+            val ctx = DSL.using(configuration)
+            val now = Instant.now()
+            val id = UUID.randomUUID()
+            val buildingMatchKeyField =
+                DSL.field(
+                    "building_match_key",
+                    org.jooq.impl.SQLDataType
+                        .VARCHAR(64)
+                )
+
+            ctx
+                .insertInto(BUILDINGS)
+                .set(BUILDINGS.ID, id)
+                .set(BUILDINGS.CITY_ID, cityId)
+                .set(BUILDINGS.NAME, name)
+                .set(BUILDINGS.ADDRESS, address)
+                .set(buildingMatchKeyField, MatchKeyGenerator.buildingMatchKey(cityId, address, lat, lon))
+                .set(BUILDINGS.COORDINATES, pointExpr(lon, lat, BUILDINGS.COORDINATES))
+                .set(BUILDINGS.CREATED_AT, now)
+                .set(BUILDINGS.UPDATED_AT, now)
+                .returning(BUILDINGS.ID)
+                .fetchOne()
+                ?.getValue(BUILDINGS.ID)
+                ?: error("Failed to insert test building")
+        }
+
+    fun insertStandaloneRestroom(
+        dslContext: DSLContext,
+        cityId: UUID,
+        name: String,
+        address: String,
+        lat: Double,
+        lon: Double
+    ): UUID =
+        dslContext.transactionResult { configuration ->
+            val ctx = DSL.using(configuration)
+            val now = Instant.now()
+            val id = UUID.randomUUID()
+            val locationTypeField =
+                DSL.field(
+                    "location_type",
+                    org.jooq.impl.SQLDataType
+                        .VARCHAR(20)
+                )
+            val restroomMatchKeyField =
+                DSL.field(
+                    "restroom_match_key",
+                    org.jooq.impl.SQLDataType
+                        .VARCHAR(64)
+                )
+
+            ctx
+                .insertInto(RESTROOMS)
+                .set(RESTROOMS.ID, id)
+                .set(RESTROOMS.CITY_ID, cityId)
+                .set(RESTROOMS.NAME, name)
+                .set(RESTROOMS.ADDRESS, address)
+                .set(RESTROOMS.FEE_TYPE, FeeType.FREE.name)
+                .set(locationTypeField, LocationType.STANDALONE.name)
+                .set(RESTROOMS.ACCESSIBILITY_TYPE, AccessibilityType.UNKNOWN.name)
+                .set(RESTROOMS.PLACE_TYPE, PlaceType.PUBLIC.code)
+                .set(RESTROOMS.STATUS, RestroomStatus.ACTIVE.name)
+                .set(RESTROOMS.DATA_SOURCE, DataSourceType.MANUAL.name)
+                .set(RESTROOMS.AMENITIES, buildJsonObject { }.toJSONB())
+                .set(
+                    restroomMatchKeyField,
+                    MatchKeyGenerator.restroomMatchKey(
+                        cityId = cityId,
+                        buildingId = null,
+                        address = address,
+                        name = name,
+                        lat = lat,
+                        lon = lon,
+                        locationType = LocationType.STANDALONE
+                    )
+                ).set(RESTROOMS.COORDINATES, pointExpr(lon, lat, RESTROOMS.COORDINATES))
+                .set(RESTROOMS.CREATED_AT, now)
+                .set(RESTROOMS.UPDATED_AT, now)
+                .returning(RESTROOMS.ID)
+                .fetchOne()
+                ?.getValue(RESTROOMS.ID)
+                ?: error("Failed to insert standalone restroom")
+        }
+
+    fun insertAnalyticsUser(
+        dslContext: DSLContext,
+        data: TestAnalyticsUserData = createTestAnalyticsUserData()
+    ): UUID =
+        dslContext.transactionResult { configuration ->
+            val ctx = DSL.using(configuration)
+            val id = UUID.randomUUID()
+
+            ctx
+                .insertInto(USERS)
+                .set(USERS.ID, id)
+                .set(USERS.TG_USER_ID, data.tgUserId)
+                .set(USERS.TG_CHAT_ID, data.tgChatId)
+                .set(USERS.SOURCE, data.source)
+                .set(USERS.USERNAME, data.username)
+                .set(USERS.CREATED_AT, data.createdAt)
+                .set(USERS.UPDATED_AT, data.updatedAt)
+                .returning(USERS.ID)
+                .fetchOne()
+                ?.getValue(USERS.ID)
+                ?: error("Failed to insert analytics user")
+        }
+
+    fun insertAnalyticsEvent(
+        dslContext: DSLContext,
+        data: TestAnalyticsEventData
+    ): UUID =
+        dslContext.transactionResult { configuration ->
+            val ctx = DSL.using(configuration)
+            val id = UUID.randomUUID()
+
+            ctx
+                .insertInto(ANALYTICS_EVENTS)
+                .set(ANALYTICS_EVENTS.ID, id)
+                .set(ANALYTICS_EVENTS.EVENT, data.event)
+                .set(ANALYTICS_EVENTS.CREATED_AT, data.createdAt)
+                .set(ANALYTICS_EVENTS.USER_ID, data.userId)
+                .set(ANALYTICS_EVENTS.SOURCE, data.source)
+                .set(ANALYTICS_EVENTS.RESULTS_COUNT, data.resultsCount)
+                .returning(ANALYTICS_EVENTS.ID)
+                .fetchOne()
+                ?.getValue(ANALYTICS_EVENTS.ID)
+                ?: error("Failed to insert analytics event")
         }
 
     fun createTestEnvironment(dslContext: DSLContext): TestEnvironment {
