@@ -17,6 +17,7 @@ import kotlinx.serialization.json.JsonPrimitive
 import kotlinx.serialization.json.buildJsonObject
 import kotlinx.serialization.modules.SerializersModule
 import yayauheny.by.model.building.BuildingResponseDto
+import yayauheny.by.model.analytics.AcquisitionTag
 import yayauheny.by.model.dto.Coordinates
 import yayauheny.by.model.enums.AccessibilityType
 import yayauheny.by.model.enums.DataSourceType
@@ -139,6 +140,15 @@ class ContractSerializationTest {
         assertEquals("\"public_toilet\"", encoded)
         assertEquals(PlaceType.PUBLIC, json.decodeFromString(PlaceType.serializer(), encoded))
         assertEquals(PlaceType.OTHER, PlaceType.fromCode("missing"))
+    }
+
+    @Test
+    fun acquisitionTag_uses_wire_code() {
+        val encoded = json.encodeToString(AcquisitionTag.serializer(), AcquisitionTag.WEBSITE)
+
+        assertEquals("\"website\"", encoded)
+        assertEquals(AcquisitionTag.WEBSITE, json.decodeFromString(AcquisitionTag.serializer(), encoded))
+        assertEquals(AcquisitionTag.OTHER, AcquisitionTag.fromValue("other"))
     }
 
     @Test

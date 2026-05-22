@@ -10,6 +10,7 @@ import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.telegram.telegrambots.meta.api.objects.Update;
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.ReplyKeyboardMarkup;
 import yayauheny.by.contract.BackendClient;
+import yayauheny.by.model.analytics.AcquisitionTag;
 import yayauheny.by.model.analytics.AnalyticsEventRequest;
 import yayauheny.by.model.analytics.ProductAnalyticsEvent;
 
@@ -49,7 +50,7 @@ class StartCommandIntegrationTest extends AbstractSpringBotIntegrationTest {
         ArgumentCaptor<AnalyticsEventRequest> requestCaptor = ArgumentCaptor.forClass(AnalyticsEventRequest.class);
         verify(backendClient).trackProductEvent(requestCaptor.capture(), eq(10L), eq(123L), eq("test-user-10"));
         assertThat(requestCaptor.getValue().getEvent()).isEqualTo(ProductAnalyticsEvent.BOT_STARTED);
-        assertThat(requestCaptor.getValue().getAcquisitionTag()).isEqualTo("direct");
+        assertThat(requestCaptor.getValue().getAcquisitionTag()).isEqualTo(AcquisitionTag.DIRECT);
         assertThat(requestCaptor.getValue().getMetadata()).isEqualTo(new JsonObject(java.util.Map.of()));
     }
 
@@ -61,6 +62,6 @@ class StartCommandIntegrationTest extends AbstractSpringBotIntegrationTest {
 
         ArgumentCaptor<AnalyticsEventRequest> requestCaptor = ArgumentCaptor.forClass(AnalyticsEventRequest.class);
         verify(backendClient).trackProductEvent(requestCaptor.capture(), eq(10L), eq(123L), eq("test-user-10"));
-        assertThat(requestCaptor.getValue().getAcquisitionTag()).isEqualTo("website");
+        assertThat(requestCaptor.getValue().getAcquisitionTag()).isEqualTo(AcquisitionTag.WEBSITE);
     }
 }

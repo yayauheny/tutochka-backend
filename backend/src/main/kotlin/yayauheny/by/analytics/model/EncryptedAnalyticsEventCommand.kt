@@ -2,6 +2,7 @@ package yayauheny.by.analytics.model
 
 import java.math.BigDecimal
 import kotlinx.serialization.json.JsonObject
+import yayauheny.by.model.analytics.AcquisitionTag
 import yayauheny.by.model.analytics.AnalyticsSource
 import yayauheny.by.model.analytics.ProductAnalyticsEvent
 
@@ -15,6 +16,6 @@ data class EncryptedAnalyticsEventCommand(
     val lon: BigDecimal? = null,
     val resultsCount: Int? = null,
     val durationMs: Int? = null,
-    val acquisitionTag: String? = null,
+    val acquisitionTag: AcquisitionTag? = null,
     val metadata: JsonObject = JsonObject(emptyMap())
 )

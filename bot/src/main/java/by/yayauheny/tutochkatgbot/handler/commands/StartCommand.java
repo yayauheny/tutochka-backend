@@ -13,6 +13,7 @@ import org.springframework.stereotype.Component;
 import org.telegram.telegrambots.meta.api.objects.message.Message;
 import org.telegram.telegrambots.meta.api.objects.Update;
 import yayauheny.by.contract.BackendClient;
+import yayauheny.by.model.analytics.AcquisitionTag;
 import yayauheny.by.model.analytics.AnalyticsEventRequest;
 import yayauheny.by.model.analytics.ProductAnalyticsEvent;
 
@@ -27,9 +28,6 @@ import kotlinx.serialization.json.JsonObject;
 @Order(1)
 public class StartCommand implements CommandHandler {
     private static final Logger log = LoggerFactory.getLogger(StartCommand.class);
-    private static final String DIRECT_TAG = "direct";
-    private static final String WEBSITE_TAG = "website";
-    private static final String OTHER_TAG = "other";
 
     private final MessageSender sender;
     private final ReplyKeyboardFactory replyKeyboard;
@@ -64,7 +62,7 @@ public class StartCommand implements CommandHandler {
 
     private void trackBotStarted(Update update, UpdateContext ctx) {
         try {
-            String acquisitionTag = resolveAcquisitionTag(update.getMessage());
+            AcquisitionTag acquisitionTag = resolveAcquisitionTag(update.getMessage());
             AnalyticsEventRequest request =
                 new AnalyticsEventRequest(
                     ProductAnalyticsEvent.BOT_STARTED,
@@ -81,16 +79,16 @@ public class StartCommand implements CommandHandler {
         }
     }
 
-    private String resolveAcquisitionTag(Message message) {
+    private AcquisitionTag resolveAcquisitionTag(Message message) {
         String payload = CommandUtils.extractCommandArgument(message);
         if (payload == null) {
-            return DIRECT_TAG;
+            return AcquisitionTag.DIRECT;
         }
 
         return switch (payload.trim().toLowerCase()) {
-            case WEBSITE_TAG -> WEBSITE_TAG;
-            case DIRECT_TAG -> DIRECT_TAG;
-            default -> OTHER_TAG;
+            case "website" -> AcquisitionTag.WEBSITE;
+            case "direct" -> AcquisitionTag.DIRECT;
+            default -> AcquisitionTag.OTHER;
         };
     }
 }

@@ -35,6 +35,7 @@ import org.springframework.web.client.RestClientException;
 import org.springframework.web.client.RestClientResponseException;
 import org.springframework.web.client.ResourceAccessException;
 import yayauheny.by.contract.BackendClient;
+import yayauheny.by.model.analytics.AcquisitionTag;
 import yayauheny.by.model.analytics.AnalyticsSource;
 import yayauheny.by.model.analytics.ProductAnalyticsEvent;
 import yayauheny.by.model.analytics.AnalyticsEventRequest;
@@ -190,6 +191,7 @@ public class WebBackendClient implements BackendClient {
     private static ObjectMapper createObjectMapper() {
         SimpleModule module = new SimpleModule()
             .addSerializer(ProductAnalyticsEvent.class, new ProductAnalyticsEventSerializer())
+            .addSerializer(AcquisitionTag.class, new AcquisitionTagSerializer())
             .addSerializer(JsonObject.class, new JsonObjectSerializer())
             .addDeserializer(JsonObject.class, new JsonObjectDeserializer());
 
@@ -221,6 +223,13 @@ public class WebBackendClient implements BackendClient {
     private static final class ProductAnalyticsEventSerializer extends JsonSerializer<ProductAnalyticsEvent> {
         @Override
         public void serialize(ProductAnalyticsEvent value, JsonGenerator gen, SerializerProvider serializers) throws IOException {
+            gen.writeString(value.getValue());
+        }
+    }
+
+    private static final class AcquisitionTagSerializer extends JsonSerializer<AcquisitionTag> {
+        @Override
+        public void serialize(AcquisitionTag value, JsonGenerator gen, SerializerProvider serializers) throws IOException {
             gen.writeString(value.getValue());
         }
     }

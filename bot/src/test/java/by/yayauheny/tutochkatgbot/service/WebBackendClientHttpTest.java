@@ -29,6 +29,7 @@ import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.web.client.RestClientResponseException;
+import yayauheny.by.model.analytics.AcquisitionTag;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertThrows;
@@ -116,7 +117,7 @@ class WebBackendClientHttpTest {
                 null,
                 null,
                 null,
-                "website",
+                AcquisitionTag.WEBSITE,
                 new JsonObject(java.util.Map.of("restroom_id", JsonElementKt.JsonPrimitive("abc123")))
             ),
             10L,

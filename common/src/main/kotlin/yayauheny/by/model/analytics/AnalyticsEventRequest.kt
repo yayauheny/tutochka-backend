@@ -10,6 +10,6 @@ data class AnalyticsEventRequest(
     val lon: Double? = null,
     val resultsCount: Int? = null,
     val durationMs: Int? = null,
-    val acquisitionTag: String? = null,
+    val acquisitionTag: AcquisitionTag? = null,
     val metadata: JsonObject = JsonObject(emptyMap())
 )

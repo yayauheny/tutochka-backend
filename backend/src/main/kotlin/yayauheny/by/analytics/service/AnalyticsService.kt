@@ -63,7 +63,7 @@ class AnalyticsService(
             lon = lon,
             resultsCount = resultsCount,
             durationMs = durationMs,
-            acquisitionTag = acquisitionTag?.normalizedAcquisitionTag(),
+            acquisitionTag = acquisitionTag,
             metadata = metadata
         )
     }
@@ -83,9 +83,4 @@ class AnalyticsService(
             metadata = metadata
         )
     }
-
-    private fun String.normalizedAcquisitionTag(): String? =
-        trim()
-            .lowercase()
-            .takeIf { it == "direct" || it == "website" || it == "other" }
 }

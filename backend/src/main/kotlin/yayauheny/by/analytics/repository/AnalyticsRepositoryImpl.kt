@@ -43,7 +43,7 @@ class AnalyticsRepositoryImpl(
             .set(USERS.USERNAME, command.username)
             .apply {
                 if (command.acquisitionTag != null) {
-                    set(USERS.ACQUISITION_TAG, command.acquisitionTag)
+                    set(USERS.ACQUISITION_TAG, command.acquisitionTag.value)
                 }
             }.set(USERS.UPDATED_AT, Instant.now())
             .onConflict(USERS.TG_USER_ID)
@@ -56,7 +56,7 @@ class AnalyticsRepositoryImpl(
                     set(USERS.USERNAME, command.username)
                 }
                 if (command.acquisitionTag != null) {
-                    set(USERS.ACQUISITION_TAG, command.acquisitionTag)
+                    set(USERS.ACQUISITION_TAG, command.acquisitionTag.value)
                 }
             }.returning(USERS.ID)
             .fetchOne()

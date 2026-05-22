@@ -35,6 +35,7 @@ import yayauheny.by.helpers.DatabaseTestHelper
 import yayauheny.by.helpers.assertStatusAndJsonContent
 import yayauheny.by.helpers.testPost
 import yayauheny.by.helpers.testJson
+import yayauheny.by.model.analytics.AcquisitionTag
 import yayauheny.by.model.analytics.AnalyticsSource
 import yayauheny.by.testsupport.TEST_ENCRYPTION_KEYSET_JSON
 import yayauheny.by.tables.references.ANALYTICS_EVENTS
@@ -83,7 +84,7 @@ class AnalyticsApiTest : BaseIntegrationTest() {
             assertEquals("10", encryptionService.decrypt(requireNotNull(user.tgUserId)))
             assertEquals("123", encryptionService.decrypt(requireNotNull(user.tgChatId)))
             assertEquals("test-user-10", user.username)
-            assertEquals("direct", user.acquisitionTag)
+            assertEquals(AcquisitionTag.DIRECT.value, user.acquisitionTag)
 
             val userAnalytics = dslContext.selectFrom(USER_ANALYTICS).fetchOne() ?: error("Expected user analytics row")
             assertEquals(0, userAnalytics.searchesCount)
@@ -189,7 +190,7 @@ class AnalyticsApiTest : BaseIntegrationTest() {
             }
 
             val user = dslContext.selectFrom(USERS).fetchOne() ?: error("Expected one analytics user")
-            assertEquals("website", user.acquisitionTag)
+            assertEquals(AcquisitionTag.WEBSITE.value, user.acquisitionTag)
         }
 
     @Test

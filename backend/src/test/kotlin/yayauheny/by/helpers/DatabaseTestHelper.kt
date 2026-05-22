@@ -15,6 +15,7 @@ import yayauheny.by.model.enums.LocationType
 import yayauheny.by.model.enums.PlaceType
 import yayauheny.by.model.enums.RestroomStatus
 import yayauheny.by.importing.dedup.MatchKeyGenerator
+import yayauheny.by.model.analytics.AcquisitionTag
 import yayauheny.by.model.analytics.AnalyticsSource
 import yayauheny.by.tables.references.BUILDINGS
 import yayauheny.by.tables.references.ANALYTICS_EVENTS
@@ -71,7 +72,7 @@ data class TestAnalyticsUserData(
     val tgUserId: String = "enc-user-${UUID.randomUUID()}",
     val tgChatId: String = "enc-chat-${UUID.randomUUID()}",
     val source: String = AnalyticsSource.TELEGRAM_BOT.value,
-    val acquisitionTag: String = "direct",
+    val acquisitionTag: AcquisitionTag = AcquisitionTag.DIRECT,
     val username: String? = null,
     val createdAt: Instant = Instant.now(),
     val updatedAt: Instant = createdAt
@@ -151,7 +152,7 @@ object DatabaseTestHelper {
         tgUserId: String = "enc-user-${UUID.randomUUID()}",
         tgChatId: String = "enc-chat-${UUID.randomUUID()}",
         source: String = AnalyticsSource.TELEGRAM_BOT.value,
-        acquisitionTag: String = "direct",
+        acquisitionTag: AcquisitionTag = AcquisitionTag.DIRECT,
         username: String? = null,
         createdAt: Instant = Instant.now(),
         updatedAt: Instant = createdAt
@@ -371,7 +372,7 @@ object DatabaseTestHelper {
                 .set(USERS.TG_USER_ID, data.tgUserId)
                 .set(USERS.TG_CHAT_ID, data.tgChatId)
                 .set(USERS.SOURCE, data.source)
-                .set(USERS.ACQUISITION_TAG, data.acquisitionTag)
+                .set(USERS.ACQUISITION_TAG, data.acquisitionTag.value)
                 .set(USERS.USERNAME, data.username)
                 .set(USERS.CREATED_AT, data.createdAt)
                 .set(USERS.UPDATED_AT, data.updatedAt)

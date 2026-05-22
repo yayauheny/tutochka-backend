@@ -84,3 +84,10 @@ databaseChangeLog:
         - sqlFile:
             path: migration/20260523_add_users_acquisition_tag.sql
             relativeToChangelogFile: true
+  - changeSet:
+      id: users-acquisition-tag-check
+      author: yayauheny
+      changes:
+        - sqlFile:
+            path: migration/20260523_add_users_acquisition_tag_check.sql
+            relativeToChangelogFile: true
