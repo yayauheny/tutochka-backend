@@ -15,5 +15,6 @@ data class EncryptedAnalyticsEventCommand(
     val lon: BigDecimal? = null,
     val resultsCount: Int? = null,
     val durationMs: Int? = null,
+    val acquisitionTag: String? = null,
     val metadata: JsonObject = JsonObject(emptyMap())
 )

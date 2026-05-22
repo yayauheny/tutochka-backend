@@ -91,6 +91,7 @@ public class ToiletDetailCallback implements CallbackHandler {
                     null,
                     null,
                     null,
+                    null,
                     new JsonObject(java.util.Map.of("restroom_id", JsonElementKt.JsonPrimitive(restroomId)))
                 );
             backendClient.trackProductEvent(request, ctx.userId(), ctx.chatId(), ctx.username());

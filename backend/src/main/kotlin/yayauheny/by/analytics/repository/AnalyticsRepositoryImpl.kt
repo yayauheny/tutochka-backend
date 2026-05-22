@@ -41,7 +41,11 @@ class AnalyticsRepositoryImpl(
             .set(USERS.TG_CHAT_ID, encryptedTgChatId)
             .set(USERS.SOURCE, command.source.value)
             .set(USERS.USERNAME, command.username)
-            .set(USERS.UPDATED_AT, Instant.now())
+            .apply {
+                if (command.acquisitionTag != null) {
+                    set(USERS.ACQUISITION_TAG, command.acquisitionTag)
+                }
+            }.set(USERS.UPDATED_AT, Instant.now())
             .onConflict(USERS.TG_USER_ID)
             .doUpdate()
             .set(USERS.TG_CHAT_ID, encryptedTgChatId)
@@ -50,6 +54,9 @@ class AnalyticsRepositoryImpl(
             .apply {
                 if (command.username != null) {
                     set(USERS.USERNAME, command.username)
+                }
+                if (command.acquisitionTag != null) {
+                    set(USERS.ACQUISITION_TAG, command.acquisitionTag)
                 }
             }.returning(USERS.ID)
             .fetchOne()
@@ -108,6 +115,9 @@ class AnalyticsRepositoryImpl(
 
     private fun ProductAnalyticsEvent.analyticsCounters(): UserAnalyticsCounters =
         when (this) {
+            ProductAnalyticsEvent.BOT_STARTED ->
+                UserAnalyticsCounters()
+
             ProductAnalyticsEvent.NEAREST_RESTROOMS_RETURNED ->
                 UserAnalyticsCounters(searchesCount = 1, successfulSearchesCount = 1)
 

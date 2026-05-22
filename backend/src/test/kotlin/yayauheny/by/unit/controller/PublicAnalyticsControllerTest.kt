@@ -22,17 +22,13 @@ import yayauheny.by.helpers.assertJsonContentType
 @DisplayName("PublicAnalyticsController Tests")
 class PublicAnalyticsControllerTest : RoutingTestBase() {
     @Test
-    @DisplayName("GIVEN public dashboard route WHEN GET root THEN return HTML page")
-    fun given_public_dashboard_route_when_get_root_then_return_html_page() =
+    @DisplayName("GIVEN backend routing WHEN GET root THEN return not found")
+    fun given_backend_routing_when_get_root_then_return_not_found() =
         runTest {
             withRoutingApp { client ->
                 val response = client.get("/")
 
-                assertEquals(HttpStatusCode.OK, response.status)
-                assertTrue(response.headers["Content-Type"]?.contains("text/html") == true)
-                val body = response.bodyAsText()
-                assertTrue(body.contains("ТуТочка Analytics"))
-                assertTrue(body.contains("/api/v1/public/analytics"))
+                assertEquals(HttpStatusCode.NotFound, response.status)
             }
         }
 

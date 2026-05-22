@@ -77,3 +77,10 @@ databaseChangeLog:
         - sqlFile:
             path: migration/20260515_seed_observed_countries_and_cities.sql
             relativeToChangelogFile: true
+  - changeSet:
+      id: users-acquisition-tag
+      author: yayauheny
+      changes:
+        - sqlFile:
+            path: migration/20260523_add_users_acquisition_tag.sql
+            relativeToChangelogFile: true

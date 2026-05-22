@@ -20,25 +20,17 @@ public class CommandUtils {
         if (message == null) {
             return null;
         }
-        
-        String text = message.getText();
-        if (text == null) {
-            text = message.getCaption();
-        }
-        
+
+        String text = extractMessageText(message);
         if (text == null) {
             return null;
         }
-        
-        List<MessageEntity> entities = message.getEntities();
-        if (entities == null) {
-            entities = message.getCaptionEntities();
-        }
-        
+
+        List<MessageEntity> entities = extractEntities(message);
         if (entities == null) {
             return null;
         }
-        
+
         for (MessageEntity entity : entities) {
             if ("bot_command".equals(entity.getType())) {
                 int offset = entity.getOffset();
@@ -53,7 +45,35 @@ public class CommandUtils {
                 }
             }
         }
-        
+
+        return null;
+    }
+
+    public static String extractCommandArgument(Message message) {
+        if (message == null) {
+            return null;
+        }
+
+        String text = extractMessageText(message);
+        List<MessageEntity> entities = extractEntities(message);
+        if (text == null || entities == null) {
+            return null;
+        }
+
+        for (MessageEntity entity : entities) {
+            if (!"bot_command".equals(entity.getType())) {
+                continue;
+            }
+
+            int commandEnd = entity.getOffset() + entity.getLength();
+            if (commandEnd >= text.length()) {
+                return null;
+            }
+
+            String argument = text.substring(commandEnd).trim();
+            return argument.isBlank() ? null : argument;
+        }
+
         return null;
     }
     
@@ -66,23 +86,32 @@ public class CommandUtils {
         if (message == null) {
             return false;
         }
-        
-        if (message.getEntities() != null) {
-            for (MessageEntity entity : message.getEntities()) {
+
+        List<MessageEntity> entities = extractEntities(message);
+        if (entities != null) {
+            for (MessageEntity entity : entities) {
                 if ("bot_command".equals(entity.getType())) {
                     return true;
                 }
             }
         }
-        
-        if (message.getCaptionEntities() != null) {
-            for (MessageEntity entity : message.getCaptionEntities()) {
-                if ("bot_command".equals(entity.getType())) {
-                    return true;
-                }
-            }
-        }
-        
+
         return false;
+    }
+
+    private static String extractMessageText(Message message) {
+        String text = message.getText();
+        if (text == null) {
+            text = message.getCaption();
+        }
+        return text;
+    }
+
+    private static List<MessageEntity> extractEntities(Message message) {
+        List<MessageEntity> entities = message.getEntities();
+        if (entities == null) {
+            entities = message.getCaptionEntities();
+        }
+        return entities;
     }
 }

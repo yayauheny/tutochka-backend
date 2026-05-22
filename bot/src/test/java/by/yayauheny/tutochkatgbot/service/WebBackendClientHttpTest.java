@@ -116,6 +116,7 @@ class WebBackendClientHttpTest {
                 null,
                 null,
                 null,
+                "website",
                 new JsonObject(java.util.Map.of("restroom_id", JsonElementKt.JsonPrimitive("abc123")))
             ),
             10L,
@@ -129,6 +130,7 @@ class WebBackendClientHttpTest {
         assertThat(tgChatIdHeader.get()).isEqualTo("123");
         assertThat(tgUsernameHeader.get()).isEqualTo("test-user-10");
         assertThat(body.get()).contains("\"restroom_id\":\"abc123\"");
+        assertThat(body.get()).contains("\"acquisitionTag\":\"website\"");
         assertThat(body.get()).contains("\"event\":\"restroom_details_opened\"");
     }
 
@@ -149,6 +151,7 @@ class WebBackendClientHttpTest {
                 client.trackProductEvent(
                     new AnalyticsEventRequest(
                         ProductAnalyticsEvent.RESTROOM_DETAILS_OPENED,
+                        null,
                         null,
                         null,
                         null,

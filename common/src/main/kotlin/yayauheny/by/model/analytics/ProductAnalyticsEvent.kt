@@ -5,6 +5,9 @@ import kotlinx.serialization.Serializable
 
 @Serializable
 enum class ProductAnalyticsEvent(val value: String) {
+    @SerialName("bot_started")
+    BOT_STARTED("bot_started"),
+
     @SerialName("nearest_restrooms_returned")
     NEAREST_RESTROOMS_RETURNED("nearest_restrooms_returned"),
 

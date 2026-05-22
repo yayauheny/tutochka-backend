@@ -127,6 +127,11 @@ open class Users(
      */
     val BLOCKED_AT: TableField<UsersRecord, Instant?> = createField(DSL.name("blocked_at"), SQLDataType.INSTANT, this, "")
 
+    /**
+     * The column <code>public.users.acquisition_tag</code>.
+     */
+    val ACQUISITION_TAG: TableField<UsersRecord, String?> = createField(DSL.name("acquisition_tag"), SQLDataType.CLOB.nullable(false).defaultValue(DSL.field(DSL.raw("'direct'::text"), SQLDataType.CLOB)), this, "")
+
     private constructor(alias: Name, aliased: Table<UsersRecord>?): this(alias, null, null, null, aliased, null, null)
     private constructor(alias: Name, aliased: Table<UsersRecord>?, parameters: Array<Field<*>?>?): this(alias, null, null, null, aliased, parameters, null)
     private constructor(alias: Name, aliased: Table<UsersRecord>?, where: Condition?): this(alias, null, null, null, aliased, null, where)

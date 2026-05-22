@@ -71,6 +71,7 @@ data class TestAnalyticsUserData(
     val tgUserId: String = "enc-user-${UUID.randomUUID()}",
     val tgChatId: String = "enc-chat-${UUID.randomUUID()}",
     val source: String = AnalyticsSource.TELEGRAM_BOT.value,
+    val acquisitionTag: String = "direct",
     val username: String? = null,
     val createdAt: Instant = Instant.now(),
     val updatedAt: Instant = createdAt
@@ -150,10 +151,11 @@ object DatabaseTestHelper {
         tgUserId: String = "enc-user-${UUID.randomUUID()}",
         tgChatId: String = "enc-chat-${UUID.randomUUID()}",
         source: String = AnalyticsSource.TELEGRAM_BOT.value,
+        acquisitionTag: String = "direct",
         username: String? = null,
         createdAt: Instant = Instant.now(),
         updatedAt: Instant = createdAt
-    ) = TestAnalyticsUserData(tgUserId, tgChatId, source, username, createdAt, updatedAt)
+    ) = TestAnalyticsUserData(tgUserId, tgChatId, source, acquisitionTag, username, createdAt, updatedAt)
 
     fun createTestAnalyticsEventData(
         event: String,
@@ -369,6 +371,7 @@ object DatabaseTestHelper {
                 .set(USERS.TG_USER_ID, data.tgUserId)
                 .set(USERS.TG_CHAT_ID, data.tgChatId)
                 .set(USERS.SOURCE, data.source)
+                .set(USERS.ACQUISITION_TAG, data.acquisitionTag)
                 .set(USERS.USERNAME, data.username)
                 .set(USERS.CREATED_AT, data.createdAt)
                 .set(USERS.UPDATED_AT, data.updatedAt)

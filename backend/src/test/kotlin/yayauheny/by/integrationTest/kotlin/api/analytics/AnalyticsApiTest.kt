@@ -83,6 +83,7 @@ class AnalyticsApiTest : BaseIntegrationTest() {
             assertEquals("10", encryptionService.decrypt(requireNotNull(user.tgUserId)))
             assertEquals("123", encryptionService.decrypt(requireNotNull(user.tgChatId)))
             assertEquals("test-user-10", user.username)
+            assertEquals("direct", user.acquisitionTag)
 
             val userAnalytics = dslContext.selectFrom(USER_ANALYTICS).fetchOne() ?: error("Expected user analytics row")
             assertEquals(0, userAnalytics.searchesCount)
@@ -141,6 +142,54 @@ class AnalyticsApiTest : BaseIntegrationTest() {
             assertEquals(2, dslContext.fetchCount(USERS))
             assertEquals(2, dslContext.fetchCount(USER_ANALYTICS))
             assertEquals(2, dslContext.fetchCount(ANALYTICS_EVENTS))
+        }
+
+    @Test
+    @DisplayName("GIVEN website acquisition tag WHEN POST analytics events THEN persist it without later overwrite")
+    fun given_website_acquisition_tag_when_post_analytics_events_then_persist_it_without_later_overwrite() =
+        runTest {
+            val startedBody =
+                buildJsonObject {
+                    put("event", "bot_started")
+                    put("acquisitionTag", "website")
+                }.toString()
+            val detailsBody =
+                buildJsonObject {
+                    put("event", "restroom_details_opened")
+                }.toString()
+
+            KtorTestApplication.withApp(dslContext) { client ->
+                client
+                    .testPost(
+                        "/api/v1/analytics/events",
+                        startedBody,
+                        mapOf(
+                            "X-Tg-User-Id" to "10",
+                            "X-Tg-Chat-Id" to "123",
+                            "X-Tg-Username" to "test-user-10",
+                            "X-Analytics-Source" to AnalyticsSource.TELEGRAM_BOT.value
+                        )
+                    ).also { response ->
+                        assertEquals(HttpStatusCode.Accepted, response.status)
+                    }
+
+                client
+                    .testPost(
+                        "/api/v1/analytics/events",
+                        detailsBody,
+                        mapOf(
+                            "X-Tg-User-Id" to "10",
+                            "X-Tg-Chat-Id" to "123",
+                            "X-Tg-Username" to "test-user-10",
+                            "X-Analytics-Source" to AnalyticsSource.TELEGRAM_BOT.value
+                        )
+                    ).also { response ->
+                        assertEquals(HttpStatusCode.Accepted, response.status)
+                    }
+            }
+
+            val user = dslContext.selectFrom(USERS).fetchOne() ?: error("Expected one analytics user")
+            assertEquals("website", user.acquisitionTag)
         }
 
     @Test

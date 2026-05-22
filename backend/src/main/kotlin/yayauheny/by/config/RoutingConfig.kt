@@ -1,7 +1,6 @@
 package yayauheny.by.config
 
 import io.ktor.server.application.Application
-import io.ktor.server.routing.get
 import io.ktor.server.routing.route
 import io.ktor.server.routing.routing
 import org.koin.ktor.ext.inject
@@ -23,7 +22,6 @@ fun Application.configureRouting() {
     val importController by inject<ImportController>()
 
     routing {
-        with(publicAnalyticsController) { dashboardRoutes() }
         with(healthController) { healthRoutes() }
 
         route("/api/v1") {

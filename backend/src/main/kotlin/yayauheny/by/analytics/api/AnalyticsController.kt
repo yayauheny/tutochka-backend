@@ -45,6 +45,7 @@ class AnalyticsController(
                 lon = request.lon?.toBigDecimalRounded(),
                 resultsCount = request.resultsCount,
                 durationMs = request.durationMs,
+                acquisitionTag = request.acquisitionTag,
                 metadata = request.metadata
             )
 

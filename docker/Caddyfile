@@ -1,14 +1,23 @@
 tutochka.by, www.tutochka.by {
+    @backend_routes {
+        path /api /api/*
+        path /health /health/*
+        path /metrics
+        path /actuator/prometheus
+    }
+
     handle /telegram/* {
         reverse_proxy bot:{$BOT_PORT:8081}
     }
 
-    handle /api/* {
+    handle @backend_routes {
         reverse_proxy backend:{$BACKEND_PORT:8080}
     }
 
     handle {
-        reverse_proxy backend:{$BACKEND_PORT:8080}
+        reverse_proxy https://tutochka.lovable.app {
+            header_up Host tutochka.lovable.app
+        }
     }
 }
 

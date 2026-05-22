@@ -57,6 +57,10 @@ open class UsersRecord() : UpdatableRecordImpl<UsersRecord>(Users.USERS) {
         set(value): Unit = set(8, value)
         get(): Instant? = get(8) as Instant?
 
+    open var acquisitionTag: String?
+        set(value): Unit = set(9, value)
+        get(): String? = get(9) as String?
+
     // -------------------------------------------------------------------------
     // Primary key information
     // -------------------------------------------------------------------------
@@ -66,7 +70,7 @@ open class UsersRecord() : UpdatableRecordImpl<UsersRecord>(Users.USERS) {
     /**
      * Create a detached, initialised UsersRecord
      */
-    constructor(id: UUID? = null, tgUserId: String? = null, tgChatId: String? = null, source: String? = null, username: String? = null, createdAt: Instant? = null, updatedAt: Instant? = null, isBlocked: Boolean? = null, blockedAt: Instant? = null): this() {
+    constructor(id: UUID? = null, tgUserId: String? = null, tgChatId: String? = null, source: String? = null, username: String? = null, createdAt: Instant? = null, updatedAt: Instant? = null, isBlocked: Boolean? = null, blockedAt: Instant? = null, acquisitionTag: String? = null): this() {
         this.id = id
         this.tgUserId = tgUserId
         this.tgChatId = tgChatId
@@ -76,6 +80,7 @@ open class UsersRecord() : UpdatableRecordImpl<UsersRecord>(Users.USERS) {
         this.updatedAt = updatedAt
         this.isBlocked = isBlocked
         this.blockedAt = blockedAt
+        this.acquisitionTag = acquisitionTag
         resetTouchedOnNotNull()
     }
 }

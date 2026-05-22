@@ -67,7 +67,7 @@ public abstract class AbstractSpringBotIntegrationTest {
                 MessageEntity.builder()
                     .type("bot_command")
                     .offset(0)
-                    .length(text.length())
+                    .length(commandLength(text))
                     .build()
             )
         );
@@ -134,5 +134,10 @@ public abstract class AbstractSpringBotIntegrationTest {
 
     private User user(long id) {
         return User.builder().id(id).isBot(false).firstName("Test").userName("test-user-" + id).build();
+    }
+
+    private int commandLength(String text) {
+        int firstSpace = text.indexOf(' ');
+        return firstSpace >= 0 ? firstSpace : text.length();
     }
 }
