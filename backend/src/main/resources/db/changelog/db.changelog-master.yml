@@ -57,6 +57,13 @@ databaseChangeLog:
             path: migration/20260514_add_restroom_match_key_unique_index.sql
             relativeToChangelogFile: true
   - changeSet:
+      id: fix-restroom-match-key-unique-index
+      author: yayauheny
+      changes:
+        - sqlFile:
+            path: migration/20260526_fix_restroom_match_key_unique_index.sql
+            relativeToChangelogFile: true
+  - changeSet:
       id: building-match-key-unique-index
       author: yayauheny
       changes:

@@ -4,8 +4,6 @@ import java.util.UUID
 import kotlinx.serialization.json.JsonPrimitive
 import kotlinx.serialization.json.buildJsonObject
 import org.jooq.DSLContext
-import org.postgresql.util.PSQLException
-import org.postgresql.util.PSQLState
 import yayauheny.by.importing.dedup.MatchKeyGenerator
 import yayauheny.by.importing.dedup.ProviderKeyResolver
 import yayauheny.by.importing.mapper.RestroomImportMapper
@@ -112,27 +110,14 @@ class ImportPipeline(
                 externalIds = buildJsonObject { put(resolvedProviderKey, JsonPrimitive(context.externalId)) }
             )
 
-        return try {
-            buildingImportRepository
-                .upsertImportedBuildingInTx(
-                    txCtx = txCtx,
-                    provider = resolvedProviderKey,
-                    externalId = context.externalId,
-                    createDto = createDto,
-                    matchKey = buildingMatchKey
-                ).building
-        } catch (error: PSQLException) {
-            if (error.sqlState != PSQLState.UNIQUE_VIOLATION.state || buildingMatchKey == null) {
-                throw error
-            }
-
-            val concurrentMatch =
-                buildingImportRepository
-                    .findByMatchKeysInTx(txCtx, listOf(buildingMatchKey))
-                    .firstOrNull() ?: throw error
-
-            buildingImportRepository.linkExternalIdInTx(txCtx, concurrentMatch.id, resolvedProviderKey, context.externalId)
-        }
+        return buildingImportRepository
+            .upsertImportedBuildingInTx(
+                txCtx = txCtx,
+                provider = resolvedProviderKey,
+                externalId = context.externalId,
+                createDto = createDto,
+                matchKey = buildingMatchKey
+            ).building
     }
 
     private fun importRestroom(
@@ -153,7 +138,7 @@ class ImportPipeline(
         val originKey = ImportOriginKey(createDto.originProvider, originId)
 
         restroomImportRepository.findByOriginsInTx(txCtx, listOf(originKey)).firstOrNull()?.let {
-            val upserted = restroomImportRepository.upsertImportedRestroomInTx(txCtx, createDto, restroomMatchKey)
+            val upserted = restroomImportRepository.upsertImportedRestroomInTx(txCtx, createDto, null)
             setNearestStation(txCtx, upserted.restroom.id, candidate.lat, candidate.lng)
             return ImportPipelineResult(
                 outcome = if (upserted.created) ImportStatus.CREATED else ImportStatus.UPDATED,
@@ -210,46 +195,7 @@ class ImportPipeline(
             }
 
         val upserted =
-            try {
-                inSavepoint(txCtx) { nestedTx ->
-                    restroomImportRepository.upsertImportedRestroomInTx(nestedTx, createDto, restroomMatchKey)
-                }
-            } catch (error: PSQLException) {
-                if (!isRestroomMatchKeyUniqueViolation(error, restroomMatchKey)) {
-                    throw error
-                }
-
-                val canonical =
-                    restroomMatchKey
-                        ?.let { key ->
-                            restroomImportRepository.findByMatchKeysInTx(txCtx, listOf(key)).firstOrNull()
-                        } ?: throw error
-
-                val linked =
-                    if (providerKey == null) {
-                        canonical
-                    } else {
-                        val currentExternalId =
-                            canonical.externalMaps
-                                ?.get(providerKey)
-                                ?.toString()
-                                ?.trim('"')
-                        if (currentExternalId == candidate.providerObjectId) {
-                            canonical
-                        } else {
-                            restroomImportRepository.linkExternalMapInTx(txCtx, canonical.id, providerKey, candidate.providerObjectId)
-                        }
-                    }
-
-                return ImportPipelineResult(
-                    outcome = ImportStatus.LINKED_DUPLICATE,
-                    providerExternalId = candidate.providerObjectId,
-                    restroomId = linked.id,
-                    buildingId = linked.buildingId,
-                    duplicateOfRestroomId = canonical.id,
-                    duplicateReason = "EXACT_RESTROOM_MATCH_KEY"
-                )
-            }
+            restroomImportRepository.upsertImportedRestroomInTx(txCtx, createDto, restroomMatchKey)
         setNearestStation(txCtx, upserted.restroom.id, candidate.lat, candidate.lng)
 
         if (upserted.created && providerKey != null) {
@@ -263,7 +209,14 @@ class ImportPipeline(
         }
 
         return ImportPipelineResult(
-            outcome = if (upserted.created) ImportStatus.CREATED else ImportStatus.UPDATED,
+            outcome =
+                if (upserted.created) {
+                    ImportStatus.CREATED
+                } else if (restroomMatchKey != null) {
+                    ImportStatus.LINKED_DUPLICATE
+                } else {
+                    ImportStatus.UPDATED
+                },
             providerExternalId = candidate.providerObjectId,
             restroomId = upserted.restroom.id,
             buildingId = upserted.restroom.buildingId
@@ -307,22 +260,6 @@ class ImportPipeline(
             }
     }
 
-    private fun <T> inSavepoint(
-        txCtx: DSLContext,
-        block: (DSLContext) -> T
-    ): T =
-        txCtx.connectionResult { connection ->
-            val savepoint = connection.setSavepoint()
-            try {
-                val result = block(txCtx)
-                connection.releaseSavepoint(savepoint)
-                result
-            } catch (error: Throwable) {
-                connection.rollback(savepoint)
-                throw error
-            }
-        }
-
     private fun setNearestStation(
         txCtx: DSLContext,
         restroomId: UUID,
@@ -336,12 +273,4 @@ class ImportPipeline(
             lon = lon
         )
     }
-
-    private fun isRestroomMatchKeyUniqueViolation(
-        error: PSQLException,
-        restroomMatchKey: String?
-    ): Boolean =
-        restroomMatchKey != null &&
-            error.sqlState == PSQLState.UNIQUE_VIOLATION.state &&
-            error.serverErrorMessage?.constraint == "restrooms_restroom_match_key_unique_idx"
 }

@@ -5,6 +5,7 @@ import org.junit.jupiter.api.Test
 import org.koin.dsl.koinApplication
 import org.koin.dsl.module
 import yayauheny.by.di.importingModule
+import yayauheny.by.importing.provider.osm.OsmImportAdapter
 import yayauheny.by.importing.provider.twogis.TwoGisImportAdapter
 import yayauheny.by.importing.provider.yandex.YandexImportAdapter
 import yayauheny.by.importing.service.ImportAdapterRegistry
@@ -30,12 +31,15 @@ class ImportingModuleTest {
             }
 
         try {
+            val osmAdapter = app.koin.get<OsmImportAdapter>()
             val twoGisAdapter = app.koin.get<TwoGisImportAdapter>()
             val yandexAdapter = app.koin.get<YandexImportAdapter>()
             val registry = app.koin.get<ImportAdapterRegistry>()
 
+            assertEquals(ImportProvider.OSM, osmAdapter.provider)
             assertEquals(ImportProvider.TWO_GIS, twoGisAdapter.provider)
             assertEquals(ImportProvider.YANDEX_MAPS, yandexAdapter.provider)
+            assertEquals(osmAdapter, registry.get(ImportProvider.OSM))
             assertEquals(twoGisAdapter, registry.get(ImportProvider.TWO_GIS))
             assertEquals(yandexAdapter, registry.get(ImportProvider.YANDEX_MAPS))
         } finally {

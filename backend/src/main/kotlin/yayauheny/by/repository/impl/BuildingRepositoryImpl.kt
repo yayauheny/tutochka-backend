@@ -352,15 +352,7 @@ class BuildingRepositoryImpl(
             insertWithMatchKey
                 .onConflict(buildingMatchKeyField)
                 .doUpdate()
-                .set(BUILDINGS.CITY_ID, createDto.cityId)
-                .set(BUILDINGS.NAME, createDto.name)
-                .set(BUILDINGS.ADDRESS, createDto.address.takeIf { it.isNotBlank() })
-                .set(BUILDINGS.BUILDING_TYPE, createDto.buildingType?.code)
-                .set(BUILDINGS.WORK_TIME, createDto.workTime.toJSONB())
-                .set(
-                    BUILDINGS.COORDINATES,
-                    yayauheny.by.util.pointExpr(createDto.coordinates.lon, createDto.coordinates.lat, BUILDINGS.COORDINATES)
-                ).set(BUILDINGS.EXTERNAL_IDS, mergeProviderJsonField(BUILDINGS.EXTERNAL_IDS, provider, externalId))
+                .set(BUILDINGS.EXTERNAL_IDS, mergeProviderJsonField(BUILDINGS.EXTERNAL_IDS, provider, externalId))
                 .set(BUILDINGS.UPDATED_AT, now)
         val record =
             (

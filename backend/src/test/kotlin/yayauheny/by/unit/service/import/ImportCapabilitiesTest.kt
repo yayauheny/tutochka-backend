@@ -19,6 +19,10 @@ class ImportCapabilitiesTest {
             ImportProvider.TWO_GIS,
             ImportPayloadType.TWO_GIS_SCRAPED_PLACE_JSON
         )
+        ImportCapabilities.requireSupported(
+            ImportProvider.OSM,
+            ImportPayloadType.OSM_TOILET_JSON
+        )
     }
 
     @Test

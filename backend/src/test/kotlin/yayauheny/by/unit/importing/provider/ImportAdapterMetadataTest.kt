@@ -9,9 +9,11 @@ import kotlinx.serialization.json.put
 import org.junit.jupiter.api.DisplayName
 import org.junit.jupiter.api.Test
 import yayauheny.by.importing.model.ImportAdapterContext
+import yayauheny.by.importing.provider.osm.OsmImportAdapter
 import yayauheny.by.importing.provider.twogis.TwoGisImportAdapter
 import yayauheny.by.importing.provider.yandex.YandexImportAdapter
 import yayauheny.by.model.enums.ImportPayloadType
+import yayauheny.by.testfixtures.OsmOriginalRows
 
 @DisplayName("ImportAdapter Metadata Tests")
 class ImportAdapterMetadataTest {
@@ -138,5 +140,34 @@ class ImportAdapterMetadataTest {
         val sourceLocation = adapter.extractSourceLocation(payload)
 
         assertNull(sourceLocation.city)
+    }
+
+    @Test
+    fun `OSM adapter extracts inbox metadata from OSM payload`() {
+        val adapter = OsmImportAdapter()
+        val payload =
+            OsmOriginalRows.withTopLevel(
+                OsmOriginalRows.accessCustomersWheelchair(),
+                mapOf("scrapedAt" to "2026-05-24T09:25:00.392Z")
+            )
+
+        val envelope = adapter.parseEnvelope(payload, ImportAdapterContext(ImportPayloadType.OSM_TOILET_JSON, UUID.randomUUID()))
+
+        assertEquals("4115239922", envelope.inboxMetadata.externalId)
+        assertEquals("https://www.openstreetmap.org/node/4115239922", envelope.inboxMetadata.sourceUrl)
+        assertNotNull(envelope.inboxMetadata.scrapedAt)
+    }
+
+    @Test
+    fun `OSM adapter extracts source city and coordinates from tags and geom`() {
+        val adapter = OsmImportAdapter()
+        val payload = OsmOriginalRows.addressTaggedPaid()
+
+        val sourceLocation = adapter.extractSourceLocation(payload)
+
+        assertEquals("BY", sourceLocation.country)
+        assertEquals("Мінск", sourceLocation.city)
+        assertNotNull(sourceLocation.lat)
+        assertNotNull(sourceLocation.lng)
     }
 }

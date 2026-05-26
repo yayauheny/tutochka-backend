@@ -611,41 +611,46 @@ class RestroomRepositoryImpl(
             } else {
                 insertStep
             }
-        val updateStep =
-            insertWithMatchKey
-                .onConflict(RESTROOMS.ORIGIN_PROVIDER, RESTROOMS.ORIGIN_ID)
-                .doUpdate()
-                .set(RESTROOMS.CITY_ID, createDto.cityId)
-                .set(RESTROOMS.BUILDING_ID, createDto.buildingId)
-                .set(RESTROOMS.SUBWAY_STATION_ID, createDto.subwayStationId)
-                .set(RESTROOMS.NAME, createDto.name)
-                .set(RESTROOMS.ADDRESS, createDto.address.takeIf { !it.isNullOrBlank() && it != "null" })
-                .set(RESTROOMS.PHONES, createDto.phones.toJSONB())
-                .set(RESTROOMS.WORK_TIME, createDto.workTime.toJSONB())
-                .set(RESTROOMS.FEE_TYPE, createDto.feeType?.name)
-                .set(RESTROOMS.GENDER_TYPE, createDto.genderType?.name)
-                .set(RESTROOMS.ACCESSIBILITY_TYPE, createDto.accessibilityType.name)
-                .set(RESTROOMS.PLACE_TYPE, createDto.placeType.code)
-                .set(RESTROOMS.COORDINATES, pointExpr(createDto.coordinates.lon, createDto.coordinates.lat, RESTROOMS.COORDINATES))
-                .set(RESTROOMS.DATA_SOURCE, createDto.dataSource.name)
-                .set(RESTROOMS.STATUS, createDto.status.name)
-                .set(RESTROOMS.AMENITIES, createDto.amenities.toJSONB())
-                .set(RESTROOMS.EXTERNAL_MAPS, externalMapsField)
-                .set(RESTROOMS.ACCESS_NOTE, createDto.accessNote)
-                .set(RESTROOMS.DIRECTION_GUIDE, createDto.directionGuide)
-                .set(RESTROOMS.INHERIT_BUILDING_SCHEDULE, createDto.inheritBuildingSchedule)
-                .set(RESTROOMS.HAS_PHOTOS, createDto.hasPhotos)
-                .set(RESTROOMS.LOCATION_TYPE, createDto.locationType.name)
-                .set(RESTROOMS.IS_HIDDEN, createDto.isHidden)
-                .set(RESTROOMS.UPDATED_AT, now)
+
+        val upsertStep =
+            if (matchKey != null) {
+                insertWithMatchKey
+                    .onConflict(restroomMatchKeyField)
+                    .doUpdate()
+                    .set(RESTROOMS.EXTERNAL_MAPS, externalMapsField)
+                    .set(RESTROOMS.UPDATED_AT, now)
+            } else {
+                insertWithMatchKey
+                    .onConflict(RESTROOMS.ORIGIN_PROVIDER, RESTROOMS.ORIGIN_ID)
+                    .doUpdate()
+                    .set(RESTROOMS.CITY_ID, createDto.cityId)
+                    .set(RESTROOMS.BUILDING_ID, createDto.buildingId)
+                    .set(RESTROOMS.SUBWAY_STATION_ID, createDto.subwayStationId)
+                    .set(RESTROOMS.NAME, createDto.name)
+                    .set(RESTROOMS.ADDRESS, createDto.address.takeIf { !it.isNullOrBlank() && it != "null" })
+                    .set(RESTROOMS.PHONES, createDto.phones.toJSONB())
+                    .set(RESTROOMS.WORK_TIME, createDto.workTime.toJSONB())
+                    .set(RESTROOMS.FEE_TYPE, createDto.feeType?.name)
+                    .set(RESTROOMS.GENDER_TYPE, createDto.genderType?.name)
+                    .set(RESTROOMS.ACCESSIBILITY_TYPE, createDto.accessibilityType.name)
+                    .set(RESTROOMS.PLACE_TYPE, createDto.placeType.code)
+                    .set(RESTROOMS.COORDINATES, pointExpr(createDto.coordinates.lon, createDto.coordinates.lat, RESTROOMS.COORDINATES))
+                    .set(RESTROOMS.DATA_SOURCE, createDto.dataSource.name)
+                    .set(RESTROOMS.STATUS, createDto.status.name)
+                    .set(RESTROOMS.AMENITIES, createDto.amenities.toJSONB())
+                    .set(RESTROOMS.EXTERNAL_MAPS, externalMapsField)
+                    .set(RESTROOMS.ACCESS_NOTE, createDto.accessNote)
+                    .set(RESTROOMS.DIRECTION_GUIDE, createDto.directionGuide)
+                    .set(RESTROOMS.INHERIT_BUILDING_SCHEDULE, createDto.inheritBuildingSchedule)
+                    .set(RESTROOMS.HAS_PHOTOS, createDto.hasPhotos)
+                    .set(RESTROOMS.LOCATION_TYPE, createDto.locationType.name)
+                    .set(RESTROOMS.IS_HIDDEN, createDto.isHidden)
+                    .set(RESTROOMS.UPDATED_AT, now)
+            }
+
         val record =
-            (
-                if (matchKey != null) {
-                    updateStep.set(restroomMatchKeyField, matchKey)
-                } else {
-                    updateStep
-                }
-            ).returningResult(*((getAllRestroomsFieldsWithCoordinates()) + insertedField).toTypedArray())
+            upsertStep
+                .returningResult(*((getAllRestroomsFieldsWithCoordinates()) + insertedField).toTypedArray())
                 .fetchOne()
                 ?: throw EntityNotFoundException("Туалет", "не удалось сохранить")
 

@@ -23,6 +23,7 @@ import org.junit.jupiter.api.Test
 import yayauheny.by.helpers.DatabaseTestHelper
 import yayauheny.by.importing.dedup.MatchKeyGenerator
 import yayauheny.by.importing.provider.ImportSourceAdapter
+import yayauheny.by.importing.provider.osm.OsmImportAdapter
 import yayauheny.by.importing.provider.ProviderImportEnvelope
 import yayauheny.by.importing.provider.twogis.TwoGisImportAdapter
 import yayauheny.by.importing.provider.yandex.YandexImportAdapter
@@ -52,6 +53,7 @@ import yayauheny.by.model.restroom.RestroomCreateDto
 import yayauheny.by.repository.impl.RestroomRepositoryImpl
 import yayauheny.by.tables.references.BUILDINGS
 import yayauheny.by.tables.references.RESTROOMS
+import yayauheny.by.testfixtures.OsmOriginalRows
 import yayauheny.by.util.transactionSuspend
 
 @Tag("integration")
@@ -73,6 +75,7 @@ class ImportPipelineIntegrationTest : BaseIntegrationTest() {
         val registry =
             ImportAdapterRegistry(
                 listOf<ImportSourceAdapter>(
+                    OsmImportAdapter(),
                     TwoGisImportAdapter(),
                     YandexImportAdapter()
                 )
@@ -174,6 +177,94 @@ class ImportPipelineIntegrationTest : BaseIntegrationTest() {
             assertNotNull(restroom)
             assertEquals("Updated Name", restroom.name)
             assertEquals("Updated Address", restroom.address)
+        }
+
+    @Test
+    fun `repeated osm import updates same restroom`() =
+        runTest {
+            val env = DatabaseTestHelper.createTestEnvironment(dslContext)
+
+            val first =
+                OsmOriginalRows.withTags(
+                    OsmOriginalRows.accessCustomersWheelchair(),
+                    mapOf(
+                        "name" to "Туалет",
+                        "fee" to "no",
+                        "access" to "yes"
+                    )
+                )
+            val second =
+                OsmOriginalRows.withTags(
+                    OsmOriginalRows.accessCustomersWheelchair(),
+                    mapOf(
+                        "name" to "Общественный туалет",
+                        "fee" to "yes",
+                        "access" to "yes"
+                    )
+                )
+
+            val firstResult =
+                importBatchProcessor
+                    .process(
+                        provider = ImportProvider.OSM,
+                        payloadType = ImportPayloadType.OSM_TOILET_JSON,
+                        cityId = env.cityId,
+                        items = listOf(first),
+                        chunkSize = 50
+                    ).results
+                    .single()
+            val secondResult =
+                importBatchProcessor
+                    .process(
+                        provider = ImportProvider.OSM,
+                        payloadType = ImportPayloadType.OSM_TOILET_JSON,
+                        cityId = env.cityId,
+                        items = listOf(second),
+                        chunkSize = 50
+                    ).results
+                    .single()
+
+            assertEquals(ImportStatus.CREATED, firstResult.outcome)
+            assertEquals(ImportStatus.UPDATED, secondResult.outcome)
+            assertEquals(firstResult.restroomId, secondResult.restroomId)
+
+            val restroom = restroomRepository.findById(requireNotNull(secondResult.restroomId))
+            assertNotNull(restroom)
+            assertEquals("Общественный туалет", restroom.name)
+            assertEquals(FeeType.PAID, restroom.feeType)
+        }
+
+    @Test
+    fun `osm toilets from same original building reuse one building`() =
+        runTest {
+            val env = DatabaseTestHelper.createTestEnvironment(dslContext)
+
+            val firstResult =
+                importBatchProcessor
+                    .process(
+                        provider = ImportProvider.OSM,
+                        payloadType = ImportPayloadType.OSM_TOILET_JSON,
+                        cityId = env.cityId,
+                        items = listOf(OsmOriginalRows.sameBuildingLevelOne()),
+                        chunkSize = 50
+                    ).results
+                    .single()
+            val secondResult =
+                importBatchProcessor
+                    .process(
+                        provider = ImportProvider.OSM,
+                        payloadType = ImportPayloadType.OSM_TOILET_JSON,
+                        cityId = env.cityId,
+                        items = listOf(OsmOriginalRows.sameBuildingLevelTwo()),
+                        chunkSize = 50
+                    ).results
+                    .single()
+
+            assertEquals(ImportStatus.CREATED, firstResult.outcome)
+            assertEquals(ImportStatus.CREATED, secondResult.outcome)
+            assertNotNull(firstResult.buildingId)
+            assertEquals(firstResult.buildingId, secondResult.buildingId)
+            assertTrue(firstResult.restroomId != secondResult.restroomId)
         }
 
     @Test

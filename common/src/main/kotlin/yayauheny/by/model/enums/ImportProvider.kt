@@ -16,6 +16,7 @@ enum class ImportProvider {
             when (payloadType) {
                 ImportPayloadType.TWO_GIS_SCRAPED_PLACE_JSON -> TWO_GIS
                 ImportPayloadType.YANDEX_MAPS_SCRAPED_PLACE_JSON -> YANDEX_MAPS
+                ImportPayloadType.OSM_TOILET_JSON -> OSM
                 ImportPayloadType.MANUAL -> MANUAL
             }
     }

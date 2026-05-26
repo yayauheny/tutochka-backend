@@ -3,6 +3,7 @@ package yayauheny.by.di
 import org.jooq.DSLContext
 import org.koin.dsl.module
 import yayauheny.by.importing.api.ImportController
+import yayauheny.by.importing.provider.osm.OsmImportAdapter
 import yayauheny.by.importing.provider.twogis.TwoGisImportAdapter
 import yayauheny.by.importing.provider.yandex.YandexImportAdapter
 import yayauheny.by.importing.repository.BuildingImportRepository
@@ -21,11 +22,13 @@ import yayauheny.by.importing.service.ImportService
 
 val importingModule =
     module {
+        single { OsmImportAdapter() }
         single { TwoGisImportAdapter() }
         single { YandexImportAdapter() }
         single {
             ImportAdapterRegistry(
                 listOf(
+                    get<OsmImportAdapter>(),
                     get<TwoGisImportAdapter>(),
                     get<YandexImportAdapter>()
                 )

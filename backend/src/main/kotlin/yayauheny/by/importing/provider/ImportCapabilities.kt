@@ -8,7 +8,8 @@ object ImportCapabilities {
     private val allowed: Map<ImportProvider, Set<ImportPayloadType>> =
         mapOf(
             ImportProvider.TWO_GIS to setOf(ImportPayloadType.TWO_GIS_SCRAPED_PLACE_JSON),
-            ImportProvider.YANDEX_MAPS to setOf(ImportPayloadType.YANDEX_MAPS_SCRAPED_PLACE_JSON)
+            ImportProvider.YANDEX_MAPS to setOf(ImportPayloadType.YANDEX_MAPS_SCRAPED_PLACE_JSON),
+            ImportProvider.OSM to setOf(ImportPayloadType.OSM_TOILET_JSON)
         )
 
     fun requireSupported(
