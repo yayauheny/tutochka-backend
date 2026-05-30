@@ -1,6 +1,5 @@
 package yayauheny.by.common.querydsl
 
-import com.querydsl.jpa.impl.JPAQuery
 import org.springframework.data.domain.Page
 import org.springframework.data.domain.PageImpl
 import org.springframework.data.domain.PageRequest
@@ -20,16 +19,3 @@ fun PaginationRequest.toPageRequest(
 
 fun <T> buildPage(content: List<T>, pageable: Pageable, totalElements: Long): Page<T> =
     PageImpl(content, pageable, totalElements)
-
-fun <T> fetchPage(
-    query: JPAQuery<T>,
-    countQuery: JPAQuery<Long>,
-    pageable: Pageable
-): Page<T> {
-    val content = query
-        .offset(pageable.offset)
-        .limit(pageable.pageSize.toLong())
-        .fetch()
-    val total = countQuery.fetchOne() ?: 0L
-    return PageImpl(content, pageable, total)
-}

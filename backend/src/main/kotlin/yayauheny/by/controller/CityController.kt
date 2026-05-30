@@ -25,7 +25,7 @@ class CityController(
 ) {
     @GetMapping
     fun getAllCities(
-        @ModelAttribute filter: CityFilter,
+        @Valid @ModelAttribute filter: CityFilter,
         request: HttpServletRequest
     ): ResponseEntity<PageResponse<CityResponseDto>> {
         val pagination = request.toPaginationRequest(

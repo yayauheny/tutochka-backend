@@ -54,6 +54,23 @@ class RestroomControllerTest : RoutingTestBase() {
                     restroomService.getAllRestrooms(any(), any())
                 }
             }
+
+        @Test
+        @DisplayName("GIVEN too long address filter WHEN GET restrooms THEN return 400 and skip service")
+        fun restrooms_with_too_long_address_filter_returns_400_and_skips_service() =
+            runTest {
+                withRoutingApp { client ->
+                    val response =
+                        client.testGet(
+                            "/api/v1/restrooms",
+                            mapOf("address" to "a".repeat(256))
+                        )
+
+                    assertEquals(HttpStatusCode.BadRequest, response.status)
+                }
+
+                coVerify(exactly = 0) { restroomService.getAllRestrooms(any(), any()) }
+            }
     }
 
     @Nested

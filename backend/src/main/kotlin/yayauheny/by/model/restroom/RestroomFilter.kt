@@ -1,5 +1,6 @@
 package yayauheny.by.model.restroom
 
+import jakarta.validation.constraints.Size
 import java.util.UUID
 import yayauheny.by.model.enums.AccessibilityType
 import yayauheny.by.model.enums.FeeType
@@ -21,6 +22,8 @@ data class RestroomFilter(
     var locationType: LocationType? = null,
     var originProvider: ImportProvider? = null,
     var isHidden: Boolean? = null,
+    @field:Size(max = 100)
     var name: String? = null,
+    @field:Size(max = 255)
     var address: String? = null
 )

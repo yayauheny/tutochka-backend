@@ -24,7 +24,7 @@ class CountryController(
 ) {
     @GetMapping
     fun getAllCountries(
-        @ModelAttribute filter: CountryFilter,
+        @Valid @ModelAttribute filter: CountryFilter,
         request: HttpServletRequest
     ): ResponseEntity<PageResponse<CountryResponseDto>> {
         val pagination = request.toPaginationRequest(

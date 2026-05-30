@@ -267,9 +267,34 @@ paths:
             default: 20
         - name: sort
           in: query
-          description: Sort field
+          description: "Sort field. Supported values: id, code, nameRu, nameEn, isDeleted."
           schema:
             type: string
+        - name: direction
+          in: query
+          description: Sort direction
+          schema:
+            type: string
+            enum: [ASC, DESC]
+            default: ASC
+        - name: code
+          in: query
+          description: Filter by country code
+          schema:
+            type: string
+            maxLength: 2
+        - name: nameRu
+          in: query
+          description: Filter by Russian name
+          schema:
+            type: string
+            maxLength: 100
+        - name: nameEn
+          in: query
+          description: Filter by English name
+          schema:
+            type: string
+            maxLength: 100
       responses:
         '200':
           description: OK
@@ -401,9 +426,34 @@ paths:
             default: 20
         - name: sort
           in: query
-          description: Sort field
+          description: "Sort field. Supported values: id, countryId, nameRu, nameEn, region, isDeleted."
           schema:
             type: string
+        - name: direction
+          in: query
+          description: Sort direction
+          schema:
+            type: string
+            enum: [ASC, DESC]
+            default: ASC
+        - name: countryId
+          in: query
+          description: Filter by country ID
+          schema:
+            type: string
+            format: uuid
+        - name: name
+          in: query
+          description: Filter by city name
+          schema:
+            type: string
+            maxLength: 100
+        - name: region
+          in: query
+          description: Filter by region
+          schema:
+            type: string
+            maxLength: 100
       responses:
         '200':
           description: OK
@@ -487,7 +537,8 @@ paths:
   /cities/country/{countryId}:
     get:
       summary: List cities by country
-      description: Return cities for one country
+      description: Legacy wrapper for GET /cities with countryId filter.
+      deprecated: true
       parameters:
         - name: countryId
           in: path
@@ -537,7 +588,8 @@ paths:
   /cities/search:
     get:
       summary: Search cities
-      description: Search cities by name
+      description: Legacy wrapper for GET /cities with name filter.
+      deprecated: true
       parameters:
         - name: name
           in: query
@@ -597,9 +649,108 @@ paths:
             default: 20
         - name: sort
           in: query
-          description: Sort field
+          description: "Sort field. Supported values: id, cityId, buildingId, subwayStationId, status, feeType, genderType, accessibilityType, placeType, locationType, originProvider, originId, isHidden, name, address."
           schema:
             type: string
+        - name: direction
+          in: query
+          description: Sort direction
+          schema:
+            type: string
+            enum: [ASC, DESC]
+            default: ASC
+        - name: cityId
+          in: query
+          description: Filter by city ID
+          schema:
+            type: string
+            format: uuid
+        - name: buildingId
+          in: query
+          description: Filter by building ID
+          schema:
+            type: string
+            format: uuid
+        - name: subwayStationId
+          in: query
+          description: Filter by subway station ID
+          schema:
+            type: string
+            format: uuid
+        - name: status
+          in: query
+          description: Filter by restroom status
+          schema:
+            type: string
+            enum: [ACTIVE, INACTIVE, PENDING, TEMP_CLOSED]
+        - name: feeType
+          in: query
+          description: Filter by fee type
+          schema:
+            type: string
+            enum: [FREE, PAID, UNKNOWN]
+        - name: genderType
+          in: query
+          description: Filter by gender type
+          schema:
+            type: string
+            enum: [MEN, WOMEN, UNISEX, UNKNOWN]
+        - name: accessibilityType
+          in: query
+          description: Filter by accessibility type
+          schema:
+            type: string
+            enum: [INACCESSIBLE, WHEELCHAIR, CHANGING_PLACES, UNKNOWN]
+        - name: placeType
+          in: query
+          description: Filter by place type
+          schema:
+            type: string
+            enum:
+              - public_toilet
+              - mall
+              - gas_station
+              - fast_food
+              - park
+              - restaurant
+              - market
+              - culture
+              - transport
+              - medical
+              - administrative
+              - education
+              - office
+              - residential
+              - other
+        - name: locationType
+          in: query
+          description: Filter by location type
+          schema:
+            type: string
+            enum: [STANDALONE, INSIDE_BUILDING, UNKNOWN]
+        - name: originProvider
+          in: query
+          description: Filter by origin provider
+          schema:
+            type: string
+            enum: [TWO_GIS, YANDEX_MAPS, GOOGLE_MAPS, OSM, USER, MANUAL]
+        - name: isHidden
+          in: query
+          description: Filter by hidden flag
+          schema:
+            type: boolean
+        - name: name
+          in: query
+          description: Filter by restroom name
+          schema:
+            type: string
+            maxLength: 100
+        - name: address
+          in: query
+          description: Filter by restroom address
+          schema:
+            type: string
+            maxLength: 255
       responses:
         '200':
           description: OK
@@ -683,7 +834,8 @@ paths:
   /restrooms/city/{cityId}:
     get:
       summary: List restrooms by city
-      description: Return restrooms for one city
+      description: Legacy wrapper for GET /restrooms with cityId filter.
+      deprecated: true
       parameters:
         - name: cityId
           in: path

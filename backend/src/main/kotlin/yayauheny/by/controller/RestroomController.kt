@@ -41,7 +41,7 @@ class RestroomController(
 
     @GetMapping
     fun getAllRestrooms(
-        @ModelAttribute filter: RestroomFilter,
+        @Valid @ModelAttribute filter: RestroomFilter,
         request: HttpServletRequest
     ): ResponseEntity<Any> {
         val pagination = request.toPaginationRequest(

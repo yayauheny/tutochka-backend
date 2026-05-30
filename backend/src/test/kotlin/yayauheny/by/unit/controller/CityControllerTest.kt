@@ -71,6 +71,25 @@ class CityControllerTest : RoutingTestBase() {
                     cityService.getAllCities(any(), any())
                 }
             }
+
+        @Test
+        @DisplayName("GIVEN too long name filter WHEN GET cities THEN return 400 and skip service")
+        fun cities_with_too_long_name_filter_returns_400_and_skips_service() =
+            runTest {
+                withRoutingApp { client ->
+                    val response =
+                        client.testGet(
+                            "/api/v1/cities",
+                            mapOf("name" to "a".repeat(101))
+                        )
+
+                    assertEquals(HttpStatusCode.BadRequest, response.status)
+                }
+
+                coVerify(exactly = 0) {
+                    cityService.getAllCities(any(), any())
+                }
+            }
     }
 
     @Nested
