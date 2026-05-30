@@ -5,6 +5,7 @@ import org.springframework.http.HttpHeaders
 import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
 import org.springframework.web.bind.annotation.*
+import yayauheny.by.common.config.ApiProperties
 import yayauheny.by.analytics.service.AnalyticsService
 import yayauheny.by.common.errors.EntityNotFoundException
 import yayauheny.by.common.errors.ValidationException
@@ -25,23 +26,29 @@ import yayauheny.by.analytics.model.AnalyticsIdentityHeaders
 import java.util.UUID
 
 @RestController
-@RequestMapping("/restrooms")
+@RequestMapping("/api/v1/restrooms")
 @Validated
 class RestroomController(
     private val restroomService: RestroomService,
     private val backendSearchMetrics: BackendSearchMetrics,
-    private val analyticsService: AnalyticsService
+    private val analyticsService: AnalyticsService,
+    private val apiProperties: ApiProperties = ApiProperties()
 ) {
     private val log = LoggerFactory.getLogger(RestroomController::class.java)
 
     @GetMapping
     fun getAllRestrooms(
-        @RequestParam(defaultValue = "0") page: Int,
-        @RequestParam(defaultValue = "20") size: Int,
+        @RequestParam(required = false) page: Int?,
+        @RequestParam(required = false) size: Int?,
         @RequestParam(defaultValue = "id") sort: String,
         @RequestParam(defaultValue = "desc") order: String
     ): ResponseEntity<Any> {
-        val pagination = PaginationRequest(page = page, size = size, sort = sort, direction = yayauheny.by.common.query.SortDirection.valueOf(order.uppercase()))
+        val pagination = PaginationRequest(
+            page = page ?: apiProperties.defaults.page,
+            size = size ?: apiProperties.defaults.pageSize,
+            sort = sort,
+            direction = yayauheny.by.common.query.SortDirection.valueOf(order.uppercase())
+        )
         val pageResponse = restroomService.getAllRestrooms(pagination)
         return ResponseEntity.ok(pageResponse)
     }
@@ -56,12 +63,17 @@ class RestroomController(
     @GetMapping("/city/{cityId}")
     fun getRestroomsByCity(
         @PathVariable cityId: UUID,
-        @RequestParam(defaultValue = "0") page: Int,
-        @RequestParam(defaultValue = "20") size: Int,
+        @RequestParam(required = false) page: Int?,
+        @RequestParam(required = false) size: Int?,
         @RequestParam(defaultValue = "id") sort: String,
         @RequestParam(defaultValue = "desc") order: String
     ): ResponseEntity<Any> {
-        val pagination = PaginationRequest(page = page, size = size, sort = sort, direction = yayauheny.by.common.query.SortDirection.valueOf(order.uppercase()))
+        val pagination = PaginationRequest(
+            page = page ?: apiProperties.defaults.page,
+            size = size ?: apiProperties.defaults.pageSize,
+            sort = sort,
+            direction = yayauheny.by.common.query.SortDirection.valueOf(order.uppercase())
+        )
         val pageResponse = restroomService.getRestroomsByCity(cityId, pagination)
         return ResponseEntity.ok(pageResponse)
     }
@@ -75,19 +87,21 @@ class RestroomController(
         @RequestHeader(name = "X-Analytics-Source", required = false) sourceHeader: String?,
         @RequestParam lat: Double,
         @RequestParam lon: Double,
-        @RequestParam(defaultValue = "10") @Min(1) @Max(100) limit: Int,
-        @RequestParam(defaultValue = "5000") @Min(1) @Max(10000) distanceMeters: Int
+        @RequestParam(required = false) @Min(1) @Max(100) limit: Int?,
+        @RequestParam(required = false) @Min(1) @Max(10000) distanceMeters: Int?
     ): ResponseEntity<Any> {
+        val resolvedLimit = limit ?: apiProperties.defaults.maxNearestRestroomsSize
+        val resolvedDistanceMeters = distanceMeters ?: apiProperties.defaults.maxDistanceMeters
         val clientType = MetricLabelWhitelist.clientTypeOrDefault(clientTypeHeader)
-        val radiusBucket = SearchMetricBuckets.radiusBucketOrFallback(distanceMeters.toString())
+        val radiusBucket = SearchMetricBuckets.radiusBucketOrFallback(resolvedDistanceMeters.toString())
         backendSearchMetrics.incrementSearchRequest(clientType, radiusBucket)
 
         try {
             val restrooms = restroomService.findNearestRestrooms(
                 lat,
                 lon,
-                limit,
-                distanceMeters
+                resolvedLimit,
+                resolvedDistanceMeters
             )
 
             val resultsCount = restrooms.size

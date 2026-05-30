@@ -44,6 +44,3 @@ interface RestroomJpaRepository : JpaRepository<RestroomEntity, UUID> {
     @Query(value = "SELECT * FROM restrooms WHERE ST_DWithin(coordinates, ST_SetSRID(ST_MakePoint(:lon, :lat), 4326), :distanceMeters, true) ORDER BY coordinates <-> ST_SetSRID(ST_MakePoint(:lon, :lat), 4326) LIMIT :limit", nativeQuery = true)
     fun findNearest(lon: Double, lat: Double, distanceMeters: Int, limit: Int): List<RestroomEntity>
 }
-
-@Repository
-interface RestroomImportJpaRepository : JpaRepository<RestroomImportEntity, UUID>

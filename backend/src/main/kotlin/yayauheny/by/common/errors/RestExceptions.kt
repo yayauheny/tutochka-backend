@@ -45,6 +45,13 @@ class ServiceUnavailableException(
     override val httpStatus = HttpStatus.SERVICE_UNAVAILABLE
 }
 
+class NotImplementedException(
+    message: String? = "Не реализовано",
+    cause: Throwable? = null
+) : Exception(message, cause), RestException {
+    override val httpStatus = HttpStatus.NOT_IMPLEMENTED
+}
+
 class RepositoryException(
     message: String,
     cause: Throwable? = null

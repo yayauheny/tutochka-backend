@@ -27,6 +27,16 @@ spring:
     enabled: true
     change-log: classpath:db/changelog/db.changelog-master.yml
 
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics,prometheus
+  endpoint:
+    health:
+      probes:
+        enabled: true
+
 app:
   api:
     defaults:

@@ -102,12 +102,12 @@ paths:
             schema:
               $ref: '#/components/schemas/ImportRequestDto'
       responses:
-        '201':
-          description: Import completed
+        '501':
+          description: Import is not implemented yet
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/ImportResponseDto'
+                $ref: '#/components/schemas/ErrorResponse'
         '400':
           description: Validation error
           content:
@@ -159,18 +159,88 @@ paths:
                     type: object
                     additionalProperties: true
       responses:
-        '201':
-          description: Batch import completed
+        '501':
+          description: Batch import is not implemented yet
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/ImportBatchResponseDto'
+                $ref: '#/components/schemas/ErrorResponse'
         '400':
           description: Validation error
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /analytics/events:
+    post:
+      summary: Track analytics event
+      description: Track a product analytics event
+      parameters:
+        - name: X-Tg-User-Id
+          in: header
+          required: false
+          description: Telegram user ID
+          schema:
+            type: integer
+            format: int64
+        - name: X-Tg-Chat-Id
+          in: header
+          required: false
+          description: Telegram chat ID
+          schema:
+            type: string
+        - name: X-Tg-Username
+          in: header
+          required: false
+          description: Telegram username
+          schema:
+            type: string
+        - name: X-Analytics-Source
+          in: header
+          required: false
+          description: Event source
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AnalyticsEventRequest'
+      responses:
+        '202':
+          description: Accepted
+        '400':
+          description: Validation error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /public/analytics:
+    get:
+      summary: Public analytics
+      description: Return aggregate public analytics
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PublicAnalyticsResponse'
         '500':
           description: Internal server error
           content:
@@ -805,6 +875,62 @@ components:
         errorMessage:
           type: string
           nullable: true
+
+    AnalyticsEventRequest:
+      type: object
+      required:
+        - event
+      properties:
+        event:
+          type: string
+          description: Product analytics event name
+        lat:
+          type: number
+          format: double
+          nullable: true
+        lon:
+          type: number
+          format: double
+          nullable: true
+        resultsCount:
+          type: integer
+          nullable: true
+        durationMs:
+          type: integer
+          nullable: true
+        acquisitionTag:
+          type: object
+          nullable: true
+        metadata:
+          type: object
+          additionalProperties: true
+
+    PublicAnalyticsResponse:
+      type: object
+      properties:
+        generatedAt:
+          type: string
+          format: date-time
+        timezone:
+          type: string
+        headlineKpis:
+          type: array
+          items:
+            type: object
+        summary:
+          type: object
+        dailySeries:
+          type: array
+          items:
+            type: object
+        monthlySeries:
+          type: array
+          items:
+            type: object
+        eventTotals:
+          type: array
+          items:
+            type: object
 
     CountryCreateDto:
       type: object

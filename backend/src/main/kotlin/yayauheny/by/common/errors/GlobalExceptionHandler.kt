@@ -3,10 +3,15 @@ package yayauheny.by.common.errors
 import org.slf4j.LoggerFactory
 import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
+import org.springframework.web.HttpMediaTypeNotSupportedException
 import org.springframework.web.bind.MethodArgumentNotValidException
+import org.springframework.web.bind.MissingServletRequestParameterException
+import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException
 import org.springframework.web.bind.annotation.ExceptionHandler
 import org.springframework.web.bind.annotation.RestControllerAdvice
 import jakarta.servlet.http.HttpServletRequest
+import jakarta.validation.ConstraintViolationException
+import org.springframework.http.converter.HttpMessageNotReadableException
 
 @RestControllerAdvice
 class GlobalExceptionHandler {
@@ -18,7 +23,8 @@ class GlobalExceptionHandler {
         NotFoundException::class, 
         ConflictException::class, 
         BadRequestException::class, 
-        ServiceUnavailableException::class
+        ServiceUnavailableException::class,
+        NotImplementedException::class
     )
     fun handleRestException(e: Exception, request: HttpServletRequest): ResponseEntity<ErrorResponse> {
         val restException = e as RestException
@@ -62,6 +68,22 @@ class GlobalExceptionHandler {
             message = "Validation failed",
             path = request.requestURI,
             errors = fieldErrors
+        )
+        return ResponseEntity.badRequest().body(response)
+    }
+
+    @ExceptionHandler(
+        MethodArgumentTypeMismatchException::class,
+        HttpMessageNotReadableException::class,
+        ConstraintViolationException::class,
+        MissingServletRequestParameterException::class,
+        HttpMediaTypeNotSupportedException::class
+    )
+    fun handleBadRequestExceptions(e: Exception, request: HttpServletRequest): ResponseEntity<ErrorResponse> {
+        val response = ErrorResponse(
+            status = HttpStatus.BAD_REQUEST.value(),
+            message = e.message ?: "Bad Request",
+            path = request.requestURI
         )
         return ResponseEntity.badRequest().body(response)
     }

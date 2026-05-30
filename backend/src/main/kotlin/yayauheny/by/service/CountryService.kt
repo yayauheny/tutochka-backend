@@ -1,7 +1,6 @@
 package yayauheny.by.service
 import yayauheny.by.util.toPageResponse
 
-import org.springframework.data.domain.Page
 import org.springframework.data.domain.PageRequest
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
@@ -13,6 +12,7 @@ import yayauheny.by.model.country.CountryCreateDto
 import yayauheny.by.model.country.CountryResponseDto
 import yayauheny.by.model.country.CountryUpdateDto
 import yayauheny.by.repository.CountryJpaRepository
+import yayauheny.by.util.toPageRequest
 import java.util.UUID
 
 fun CountryEntity.toDto() = CountryResponseDto(
@@ -30,7 +30,7 @@ class CountryService(
 ) {
     @Transactional(readOnly = true)
     fun getAllCountries(pagination: PaginationRequest): PageResponse<CountryResponseDto> {
-        val pageRequest = PageRequest.of(pagination.page, pagination.size)
+        val pageRequest = pagination.toPageRequest("nameRu")
         val page = countryRepository.findAll(pageRequest)
         val dtoPage = page.map { it.toDto() }
         return dtoPage.toPageResponse()

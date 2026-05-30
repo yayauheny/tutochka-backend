@@ -25,6 +25,7 @@ dependencies {
     implementation(libs.tink)
 
     implementation(libs.bundles.springBootBundle)
+    implementation(libs.micrometerPrometheus)
     implementation(libs.bundles.swaggerBundle)
     implementation("org.springframework.boot:spring-boot-starter-validation")
     implementation("com.fasterxml.jackson.module:jackson-module-kotlin")

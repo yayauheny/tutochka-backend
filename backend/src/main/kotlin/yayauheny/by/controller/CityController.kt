@@ -3,6 +3,7 @@ package yayauheny.by.controller
 import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
 import org.springframework.web.bind.annotation.*
+import yayauheny.by.common.config.ApiProperties
 import yayauheny.by.common.errors.NotFoundException
 import yayauheny.by.common.errors.ValidationException
 import yayauheny.by.common.query.PageResponse
@@ -18,14 +19,18 @@ import java.util.UUID
 @RestController
 @RequestMapping("/api/v1/cities")
 class CityController(
-    private val cityService: CityService
+    private val cityService: CityService,
+    private val apiProperties: ApiProperties = ApiProperties()
 ) {
     @GetMapping
     fun getAllCities(
-        @RequestParam(defaultValue = "0") page: Int,
-        @RequestParam(defaultValue = "20") size: Int
+        @RequestParam(required = false) page: Int?,
+        @RequestParam(required = false) size: Int?
     ): ResponseEntity<PageResponse<CityResponseDto>> {
-        val pagination = PaginationRequest(page = page, size = size)
+        val pagination = PaginationRequest(
+            page = page ?: apiProperties.defaults.page,
+            size = size ?: apiProperties.defaults.pageSize
+        )
         val pageResponse = cityService.getAllCities(pagination)
         return ResponseEntity.ok(pageResponse)
     }
@@ -40,10 +45,13 @@ class CityController(
     @GetMapping("/country/{countryId}")
     fun getCitiesByCountry(
         @PathVariable countryId: UUID,
-        @RequestParam(defaultValue = "0") page: Int,
-        @RequestParam(defaultValue = "20") size: Int
+        @RequestParam(required = false) page: Int?,
+        @RequestParam(required = false) size: Int?
     ): ResponseEntity<PageResponse<CityResponseDto>> {
-        val pagination = PaginationRequest(page = page, size = size)
+        val pagination = PaginationRequest(
+            page = page ?: apiProperties.defaults.page,
+            size = size ?: apiProperties.defaults.pageSize
+        )
         val pageResponse = cityService.getCitiesByCountry(countryId, pagination)
         return ResponseEntity.ok(pageResponse)
     }
@@ -51,12 +59,15 @@ class CityController(
     @GetMapping("/search")
     fun searchCitiesByName(
         @RequestParam(required = false, defaultValue = "") @Size(min = 1, max = 100) name: String,
-        @RequestParam(defaultValue = "0") page: Int,
-        @RequestParam(defaultValue = "20") size: Int
+        @RequestParam(required = false) page: Int?,
+        @RequestParam(required = false) size: Int?
     ): ResponseEntity<PageResponse<CityResponseDto>> {
         val validName = name.trim()
 
-        val pagination = PaginationRequest(page = page, size = size)
+        val pagination = PaginationRequest(
+            page = page ?: apiProperties.defaults.page,
+            size = size ?: apiProperties.defaults.pageSize
+        )
         val pageResponse = cityService.searchCitiesByName(validName, pagination)
         return ResponseEntity.ok(pageResponse)
     }

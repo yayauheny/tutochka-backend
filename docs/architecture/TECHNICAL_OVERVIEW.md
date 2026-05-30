@@ -1,6 +1,6 @@
 # TuTochka — technical overview
 
-Canonical, non-marketing description of the **tutochka-backend** monorepo: **Ktor backend** + **Spring Telegram bot**, **PostgreSQL/PostGIS**, **Liquibase**, **jOOQ**.
+Canonical, non-marketing description of the **tutochka-backend** monorepo: **Spring Boot backend** + **Spring Telegram bot**, **PostgreSQL/PostGIS**, **Liquibase**.
 
 ---
 
@@ -26,13 +26,13 @@ Canonical, non-marketing description of the **tutochka-backend** monorepo: **Kto
 
 **Current external interfaces:**
 
-- **REST API** under `/api/v1` (prefix); health under `/health`.
+- **REST API** under `/api/v1` (prefix); health is available at `/health` and `/api/v1/health`.
 - **OpenAPI 3** specification: [`backend/src/main/resources/openapi.yaml`](../../backend/src/main/resources/openapi.yaml) (served as static resource; interactive UI may be documented in README — verify deployment).
 - **Telegram bot** (Spring Boot): HTTP client to backend `BACKEND_BASE_URL` — not a second source of truth.
 
 **Supported (implemented in this repo):**
 
-- REST endpoints for countries, cities, restrooms (list, by id, by city, nearest), health, import.
+- REST endpoints for countries, cities, restrooms (list, by id, by city, nearest), health, analytics, and public analytics.
 - PostGIS-backed **nearest** query with distance cap and KNN ordering.
 - Nested **building** and **subway** objects on restroom detail responses (no separate public `/buildings` or `/subway/*` routes in current routing wiring).
 - **Soft-delete** patterns for subway lines/stations and logical delete for restrooms.
@@ -77,7 +77,7 @@ Canonical, non-marketing description of the **tutochka-backend** monorepo: **Kto
 | Real photos | Planned | `hasPhotos` only |
 | User submissions | Planned | Not exposed as product flow |
 | Admin moderation UI | Planned | Not in repo as product |
-| Automated imports from map providers | Partial | `POST /api/v1/import`, `restroom_imports` queue; not full automation at scale |
+| Automated imports from map providers | Not implemented in stage 1.75 | `POST /api/v1/import`, `POST /api/v1/import/batch` currently return `501 Not Implemented` |
 | OpenAPI / Swagger UI | Partial | `openapi.yaml` committed; verify Swagger UI route on running server |
 
 ---

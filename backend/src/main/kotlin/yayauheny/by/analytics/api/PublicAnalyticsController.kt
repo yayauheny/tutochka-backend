@@ -7,7 +7,7 @@ import yayauheny.by.analytics.model.PublicAnalyticsResponse
 import yayauheny.by.analytics.service.PublicAnalyticsService
 
 @RestController
-@RequestMapping("/public/analytics")
+@RequestMapping("/api/v1/public/analytics")
 class PublicAnalyticsController(
     private val publicAnalyticsService: PublicAnalyticsService
 ) {

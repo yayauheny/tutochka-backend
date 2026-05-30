@@ -98,3 +98,10 @@ databaseChangeLog:
         - sqlFile:
             path: migration/20260523_add_users_acquisition_tag_check.sql
             relativeToChangelogFile: true
+  - changeSet:
+      id: fix-restroom-imports-payload-hash-type
+      author: yayauheny
+      changes:
+        - sqlFile:
+            path: migration/20260530_fix_restroom_imports_payload_hash.sql
+            relativeToChangelogFile: true

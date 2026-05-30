@@ -2,7 +2,9 @@ package yayauheny.by.metrics
 
 import io.micrometer.core.instrument.Counter
 import io.micrometer.core.instrument.MeterRegistry
+import org.springframework.stereotype.Component
 
+@Component
 class BackendSearchMetrics(
     private val registry: MeterRegistry
 ) {

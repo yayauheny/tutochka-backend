@@ -147,6 +147,13 @@ class BuildingEntity : BaseEntity() {
     var buildingMatchKey: String? = null
 }
 
+@Converter(autoApply = false)
+class PlaceTypeJpaConverter : AttributeConverter<PlaceType, String> {
+    override fun convertToDatabaseColumn(attribute: PlaceType?): String? = attribute?.code
+
+    override fun convertToEntityAttribute(dbData: String?): PlaceType = PlaceType.fromCode(dbData)
+}
+
 @Entity
 @Table(name = "restrooms")
 class RestroomEntity : BaseEntity() {
@@ -165,7 +172,7 @@ class RestroomEntity : BaseEntity() {
     @Column(name = "name")
     var name: String? = null
 
-    @Enumerated(EnumType.STRING)
+    @Convert(converter = PlaceTypeJpaConverter::class)
     @Column(name = "place_type", nullable = false, length = 50)
     var placeType: PlaceType = PlaceType.OTHER
 
@@ -207,7 +214,7 @@ class RestroomEntity : BaseEntity() {
 
     @JdbcTypeCode(SqlTypes.JSON)
     @Column(name = "amenities", columnDefinition = "jsonb")
-    var amenities: Map<String, Boolean>? = null
+    var amenities: Map<String, Any>? = null
 
     @Column(name = "has_photos")
     var hasPhotos: Boolean = false

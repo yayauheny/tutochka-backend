@@ -1,7 +1,6 @@
 package yayauheny.by.analytics.api
 
 import org.slf4j.LoggerFactory
-import org.springframework.http.HttpHeaders
 import org.springframework.http.ResponseEntity
 import org.springframework.web.bind.annotation.*
 
@@ -12,7 +11,7 @@ import yayauheny.by.model.analytics.AnalyticsSource
 import yayauheny.by.common.util.toBigDecimalRounded
 
 @RestController
-@RequestMapping("/analytics")
+@RequestMapping("/api/v1/analytics")
 class AnalyticsController(
     private val analyticsService: AnalyticsService
 ) {

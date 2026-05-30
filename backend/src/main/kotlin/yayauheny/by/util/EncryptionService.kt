@@ -11,7 +11,7 @@ import java.util.Base64
 
 @Service
 class EncryptionService(
-    @Value("\${encryption.keyset.json:\#{null}}") keysetJson: String?
+    @Value("\${encryption.keyset.json:#{null}}") keysetJson: String?
 ) {
     private val deterministicAead: DeterministicAead = createPrimitive(keysetJson)
 

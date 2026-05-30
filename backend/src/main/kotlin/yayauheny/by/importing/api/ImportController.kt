@@ -1,7 +1,7 @@
 package yayauheny.by.importing.api
 
 import com.fasterxml.jackson.databind.JsonNode
-import org.slf4j.LoggerFactory
+import org.springframework.http.HttpHeaders
 import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
 import org.springframework.web.bind.annotation.PostMapping
@@ -9,8 +9,8 @@ import org.springframework.web.bind.annotation.RequestBody
 import org.springframework.web.bind.annotation.RequestHeader
 import org.springframework.web.bind.annotation.RequestMapping
 import org.springframework.web.bind.annotation.RestController
-import yayauheny.by.common.errors.ValidationException
 import yayauheny.by.importing.service.ImportService
+import yayauheny.by.common.errors.BadRequestException
 import yayauheny.by.model.enums.ImportPayloadType
 import yayauheny.by.model.enums.ImportProvider
 import yayauheny.by.model.import.ImportBatchResponseDto
@@ -19,22 +19,18 @@ import yayauheny.by.model.import.ImportResponseDto
 import java.util.UUID
 
 @RestController
-@RequestMapping("/import")
+@RequestMapping("/api/v1/import")
 class ImportController(
     private val importService: ImportService
 ) {
-    private val logger = LoggerFactory.getLogger(ImportController::class.java)
-
     @PostMapping
     fun importSingle(
-        @RequestHeader("X-Import-Provider") provider: String,
-        @RequestHeader("X-Import-Payload-Type") payloadType: String,
-        @RequestHeader("X-Import-City-Id", required = false) cityId: String?,
+        headers: HttpHeaders,
         @RequestBody body: JsonNode
     ): ResponseEntity<ImportResponseDto> {
-        val parsedProvider = ImportProvider.valueOf(provider)
-        val parsedPayloadType = ImportPayloadType.valueOf(payloadType)
-        val parsedCityId = cityId?.let { UUID.fromString(it) }
+        val parsedProvider = headers.importProvider()
+        val parsedPayloadType = headers.importPayloadType()
+        val parsedCityId = headers.importCityId()
 
         val payload = if (body.has("items") && body.get("items").isArray) {
             body.get("items").first()
@@ -61,14 +57,12 @@ class ImportController(
 
     @PostMapping("/batch")
     fun importBatch(
-        @RequestHeader("X-Import-Provider") provider: String,
-        @RequestHeader("X-Import-Payload-Type") payloadType: String,
-        @RequestHeader("X-Import-City-Id", required = false) cityId: String?,
+        headers: HttpHeaders,
         @RequestBody body: JsonNode
     ): ResponseEntity<ImportBatchResponseDto> {
-        val parsedProvider = ImportProvider.valueOf(provider)
-        val parsedPayloadType = ImportPayloadType.valueOf(payloadType)
-        val parsedCityId = cityId?.let { UUID.fromString(it) }
+        val parsedProvider = headers.importProvider()
+        val parsedPayloadType = headers.importPayloadType()
+        val parsedCityId = headers.importCityId()
 
         val result = importService.importBatch(
             provider = parsedProvider,
@@ -98,5 +92,43 @@ class ImportController(
                 }
             )
         )
+    }
+
+    private fun HttpHeaders.importProvider(): ImportProvider {
+        val raw = firstOrNull("Import-Provider") ?: firstOrNull("X-Import-Provider")
+        return parseEnum(raw, "Import-Provider", ImportProvider::valueOf)
+    }
+
+    private fun HttpHeaders.importPayloadType(): ImportPayloadType {
+        val raw = firstOrNull("Import-Payload-Type") ?: firstOrNull("X-Import-Payload-Type")
+        return parseEnum(raw, "Import-Payload-Type", ImportPayloadType::valueOf)
+    }
+
+    private fun HttpHeaders.importCityId(): UUID? {
+        val raw = firstOrNull("Import-City-Id") ?: firstOrNull("X-Import-City-Id")
+        return raw?.let {
+            try {
+                UUID.fromString(it)
+            } catch (_: IllegalArgumentException) {
+                throw BadRequestException("Invalid Import-City-Id header")
+            }
+        }
+    }
+
+    private fun HttpHeaders.firstOrNull(name: String): String? = this[name]?.firstOrNull()
+
+    private fun <T> parseEnum(
+        raw: String?,
+        headerName: String,
+        parser: (String) -> T
+    ): T {
+        if (raw.isNullOrBlank()) {
+            throw BadRequestException("$headerName header is required")
+        }
+        return try {
+            parser(raw)
+        } catch (_: IllegalArgumentException) {
+            throw BadRequestException("Invalid $headerName header")
+        }
     }
 }
