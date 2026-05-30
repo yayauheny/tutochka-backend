@@ -53,3 +53,7 @@ app:
       max-description-length: 1000
       max-address-length: 255
       max-json-string-length: 5000
+
+encryption:
+  keyset:
+    json: ${ENCRYPTION_KEYSET_JSON:}

@@ -27,6 +27,7 @@
 - Backend config: `backend/src/main/resources/application.yml`
 - Bot config: `bot/src/main/resources/application.yml`
 - API contract: `backend/src/main/resources/openapi.yaml`
+- Backend secret for analytics encryption: set `ENCRYPTION_KEYSET_JSON`
 
 ## Документация
 - [docs/architecture/TECHNICAL_OVERVIEW.md](docs/architecture/TECHNICAL_OVERVIEW.md)
