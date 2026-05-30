@@ -4,20 +4,12 @@ import org.springframework.data.jpa.repository.JpaRepository
 import org.springframework.data.jpa.repository.Modifying
 import org.springframework.data.jpa.repository.Query
 import org.springframework.stereotype.Repository
-import yayauheny.by.analytics.entity.AnalyticsEventEntity
 import yayauheny.by.analytics.entity.UserAnalyticsEntity
-import yayauheny.by.analytics.entity.UserEntity
 import java.time.Instant
 import java.util.UUID
 
 @Repository
-interface UserJpaRepository : JpaRepository<UserEntity, UUID> {
-    fun findByTgUserId(tgUserId: String): UserEntity?
-}
-
-@Repository
 interface UserAnalyticsJpaRepository : JpaRepository<UserAnalyticsEntity, UUID> {
-
     @Modifying
     @Query(
         """
@@ -42,20 +34,4 @@ interface UserAnalyticsJpaRepository : JpaRepository<UserAnalyticsEntity, UUID> 
         lastEvent: String?,
         lastEventAt: Instant?
     )
-}
-
-@Repository
-interface AnalyticsEventJpaRepository : JpaRepository<AnalyticsEventEntity, UUID> {
-    
-    @Query("SELECT COUNT(u) FROM UserEntity u")
-    fun countTotalUsers(): Long
-
-    @Query("SELECT COUNT(u) FROM UserEntity u WHERE u.createdAt >= :since")
-    fun countActiveUsersSince(since: Instant): Long
-    
-    @Query("SELECT COUNT(e) FROM AnalyticsEventEntity e WHERE e.event = 'SEARCH_COMPLETED'")
-    fun countTotalSearches(): Long
-    
-    @Query("SELECT COUNT(e) FROM AnalyticsEventEntity e WHERE e.event = 'SEARCH_COMPLETED' AND e.createdAt >= :since")
-    fun countSearchesSince(since: Instant): Long
 }
