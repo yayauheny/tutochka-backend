@@ -11,13 +11,8 @@ import yayauheny.by.model.city.CityCreateDto
 import yayauheny.by.model.city.CityResponseDto
 import yayauheny.by.model.city.CityUpdateDto
 import yayauheny.by.service.CityService
-import yayauheny.by.service.validation.CitySearchParams
-import yayauheny.by.service.validation.validateAndThen
-import yayauheny.by.service.validation.validateCityOnCreate
-import yayauheny.by.service.validation.validateCityOnUpdate
-import yayauheny.by.service.validation.validateCitySearchParams
-import yayauheny.by.service.validation.validateOrThrow
-import yayauheny.by.service.validation.validateRegion
+import jakarta.validation.Valid
+import jakarta.validation.constraints.Size
 import java.util.UUID
 
 @RestController
@@ -55,25 +50,19 @@ class CityController(
 
     @GetMapping("/search")
     fun searchCitiesByName(
-        @RequestParam(required = false, defaultValue = "") name: String,
+        @RequestParam(required = false, defaultValue = "") @Size(min = 1, max = 100) name: String,
         @RequestParam(defaultValue = "0") page: Int,
         @RequestParam(defaultValue = "20") size: Int
     ): ResponseEntity<PageResponse<CityResponseDto>> {
-        val searchParams = CitySearchParams(name = name.trim())
-        val validParams = searchParams.validateAndThen(validateCitySearchParams) { it }.getOrThrow()
+        val validName = name.trim()
 
         val pagination = PaginationRequest(page = page, size = size)
-        val pageResponse = cityService.searchCitiesByName(validParams.name, pagination)
+        val pageResponse = cityService.searchCitiesByName(validName, pagination)
         return ResponseEntity.ok(pageResponse)
     }
 
     @PostMapping
-    fun createCity(@RequestBody createDto: CityCreateDto): ResponseEntity<CityResponseDto> {
-        createDto.validateOrThrow(validateCityOnCreate)
-        val additionalErrors = validateRegion(createDto.region)
-        if (additionalErrors.isNotEmpty()) {
-            throw ValidationException(additionalErrors)
-        }
+    fun createCity(@Valid @RequestBody createDto: CityCreateDto): ResponseEntity<CityResponseDto> {
         val city = cityService.createCity(createDto)
         return ResponseEntity.status(HttpStatus.CREATED).body(city)
     }
@@ -81,13 +70,8 @@ class CityController(
     @PutMapping("/{id}")
     fun updateCity(
         @PathVariable id: UUID,
-        @RequestBody updateDto: CityUpdateDto
+        @Valid @RequestBody updateDto: CityUpdateDto
     ): ResponseEntity<CityResponseDto> {
-        updateDto.validateOrThrow(validateCityOnUpdate)
-        val additionalErrors = validateRegion(updateDto.region)
-        if (additionalErrors.isNotEmpty()) {
-            throw ValidationException(additionalErrors)
-        }
         val city = cityService.updateCity(id, updateDto)
         return ResponseEntity.ok(city)
     }

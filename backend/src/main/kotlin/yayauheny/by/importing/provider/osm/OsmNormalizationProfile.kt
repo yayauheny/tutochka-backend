@@ -2,10 +2,10 @@ package yayauheny.by.importing.provider.osm
 
 import java.security.MessageDigest
 import java.util.Locale
-import kotlinx.serialization.json.JsonObject
-import kotlinx.serialization.json.JsonObjectBuilder
-import kotlinx.serialization.json.JsonPrimitive
-import kotlinx.serialization.json.buildJsonObject
+import com.fasterxml.jackson.databind.JsonNode
+import com.fasterxml.jackson.databind.ObjectMapper
+import com.fasterxml.jackson.databind.node.ObjectNode
+import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import yayauheny.by.importing.provider.ProviderNormalizationProfile
 import yayauheny.by.importing.provider.ProviderResolvedFields
 import yayauheny.by.model.enums.AccessibilityType
@@ -17,6 +17,8 @@ import yayauheny.by.model.enums.RestroomStatus
 import yayauheny.by.model.import.BuildingContext
 
 internal object OsmNormalizationProfile : ProviderNormalizationProfile<OsmScrapedToilet> {
+    private val mapper = jacksonObjectMapper()
+
     override fun resolve(providerDto: OsmScrapedToilet): ProviderResolvedFields {
         val tags = providerDto.tags
         val name = resolveName(tags)
@@ -114,32 +116,33 @@ internal object OsmNormalizationProfile : ProviderNormalizationProfile<OsmScrape
     private fun resolveAmenities(
         tags: Map<String, String>,
         locationType: LocationType
-    ): JsonObject =
-        buildJsonObject {
-            putOptional(tags, "access", "access")
-            putOptional(tags, "operator", "operator")
-            putOptional(tags, "charge", "charge")
-            putOptional(tags, "toilets:disposal", "disposal")
-            putOptional(tags, "toilets:position", "position")
-            putOptional(tags, "level", "level")
-            putOptional(tags, "addr:floor", "floor")
-            putOptional(tags, "wheelchair", "wheelchair")
-            put("changing_table", JsonPrimitive(tags.isTruthyOrLimited("changing_table")))
-            put("drinking_water", JsonPrimitive(tags.isTruthy("drinking_water")))
-            put("handwashing", JsonPrimitive(tags.isTruthy("toilets:handwashing")))
-            put("portable", JsonPrimitive(tags.isTruthy("portable")))
-            put("payment_required", JsonPrimitive(resolveFeeType(tags) == FeeType.PAID))
-            put("accessible_toilet", JsonPrimitive(tags.isTruthyOrLimited("wheelchair")))
-            put("access_limited", JsonPrimitive(isAccessLimited(tags.cleanedValue("access"))))
-            put("toilet_context", JsonPrimitive(locationType.name))
-        }
+    ): JsonNode {
+        val node = mapper.createObjectNode()
+        node.putOptional(tags, "access", "access")
+        node.putOptional(tags, "operator", "operator")
+        node.putOptional(tags, "charge", "charge")
+        node.putOptional(tags, "toilets:disposal", "disposal")
+        node.putOptional(tags, "toilets:position", "position")
+        node.putOptional(tags, "level", "level")
+        node.putOptional(tags, "addr:floor", "floor")
+        node.putOptional(tags, "wheelchair", "wheelchair")
+        node.put("changing_table", tags.isTruthyOrLimited("changing_table"))
+        node.put("drinking_water", tags.isTruthy("drinking_water"))
+        node.put("handwashing", tags.isTruthy("toilets:handwashing"))
+        node.put("portable", tags.isTruthy("portable"))
+        node.put("payment_required", resolveFeeType(tags) == FeeType.PAID)
+        node.put("accessible_toilet", tags.isTruthyOrLimited("wheelchair"))
+        node.put("access_limited", isAccessLimited(tags.cleanedValue("access")))
+        node.put("toilet_context", locationType.name)
+        return node
+    }
 
-    private fun resolveRawSchedule(tags: Map<String, String>): JsonObject? =
+    private fun resolveRawSchedule(tags: Map<String, String>): JsonNode? =
         tags.cleanedValue("opening_hours")?.let { openingHours ->
-            buildJsonObject {
-                put("opening_hours", JsonPrimitive(openingHours))
-                tags.cleanedValue("check_date:opening_hours")?.let { put("check_date", JsonPrimitive(it)) }
-            }
+            val node = mapper.createObjectNode()
+            node.put("opening_hours", openingHours)
+            tags.cleanedValue("check_date:opening_hours")?.let { node.put("check_date", it) }
+            node
         }
 
     private fun resolveBuildingContext(
@@ -259,12 +262,12 @@ internal object OsmNormalizationProfile : ProviderNormalizationProfile<OsmScrape
         return normalized in genericRestroomNames
     }
 
-    private fun JsonObjectBuilder.putOptional(
+    private fun ObjectNode.putOptional(
         tags: Map<String, String>,
         sourceKey: String,
         targetKey: String
     ) {
-        tags.cleanedValue(sourceKey)?.let { put(targetKey, JsonPrimitive(it)) }
+        tags.cleanedValue(sourceKey)?.let { put(targetKey, it) }
     }
 
     private fun Map<String, String>.cleanedValue(key: String): String? = this[key].cleanedValue()

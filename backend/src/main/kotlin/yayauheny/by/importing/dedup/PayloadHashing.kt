@@ -3,18 +3,14 @@ package yayauheny.by.importing.dedup
 import java.security.MessageDigest
 import java.time.Instant
 import java.time.format.DateTimeParseException
-import kotlinx.serialization.json.Json
-import kotlinx.serialization.json.JsonArray
-import kotlinx.serialization.json.JsonElement
-import kotlinx.serialization.json.JsonNull
-import kotlinx.serialization.json.JsonObject
-import kotlinx.serialization.json.JsonPrimitive
-import kotlinx.serialization.encodeToString
+import com.fasterxml.jackson.databind.JsonNode
+import com.fasterxml.jackson.databind.ObjectMapper
+import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 
-private val canonicalJson = Json { encodeDefaults = true }
+private val mapper = jacksonObjectMapper()
 
 object PayloadHashing {
-    fun canonicalPayloadHash(payload: JsonObject): String = sha256Hex(canonicalJson.encodeToString(canonicalize(payload)))
+    fun canonicalPayloadHash(payload: JsonNode): String = sha256Hex(mapper.writeValueAsString(canonicalize(payload)))
 
     fun parseInstantOrNull(value: String?): Instant? =
         value
@@ -28,12 +24,21 @@ object PayloadHashing {
                 }
             }
 
-    private fun canonicalize(element: JsonElement): JsonElement =
-        when (element) {
-            is JsonArray -> JsonArray(element.map(::canonicalize))
-            is JsonObject -> JsonObject(element.entries.sortedBy { it.key }.associate { it.key to canonicalize(it.value) })
-            is JsonPrimitive -> element
-            JsonNull -> JsonNull
+    private fun canonicalize(element: JsonNode): JsonNode =
+        when {
+            element.isArray -> {
+                val array = mapper.createArrayNode()
+                element.elements().forEach { array.add(canonicalize(it)) }
+                array
+            }
+            element.isObject -> {
+                val obj = mapper.createObjectNode()
+                element.fields().asSequence().sortedBy { it.key }.forEach {
+                    obj.set<JsonNode>(it.key, canonicalize(it.value))
+                }
+                obj
+            }
+            else -> element
         }
 
     private fun sha256Hex(value: String): String =

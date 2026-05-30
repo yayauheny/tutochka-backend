@@ -11,12 +11,12 @@ class ImportCityResolver {
         data class NeedsNearestFallback(val countryId: UUID?, val reason: String) : MetadataCityResolution()
     }
 
-    suspend fun resolveByMetadata(countryName: String?, cityName: String?): MetadataCityResolution {
+    fun resolveByMetadata(countryName: String?, cityName: String?): MetadataCityResolution {
         // TODO: Rewrite city resolution logic with JPA
         return MetadataCityResolution.NeedsNearestFallback(null, "Not implemented yet")
     }
 
-    suspend fun resolveNearest(lat: Double?, lng: Double?, countryId: UUID?): UUID? {
+    fun resolveNearest(lat: Double?, lng: Double?, countryId: UUID?): UUID? {
         // TODO: Rewrite spatial query using JPA
         return null
     }

@@ -1,9 +1,7 @@
 package yayauheny.by.analytics.model
 
 import java.time.Instant
-import kotlinx.serialization.SerialName
-import kotlinx.serialization.Serializable
-import kotlinx.serialization.Contextual
+import com.fasterxml.jackson.annotation.JsonProperty
 
 data class AnalyticsWindow(
     val start: Instant,
@@ -41,19 +39,17 @@ data class PublicAnalyticsEventCount(
     val count: Long
 )
 
-@Serializable
 enum class PublicAnalyticsTrend {
-    @SerialName("up")
+    @JsonProperty("up")
     UP,
 
-    @SerialName("down")
+    @JsonProperty("down")
     DOWN,
 
-    @SerialName("flat")
+    @JsonProperty("flat")
     FLAT
 }
 
-@Serializable
 data class PublicAnalyticsHeadlineKpi(
     val key: String,
     val label: String,
@@ -63,7 +59,6 @@ data class PublicAnalyticsHeadlineKpi(
     val trend: PublicAnalyticsTrend
 )
 
-@Serializable
 data class PublicAnalyticsSummary(
     val totalUsers: Long,
     val newUsersToday: Long,
@@ -83,7 +78,6 @@ data class PublicAnalyticsSummary(
     val detailsOpened: Long
 )
 
-@Serializable
 data class PublicAnalyticsDailySeriesPoint(
     val date: String,
     val activeUsers: Long,
@@ -94,7 +88,6 @@ data class PublicAnalyticsDailySeriesPoint(
     val detailsOpened: Long
 )
 
-@Serializable
 data class PublicAnalyticsMonthlySeriesPoint(
     val month: String,
     val newUsers: Long,
@@ -102,16 +95,14 @@ data class PublicAnalyticsMonthlySeriesPoint(
     val searches: Long
 )
 
-@Serializable
 data class PublicAnalyticsEventTotal(
     val eventKey: String,
     val label: String,
     val count: Long
 )
 
-@Serializable
 data class PublicAnalyticsResponse(
-    @Contextual val generatedAt: Instant,
+    val generatedAt: Instant,
     val timezone: String,
     val headlineKpis: List<PublicAnalyticsHeadlineKpi>,
     val summary: PublicAnalyticsSummary,

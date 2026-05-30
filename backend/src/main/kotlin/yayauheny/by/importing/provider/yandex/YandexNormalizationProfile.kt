@@ -1,11 +1,8 @@
 package yayauheny.by.importing.provider.yandex
 
-import kotlinx.serialization.json.JsonObject
-import kotlinx.serialization.json.JsonPrimitive
-import kotlinx.serialization.json.buildJsonArray
-import kotlinx.serialization.json.buildJsonObject
-import kotlinx.serialization.json.putJsonArray
-import kotlinx.serialization.json.putJsonObject
+import com.fasterxml.jackson.databind.JsonNode
+import com.fasterxml.jackson.databind.ObjectMapper
+import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import yayauheny.by.importing.provider.ProviderNormalizationProfile
 import yayauheny.by.importing.provider.ProviderResolvedFields
 import yayauheny.by.model.enums.AccessibilityType
@@ -16,6 +13,8 @@ import yayauheny.by.model.enums.RestroomStatus
 import yayauheny.by.model.import.BuildingContext
 
 internal object YandexNormalizationProfile : ProviderNormalizationProfile<YandexMapsScrapedPlace> {
+    private val mapper = jacksonObjectMapper()
+
     override fun resolve(providerDto: YandexMapsScrapedPlace): ProviderResolvedFields {
         val name = resolveName(providerDto)
         val address = resolveAddress(providerDto)
@@ -122,7 +121,7 @@ internal object YandexNormalizationProfile : ProviderNormalizationProfile<Yandex
         features: Set<String>,
         locationType: LocationType,
         place: YandexMapsScrapedPlace
-    ): JsonObject {
+    ): JsonNode {
         val accessibleEntrance =
             features.any { it.contains("доступно") } ||
                 features.any { it.contains("пандус") }
@@ -130,43 +129,36 @@ internal object YandexNormalizationProfile : ProviderNormalizationProfile<Yandex
             features.any { it.contains("туалет для людей с инвалидностью") } ||
                 features.any { it.contains("туалет для маломобильных людей") }
 
-        return buildJsonObject {
-            put("accessible_entrance", JsonPrimitive(accessibleEntrance))
-            put("accessible_toilet", JsonPrimitive(accessibleToilet))
-            put("access_limited", JsonPrimitive(features.any { it.contains("доступ ограничен") }))
-            put("toilet_context", JsonPrimitive(locationType.name))
-            put(
-                "source_features",
-                buildJsonArray {
-                    place.features.forEach { add(JsonPrimitive(it)) }
-                }
-            )
-        }
+        val node = mapper.createObjectNode()
+        node.put("accessible_entrance", accessibleEntrance)
+        node.put("accessible_toilet", accessibleToilet)
+        node.put("access_limited", features.any { it.contains("доступ ограничен") })
+        node.put("toilet_context", locationType.name)
+        val sourceFeaturesArray = node.putArray("source_features")
+        place.features.forEach { sourceFeaturesArray.add(it) }
+        return node
     }
 
-    private fun resolveRawSchedule(providerDto: YandexMapsScrapedPlace): JsonObject? {
+    private fun resolveRawSchedule(providerDto: YandexMapsScrapedPlace): JsonNode? {
         val workingHours = providerDto.workingHours ?: return null
         if (workingHours.isEmpty()) return null
-        return buildJsonObject {
-            workingHours.forEach { wh ->
-                putJsonObject(wh.day) {
-                    put("from", JsonPrimitive(wh.from))
-                    put("to", JsonPrimitive(wh.to))
-                    if (wh.intervals.isNotEmpty()) {
-                        putJsonArray("intervals") {
-                            wh.intervals.forEach { interval ->
-                                add(
-                                    buildJsonObject {
-                                        put("from", JsonPrimitive(interval.from))
-                                        put("to", JsonPrimitive(interval.to))
-                                    }
-                                )
-                            }
-                        }
-                    }
+        
+        val node = mapper.createObjectNode()
+        workingHours.forEach { wh ->
+            val dayNode = node.putObject(wh.day)
+            dayNode.put("from", wh.from)
+            dayNode.put("to", wh.to)
+            if (wh.intervals.isNotEmpty()) {
+                val intervalsArray = dayNode.putArray("intervals")
+                wh.intervals.forEach { interval ->
+                    val intervalNode = mapper.createObjectNode()
+                    intervalNode.put("from", interval.from)
+                    intervalNode.put("to", interval.to)
+                    intervalsArray.add(intervalNode)
                 }
             }
         }
+        return node
     }
 
     private fun resolveBuildingContext(
@@ -174,7 +166,7 @@ internal object YandexNormalizationProfile : ProviderNormalizationProfile<Yandex
         name: String?,
         address: String?,
         locationType: LocationType,
-        rawSchedule: JsonObject?
+        rawSchedule: JsonNode?
     ): BuildingContext? {
         if (locationType != LocationType.INSIDE_BUILDING) {
             return null

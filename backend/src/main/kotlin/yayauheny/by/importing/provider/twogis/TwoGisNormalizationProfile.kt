@@ -1,9 +1,8 @@
 package yayauheny.by.importing.provider.twogis
 
-import kotlinx.serialization.json.JsonObject
-import kotlinx.serialization.json.JsonPrimitive
-import kotlinx.serialization.json.buildJsonArray
-import kotlinx.serialization.json.buildJsonObject
+import com.fasterxml.jackson.databind.JsonNode
+import com.fasterxml.jackson.databind.ObjectMapper
+import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import yayauheny.by.importing.provider.ProviderNormalizationProfile
 import yayauheny.by.importing.provider.ProviderResolvedFields
 import yayauheny.by.model.enums.AccessibilityType
@@ -17,6 +16,8 @@ import yayauheny.by.model.enums.TwoGisRubric
 import yayauheny.by.model.import.BuildingContext
 
 internal object TwoGisNormalizationProfile : ProviderNormalizationProfile<TwoGisScrapedPlace> {
+    private val mapper = jacksonObjectMapper()
+
     override fun resolve(providerDto: TwoGisScrapedPlace): ProviderResolvedFields {
         val attrs = providerDto.attributeGroups.map { it.trim().lowercase() }.toSet()
         val name = resolveName(providerDto)
@@ -108,16 +109,15 @@ internal object TwoGisNormalizationProfile : ProviderNormalizationProfile<TwoGis
     private fun resolveAmenities(
         attrs: Set<String>,
         locationType: LocationType
-    ): JsonObject {
-        val paymentMethods =
-            buildJsonArray {
-                if (attrs.any { it.contains("оплата картой") }) add(JsonPrimitive("card"))
-                if (attrs.any { it.contains("наличный расчёт") }) add(JsonPrimitive("cash"))
-                if (attrs.any { it.contains("оплата по qr-коду") }) add(JsonPrimitive("qr"))
-                if (attrs.any { it.contains("оплата через банк") }) add(JsonPrimitive("bank"))
-                if (attrs.any { it.contains("оплата через приложение") }) add(JsonPrimitive("app"))
-                if (attrs.any { it.contains("перевод с карты") }) add(JsonPrimitive("card_transfer"))
-            }
+    ): JsonNode {
+        val node = mapper.createObjectNode()
+        val paymentMethods = node.putArray("payment_methods")
+        if (attrs.any { it.contains("оплата картой") }) paymentMethods.add("card")
+        if (attrs.any { it.contains("наличный расчёт") }) paymentMethods.add("cash")
+        if (attrs.any { it.contains("оплата по qr-коду") }) paymentMethods.add("qr")
+        if (attrs.any { it.contains("оплата через банк") }) paymentMethods.add("bank")
+        if (attrs.any { it.contains("оплата через приложение") }) paymentMethods.add("app")
+        if (attrs.any { it.contains("перевод с карты") }) paymentMethods.add("card_transfer")
 
         val accessibleEntrance =
             attrs.any { it.contains("доступный вход") } ||
@@ -127,29 +127,25 @@ internal object TwoGisNormalizationProfile : ProviderNormalizationProfile<TwoGis
                 attrs.any { it.contains("автоматическая дверь") } ||
                 attrs.any { it.contains("нет двери") }
 
-        return buildJsonObject {
-            put("payment_methods", paymentMethods)
-            put("accessible_entrance", JsonPrimitive(accessibleEntrance))
-            put("accessible_toilet", JsonPrimitive(attrs.any { it.contains("туалет для маломобильных людей") }))
-            put("ramp", JsonPrimitive(attrs.any { it.contains("пандус") }))
-            put("lift", JsonPrimitive(attrs.any { it.contains("подъёмник") } || attrs.any { it.contains("широкий лифт") }))
-            put(
-                "automatic_door",
-                JsonPrimitive(attrs.any { it.contains("автоматическая дверь") } || attrs.any { it.contains("нет двери") })
-            )
-            put("access_limited", JsonPrimitive(attrs.any { it.contains("доступ ограничен") }))
-            put("toilet_context", JsonPrimitive(locationType.name))
-        }
+        node.put("accessible_entrance", accessibleEntrance)
+        node.put("accessible_toilet", attrs.any { it.contains("туалет для маломобильных людей") })
+        node.put("ramp", attrs.any { it.contains("пандус") })
+        node.put("lift", attrs.any { it.contains("подъёмник") } || attrs.any { it.contains("широкий лифт") })
+        node.put("automatic_door", attrs.any { it.contains("автоматическая дверь") } || attrs.any { it.contains("нет двери") })
+        node.put("access_limited", attrs.any { it.contains("доступ ограничен") })
+        node.put("toilet_context", locationType.name)
+
+        return node
     }
 
-    private fun resolveRawSchedule(providerDto: TwoGisScrapedPlace): JsonObject? = providerDto.workingHours
+    private fun resolveRawSchedule(providerDto: TwoGisScrapedPlace): JsonNode? = providerDto.workingHours
 
     private fun resolveBuildingContext(
         providerDto: TwoGisScrapedPlace,
         name: String?,
         address: String?,
         locationType: LocationType,
-        rawSchedule: JsonObject?
+        rawSchedule: JsonNode?
     ): BuildingContext? {
         if (locationType != LocationType.INSIDE_BUILDING) {
             return null

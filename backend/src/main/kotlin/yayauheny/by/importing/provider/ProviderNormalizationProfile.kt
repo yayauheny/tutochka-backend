@@ -1,6 +1,6 @@
 package yayauheny.by.importing.provider
 
-import kotlinx.serialization.json.JsonObject
+import com.fasterxml.jackson.databind.JsonNode
 import yayauheny.by.model.enums.AccessibilityType
 import yayauheny.by.model.enums.FeeType
 import yayauheny.by.model.enums.GenderType
@@ -21,8 +21,8 @@ internal data class ProviderResolvedFields(
     val feeType: FeeType,
     val accessibilityType: AccessibilityType,
     val status: RestroomStatus,
-    val amenities: JsonObject,
-    val rawSchedule: JsonObject?,
+    val amenities: JsonNode,
+    val rawSchedule: JsonNode?,
     val buildingContext: BuildingContext?,
     val genderType: GenderType?
 )

@@ -1,11 +1,11 @@
 package yayauheny.by.importing.provider
 
-import kotlinx.serialization.json.JsonObject
+import com.fasterxml.jackson.databind.JsonNode
 import yayauheny.by.importing.model.ImportAdapterContext
 import yayauheny.by.model.import.NormalizedRestroomCandidate
 
 interface Parser<T> {
-    fun parse(jsonObject: JsonObject): T
+    fun parse(jsonObject: JsonNode): T
 
     fun toCommonModel(
         providerDto: T,
@@ -13,7 +13,7 @@ interface Parser<T> {
     ): NormalizedRestroomCandidate
 
     fun convert(
-        jsonObject: JsonObject,
+        jsonObject: JsonNode,
         context: ImportAdapterContext
     ): NormalizedRestroomCandidate = toCommonModel(parse(jsonObject), context)
 }

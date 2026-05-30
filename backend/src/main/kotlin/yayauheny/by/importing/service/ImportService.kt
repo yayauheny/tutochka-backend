@@ -15,7 +15,10 @@ import yayauheny.by.model.import.ImportItemResult
 import yayauheny.by.model.import.ImportStatus
 import yayauheny.by.repository.CityJpaRepository
 
+import org.springframework.transaction.annotation.Transactional
+
 @Service
+@Transactional
 class ImportService(
     private val cityRepository: CityJpaRepository,
     private val importBatchProcessor: ImportBatchProcessor
@@ -25,7 +28,7 @@ class ImportService(
         const val CHUNK_SIZE = 150
     }
 
-    suspend fun import(
+    fun import(
         provider: ImportProvider,
         payloadType: ImportPayloadType,
         cityId: UUID?,
@@ -59,7 +62,7 @@ class ImportService(
         )
     }
 
-    suspend fun importBatch(
+    fun importBatch(
         provider: ImportProvider,
         payloadType: ImportPayloadType,
         cityId: UUID?,

@@ -26,3 +26,20 @@ spring:
   liquibase:
     enabled: true
     change-log: classpath:db/changelog/db.changelog-master.yml
+
+app:
+  api:
+    defaults:
+      page: 0
+      page-size: 20
+      max-nearest-restrooms-size: 50
+      max-distance-meters: 5000
+    limits:
+      max-name-length: 100
+      min-name-length: 0
+      min-name-length-required: 1
+      max-region-length: 100
+      max-country-code-length: 2
+      max-description-length: 1000
+      max-address-length: 255
+      max-json-string-length: 5000

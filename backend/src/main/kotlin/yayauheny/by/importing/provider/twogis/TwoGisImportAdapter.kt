@@ -1,9 +1,6 @@
 package yayauheny.by.importing.provider.twogis
 
-import kotlinx.serialization.json.JsonObject
-import kotlinx.serialization.json.contentOrNull
-import kotlinx.serialization.json.jsonObject
-import kotlinx.serialization.json.jsonPrimitive
+import com.fasterxml.jackson.databind.JsonNode
 import yayauheny.by.importing.dedup.PayloadHashing
 import yayauheny.by.importing.exception.InvalidImportPayload
 import yayauheny.by.importing.model.ImportAdapterContext
@@ -21,7 +18,7 @@ class TwoGisImportAdapter : ImportSourceAdapter {
     private val parser = TwoGisScrapedParser()
 
     override fun parseEnvelope(
-        rawPayload: JsonObject,
+        rawPayload: JsonNode,
         context: ImportAdapterContext
     ): ProviderImportEnvelope {
         val metadata = extractInboxMetadata(rawPayload)
@@ -42,9 +39,9 @@ class TwoGisImportAdapter : ImportSourceAdapter {
         }
     }
 
-    override fun extractInboxMetadata(rawPayload: JsonObject): InboxMetadata = rawPayload.toInboxMetadata()
+    override fun extractInboxMetadata(rawPayload: JsonNode): InboxMetadata = rawPayload.toInboxMetadata()
 
-    override fun extractSourceLocation(rawPayload: JsonObject): SourceLocationHint =
+    override fun extractSourceLocation(rawPayload: JsonNode): SourceLocationHint =
         SourceLocationHint(
             country = rawPayload.stringValue("country"),
             city = rawPayload.stringValue("city"),
@@ -52,41 +49,40 @@ class TwoGisImportAdapter : ImportSourceAdapter {
             lng = rawPayload.locationCoordinate("lng")
         )
 
-    private fun JsonObject.toInboxMetadata(): InboxMetadata =
+    private fun JsonNode.toInboxMetadata(): InboxMetadata =
         InboxMetadata(
             provider = provider,
             entityType = ImportEntityType.PLACE,
             externalId =
-                this["id"]
-                    ?.jsonPrimitive
-                    ?.contentOrNull
+                this.get("id")
+                    ?.takeIf { it.isTextual || it.isNumber }
+                    ?.asText()
                     ?.trim()
                     ?.takeIf { it.isNotEmpty() },
             sourceUrl =
                 listOf("url", "searchUrl")
                     .firstNotNullOfOrNull { key ->
-                        this[key]
-                            ?.jsonPrimitive
-                            ?.contentOrNull
+                        this.get(key)
+                            ?.takeIf { it.isTextual }
+                            ?.asText()
                             ?.trim()
                             ?.takeIf { it.isNotEmpty() }
                     },
-            scrapedAt = PayloadHashing.parseInstantOrNull(this["scrapedAt"]?.jsonPrimitive?.contentOrNull),
+            scrapedAt = PayloadHashing.parseInstantOrNull(this.get("scrapedAt")?.takeIf { it.isTextual }?.asText()),
             payloadHash = PayloadHashing.canonicalPayloadHash(this)
         )
 
-    private fun JsonObject.stringValue(key: String): String? =
-        this[key]
-            ?.jsonPrimitive
-            ?.contentOrNull
+    private fun JsonNode.stringValue(key: String): String? =
+        this.get(key)
+            ?.takeIf { it.isTextual }
+            ?.asText()
             ?.trim()
             ?.takeIf { it.isNotEmpty() }
 
-    private fun JsonObject.locationCoordinate(key: String): Double? =
-        this["location"]
-            ?.jsonObject
+    private fun JsonNode.locationCoordinate(key: String): Double? =
+        this.get("location")
+            ?.takeIf { it.isObject }
             ?.get(key)
-            ?.jsonPrimitive
-            ?.contentOrNull
-            ?.toDoubleOrNull()
+            ?.takeIf { it.isNumber || it.isTextual }
+            ?.asDouble()
 }

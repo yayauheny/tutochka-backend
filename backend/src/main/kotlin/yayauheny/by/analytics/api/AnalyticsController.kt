@@ -4,7 +4,7 @@ import org.slf4j.LoggerFactory
 import org.springframework.http.HttpHeaders
 import org.springframework.http.ResponseEntity
 import org.springframework.web.bind.annotation.*
-import yayauheny.by.analytics.model.AnalyticsIdentityHeaders
+
 import yayauheny.by.analytics.service.AnalyticsService
 import yayauheny.by.model.analytics.AnalyticsEventCommand
 import yayauheny.by.model.analytics.AnalyticsEventRequest
@@ -21,16 +21,19 @@ class AnalyticsController(
     @PostMapping("/events")
     fun trackEvent(
         @RequestBody request: AnalyticsEventRequest,
-        @RequestHeader headers: HttpHeaders
+        @RequestHeader(name = "X-Tg-User-Id", required = false) tgUserId: Long?,
+        @RequestHeader(name = "X-Tg-Chat-Id", required = false) tgChatId: String?,
+        @RequestHeader(name = "X-Tg-Username", required = false) username: String?,
+        @RequestHeader(name = "X-Analytics-Source", required = false) sourceHeader: String?
     ): ResponseEntity<Void> {
-        val identity = headers.getAnalyticsIdentityHeaders(AnalyticsSource.API)
+        val source = sourceHeader?.let { AnalyticsSource.fromValue(it) } ?: AnalyticsSource.API
         
         val command = AnalyticsEventCommand(
             event = request.event,
-            tgUserId = identity.tgUserId,
-            tgChatId = identity.tgChatId,
-            username = identity.username,
-            source = identity.source,
+            tgUserId = tgUserId,
+            tgChatId = tgChatId,
+            username = username,
+            source = source,
             lat = request.lat?.toBigDecimalRounded(),
             lon = request.lon?.toBigDecimalRounded(),
             resultsCount = request.resultsCount,

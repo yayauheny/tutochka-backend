@@ -1,8 +1,6 @@
 package yayauheny.by.common.query
 
-import kotlinx.serialization.Serializable
 
-@Serializable
 enum class FilterOperator {
     EQ, // equals
     NE, // not equals

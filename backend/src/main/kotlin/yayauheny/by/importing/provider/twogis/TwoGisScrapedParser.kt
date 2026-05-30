@@ -1,38 +1,26 @@
 package yayauheny.by.importing.provider.twogis
 
-import kotlinx.serialization.json.JsonArray
-import kotlinx.serialization.json.JsonElement
-import kotlinx.serialization.json.JsonNull
-import kotlinx.serialization.json.JsonObject
-import kotlinx.serialization.json.JsonPrimitive
-import kotlinx.serialization.json.jsonObject
-import kotlinx.serialization.json.jsonPrimitive
+import com.fasterxml.jackson.databind.JsonNode
 import org.slf4j.LoggerFactory
 import yayauheny.by.importing.exception.InvalidImportPayload
 import yayauheny.by.importing.model.ImportAdapterContext
 import yayauheny.by.importing.provider.Parser
-import yayauheny.by.importing.provider.requireObject
-import yayauheny.by.importing.provider.requireString
 import yayauheny.by.model.import.NormalizedRestroomCandidate
 
 class TwoGisScrapedParser : Parser<TwoGisScrapedPlace> {
     private val logger = LoggerFactory.getLogger(TwoGisScrapedParser::class.java)
 
-    override fun parse(jsonObject: JsonObject): TwoGisScrapedPlace {
+    override fun parse(jsonObject: JsonNode): TwoGisScrapedPlace {
         return try {
-            val id = jsonObject.requireString("id")
+            val id = jsonObject.get("id")?.asText() ?: throw InvalidImportPayload("Missing id")
             val title = jsonObject.stringOrNull("title")
             val category = jsonObject.stringOrNull("category")
-            val address = parseAddress(jsonObject["address"])
+            val address = parseAddress(jsonObject.get("address"))
             val street = jsonObject.stringOrNull("street")
             val houseNumber = jsonObject.stringOrNull("houseNumber")
-            val locationObj = jsonObject.requireObject("location")
+            val locationObj = jsonObject.get("location")?.takeIf { it.isObject } ?: throw InvalidImportPayload("Missing location")
             val location = parseLocation(locationObj)
-            val workingHours =
-                when (val wh = jsonObject["working_hours"]) {
-                    null, is JsonNull -> null
-                    else -> wh.jsonObject
-                }
+            val workingHours = jsonObject.get("working_hours")?.takeIf { it.isObject }
             val attributeGroups = jsonObject.stringList("attributeGroups")
             val rubrics = jsonObject.stringList("rubrics")
 
@@ -83,33 +71,31 @@ class TwoGisScrapedParser : Parser<TwoGisScrapedPlace> {
         )
     }
 
-    private fun parseLocation(locationObj: JsonObject): TwoGisScrapedLocation {
+    private fun parseLocation(locationObj: JsonNode): TwoGisScrapedLocation {
         val lat =
-            locationObj["lat"]?.jsonPrimitive?.content?.toDoubleOrNull()
+            locationObj.get("lat")?.takeIf { it.isNumber || it.isTextual }?.asDouble()
                 ?: throw InvalidImportPayload("Missing or invalid 'location.lat'")
         val lng =
-            locationObj["lng"]?.jsonPrimitive?.content?.toDoubleOrNull()
+            locationObj.get("lng")?.takeIf { it.isNumber || it.isTextual }?.asDouble()
                 ?: throw InvalidImportPayload("Missing or invalid 'location.lng'")
         return TwoGisScrapedLocation(lat = lat, lng = lng)
     }
 
-    private fun parseAddress(addressElem: JsonElement?): String? =
-        when (addressElem) {
-            null, is JsonNull -> null
-            is JsonPrimitive -> addressElem.content.takeIf { it.isNotBlank() && !it.equals("null", ignoreCase = true) }?.trim()
-            else -> null
-        }
+    private fun parseAddress(addressElem: JsonNode?): String? =
+        addressElem?.takeIf { it.isTextual }?.asText()?.takeIf { it.isNotBlank() && !it.equals("null", ignoreCase = true) }?.trim()
 
-    private fun JsonObject.stringOrNull(key: String): String? =
-        (this[key] as? JsonPrimitive)
-            ?.content
+    private fun JsonNode.stringOrNull(key: String): String? =
+        this.get(key)
+            ?.takeIf { it.isTextual }
+            ?.asText()
             ?.takeIf { it.isNotBlank() && !it.equals("null", ignoreCase = true) }
 
-    private fun JsonObject.stringList(key: String): List<String> =
-        (this[key] as? JsonArray)
+    private fun JsonNode.stringList(key: String): List<String> =
+        this.get(key)
+            ?.takeIf { it.isArray }
             ?.mapNotNull { element ->
-                (element as? JsonPrimitive)
-                    ?.content
+                element.takeIf { it.isTextual }
+                    ?.asText()
                     ?.takeIf { it.isNotBlank() && !it.equals("null", ignoreCase = true) }
             }.orEmpty()
 }

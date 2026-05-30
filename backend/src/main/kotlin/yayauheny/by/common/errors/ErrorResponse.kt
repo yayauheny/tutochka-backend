@@ -1,9 +1,7 @@
 package yayauheny.by.common.errors
 
 import io.swagger.v3.oas.annotations.media.Schema
-import kotlinx.serialization.Serializable
 
-@Serializable
 @Schema(description = "Field validation error")
 data class FieldError(
     @Schema(description = "Field name", example = "nameRu")
@@ -12,7 +10,7 @@ data class FieldError(
     val message: String
 )
 
-@Serializable
+
 @Schema(description = "Error response structure")
 data class ErrorResponse(
     @Schema(description = "HTTP status code", example = "400")

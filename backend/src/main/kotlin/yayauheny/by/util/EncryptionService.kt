@@ -5,12 +5,13 @@ import com.google.crypto.tink.InsecureSecretKeyAccess
 import com.google.crypto.tink.RegistryConfiguration
 import com.google.crypto.tink.TinkJsonProtoKeysetFormat
 import com.google.crypto.tink.daead.DeterministicAeadConfig
+import org.springframework.beans.factory.annotation.Value
+import org.springframework.stereotype.Service
 import java.util.Base64
 
-private const val DEFAULT_ENCRYPTION_KEYSET_ENV = "ENCRYPTION_KEYSET_JSON"
-
+@Service
 class EncryptionService(
-    keysetJson: String = DEFAULT_ENCRYPTION_KEYSET_ENV.env()
+    @Value("\${encryption.keyset.json:\#{null}}") keysetJson: String?
 ) {
     private val deterministicAead: DeterministicAead = createPrimitive(keysetJson)
 
@@ -32,8 +33,8 @@ class EncryptionService(
         return decrypted.toString(Charsets.UTF_8)
     }
 
-    private fun createPrimitive(keysetJson: String): DeterministicAead {
-        require(keysetJson.isNotBlank()) { "$DEFAULT_ENCRYPTION_KEYSET_ENV is required" }
+    private fun createPrimitive(keysetJson: String?): DeterministicAead {
+        require(!keysetJson.isNullOrBlank()) { "encryption.keyset.json is required" }
         ensureRegistered()
         val handle = TinkJsonProtoKeysetFormat.parseKeyset(keysetJson, InsecureSecretKeyAccess.get())
         return handle.getPrimitive(RegistryConfiguration.get(), DeterministicAead::class.java)

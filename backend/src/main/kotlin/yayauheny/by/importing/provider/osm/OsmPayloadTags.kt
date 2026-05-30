@@ -1,28 +1,32 @@
 package yayauheny.by.importing.provider.osm
 
-import kotlinx.serialization.json.Json
-import kotlinx.serialization.json.JsonObject
-import kotlinx.serialization.json.contentOrNull
-import kotlinx.serialization.json.jsonObject
-import kotlinx.serialization.json.jsonPrimitive
+import com.fasterxml.jackson.databind.JsonNode
+import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 
-internal fun JsonObject.readTags(): Map<String, String>? {
-    val tagsElement = this["tags"] ?: return null
+private val mapper = jacksonObjectMapper()
+
+internal fun JsonNode.readTags(): Map<String, String>? {
+    val tagsElement = this.get("tags") ?: return null
     val tagsObject =
-        when (tagsElement) {
-            is JsonObject -> tagsElement
-            else ->
-                tagsElement.jsonPrimitive.contentOrNull
-                    ?.trim()
-                    ?.takeIf { it.isNotEmpty() && !it.equals("null", ignoreCase = true) }
-                    ?.let { rawTags -> runCatching { Json.parseToJsonElement(rawTags).jsonObject }.getOrNull() }
+        when {
+            tagsElement.isObject -> tagsElement
+            tagsElement.isTextual -> {
+                tagsElement.asText()
+                    .trim()
+                    .takeIf { it.isNotEmpty() && !it.equals("null", ignoreCase = true) }
+                    ?.let { rawTags -> runCatching { mapper.readTree(rawTags) }.getOrNull()?.takeIf { it.isObject } }
+            }
+            else -> null
         } ?: return null
 
-    return tagsObject.entries
-        .mapNotNull { (key, value) ->
-            value.jsonPrimitive.contentOrNull
-                ?.trim()
-                ?.takeIf { it.isNotEmpty() && !it.equals("null", ignoreCase = true) }
-                ?.let { key to it }
-        }.toMap()
+    val map = mutableMapOf<String, String>()
+    val fields = tagsObject.fields()
+    while (fields.hasNext()) {
+        val entry = fields.next()
+        entry.value.takeIf { it.isTextual }?.asText()
+            ?.trim()
+            ?.takeIf { it.isNotEmpty() && !it.equals("null", ignoreCase = true) }
+            ?.let { map[entry.key] = it }
+    }
+    return map
 }

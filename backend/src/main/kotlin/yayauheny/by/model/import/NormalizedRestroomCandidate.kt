@@ -1,7 +1,7 @@
 package yayauheny.by.model.import
 
 import java.util.UUID
-import kotlinx.serialization.json.JsonObject
+import com.fasterxml.jackson.databind.JsonNode
 import yayauheny.by.model.dto.Coordinates
 import yayauheny.by.model.enums.AccessibilityType
 import yayauheny.by.model.enums.FeeType
@@ -14,7 +14,7 @@ import yayauheny.by.model.enums.RestroomStatus
 data class BuildingContext(
     val name: String?,
     val address: String,
-    val workTime: JsonObject?,
+    val workTime: JsonNode?,
     val externalId: String
 )
 
@@ -36,8 +36,8 @@ data class NormalizedRestroomCandidate(
     val feeType: FeeType,
     val accessibilityType: AccessibilityType,
     val status: RestroomStatus,
-    val amenities: JsonObject?,
-    val rawSchedule: JsonObject? = null,
+    val amenities: JsonNode?,
+    val rawSchedule: JsonNode? = null,
     val buildingContext: BuildingContext? = null,
     val genderType: GenderType? = null
 ) {

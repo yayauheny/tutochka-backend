@@ -1,6 +1,6 @@
 package yayauheny.by.importing.provider
 
-import kotlinx.serialization.json.JsonObject
+import com.fasterxml.jackson.databind.JsonNode
 import yayauheny.by.importing.model.ImportAdapterContext
 import yayauheny.by.importing.model.InboxMetadata
 import yayauheny.by.importing.model.NormalizedImportCommand
@@ -10,7 +10,7 @@ import yayauheny.by.model.enums.ImportProvider
 data class ProviderImportEnvelope(
     val inboxMetadata: InboxMetadata,
     val command: NormalizedImportCommand,
-    val rawPayload: JsonObject
+    val rawPayload: JsonNode
 )
 
 class ImportEnvelopeParsingException(
@@ -22,12 +22,12 @@ class ImportEnvelopeParsingException(
 interface ImportSourceAdapter {
     val provider: ImportProvider
 
-    fun extractInboxMetadata(rawPayload: JsonObject): InboxMetadata
+    fun extractInboxMetadata(rawPayload: JsonNode): InboxMetadata
 
-    fun extractSourceLocation(rawPayload: JsonObject): SourceLocationHint
+    fun extractSourceLocation(rawPayload: JsonNode): SourceLocationHint
 
     fun parseEnvelope(
-        rawPayload: JsonObject,
+        rawPayload: JsonNode,
         context: ImportAdapterContext
     ): ProviderImportEnvelope
 }

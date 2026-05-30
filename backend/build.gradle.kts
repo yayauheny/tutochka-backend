@@ -26,8 +26,8 @@ dependencies {
 
     implementation(libs.bundles.springBootBundle)
     implementation(libs.bundles.swaggerBundle)
-    implementation("io.konform:konform-jvm:0.11.0")
-    implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.6.3")
+    implementation("org.springframework.boot:spring-boot-starter-validation")
+    implementation("com.fasterxml.jackson.module:jackson-module-kotlin")
     // Database
     implementation(libs.postgresql)
     implementation(libs.postgis)

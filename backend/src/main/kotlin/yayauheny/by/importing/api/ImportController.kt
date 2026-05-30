@@ -26,7 +26,7 @@ class ImportController(
     private val logger = LoggerFactory.getLogger(ImportController::class.java)
 
     @PostMapping
-    suspend fun importSingle(
+    fun importSingle(
         @RequestHeader("X-Import-Provider") provider: String,
         @RequestHeader("X-Import-Payload-Type") payloadType: String,
         @RequestHeader("X-Import-City-Id", required = false) cityId: String?,
@@ -60,7 +60,7 @@ class ImportController(
     }
 
     @PostMapping("/batch")
-    suspend fun importBatch(
+    fun importBatch(
         @RequestHeader("X-Import-Provider") provider: String,
         @RequestHeader("X-Import-Payload-Type") payloadType: String,
         @RequestHeader("X-Import-City-Id", required = false) cityId: String?,

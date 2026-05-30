@@ -1,9 +1,9 @@
 package yayauheny.by.importing.mapper
 
 import java.util.UUID
-import kotlinx.serialization.json.JsonObject
-import kotlinx.serialization.json.JsonPrimitive
-import kotlinx.serialization.json.buildJsonObject
+import com.fasterxml.jackson.databind.JsonNode
+import com.fasterxml.jackson.databind.ObjectMapper
+import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import yayauheny.by.model.enums.DataSourceType
 import yayauheny.by.model.enums.GenderType
 import yayauheny.by.model.enums.ImportProvider
@@ -11,6 +11,8 @@ import yayauheny.by.model.import.NormalizedRestroomCandidate
 import yayauheny.by.model.restroom.RestroomCreateDto
 
 object RestroomImportMapper {
+    private val mapper = jacksonObjectMapper()
+
     fun toCreateDto(
         candidate: NormalizedRestroomCandidate,
         genderType: GenderType? = null,
@@ -57,7 +59,7 @@ object RestroomImportMapper {
     private fun buildExternalMaps(
         provider: ImportProvider,
         providerObjectId: String
-    ): JsonObject {
+    ): JsonNode {
         val providerKey =
             when (provider) {
                 ImportProvider.TWO_GIS -> "2gis"
@@ -67,9 +69,11 @@ object RestroomImportMapper {
                 ImportProvider.USER, ImportProvider.MANUAL -> null
             }
         return if (providerKey != null) {
-            buildJsonObject { put(providerKey, JsonPrimitive(providerObjectId)) }
+            val node = mapper.createObjectNode()
+            node.put(providerKey, providerObjectId)
+            node
         } else {
-            buildJsonObject { }
+            mapper.createObjectNode()
         }
     }
 }

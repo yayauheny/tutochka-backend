@@ -20,6 +20,7 @@ kotlin {
 
 dependencies {
     api(libs.jacksonAnnotations)
+    api("jakarta.validation:jakarta.validation-api:3.0.2")
     implementation(libs.swaggerAnnotations)
 
     testImplementation(libs.junitJupiter)

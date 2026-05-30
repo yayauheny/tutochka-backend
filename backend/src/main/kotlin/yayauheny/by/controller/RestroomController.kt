@@ -11,18 +11,22 @@ import yayauheny.by.common.errors.ValidationException
 import yayauheny.by.common.query.PaginationRequest
 import yayauheny.by.metrics.BackendSearchMetrics
 import yayauheny.by.metrics.SearchMetricBuckets
-import yayauheny.by.metrics.extractClientType
+import yayauheny.by.metrics.MetricLabelWhitelist
 import yayauheny.by.model.analytics.AnalyticsSource
 import yayauheny.by.model.dto.Coordinates
 import yayauheny.by.model.restroom.RestroomCreateDto
 import yayauheny.by.model.restroom.RestroomUpdateDto
 import yayauheny.by.service.RestroomService
-import yayauheny.by.service.validation.*
-import yayauheny.by.analytics.api.getAnalyticsIdentityHeaders
+import jakarta.validation.Valid
+import jakarta.validation.constraints.Max
+import jakarta.validation.constraints.Min
+import org.springframework.validation.annotation.Validated
+import yayauheny.by.analytics.model.AnalyticsIdentityHeaders
 import java.util.UUID
 
 @RestController
 @RequestMapping("/restrooms")
+@Validated
 class RestroomController(
     private val restroomService: RestroomService,
     private val backendSearchMetrics: BackendSearchMetrics,
@@ -64,27 +68,27 @@ class RestroomController(
 
     @GetMapping("/nearest")
     fun getNearestRestrooms(
-        @RequestHeader headers: HttpHeaders,
+        @RequestHeader(name = "X-Client-Type", required = false) clientTypeHeader: String?,
+        @RequestHeader(name = "X-Tg-User-Id", required = false) tgUserId: Long?,
+        @RequestHeader(name = "X-Tg-Chat-Id", required = false) tgChatId: String?,
+        @RequestHeader(name = "X-Tg-Username", required = false) username: String?,
+        @RequestHeader(name = "X-Analytics-Source", required = false) sourceHeader: String?,
         @RequestParam lat: Double,
         @RequestParam lon: Double,
-        @RequestParam(defaultValue = "10") limit: Int,
-        @RequestParam(defaultValue = "5000") distanceMeters: Int
+        @RequestParam(defaultValue = "10") @Min(1) @Max(100) limit: Int,
+        @RequestParam(defaultValue = "5000") @Min(1) @Max(10000) distanceMeters: Int
     ): ResponseEntity<Any> {
-        val clientType = headers.extractClientType()
+        val clientType = MetricLabelWhitelist.clientTypeOrDefault(clientTypeHeader)
         val radiusBucket = SearchMetricBuckets.radiusBucketOrFallback(distanceMeters.toString())
         backendSearchMetrics.incrementSearchRequest(clientType, radiusBucket)
 
         try {
-            val params = NearestRestroomsParams(Coordinates(lat, lon), limit, distanceMeters)
-
-            val restrooms = params.validateAndThen(validateNearestRestroomsParams) { valid ->
-                restroomService.findNearestRestrooms(
-                    valid.coordinates.lat,
-                    valid.coordinates.lon,
-                    valid.limit,
-                    valid.distanceMeters
-                )
-            }.getOrThrow()
+            val restrooms = restroomService.findNearestRestrooms(
+                lat,
+                lon,
+                limit,
+                distanceMeters
+            )
 
             val resultsCount = restrooms.size
             val firstDistanceMeters = restrooms.firstOrNull()?.distanceMeters?.toInt()
@@ -98,7 +102,13 @@ class RestroomController(
                 qualityBucket = SearchMetricBuckets.qualityBucket(resultsCount, firstDistanceMeters)
             )
 
-            val identity = headers.getAnalyticsIdentityHeaders(AnalyticsSource.TELEGRAM_BOT)
+            val source = sourceHeader?.let { AnalyticsSource.fromValue(it) } ?: AnalyticsSource.TELEGRAM_BOT
+            val identity = AnalyticsIdentityHeaders(
+                tgUserId = tgUserId,
+                tgChatId = tgChatId,
+                username = username,
+                source = source
+            )
             runCatching {
                 analyticsService.trackNearestRestroomsSearch(identity, resultsCount, lat, lon)
             }.onFailure { exception ->
@@ -122,21 +132,13 @@ class RestroomController(
     }
 
     @PostMapping
-    fun createRestroom(@RequestBody createDto: RestroomCreateDto): ResponseEntity<Any> {
-        val additionalErrors = validateRestroomCreateFields(createDto)
-        if (additionalErrors.isNotEmpty()) {
-            throw ValidationException(additionalErrors)
-        }
+    fun createRestroom(@Valid @RequestBody createDto: RestroomCreateDto): ResponseEntity<Any> {
         val restroom = restroomService.createRestroom(createDto)
         return ResponseEntity.status(HttpStatus.CREATED).body(restroom)
     }
 
     @PutMapping("/{id}")
-    fun updateRestroom(@PathVariable id: UUID, @RequestBody updateDto: RestroomUpdateDto): ResponseEntity<Any> {
-        val additionalErrors = validateRestroomUpdateFields(updateDto)
-        if (additionalErrors.isNotEmpty()) {
-            throw ValidationException(additionalErrors)
-        }
+    fun updateRestroom(@PathVariable id: UUID, @Valid @RequestBody updateDto: RestroomUpdateDto): ResponseEntity<Any> {
         val restroom = restroomService.updateRestroom(id, updateDto)
         return ResponseEntity.ok(restroom)
     }

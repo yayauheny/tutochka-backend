@@ -1,40 +1,35 @@
 package yayauheny.by.importing.provider
 
-import kotlinx.serialization.json.JsonArray
-import kotlinx.serialization.json.JsonNull
-import kotlinx.serialization.json.JsonObject
-import kotlinx.serialization.json.jsonArray
-import kotlinx.serialization.json.jsonObject
-import kotlinx.serialization.json.jsonPrimitive
+import com.fasterxml.jackson.databind.JsonNode
 import yayauheny.by.importing.exception.InvalidImportPayload
 
-fun JsonObject.requireString(key: String): String {
-    val value = this[key]?.jsonPrimitive?.content
+fun JsonNode.requireString(key: String): String {
+    val value = this.get(key)?.takeIf { it.isTextual }?.asText()
     if (value.isNullOrBlank()) throw InvalidImportPayload("Missing or invalid '$key'")
     return value.trim()
 }
 
-fun JsonObject.requireDouble(key: String): Double {
-    val value = this[key]?.jsonPrimitive?.content?.toDoubleOrNull()
+fun JsonNode.requireDouble(key: String): Double {
+    val value = this.get(key)?.takeIf { it.isNumber || it.isTextual }?.asDouble()
     if (value == null) throw InvalidImportPayload("Missing or invalid '$key'")
     return value
 }
 
-fun JsonObject.requireObject(key: String): JsonObject {
-    val value = this[key]?.jsonObject
+fun JsonNode.requireObject(key: String): JsonNode {
+    val value = this.get(key)?.takeIf { it.isObject }
     if (value == null) throw InvalidImportPayload("Missing or invalid '$key'")
     return value
 }
 
-fun JsonObject.optionalString(key: String): String? =
-    this[key]
-        ?.jsonPrimitive
-        ?.content
+fun JsonNode.optionalString(key: String): String? =
+    this.get(key)
+        ?.takeIf { it.isTextual }
+        ?.asText()
         ?.trim()
         ?.takeIf { it.isNotBlank() && !it.equals("null", ignoreCase = true) }
 
-fun JsonObject.optionalArray(key: String): JsonArray? {
-    val elem = this[key] ?: return null
-    if (elem is JsonNull) return null
-    return elem.jsonArray
+fun JsonNode.optionalArray(key: String): JsonNode? {
+    val elem = this.get(key) ?: return null
+    if (elem.isNull || !elem.isArray) return null
+    return elem
 }

@@ -1,13 +1,9 @@
 package yayauheny.by.common.query
 
-import kotlinx.serialization.Serializable
-import yayauheny.by.common.config.ApiConstants
-
-@Serializable
 data class PaginationRequest(
     val filters: List<FilterCriteria> = emptyList(),
     val sort: String? = null,
     val direction: SortDirection = SortDirection.ASC,
-    val page: Int = ApiConstants.DEFAULT_PAGE,
-    val size: Int = ApiConstants.DEFAULT_PAGE_SIZE
+    val page: Int = 0,
+    val size: Int = 20
 )

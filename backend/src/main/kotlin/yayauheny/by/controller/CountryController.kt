@@ -10,9 +10,7 @@ import yayauheny.by.model.country.CountryCreateDto
 import yayauheny.by.model.country.CountryResponseDto
 import yayauheny.by.model.country.CountryUpdateDto
 import yayauheny.by.service.CountryService
-import yayauheny.by.service.validation.validateCountryOnCreate
-import yayauheny.by.service.validation.validateCountryOnUpdate
-import yayauheny.by.service.validation.validateOrThrow
+import jakarta.validation.Valid
 import java.util.UUID
 
 @RestController
@@ -47,8 +45,7 @@ class CountryController(
     }
 
     @PostMapping
-    fun createCountry(@RequestBody createDto: CountryCreateDto): ResponseEntity<CountryResponseDto> {
-        // createDto.validateOrThrow(validateCountryOnCreate)
+    fun createCountry(@Valid @RequestBody createDto: CountryCreateDto): ResponseEntity<CountryResponseDto> {
         val country = countryService.createCountry(createDto)
         return ResponseEntity.status(HttpStatus.CREATED).body(country)
     }
@@ -56,9 +53,8 @@ class CountryController(
     @PutMapping("/{id}")
     fun updateCountry(
         @PathVariable id: UUID,
-        @RequestBody updateDto: CountryUpdateDto
+        @Valid @RequestBody updateDto: CountryUpdateDto
     ): ResponseEntity<CountryResponseDto> {
-        // updateDto.validateOrThrow(validateCountryOnUpdate)
         val country = countryService.updateCountry(id, updateDto)
         return ResponseEntity.ok(country)
     }

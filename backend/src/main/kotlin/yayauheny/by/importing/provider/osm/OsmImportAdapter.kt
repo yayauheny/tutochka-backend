@@ -1,8 +1,6 @@
 package yayauheny.by.importing.provider.osm
 
-import kotlinx.serialization.json.JsonObject
-import kotlinx.serialization.json.contentOrNull
-import kotlinx.serialization.json.jsonPrimitive
+import com.fasterxml.jackson.databind.JsonNode
 import yayauheny.by.importing.dedup.PayloadHashing
 import yayauheny.by.importing.exception.InvalidImportPayload
 import yayauheny.by.importing.model.ImportAdapterContext
@@ -20,7 +18,7 @@ class OsmImportAdapter : ImportSourceAdapter {
     private val parser = OsmScrapedParser()
 
     override fun parseEnvelope(
-        rawPayload: JsonObject,
+        rawPayload: JsonNode,
         context: ImportAdapterContext
     ): ProviderImportEnvelope {
         val metadata = extractInboxMetadata(rawPayload)
@@ -40,9 +38,9 @@ class OsmImportAdapter : ImportSourceAdapter {
         }
     }
 
-    override fun extractInboxMetadata(rawPayload: JsonObject): InboxMetadata = rawPayload.toInboxMetadata()
+    override fun extractInboxMetadata(rawPayload: JsonNode): InboxMetadata = rawPayload.toInboxMetadata()
 
-    override fun extractSourceLocation(rawPayload: JsonObject): SourceLocationHint {
+    override fun extractSourceLocation(rawPayload: JsonNode): SourceLocationHint {
         val location = runCatching { parser.extractLocation(rawPayload) }.getOrNull()
         return SourceLocationHint(
             country = rawPayload.optionalString("country") ?: rawPayload.optionalTag("addr:country"),
@@ -52,37 +50,37 @@ class OsmImportAdapter : ImportSourceAdapter {
         )
     }
 
-    private fun JsonObject.toInboxMetadata(): InboxMetadata =
+    private fun JsonNode.toInboxMetadata(): InboxMetadata =
         InboxMetadata(
             provider = provider,
             entityType = ImportEntityType.PLACE,
             externalId = externalNodeId(),
             sourceUrl = optionalString("sourceUrl") ?: optionalString("url") ?: osmNodeUrl(),
-            scrapedAt = PayloadHashing.parseInstantOrNull(this["scrapedAt"]?.jsonPrimitive?.contentOrNull),
+            scrapedAt = PayloadHashing.parseInstantOrNull(this.get("scrapedAt")?.takeIf { it.isTextual }?.asText()),
             payloadHash = PayloadHashing.canonicalPayloadHash(this)
         )
 
-    private fun JsonObject.externalNodeId(): String? =
+    private fun JsonNode.externalNodeId(): String? =
         listOf("node_id", "nodeId", "id")
             .firstNotNullOfOrNull { key ->
-                this[key]
-                    ?.jsonPrimitive
-                    ?.contentOrNull
+                this.get(key)
+                    ?.takeIf { it.isTextual || it.isNumber }
+                    ?.asText()
                     ?.replace(",", "")
                     ?.trim()
                     ?.takeIf { it.isNotEmpty() }
             }
 
-    private fun JsonObject.osmNodeUrl(): String? = externalNodeId()?.let { "https://www.openstreetmap.org/node/$it" }
+    private fun JsonNode.osmNodeUrl(): String? = externalNodeId()?.let { "https://www.openstreetmap.org/node/$it" }
 
-    private fun JsonObject.optionalString(key: String): String? =
-        this[key]
-            ?.jsonPrimitive
-            ?.contentOrNull
+    private fun JsonNode.optionalString(key: String): String? =
+        this.get(key)
+            ?.takeIf { it.isTextual }
+            ?.asText()
             ?.trim()
             ?.takeIf { it.isNotEmpty() && !it.equals("null", ignoreCase = true) }
 
-    private fun JsonObject.optionalTag(key: String): String? =
+    private fun JsonNode.optionalTag(key: String): String? =
         readTags()
             ?.get(key)
             ?.trim()

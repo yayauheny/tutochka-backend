@@ -4,19 +4,16 @@ import java.util.Locale
 import kotlin.math.PI
 import kotlin.math.atan
 import kotlin.math.exp
-import kotlinx.serialization.json.JsonObject
-import kotlinx.serialization.json.contentOrNull
-import kotlinx.serialization.json.jsonObject
-import kotlinx.serialization.json.jsonPrimitive
+import com.fasterxml.jackson.databind.JsonNode
 import yayauheny.by.importing.exception.InvalidImportPayload
 import yayauheny.by.importing.model.ImportAdapterContext
 import yayauheny.by.importing.provider.Parser
 import yayauheny.by.model.import.NormalizedRestroomCandidate
 
 class OsmScrapedParser : Parser<OsmScrapedToilet> {
-    fun extractLocation(rawPayload: JsonObject): OsmScrapedLocation = parseLocation(rawPayload)
+    fun extractLocation(rawPayload: JsonNode): OsmScrapedLocation = parseLocation(rawPayload)
 
-    override fun parse(jsonObject: JsonObject): OsmScrapedToilet {
+    override fun parse(jsonObject: JsonNode): OsmScrapedToilet {
         val nodeId = jsonObject.requireNodeId()
         val tags = jsonObject.requireTags()
 
@@ -102,7 +99,7 @@ class OsmScrapedParser : Parser<OsmScrapedToilet> {
         return tags.cleanedValue("description:ru")?.lowercase(Locale.ROOT)?.contains("туалет") == true
     }
 
-    private fun parseLocation(rawPayload: JsonObject): OsmScrapedLocation {
+    private fun parseLocation(rawPayload: JsonNode): OsmScrapedLocation {
         parseExplicitLocation(rawPayload)?.let { return it }
 
         val geom = rawPayload.optionalString("geom") ?: rawPayload.optionalString("geometry")
@@ -113,22 +110,20 @@ class OsmScrapedParser : Parser<OsmScrapedToilet> {
         throw InvalidImportPayload("Missing coordinates: expected 'location', 'lat'/'lng', or 'geom'")
     }
 
-    private fun parseExplicitLocation(rawPayload: JsonObject): OsmScrapedLocation? {
-        val locationObject = rawPayload["location"]?.jsonObject
+    private fun parseExplicitLocation(rawPayload: JsonNode): OsmScrapedLocation? {
+        val locationObject = rawPayload.get("location")?.takeIf { it.isObject }
         val lat =
             locationObject
                 ?.get("lat")
-                ?.jsonPrimitive
-                ?.contentOrNull
-                ?.toDoubleOrNull()
-                ?: rawPayload["lat"]?.jsonPrimitive?.contentOrNull?.toDoubleOrNull()
+                ?.takeIf { it.isNumber || it.isTextual }
+                ?.asDouble()
+                ?: rawPayload.get("lat")?.takeIf { it.isNumber || it.isTextual }?.asDouble()
         val lng =
             locationObject
                 ?.get("lng")
-                ?.jsonPrimitive
-                ?.contentOrNull
-                ?.toDoubleOrNull()
-                ?: rawPayload["lng"]?.jsonPrimitive?.contentOrNull?.toDoubleOrNull()
+                ?.takeIf { it.isNumber || it.isTextual }
+                ?.asDouble()
+                ?: rawPayload.get("lng")?.takeIf { it.isNumber || it.isTextual }?.asDouble()
 
         return if (lat != null && lng != null) {
             OsmScrapedLocation(lat = lat, lng = lng)
@@ -153,28 +148,28 @@ class OsmScrapedParser : Parser<OsmScrapedToilet> {
     }
 
     private fun resolveSourceUrl(
-        rawPayload: JsonObject,
+        rawPayload: JsonNode,
         nodeId: String
     ): String =
         rawPayload.optionalString("sourceUrl")
             ?: rawPayload.optionalString("url")
             ?: "https://www.openstreetmap.org/node/$nodeId"
 
-    private fun JsonObject.requireNodeId(): String =
+    private fun JsonNode.requireNodeId(): String =
         listOf("node_id", "nodeId", "id")
-            .firstNotNullOfOrNull { key -> this[key]?.jsonPrimitive?.contentOrNull?.trim() }
+            .firstNotNullOfOrNull { key -> this.get(key)?.takeIf { it.isTextual || it.isNumber }?.asText()?.trim() }
             ?.replace(",", "")
             ?.takeIf { it.isNotBlank() }
             ?: throw InvalidImportPayload("Missing or invalid 'node_id'")
 
-    private fun JsonObject.requireTags(): Map<String, String> {
+    private fun JsonNode.requireTags(): Map<String, String> {
         return readTags() ?: throw InvalidImportPayload("Missing or invalid 'tags'")
     }
 
-    private fun JsonObject.optionalString(key: String): String? =
-        this[key]
-            ?.jsonPrimitive
-            ?.contentOrNull
+    private fun JsonNode.optionalString(key: String): String? =
+        this.get(key)
+            ?.takeIf { it.isTextual }
+            ?.asText()
             ?.trim()
             ?.takeIf { it.isNotEmpty() && !it.equals("null", ignoreCase = true) }
 

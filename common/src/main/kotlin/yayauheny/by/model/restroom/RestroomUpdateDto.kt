@@ -1,5 +1,8 @@
 package yayauheny.by.model.restroom
 
+import jakarta.validation.Valid
+import jakarta.validation.constraints.Size
+
 
 
 import io.swagger.v3.oas.annotations.media.Schema
@@ -32,8 +35,10 @@ data class RestroomUpdateDto(
     
     val subwayStationId: UUID?,
     @field:Schema(description = "Restroom name", example = "Public Restroom at Central Park")
+    @field:Size(min = 1, max = 150)
     val name: String?,
     @field:Schema(description = "Street address", example = "123 Main Street, Downtown")
+    @field:Size(min = 1, max = 250)
     val address: String? = null,
     @field:Schema(
         description = "Contact phone numbers in JSON format",
@@ -54,6 +59,7 @@ data class RestroomUpdateDto(
     @field:Schema(description = "Place type", example = "public_toilet")
     val placeType: PlaceType?,
     @field:Schema(description = "Coordinates", example = "55.7558, 37.6176", required = true)
+    @field:Valid
     val coordinates: Coordinates,
     @field:Schema(description = "Current status of the restroom", example = "ACTIVE")
     val status: RestroomStatus,
@@ -65,8 +71,10 @@ data class RestroomUpdateDto(
     @field:Schema(description = "External maps links", example = """{"yandex": "...", "google": "..."}""")
     val externalMaps: Map<String, Any>?,
     @field:Schema(description = "Access note / restrictions", example = "Only for customers")
+    @field:Size(max = 500)
     val accessNote: String?,
     @field:Schema(description = "Indoor directions / navigation", example = "2nd floor, left wing")
+    @field:Size(max = 500)
     val directionGuide: String?,
     @field:Schema(description = "Inherit schedule from building", example = "false")
     val inheritBuildingSchedule: Boolean = false,
