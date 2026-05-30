@@ -1,10 +1,10 @@
 package yayauheny.by.service.validation
 
 import io.konform.validation.Validation
-import io.konform.validation.constraints.maxLength
-import io.konform.validation.constraints.minLength
+import io.konform.validation.jsonschema.maxLength
+import io.konform.validation.jsonschema.minLength
 import yayauheny.by.common.errors.FieldError
-import yayauheny.by.config.ApiConstants
+import yayauheny.by.common.config.ApiConstants
 import yayauheny.by.model.city.CityCreateDto
 import yayauheny.by.model.city.CityUpdateDto
 

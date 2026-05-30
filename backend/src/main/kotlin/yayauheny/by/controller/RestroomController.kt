@@ -1,21 +1,14 @@
 package yayauheny.by.controller
 
-import io.ktor.http.Parameters
-import io.ktor.http.HttpStatusCode
-import io.ktor.server.request.receive
-import io.ktor.server.response.respond
-import io.ktor.server.routing.Route
-import io.ktor.server.routing.delete
-import io.ktor.server.routing.get
-import io.ktor.server.routing.post
-import io.ktor.server.routing.put
-import io.ktor.server.routing.route
 import org.slf4j.LoggerFactory
-import yayauheny.by.analytics.api.getAnalyticsIdentityHeaders
+import org.springframework.http.HttpHeaders
+import org.springframework.http.HttpStatus
+import org.springframework.http.ResponseEntity
+import org.springframework.web.bind.annotation.*
 import yayauheny.by.analytics.service.AnalyticsService
 import yayauheny.by.common.errors.EntityNotFoundException
 import yayauheny.by.common.errors.ValidationException
-import yayauheny.by.config.ApiConstants
+import yayauheny.by.common.query.PaginationRequest
 import yayauheny.by.metrics.BackendSearchMetrics
 import yayauheny.by.metrics.SearchMetricBuckets
 import yayauheny.by.metrics.extractClientType
@@ -24,19 +17,12 @@ import yayauheny.by.model.dto.Coordinates
 import yayauheny.by.model.restroom.RestroomCreateDto
 import yayauheny.by.model.restroom.RestroomUpdateDto
 import yayauheny.by.service.RestroomService
-import yayauheny.by.service.validation.NearestRestroomsParams
-import yayauheny.by.service.validation.validateAndThen
-import yayauheny.by.service.validation.validateNearestRestroomsParams
-import yayauheny.by.service.validation.validateOrThrow
-import yayauheny.by.service.validation.validateRestroomCreateFields
-import yayauheny.by.service.validation.validateRestroomOnCreate
-import yayauheny.by.service.validation.validateRestroomOnUpdate
-import yayauheny.by.service.validation.validateRestroomUpdateFields
-import yayauheny.by.util.getDoubleFromQuery
-import yayauheny.by.util.getIntFromQuery
-import yayauheny.by.util.getUuidFromPath
-import yayauheny.by.util.toPaginationRequest
+import yayauheny.by.service.validation.*
+import yayauheny.by.analytics.api.getAnalyticsIdentityHeaders
+import java.util.UUID
 
+@RestController
+@RequestMapping("/restrooms")
 class RestroomController(
     private val restroomService: RestroomService,
     private val backendSearchMetrics: BackendSearchMetrics,
@@ -44,138 +30,124 @@ class RestroomController(
 ) {
     private val log = LoggerFactory.getLogger(RestroomController::class.java)
 
-    fun Route.restroomRoutes() {
-        route("/restrooms") {
-            get {
-                val pagination = call.request.queryParameters.toPaginationRequest()
-                val pageResponse = restroomService.getAllRestrooms(pagination)
-                call.respond(HttpStatusCode.OK, pageResponse)
+    @GetMapping
+    fun getAllRestrooms(
+        @RequestParam(defaultValue = "0") page: Int,
+        @RequestParam(defaultValue = "20") size: Int,
+        @RequestParam(defaultValue = "id") sort: String,
+        @RequestParam(defaultValue = "desc") order: String
+    ): ResponseEntity<Any> {
+        val pagination = PaginationRequest(page = page, size = size, sort = sort, direction = yayauheny.by.common.query.SortDirection.valueOf(order.uppercase()))
+        val pageResponse = restroomService.getAllRestrooms(pagination)
+        return ResponseEntity.ok(pageResponse)
+    }
+
+    @GetMapping("/{id}")
+    fun getRestroomById(@PathVariable id: UUID): ResponseEntity<Any> {
+        val restroom = restroomService.getRestroomById(id)
+            ?: throw EntityNotFoundException("Туалет с ID '$id' не найден")
+        return ResponseEntity.ok(restroom)
+    }
+
+    @GetMapping("/city/{cityId}")
+    fun getRestroomsByCity(
+        @PathVariable cityId: UUID,
+        @RequestParam(defaultValue = "0") page: Int,
+        @RequestParam(defaultValue = "20") size: Int,
+        @RequestParam(defaultValue = "id") sort: String,
+        @RequestParam(defaultValue = "desc") order: String
+    ): ResponseEntity<Any> {
+        val pagination = PaginationRequest(page = page, size = size, sort = sort, direction = yayauheny.by.common.query.SortDirection.valueOf(order.uppercase()))
+        val pageResponse = restroomService.getRestroomsByCity(cityId, pagination)
+        return ResponseEntity.ok(pageResponse)
+    }
+
+    @GetMapping("/nearest")
+    fun getNearestRestrooms(
+        @RequestHeader headers: HttpHeaders,
+        @RequestParam lat: Double,
+        @RequestParam lon: Double,
+        @RequestParam(defaultValue = "10") limit: Int,
+        @RequestParam(defaultValue = "5000") distanceMeters: Int
+    ): ResponseEntity<Any> {
+        val clientType = headers.extractClientType()
+        val radiusBucket = SearchMetricBuckets.radiusBucketOrFallback(distanceMeters.toString())
+        backendSearchMetrics.incrementSearchRequest(clientType, radiusBucket)
+
+        try {
+            val params = NearestRestroomsParams(Coordinates(lat, lon), limit, distanceMeters)
+
+            val restrooms = params.validateAndThen(validateNearestRestroomsParams) { valid ->
+                restroomService.findNearestRestrooms(
+                    valid.coordinates.lat,
+                    valid.coordinates.lon,
+                    valid.limit,
+                    valid.distanceMeters
+                )
+            }.getOrThrow()
+
+            val resultsCount = restrooms.size
+            val firstDistanceMeters = restrooms.firstOrNull()?.distanceMeters?.toInt()
+
+            backendSearchMetrics.incrementSearchResults(
+                clientType = clientType,
+                resultBucket = SearchMetricBuckets.resultBucket(resultsCount)
+            )
+            backendSearchMetrics.incrementSearchQuality(
+                clientType = clientType,
+                qualityBucket = SearchMetricBuckets.qualityBucket(resultsCount, firstDistanceMeters)
+            )
+
+            val identity = headers.getAnalyticsIdentityHeaders(AnalyticsSource.TELEGRAM_BOT)
+            runCatching {
+                analyticsService.trackNearestRestroomsSearch(identity, resultsCount, lat, lon)
+            }.onFailure { exception ->
+                log.warn("Failed to track nearest restroom analytics", exception)
             }
 
-            get("/{id}") {
-                val id = call.parameters.getUuidFromPath("id")
-                val restroom =
-                    restroomService.getRestroomById(id)
-                        ?: throw EntityNotFoundException("Туалет с ID '$id' не найден")
-                call.respond(HttpStatusCode.OK, restroom)
-            }
-
-            get("/city/{cityId}") {
-                val cityId = call.parameters.getUuidFromPath("cityId")
-                val pagination = call.request.queryParameters.toPaginationRequest()
-                val pageResponse = restroomService.getRestroomsByCity(cityId, pagination)
-                call.respond(HttpStatusCode.OK, pageResponse)
-            }
-
-            get("/nearest") {
-                val headers = call.request.headers
-                val query = call.request.queryParameters
-                val clientType = headers.extractClientType()
-                val rawDistanceMeters = query["distanceMeters"]
-                val radiusBucket = SearchMetricBuckets.radiusBucketOrFallback(rawDistanceMeters)
-                backendSearchMetrics.incrementSearchRequest(clientType, radiusBucket)
-
-                try {
-                    val nearestQuery = query.toNearestRestroomsQuery()
-                    val params =
-                        NearestRestroomsParams(
-                            Coordinates(nearestQuery.lat, nearestQuery.lon),
-                            nearestQuery.limit,
-                            nearestQuery.distanceMeters
-                        )
-
-                    val restrooms =
-                        params
-                            .validateAndThen(validateNearestRestroomsParams) { valid ->
-                                restroomService.findNearestRestrooms(
-                                    valid.coordinates.lat,
-                                    valid.coordinates.lon,
-                                    valid.limit,
-                                    valid.distanceMeters
-                                )
-                            }.getOrThrow()
-
-                    val resultsCount = restrooms.size
-                    val firstDistanceMeters = restrooms.firstOrNull()?.distanceMeters?.toInt()
-
-                    backendSearchMetrics.incrementSearchResults(
-                        clientType = clientType,
-                        resultBucket = SearchMetricBuckets.resultBucket(resultsCount)
-                    )
-                    backendSearchMetrics.incrementSearchQuality(
-                        clientType = clientType,
-                        qualityBucket = SearchMetricBuckets.qualityBucket(resultsCount, firstDistanceMeters)
-                    )
-                    val identity = headers.getAnalyticsIdentityHeaders(AnalyticsSource.TELEGRAM_BOT)
-                    runCatching {
-                        analyticsService.trackNearestRestroomsSearch(identity, resultsCount, nearestQuery.lat, nearestQuery.lon)
-                    }.onFailure { exception ->
-                        log.warn("Failed to track nearest restroom analytics", exception)
-                    }
-
-                    call.respond(HttpStatusCode.OK, restrooms)
-                } catch (e: ValidationException) {
-                    backendSearchMetrics.incrementSearchFailure("validation")
-                    throw e
-                } catch (e: IllegalArgumentException) {
-                    backendSearchMetrics.incrementSearchFailure("validation")
-                    throw e
-                } catch (e: EntityNotFoundException) {
-                    backendSearchMetrics.incrementSearchFailure("not_found")
-                    throw e
-                } catch (e: Exception) {
-                    backendSearchMetrics.incrementSearchFailure("internal")
-                    throw e
-                }
-            }
-
-            post {
-                val createDto = call.receive<RestroomCreateDto>()
-                createDto.validateOrThrow(validateRestroomOnCreate)
-                val additionalErrors = validateRestroomCreateFields(createDto)
-                if (additionalErrors.isNotEmpty()) {
-                    throw ValidationException(additionalErrors)
-                }
-                val restroom = restroomService.createRestroom(createDto)
-                call.respond(HttpStatusCode.Created, restroom)
-            }
-
-            put("/{id}") {
-                val id = call.parameters.getUuidFromPath("id")
-                val updateDto = call.receive<RestroomUpdateDto>()
-                updateDto.validateOrThrow(validateRestroomOnUpdate)
-                val additionalErrors = validateRestroomUpdateFields(updateDto)
-                if (additionalErrors.isNotEmpty()) {
-                    throw ValidationException(additionalErrors)
-                }
-                val restroom = restroomService.updateRestroom(id, updateDto)
-                call.respond(HttpStatusCode.OK, restroom)
-            }
-
-            delete("/{id}") {
-                val id = call.parameters.getUuidFromPath("id")
-                val deleted = restroomService.deleteRestroom(id)
-                if (deleted) {
-                    call.respond(HttpStatusCode.OK, mapOf("deleted" to true))
-                } else {
-                    call.respond(HttpStatusCode.NotFound)
-                }
-            }
+            return ResponseEntity.ok(restrooms)
+        } catch (e: ValidationException) {
+            backendSearchMetrics.incrementSearchFailure("validation")
+            throw e
+        } catch (e: IllegalArgumentException) {
+            backendSearchMetrics.incrementSearchFailure("validation")
+            throw e
+        } catch (e: EntityNotFoundException) {
+            backendSearchMetrics.incrementSearchFailure("not_found")
+            throw e
+        } catch (e: Exception) {
+            backendSearchMetrics.incrementSearchFailure("internal")
+            throw e
         }
     }
 
-    private fun Parameters.toNearestRestroomsQuery(): NearestRestroomsQuery =
-        NearestRestroomsQuery(
-            lat = getDoubleFromQuery("lat"),
-            lon = getDoubleFromQuery("lon"),
-            limit = getIntFromQuery("limit") ?: ApiConstants.DEFAULT_MAX_NEAREST_RESTROOMS_SIZE,
-            distanceMeters = getIntFromQuery("distanceMeters") ?: ApiConstants.DEFAULT_MAX_DISTANCE_METERS
-        )
+    @PostMapping
+    fun createRestroom(@RequestBody createDto: RestroomCreateDto): ResponseEntity<Any> {
+        val additionalErrors = validateRestroomCreateFields(createDto)
+        if (additionalErrors.isNotEmpty()) {
+            throw ValidationException(additionalErrors)
+        }
+        val restroom = restroomService.createRestroom(createDto)
+        return ResponseEntity.status(HttpStatus.CREATED).body(restroom)
+    }
 
-    private data class NearestRestroomsQuery(
-        val lat: Double,
-        val lon: Double,
-        val limit: Int,
-        val distanceMeters: Int
-    )
+    @PutMapping("/{id}")
+    fun updateRestroom(@PathVariable id: UUID, @RequestBody updateDto: RestroomUpdateDto): ResponseEntity<Any> {
+        val additionalErrors = validateRestroomUpdateFields(updateDto)
+        if (additionalErrors.isNotEmpty()) {
+            throw ValidationException(additionalErrors)
+        }
+        val restroom = restroomService.updateRestroom(id, updateDto)
+        return ResponseEntity.ok(restroom)
+    }
+
+    @DeleteMapping("/{id}")
+    fun deleteRestroom(@PathVariable id: UUID): ResponseEntity<Any> {
+        val deleted = restroomService.deleteRestroom(id)
+        return if (deleted) {
+            ResponseEntity.ok(mapOf("deleted" to true))
+        } else {
+            ResponseEntity.notFound().build()
+        }
+    }
 }

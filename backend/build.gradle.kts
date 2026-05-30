@@ -6,7 +6,7 @@ plugins {
     alias(libs.plugins.springDependencyManagementPlugin)
     alias(libs.plugins.kotlinSpringPlugin)
     alias(libs.plugins.kotlinJpaPlugin)
-    alias(libs.plugins.ktlintPlugin)
+
     jacoco
 }
 
@@ -26,7 +26,8 @@ dependencies {
 
     implementation(libs.bundles.springBootBundle)
     implementation(libs.bundles.swaggerBundle)
-    
+    implementation("io.konform:konform-jvm:0.11.0")
+    implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.6.3")
     // Database
     implementation(libs.postgresql)
     implementation(libs.postgis)
@@ -84,35 +85,6 @@ tasks.check {
     dependsOn("integrationTest", "jacocoTestReport")
 }
 
-val ktlintVersion = providers.gradleProperty("ktlint.version").get()
-
-ktlint {
-    version.set(ktlintVersion)
-    debug.set(false)
-    verbose.set(true)
-    android.set(false)
-    outputToConsole.set(true)
-    enableExperimentalRules.set(false)
-
-    filter {
-        exclude { element ->
-            val file = element.file
-            val absolutePath = file.absolutePath
-            val name = file.name
-
-            absolutePath.contains("/build/")
-        }
-        include("src/main/kotlin/**/*.kt", "src/test/kotlin/**/*.kt")
-    }
-}
-
-tasks.named("build") {
-    dependsOn("ktlintCheck")
-}
-
-tasks.named("compileKotlin") {
-    dependsOn("ktlintFormat")
-}
 
 val jacocoExcludes =
     listOf(

@@ -1,26 +1,39 @@
 package yayauheny.by.analytics.service
 
+import org.springframework.stereotype.Service
+import org.springframework.transaction.annotation.Transactional
+import yayauheny.by.analytics.entity.AnalyticsEventEntity
+import yayauheny.by.analytics.entity.UserAnalyticsEntity
+import yayauheny.by.analytics.entity.UserEntity
 import yayauheny.by.analytics.model.AnalyticsIdentityHeaders
 import yayauheny.by.analytics.model.EncryptedAnalyticsEventCommand
-import yayauheny.by.analytics.repository.AnalyticsRepository
+import yayauheny.by.analytics.repository.AnalyticsEventJpaRepository
+import yayauheny.by.analytics.repository.UserAnalyticsJpaRepository
+import yayauheny.by.analytics.repository.UserJpaRepository
 import yayauheny.by.model.analytics.AnalyticsEventCommand
 import yayauheny.by.model.analytics.AnalyticsSource
 import yayauheny.by.model.analytics.ProductAnalyticsEvent
 import yayauheny.by.util.EncryptionService
-import yayauheny.by.util.toBigDecimalRounded
+import yayauheny.by.common.util.toBigDecimalRounded
+import java.time.Instant
 
+@Service
 class AnalyticsService(
-    private val analyticsRepository: AnalyticsRepository,
+    private val userJpaRepository: UserJpaRepository,
+    private val userAnalyticsJpaRepository: UserAnalyticsJpaRepository,
+    private val analyticsEventJpaRepository: AnalyticsEventJpaRepository,
     private val encryptionService: EncryptionService
 ) {
-    suspend fun trackProductEvent(command: AnalyticsEventCommand) {
+    @Transactional
+    fun trackProductEvent(command: AnalyticsEventCommand) {
         when {
-            command.hasTelegramIdentity() -> analyticsRepository.trackProductEvent(command.toEncryptedCommand())
-            command.canBeTrackedAnonymously() -> analyticsRepository.trackProductEvent(command.toAnonymousCommand())
+            command.hasTelegramIdentity() -> trackEncryptedProductEvent(command.toEncryptedCommand())
+            command.canBeTrackedAnonymously() -> trackEncryptedProductEvent(command.toAnonymousCommand())
         }
     }
 
-    suspend fun trackNearestRestroomsSearch(
+    @Transactional
+    fun trackNearestRestroomsSearch(
         identity: AnalyticsIdentityHeaders,
         resultsCount: Int,
         lat: Double,
@@ -40,11 +53,63 @@ class AnalyticsService(
                 tgChatId = identity.tgChatId,
                 username = identity.username,
                 source = identity.source,
-                lat = lat.toBigDecimalRounded(),
-                lon = lon.toBigDecimalRounded(),
+                lat = lat?.toBigDecimalRounded(),
+                lon = lon?.toBigDecimalRounded(),
                 resultsCount = resultsCount
             )
         trackProductEvent(command)
+    }
+
+    private fun trackEncryptedProductEvent(command: EncryptedAnalyticsEventCommand) {
+        var user: UserEntity? = null
+        if (command.tgUserId != null) {
+            user = userJpaRepository.findByTgUserId(command.tgUserId!!)
+            if (user == null) {
+                user = UserEntity().apply {
+                    this.tgUserId = command.tgUserId!!
+                    this.tgChatId = command.tgChatId ?: ""
+                    this.username = command.username
+                    this.source = command.source.value
+                }
+                user = userJpaRepository.save(user)
+
+                val userAnalytics = UserAnalyticsEntity().apply {
+                    this.userId = user?.id
+                    this.user = user
+                }
+                userAnalyticsJpaRepository.save(userAnalytics)
+            }
+            
+            val isSearch = command.event == ProductAnalyticsEvent.NEAREST_RESTROOMS_RETURNED ||
+                    command.event == ProductAnalyticsEvent.NEAREST_RESTROOMS_NO_RESULTS
+            val isSuccessSearch = command.event == ProductAnalyticsEvent.NEAREST_RESTROOMS_RETURNED
+            val isEmptySearch = command.event == ProductAnalyticsEvent.NEAREST_RESTROOMS_NO_RESULTS
+            val isDetailsOpened = command.event == ProductAnalyticsEvent.RESTROOM_DETAILS_OPENED
+            val isRouteClicked = command.event == ProductAnalyticsEvent.ROUTE_CLICKED
+
+            userAnalyticsJpaRepository.incrementMetrics(
+                userId = user.id!!,
+                searchesInc = if (isSearch) 1 else 0,
+                successfulSearchesInc = if (isSuccessSearch) 1 else 0,
+                emptySearchesInc = if (isEmptySearch) 1 else 0,
+                detailsOpenedInc = if (isDetailsOpened) 1 else 0,
+                routesClickedInc = if (isRouteClicked) 1 else 0,
+                lastEvent = command.event.value,
+                lastEventAt = Instant.now()
+            )
+        }
+
+        val eventEntity = AnalyticsEventEntity().apply {
+            this.event = command.event.value
+            this.user = user
+            this.source = command.source.value
+            this.lat = command.lat
+            this.lon = command.lon
+            this.resultsCount = command.resultsCount
+            this.durationMs = command.durationMs
+            this.metadata = command.metadata ?: emptyMap()
+        }
+        analyticsEventJpaRepository.save(eventEntity)
     }
 
     private fun AnalyticsEventCommand.hasTelegramIdentity(): Boolean = tgUserId != null && !tgChatId.isNullOrBlank()

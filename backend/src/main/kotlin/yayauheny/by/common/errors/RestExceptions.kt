@@ -1,29 +1,17 @@
 package yayauheny.by.common.errors
 
-import io.ktor.http.HttpStatusCode
+import org.springframework.http.HttpStatus
 
-abstract class RestException(
-    val httpStatus: HttpStatusCode,
-    message: String? = null,
+interface RestException {
+    val httpStatus: HttpStatus
+}
+
+class ValidationException(
+    val errors: List<FieldError>? = null,
+    message: String? = "Ошибка валидации",
     cause: Throwable? = null
-) : Exception(message, cause)
-
-class ValidationException : RestException {
-    val errors: List<FieldError>?
-
-    constructor(
-        message: String? = "Ошибка валидации",
-        cause: Throwable? = null
-    ) : super(HttpStatusCode.BadRequest, message, cause) {
-        this.errors = null
-    }
-
-    constructor(errors: List<FieldError>) : super(
-        HttpStatusCode.BadRequest,
-        errors.joinToString { "${it.field}: ${it.message}" }
-    ) {
-        this.errors = errors
-    }
+) : Exception(message ?: errors?.joinToString { "${it.field}: ${it.message}" }, cause), RestException {
+    override val httpStatus = HttpStatus.BAD_REQUEST
 
     constructor(error: FieldError) : this(listOf(error))
 }
@@ -31,23 +19,31 @@ class ValidationException : RestException {
 class NotFoundException(
     message: String? = "Ресурс не найден",
     cause: Throwable? = null
-) : RestException(HttpStatusCode.NotFound, message, cause)
+) : Exception(message, cause), RestException {
+    override val httpStatus = HttpStatus.NOT_FOUND
+}
 
 class ConflictException(
     message: String? = "Конфликт ресурсов",
     cause: Throwable? = null
-) : RestException(HttpStatusCode.Conflict, message, cause)
+) : Exception(message, cause), RestException {
+    override val httpStatus = HttpStatus.CONFLICT
+}
 
 class BadRequestException(
     message: String? = "Неверный запрос",
     cause: Throwable? = null
-) : RestException(HttpStatusCode.BadRequest, message, cause)
+) : Exception(message, cause), RestException {
+    override val httpStatus = HttpStatus.BAD_REQUEST
+}
 
 class ServiceUnavailableException(
     message: String? = "Сервис временно недоступен",
     cause: Throwable? = null,
     val retryAfter: Int? = null
-) : RestException(HttpStatusCode.ServiceUnavailable, message, cause)
+) : Exception(message, cause), RestException {
+    override val httpStatus = HttpStatus.SERVICE_UNAVAILABLE
+}
 
 class RepositoryException(
     message: String,

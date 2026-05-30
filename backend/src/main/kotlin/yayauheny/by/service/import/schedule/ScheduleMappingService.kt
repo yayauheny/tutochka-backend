@@ -1,6 +1,6 @@
 package yayauheny.by.service.import.schedule
 
-import kotlinx.serialization.json.JsonObject
+import com.fasterxml.jackson.databind.JsonNode
 import yayauheny.by.model.enums.ImportProvider
 import yayauheny.by.model.schedule.Schedule
 
@@ -19,7 +19,7 @@ class ScheduleMappingService(
      */
     fun mapSchedule(
         provider: ImportProvider,
-        rawSchedule: JsonObject?
+        rawSchedule: JsonNode?
     ): Schedule {
         val adapter =
             adapters.firstOrNull { it.supports(provider) }

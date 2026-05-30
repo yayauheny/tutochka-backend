@@ -1,5 +1,5 @@
 package yayauheny.by.metrics
 
-import io.ktor.http.Headers
+import org.springframework.http.HttpHeaders
 
-fun Headers.extractClientType(): String = MetricLabelWhitelist.clientTypeOrDefault(this["X-Client-Type"])
+fun HttpHeaders.extractClientType(): String = MetricLabelWhitelist.clientTypeOrDefault(this.getFirst("X-Client-Type"))

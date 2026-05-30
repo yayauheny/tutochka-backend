@@ -1,6 +1,5 @@
 package yayauheny.by.metrics
 
-import yayauheny.by.config.ApiConstants
 
 object SearchMetricBuckets {
     const val UNKNOWN_BUCKET = "unknown"
@@ -15,7 +14,7 @@ object SearchMetricBuckets {
 
     fun radiusBucketOrFallback(
         rawDistanceMeters: String?,
-        defaultDistanceMeters: Int = ApiConstants.DEFAULT_MAX_DISTANCE_METERS
+        defaultDistanceMeters: Int = 5000
     ): String =
         when {
             rawDistanceMeters == null -> radiusBucket(defaultDistanceMeters)

@@ -1,8 +1,8 @@
 package yayauheny.by.service.validation
 
 import io.konform.validation.Validation
-import io.konform.validation.constraints.maximum
-import io.konform.validation.constraints.minimum
+import io.konform.validation.jsonschema.maximum
+import io.konform.validation.jsonschema.minimum
 import yayauheny.by.model.dto.Coordinates
 
 /**

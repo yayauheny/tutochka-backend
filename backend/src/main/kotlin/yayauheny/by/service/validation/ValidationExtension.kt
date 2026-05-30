@@ -70,9 +70,9 @@ fun <T> T.validateWith(validator: Validation<T>): Result<T> = validator.validate
  * @return Result.success(block result) если валидация и выполнение блока прошли успешно,
  *         Result.failure с ValidationException или исключением из блока
  */
-suspend inline fun <T, R> T.validateAndThen(
+inline fun <T, R> T.validateAndThen(
     validator: Validation<T>,
-    crossinline block: suspend (T) -> R
+    crossinline block: (T) -> R
 ): Result<R> =
     validateWith(validator)
         .mapCatching { validValue -> block(validValue) }
@@ -85,4 +85,4 @@ suspend inline fun <T, R> T.validateAndThen(
  * @return валидированное значение
  * @throws ValidationException если валидация не прошла
  */
-suspend fun <T> T.validateOrThrow(validator: Validation<T>): T = validateAndThen(validator) { it }.getOrThrow()
+fun <T> T.validateOrThrow(validator: Validation<T>): T = validateAndThen(validator) { it }.getOrThrow()

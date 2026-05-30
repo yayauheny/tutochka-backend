@@ -1,49 +1,86 @@
 package yayauheny.by.service
+import yayauheny.by.util.toPageResponse
 
-import java.util.UUID
+import org.springframework.data.domain.Page
+import org.springframework.data.domain.PageRequest
+import org.springframework.stereotype.Service
+import org.springframework.transaction.annotation.Transactional
 import yayauheny.by.common.errors.ConflictException
-import yayauheny.by.common.query.FilterCriteria
-import yayauheny.by.common.query.FilterOperator
 import yayauheny.by.common.query.PageResponse
 import yayauheny.by.common.query.PaginationRequest
+import yayauheny.by.entity.CountryEntity
 import yayauheny.by.model.country.CountryCreateDto
 import yayauheny.by.model.country.CountryResponseDto
 import yayauheny.by.model.country.CountryUpdateDto
-import yayauheny.by.repository.CountryRepository
+import yayauheny.by.repository.CountryJpaRepository
+import java.util.UUID
 
+fun CountryEntity.toDto() = CountryResponseDto(
+    id = this.id!!,
+    code = this.code,
+    nameRu = this.nameRu,
+    nameEn = this.nameEn
+)
+
+
+@Service
+@Transactional
 class CountryService(
-    private val countryRepository: CountryRepository
+    private val countryRepository: CountryJpaRepository
 ) {
-    suspend fun getAllCountries(pagination: PaginationRequest): PageResponse<CountryResponseDto> = countryRepository.findAll(pagination)
+    @Transactional(readOnly = true)
+    fun getAllCountries(pagination: PaginationRequest): PageResponse<CountryResponseDto> {
+        val pageRequest = PageRequest.of(pagination.page, pagination.size)
+        val page = countryRepository.findAll(pageRequest)
+        val dtoPage = page.map { it.toDto() }
+        return dtoPage.toPageResponse()
+    }
 
-    suspend fun getCountryById(id: UUID): CountryResponseDto? = countryRepository.findById(id)
+    @Transactional(readOnly = true)
+    fun getCountryById(id: UUID): CountryResponseDto? {
+        return countryRepository.findById(id).orElse(null)?.toDto()
+    }
 
-    suspend fun getCountryByCode(code: String): CountryResponseDto? =
-        countryRepository.findSingle(
-            listOf(FilterCriteria("code", FilterOperator.EQ, code))
-        )
+    @Transactional(readOnly = true)
+    fun getCountryByCode(code: String): CountryResponseDto? {
+        return countryRepository.findByCode(code)?.toDto()
+    }
 
-    suspend fun createCountry(createDto: CountryCreateDto): CountryResponseDto {
-        val existing =
-            countryRepository.findSingle(
-                listOf(FilterCriteria("code", FilterOperator.EQ, createDto.code))
-            )
+    fun createCountry(createDto: CountryCreateDto): CountryResponseDto {
+        val existing = countryRepository.findByCode(createDto.code)
         if (existing != null) {
             throw ConflictException("Страна с кодом '${createDto.code}' уже существует")
         }
 
-        return countryRepository.save(createDto)
+        val entity = CountryEntity().apply {
+            code = createDto.code
+            nameRu = createDto.nameRu
+            nameEn = createDto.nameEn
+        }
+        return countryRepository.save(entity).toDto()
     }
 
-    suspend fun updateCountry(
-        id: UUID,
-        updateDto: CountryUpdateDto
-    ): CountryResponseDto = countryRepository.update(id, updateDto)
+    fun updateCountry(id: UUID, updateDto: CountryUpdateDto): CountryResponseDto {
+        val entity = countryRepository.findById(id).orElseThrow {
+            IllegalArgumentException("Country not found")
+        }
+        
+        updateDto.nameRu?.let { entity.nameRu = it }
+        updateDto.nameEn?.let { entity.nameEn = it }
+        
+        return countryRepository.save(entity).toDto()
+    }
 
-    suspend fun deleteCountry(id: UUID): Boolean = countryRepository.deleteById(id)
+    fun deleteCountry(id: UUID): Boolean {
+        if (countryRepository.existsById(id)) {
+            countryRepository.deleteById(id)
+            return true
+        }
+        return false
+    }
 
-    suspend fun countryExists(code: String): Boolean =
-        countryRepository.findSingle(
-            listOf(FilterCriteria("code", FilterOperator.EQ, code))
-        ) != null
+    @Transactional(readOnly = true)
+    fun countryExists(code: String): Boolean {
+        return countryRepository.findByCode(code) != null
+    }
 }

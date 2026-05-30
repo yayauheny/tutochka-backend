@@ -1,8 +1,6 @@
 package yayauheny.by.model.enums
 
-import kotlinx.serialization.Serializable
 
-@Serializable
 enum class TwoGisAttributeKind {
     PAYMENT,
     TOILET_FEE,
@@ -11,7 +9,6 @@ enum class TwoGisAttributeKind {
     ACCESS_LIMITED
 }
 
-@Serializable
 enum class TwoGisAttributeGroup(
     val value: String,
     val kind: TwoGisAttributeKind,

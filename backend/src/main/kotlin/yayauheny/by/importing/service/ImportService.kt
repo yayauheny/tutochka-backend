@@ -1,8 +1,8 @@
 package yayauheny.by.importing.service
 
+import com.fasterxml.jackson.databind.JsonNode
 import java.util.UUID
-import kotlinx.serialization.json.JsonObject
-import kotlinx.serialization.json.jsonArray
+import org.springframework.stereotype.Service
 import yayauheny.by.importing.exception.CityNotFound
 import yayauheny.by.importing.exception.InvalidImportPayload
 import yayauheny.by.importing.provider.ImportCapabilities
@@ -13,10 +13,11 @@ import yayauheny.by.model.import.ImportBatchResult
 import yayauheny.by.model.import.ImportExecutionResult
 import yayauheny.by.model.import.ImportItemResult
 import yayauheny.by.model.import.ImportStatus
-import yayauheny.by.repository.CityRepository
+import yayauheny.by.repository.CityJpaRepository
 
+@Service
 class ImportService(
-    private val cityRepository: CityRepository,
+    private val cityRepository: CityJpaRepository,
     private val importBatchProcessor: ImportBatchProcessor
 ) {
     companion object {
@@ -28,7 +29,7 @@ class ImportService(
         provider: ImportProvider,
         payloadType: ImportPayloadType,
         cityId: UUID?,
-        payload: JsonObject
+        payload: JsonNode
     ): ImportExecutionResult {
         ImportCapabilities.requireSupported(provider, payloadType)
         cityId?.let { requireCityExists(it) }
@@ -62,9 +63,13 @@ class ImportService(
         provider: ImportProvider,
         payloadType: ImportPayloadType,
         cityId: UUID?,
-        payload: JsonObject
+        payload: JsonNode
     ): ImportBatchResult {
-        val items = payload["items"]?.jsonArray?.mapNotNull { it as? JsonObject } ?: emptyList()
+        val itemsNode = payload.get("items")
+        val items = if (itemsNode != null && itemsNode.isArray) {
+            itemsNode.elements().asSequence().toList()
+        } else emptyList()
+
         if (items.isEmpty()) {
             throw InvalidImportPayload("No items found in payload")
         }
@@ -105,8 +110,8 @@ class ImportService(
         )
     }
 
-    private suspend fun requireCityExists(cityId: UUID) {
-        if (cityRepository.findById(cityId) == null) {
+    private fun requireCityExists(cityId: UUID) {
+        if (!cityRepository.existsById(cityId)) {
             throw CityNotFound(cityId)
         }
     }

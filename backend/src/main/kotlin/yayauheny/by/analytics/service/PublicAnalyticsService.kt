@@ -7,6 +7,7 @@ import java.time.Instant
 import java.time.LocalDate
 import java.time.YearMonth
 import java.time.ZoneId
+import org.springframework.stereotype.Service
 import yayauheny.by.analytics.model.AnalyticsWindow
 import yayauheny.by.analytics.model.PublicAnalyticsDailySeriesPoint
 import yayauheny.by.analytics.model.PublicAnalyticsEventMetrics
@@ -19,13 +20,14 @@ import yayauheny.by.analytics.model.PublicAnalyticsTrend
 import yayauheny.by.analytics.repository.PublicAnalyticsRepository
 import yayauheny.by.model.analytics.ProductAnalyticsEvent
 
+@Service
 class PublicAnalyticsService(
     private val publicAnalyticsRepository: PublicAnalyticsRepository,
     private val clock: Clock
 ) {
     private val zoneId = ZoneId.of("Europe/Minsk")
 
-    suspend fun getPublicAnalytics(): PublicAnalyticsResponse {
+    fun getPublicAnalytics(): PublicAnalyticsResponse {
         val now = Instant.now(clock)
         val today = now.atZone(zoneId).toLocalDate()
 

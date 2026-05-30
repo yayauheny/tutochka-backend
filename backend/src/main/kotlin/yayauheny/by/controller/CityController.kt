@@ -1,17 +1,14 @@
 package yayauheny.by.controller
 
-import io.ktor.http.HttpStatusCode
-import io.ktor.server.request.receive
-import io.ktor.server.response.respond
-import io.ktor.server.routing.Route
-import io.ktor.server.routing.delete
-import io.ktor.server.routing.get
-import io.ktor.server.routing.post
-import io.ktor.server.routing.put
-import io.ktor.server.routing.route
+import org.springframework.http.HttpStatus
+import org.springframework.http.ResponseEntity
+import org.springframework.web.bind.annotation.*
 import yayauheny.by.common.errors.NotFoundException
 import yayauheny.by.common.errors.ValidationException
+import yayauheny.by.common.query.PageResponse
+import yayauheny.by.common.query.PaginationRequest
 import yayauheny.by.model.city.CityCreateDto
+import yayauheny.by.model.city.CityResponseDto
 import yayauheny.by.model.city.CityUpdateDto
 import yayauheny.by.service.CityService
 import yayauheny.by.service.validation.CitySearchParams
@@ -21,77 +18,87 @@ import yayauheny.by.service.validation.validateCityOnUpdate
 import yayauheny.by.service.validation.validateCitySearchParams
 import yayauheny.by.service.validation.validateOrThrow
 import yayauheny.by.service.validation.validateRegion
-import yayauheny.by.util.getUuidFromPath
-import yayauheny.by.util.toPaginationRequest
+import java.util.UUID
 
+@RestController
+@RequestMapping("/api/v1/cities")
 class CityController(
     private val cityService: CityService
 ) {
-    fun Route.cityRoutes() {
-        route("/cities") {
-            get {
-                val pagination = call.request.queryParameters.toPaginationRequest()
-                val pageResponse = cityService.getAllCities(pagination)
-                call.respond(HttpStatusCode.OK, pageResponse)
-            }
+    @GetMapping
+    fun getAllCities(
+        @RequestParam(defaultValue = "0") page: Int,
+        @RequestParam(defaultValue = "20") size: Int
+    ): ResponseEntity<PageResponse<CityResponseDto>> {
+        val pagination = PaginationRequest(page = page, size = size)
+        val pageResponse = cityService.getAllCities(pagination)
+        return ResponseEntity.ok(pageResponse)
+    }
 
-            get("/{id}") {
-                val id = call.parameters.getUuidFromPath("id")
-                val city =
-                    cityService.getCityById(id)
-                        ?: throw NotFoundException("Город с ID '$id' не найден")
-                call.respond(HttpStatusCode.OK, city)
-            }
+    @GetMapping("/{id}")
+    fun getCityById(@PathVariable id: UUID): ResponseEntity<CityResponseDto> {
+        val city = cityService.getCityById(id)
+            ?: throw NotFoundException("Город с ID '$id' не найден")
+        return ResponseEntity.ok(city)
+    }
 
-            get("/country/{countryId}") {
-                val countryId = call.parameters.getUuidFromPath("countryId")
-                val pagination = call.request.queryParameters.toPaginationRequest()
-                val pageResponse = cityService.getCitiesByCountry(countryId, pagination)
-                call.respond(HttpStatusCode.OK, pageResponse)
-            }
+    @GetMapping("/country/{countryId}")
+    fun getCitiesByCountry(
+        @PathVariable countryId: UUID,
+        @RequestParam(defaultValue = "0") page: Int,
+        @RequestParam(defaultValue = "20") size: Int
+    ): ResponseEntity<PageResponse<CityResponseDto>> {
+        val pagination = PaginationRequest(page = page, size = size)
+        val pageResponse = cityService.getCitiesByCountry(countryId, pagination)
+        return ResponseEntity.ok(pageResponse)
+    }
 
-            get("/search") {
-                val query = call.request.queryParameters
-                val nameParam = query["name"]?.trim()
-                val searchParams = CitySearchParams(name = nameParam ?: "")
-                val validParams = searchParams.validateAndThen(validateCitySearchParams) { it }.getOrThrow()
+    @GetMapping("/search")
+    fun searchCitiesByName(
+        @RequestParam(required = false, defaultValue = "") name: String,
+        @RequestParam(defaultValue = "0") page: Int,
+        @RequestParam(defaultValue = "20") size: Int
+    ): ResponseEntity<PageResponse<CityResponseDto>> {
+        val searchParams = CitySearchParams(name = name.trim())
+        val validParams = searchParams.validateAndThen(validateCitySearchParams) { it }.getOrThrow()
 
-                val pagination = query.toPaginationRequest()
-                val pageResponse = cityService.searchCitiesByName(validParams.name, pagination)
-                call.respond(HttpStatusCode.OK, pageResponse)
-            }
+        val pagination = PaginationRequest(page = page, size = size)
+        val pageResponse = cityService.searchCitiesByName(validParams.name, pagination)
+        return ResponseEntity.ok(pageResponse)
+    }
 
-            post {
-                val createDto = call.receive<CityCreateDto>()
-                createDto.validateOrThrow(validateCityOnCreate)
-                val additionalErrors = validateRegion(createDto.region)
-                if (additionalErrors.isNotEmpty()) {
-                    throw ValidationException(additionalErrors)
-                }
-                val city = cityService.createCity(createDto)
-                call.respond(HttpStatusCode.Created, city)
-            }
+    @PostMapping
+    fun createCity(@RequestBody createDto: CityCreateDto): ResponseEntity<CityResponseDto> {
+        createDto.validateOrThrow(validateCityOnCreate)
+        val additionalErrors = validateRegion(createDto.region)
+        if (additionalErrors.isNotEmpty()) {
+            throw ValidationException(additionalErrors)
+        }
+        val city = cityService.createCity(createDto)
+        return ResponseEntity.status(HttpStatus.CREATED).body(city)
+    }
 
-            put("/{id}") {
-                val id = call.parameters.getUuidFromPath("id")
-                val updateDto = call.receive<CityUpdateDto>()
-                updateDto.validateOrThrow(validateCityOnUpdate)
-                val additionalErrors = validateRegion(updateDto.region)
-                if (additionalErrors.isNotEmpty()) {
-                    throw ValidationException(additionalErrors)
-                }
-                val city = cityService.updateCity(id, updateDto)
-                call.respond(HttpStatusCode.OK, city)
-            }
+    @PutMapping("/{id}")
+    fun updateCity(
+        @PathVariable id: UUID,
+        @RequestBody updateDto: CityUpdateDto
+    ): ResponseEntity<CityResponseDto> {
+        updateDto.validateOrThrow(validateCityOnUpdate)
+        val additionalErrors = validateRegion(updateDto.region)
+        if (additionalErrors.isNotEmpty()) {
+            throw ValidationException(additionalErrors)
+        }
+        val city = cityService.updateCity(id, updateDto)
+        return ResponseEntity.ok(city)
+    }
 
-            delete("/{id}") {
-                val id = call.parameters.getUuidFromPath("id")
-                val deleted = cityService.deleteCity(id)
-                when {
-                    deleted -> call.respond(HttpStatusCode.OK, mapOf("deleted" to true))
-                    else -> call.respond(HttpStatusCode.NotFound)
-                }
-            }
+    @DeleteMapping("/{id}")
+    fun deleteCity(@PathVariable id: UUID): ResponseEntity<Map<String, Boolean>> {
+        val deleted = cityService.deleteCity(id)
+        return if (deleted) {
+            ResponseEntity.ok(mapOf("deleted" to true))
+        } else {
+            ResponseEntity.notFound().build()
         }
     }
 }

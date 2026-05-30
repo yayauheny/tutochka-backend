@@ -1,7 +1,7 @@
 package yayauheny.by.common.query
 
 import kotlinx.serialization.Serializable
-import yayauheny.by.config.ApiConstants
+import yayauheny.by.common.config.ApiConstants
 
 @Serializable
 data class PaginationRequest(

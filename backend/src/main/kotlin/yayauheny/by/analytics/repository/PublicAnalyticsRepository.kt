@@ -9,24 +9,24 @@ import yayauheny.by.analytics.model.PublicAnalyticsEventMetrics
 import yayauheny.by.analytics.model.PublicAnalyticsMonthlyAggregate
 
 interface PublicAnalyticsRepository {
-    suspend fun countTotalUsers(): Long
+    fun countTotalUsers(): Long
 
-    suspend fun countNewUsers(window: AnalyticsWindow): Long
+    fun countNewUsers(window: AnalyticsWindow): Long
 
-    suspend fun countActiveUsers(window: AnalyticsWindow): Long
+    fun countActiveUsers(window: AnalyticsWindow): Long
 
-    suspend fun aggregateEventMetrics(window: AnalyticsWindow? = null): PublicAnalyticsEventMetrics
+    fun aggregateEventMetrics(window: AnalyticsWindow? = null): PublicAnalyticsEventMetrics
 
-    suspend fun fetchDailySeries(
+    fun fetchDailySeries(
         window: AnalyticsWindow,
         zoneId: ZoneId
     ): List<PublicAnalyticsDailyAggregate>
 
-    suspend fun fetchMonthlySeries(
+    fun fetchMonthlySeries(
         startMonth: YearMonth,
         monthsCount: Int,
         zoneId: ZoneId
     ): List<PublicAnalyticsMonthlyAggregate>
 
-    suspend fun fetchEventTotals(minimumCount: Long): List<PublicAnalyticsEventCount>
+    fun fetchEventTotals(minimumCount: Long): List<PublicAnalyticsEventCount>
 }

@@ -1,19 +1,18 @@
 package yayauheny.by.analytics.api
 
-import io.ktor.server.response.respond
-import io.ktor.server.routing.Route
-import io.ktor.server.routing.get
-import io.ktor.server.routing.route
+import org.springframework.web.bind.annotation.GetMapping
+import org.springframework.web.bind.annotation.RequestMapping
+import org.springframework.web.bind.annotation.RestController
+import yayauheny.by.analytics.model.PublicAnalyticsResponse
 import yayauheny.by.analytics.service.PublicAnalyticsService
 
+@RestController
+@RequestMapping("/public/analytics")
 class PublicAnalyticsController(
     private val publicAnalyticsService: PublicAnalyticsService
 ) {
-    fun Route.publicAnalyticsRoutes() {
-        route("/public") {
-            get("/analytics") {
-                call.respond(publicAnalyticsService.getPublicAnalytics())
-            }
-        }
+    @GetMapping
+    fun getAnalytics(): PublicAnalyticsResponse {
+        return publicAnalyticsService.getPublicAnalytics()
     }
 }

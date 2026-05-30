@@ -1,313 +1,217 @@
 package yayauheny.by.analytics.repository
 
-import java.time.Instant
-import java.time.YearMonth
-import java.time.ZoneId
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.withContext
-import org.jooq.Condition
-import org.jooq.DSLContext
-import org.jooq.Field
-import org.jooq.impl.DSL
-import org.jooq.impl.SQLDataType
+import org.springframework.jdbc.core.namedparam.MapSqlParameterSource
+import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate
+import org.springframework.stereotype.Repository
 import yayauheny.by.analytics.model.AnalyticsWindow
 import yayauheny.by.analytics.model.PublicAnalyticsDailyAggregate
 import yayauheny.by.analytics.model.PublicAnalyticsEventCount
 import yayauheny.by.analytics.model.PublicAnalyticsEventMetrics
 import yayauheny.by.analytics.model.PublicAnalyticsMonthlyAggregate
 import yayauheny.by.model.analytics.ProductAnalyticsEvent
-import yayauheny.by.tables.references.ANALYTICS_EVENTS
-import yayauheny.by.tables.references.USERS
+import java.sql.ResultSet
+import java.time.Instant
+import java.time.YearMonth
+import java.time.ZoneId
 
+@Repository
 class PublicAnalyticsRepositoryImpl(
-    private val ctx: DSLContext
+    private val jdbcTemplate: NamedParameterJdbcTemplate
 ) : PublicAnalyticsRepository {
-    override suspend fun countTotalUsers(): Long =
-        withContext(Dispatchers.IO) {
-            ctx.fetchCount(USERS).toLong()
+
+    override fun countTotalUsers(): Long {
+        return jdbcTemplate.queryForObject("SELECT COUNT(*) FROM users", MapSqlParameterSource(), Long::class.java) ?: 0L
+    }
+
+    override fun countNewUsers(window: AnalyticsWindow): Long {
+        val params = MapSqlParameterSource()
+            .addValue("start", java.sql.Timestamp.from(window.start))
+            .addValue("end", java.sql.Timestamp.from(window.end))
+        return jdbcTemplate.queryForObject(
+            "SELECT COUNT(*) FROM users WHERE created_at >= :start AND created_at < :end",
+            params,
+            Long::class.java
+        ) ?: 0L
+    }
+
+    override fun countActiveUsers(window: AnalyticsWindow): Long {
+        val params = MapSqlParameterSource()
+            .addValue("start", java.sql.Timestamp.from(window.start))
+            .addValue("end", java.sql.Timestamp.from(window.end))
+        return jdbcTemplate.queryForObject(
+            "SELECT COUNT(DISTINCT user_id) FROM analytics_events WHERE user_id IS NOT NULL AND created_at >= :start AND created_at < :end",
+            params,
+            Long::class.java
+        ) ?: 0L
+    }
+
+    override fun aggregateEventMetrics(window: AnalyticsWindow?): PublicAnalyticsEventMetrics {
+        val params = MapSqlParameterSource()
+        val condition = if (window != null) {
+            params.addValue("start", java.sql.Timestamp.from(window.start))
+            params.addValue("end", java.sql.Timestamp.from(window.end))
+            "WHERE created_at >= :start AND created_at < :end"
+        } else {
+            ""
         }
 
-    override suspend fun countNewUsers(window: AnalyticsWindow): Long =
-        withContext(Dispatchers.IO) {
-            ctx
-                .fetchCount(
-                    USERS,
-                    USERS.CREATED_AT.ge(window.start).and(USERS.CREATED_AT.lt(window.end))
-                ).toLong()
-        }
+        val sql = """
+            SELECT
+                SUM(CASE WHEN event IN ('NEAREST_RESTROOMS_RETURNED', 'NEAREST_RESTROOMS_NO_RESULTS') THEN 1 ELSE 0 END) as total_searches,
+                SUM(CASE WHEN event = 'NEAREST_RESTROOMS_RETURNED' THEN 1 ELSE 0 END) as successful_searches,
+                SUM(CASE WHEN event = 'NEAREST_RESTROOMS_NO_RESULTS' THEN 1 ELSE 0 END) as empty_searches,
+                SUM(CASE WHEN event IN ('NEAREST_RESTROOMS_RETURNED', 'NEAREST_RESTROOMS_NO_RESULTS') THEN COALESCE(results_count, 0) ELSE 0 END) as total_results,
+                SUM(CASE WHEN event = 'ROUTE_CLICKED' THEN 1 ELSE 0 END) as route_clicks,
+                SUM(CASE WHEN event = 'RESTROOM_DETAILS_OPENED' THEN 1 ELSE 0 END) as details_opened
+            FROM analytics_events
+            $condition
+        """.trimIndent()
 
-    override suspend fun countActiveUsers(window: AnalyticsWindow): Long =
-        withContext(Dispatchers.IO) {
-            ctx
-                .selectCount()
-                .from(
-                    ctx
-                        .selectDistinct(ANALYTICS_EVENTS.USER_ID)
-                        .from(ANALYTICS_EVENTS)
-                        .where(
-                            ANALYTICS_EVENTS.USER_ID.isNotNull
-                                .and(ANALYTICS_EVENTS.CREATED_AT.ge(window.start))
-                                .and(ANALYTICS_EVENTS.CREATED_AT.lt(window.end))
-                        )
-                ).fetchOne(0, Long::class.java)
-                ?: 0L
-        }
-
-    override suspend fun aggregateEventMetrics(window: AnalyticsWindow?): PublicAnalyticsEventMetrics =
-        withContext(Dispatchers.IO) {
-            val searchCondition = searchEventCondition()
-            val successfulSearchesField =
-                sumCase(ANALYTICS_EVENTS.EVENT.eq(ProductAnalyticsEvent.NEAREST_RESTROOMS_RETURNED.value), "successful_searches")
-            val emptySearchesField =
-                sumCase(ANALYTICS_EVENTS.EVENT.eq(ProductAnalyticsEvent.NEAREST_RESTROOMS_NO_RESULTS.value), "empty_searches")
-            val totalSearchesField = sumCase(searchCondition, "total_searches")
-            val totalResultsField = sumSearchResults(searchCondition, "total_results")
-            val routeClicksField = sumCase(ANALYTICS_EVENTS.EVENT.eq(ProductAnalyticsEvent.ROUTE_CLICKED.value), "route_clicks")
-            val detailsOpenedField =
-                sumCase(ANALYTICS_EVENTS.EVENT.eq(ProductAnalyticsEvent.RESTROOM_DETAILS_OPENED.value), "details_opened")
-
-            val record =
-                ctx
-                    .select(
-                        totalSearchesField,
-                        successfulSearchesField,
-                        emptySearchesField,
-                        totalResultsField,
-                        routeClicksField,
-                        detailsOpenedField
-                    ).from(ANALYTICS_EVENTS)
-                    .where(analyticsWindowCondition(window))
-                    .fetchOne()
-
+        return jdbcTemplate.queryForObject(sql, params) { rs, _ ->
             PublicAnalyticsEventMetrics(
-                totalSearches = record?.get(totalSearchesField) ?: 0L,
-                successfulSearches = record?.get(successfulSearchesField) ?: 0L,
-                emptySearches = record?.get(emptySearchesField) ?: 0L,
-                totalResultsAcrossSearches = record?.get(totalResultsField) ?: 0L,
-                routeClicks = record?.get(routeClicksField) ?: 0L,
-                detailsOpened = record?.get(detailsOpenedField) ?: 0L
+                totalSearches = rs.getLong("total_searches"),
+                successfulSearches = rs.getLong("successful_searches"),
+                emptySearches = rs.getLong("empty_searches"),
+                totalResultsAcrossSearches = rs.getLong("total_results"),
+                routeClicks = rs.getLong("route_clicks"),
+                detailsOpened = rs.getLong("details_opened")
             )
-        }
+        } ?: PublicAnalyticsEventMetrics(0, 0, 0, 0, 0, 0)
+    }
 
-    override suspend fun fetchDailySeries(
+    override fun fetchDailySeries(
         window: AnalyticsWindow,
         zoneId: ZoneId
-    ): List<PublicAnalyticsDailyAggregate> =
-        withContext(Dispatchers.IO) {
-            val dayField = dayBucketField(ANALYTICS_EVENTS.CREATED_AT, zoneId, "day")
-            val searchCondition = searchEventCondition()
-            val activeUsersField = DSL.countDistinct(ANALYTICS_EVENTS.USER_ID).cast(SQLDataType.BIGINT).`as`("active_users")
-            val searchesField = sumCase(searchCondition, "searches")
-            val successfulSearchesField =
-                sumCase(ANALYTICS_EVENTS.EVENT.eq(ProductAnalyticsEvent.NEAREST_RESTROOMS_RETURNED.value), "successful_searches")
-            val emptySearchesField =
-                sumCase(ANALYTICS_EVENTS.EVENT.eq(ProductAnalyticsEvent.NEAREST_RESTROOMS_NO_RESULTS.value), "empty_searches")
-            val routeClicksField = sumCase(ANALYTICS_EVENTS.EVENT.eq(ProductAnalyticsEvent.ROUTE_CLICKED.value), "route_clicks")
-            val detailsOpenedField =
-                sumCase(ANALYTICS_EVENTS.EVENT.eq(ProductAnalyticsEvent.RESTROOM_DETAILS_OPENED.value), "details_opened")
+    ): List<PublicAnalyticsDailyAggregate> {
+        val sql = """
+            SELECT
+                date(timezone(:zoneId, created_at)) as day,
+                COUNT(DISTINCT user_id) as active_users,
+                SUM(CASE WHEN event IN ('NEAREST_RESTROOMS_RETURNED', 'NEAREST_RESTROOMS_NO_RESULTS') THEN 1 ELSE 0 END) as searches,
+                SUM(CASE WHEN event = 'NEAREST_RESTROOMS_RETURNED' THEN 1 ELSE 0 END) as successful_searches,
+                SUM(CASE WHEN event = 'NEAREST_RESTROOMS_NO_RESULTS' THEN 1 ELSE 0 END) as empty_searches,
+                SUM(CASE WHEN event = 'ROUTE_CLICKED' THEN 1 ELSE 0 END) as route_clicks,
+                SUM(CASE WHEN event = 'RESTROOM_DETAILS_OPENED' THEN 1 ELSE 0 END) as details_opened
+            FROM analytics_events
+            WHERE created_at >= :start AND created_at < :end
+            GROUP BY date(timezone(:zoneId, created_at))
+            ORDER BY day ASC
+        """.trimIndent()
 
-            ctx
-                .select(
-                    dayField,
-                    activeUsersField,
-                    searchesField,
-                    successfulSearchesField,
-                    emptySearchesField,
-                    routeClicksField,
-                    detailsOpenedField
-                ).from(ANALYTICS_EVENTS)
-                .where(analyticsWindowCondition(window))
-                .groupBy(dayField)
-                .orderBy(dayField.asc())
-                .fetch()
-                .map { record ->
-                    PublicAnalyticsDailyAggregate(
-                        date = requireNotNull(record.get(dayField)).toString(),
-                        activeUsers = record.get(activeUsersField) ?: 0L,
-                        searches = record.get(searchesField) ?: 0L,
-                        successfulSearches = record.get(successfulSearchesField) ?: 0L,
-                        emptySearches = record.get(emptySearchesField) ?: 0L,
-                        routeClicks = record.get(routeClicksField) ?: 0L,
-                        detailsOpened = record.get(detailsOpenedField) ?: 0L
-                    )
-                }
+        val params = MapSqlParameterSource()
+            .addValue("zoneId", zoneId.id)
+            .addValue("start", java.sql.Timestamp.from(window.start))
+            .addValue("end", java.sql.Timestamp.from(window.end))
+
+        return jdbcTemplate.query(sql, params) { rs, _ ->
+            PublicAnalyticsDailyAggregate(
+                date = rs.getString("day"),
+                activeUsers = rs.getLong("active_users"),
+                searches = rs.getLong("searches"),
+                successfulSearches = rs.getLong("successful_searches"),
+                emptySearches = rs.getLong("empty_searches"),
+                routeClicks = rs.getLong("route_clicks"),
+                detailsOpened = rs.getLong("details_opened")
+            )
         }
+    }
 
-    override suspend fun fetchMonthlySeries(
+    override fun fetchMonthlySeries(
         startMonth: YearMonth,
         monthsCount: Int,
         zoneId: ZoneId
-    ): List<PublicAnalyticsMonthlyAggregate> =
-        withContext(Dispatchers.IO) {
-            val start = monthStartInstant(startMonth, zoneId)
-            val end = monthStartInstant(startMonth.plusMonths(monthsCount.toLong()), zoneId)
-            val eventRows = fetchMonthlyEventRows(start, end, zoneId)
-            val newUsersRows = fetchMonthlyNewUsers(start, end, zoneId)
+    ): List<PublicAnalyticsMonthlyAggregate> {
+        val start = startMonth.atDay(1).atStartOfDay(zoneId).toInstant()
+        val end = startMonth.plusMonths(monthsCount.toLong()).atDay(1).atStartOfDay(zoneId).toInstant()
 
-            val months =
-                (0 until monthsCount)
-                    .associate { offset ->
-                        val month = startMonth.plusMonths(offset.toLong()).toString()
-                        month to PublicAnalyticsMonthlyAggregate(month = month, newUsers = 0, activeUsers = 0, searches = 0)
-                    }.toMutableMap()
+        val eventRows = fetchMonthlyEventRows(start, end, zoneId)
+        val newUsersRows = fetchMonthlyNewUsers(start, end, zoneId)
 
-            newUsersRows.forEach { row ->
-                months[row.month] = months.getValue(row.month).copy(newUsers = row.newUsers)
-            }
-            eventRows.forEach { row ->
-                months[row.month] =
-                    months.getValue(row.month).copy(
-                        activeUsers = row.activeUsers,
-                        searches = row.searches
-                    )
-            }
+        val months = (0 until monthsCount).associate { offset ->
+            val month = startMonth.plusMonths(offset.toLong()).toString()
+            month to PublicAnalyticsMonthlyAggregate(month = month, newUsers = 0, activeUsers = 0, searches = 0)
+        }.toMutableMap()
 
-            months.values.toList()
+        newUsersRows.forEach { row ->
+            months[row.month] = months.getValue(row.month).copy(newUsers = row.newUsers)
+        }
+        eventRows.forEach { row ->
+            months[row.month] = months.getValue(row.month).copy(
+                activeUsers = row.activeUsers,
+                searches = row.searches
+            )
         }
 
-    override suspend fun fetchEventTotals(minimumCount: Long): List<PublicAnalyticsEventCount> =
-        withContext(Dispatchers.IO) {
-            ctx
-                .select(ANALYTICS_EVENTS.EVENT, DSL.count().cast(SQLDataType.BIGINT).`as`("event_count"))
-                .from(ANALYTICS_EVENTS)
-                .groupBy(ANALYTICS_EVENTS.EVENT)
-                .having(DSL.count().ge(minimumCount.toInt()))
-                .orderBy(DSL.field("event_count").desc())
-                .fetch()
-                .map { record ->
-                    PublicAnalyticsEventCount(
-                        eventKey = requireNotNull(record.get(ANALYTICS_EVENTS.EVENT)),
-                        count = record.get("event_count", Long::class.java) ?: 0L
-                    )
-                }
+        return months.values.toList()
+    }
+
+    override fun fetchEventTotals(minimumCount: Long): List<PublicAnalyticsEventCount> {
+        val sql = """
+            SELECT event, COUNT(*) as event_count
+            FROM analytics_events
+            GROUP BY event
+            HAVING COUNT(*) >= :minCount
+            ORDER BY event_count DESC
+        """.trimIndent()
+
+        return jdbcTemplate.query(sql, MapSqlParameterSource("minCount", minimumCount)) { rs, _ ->
+            PublicAnalyticsEventCount(
+                eventKey = rs.getString("event"),
+                count = rs.getLong("event_count")
+            )
         }
-
-    private fun fetchMonthlyEventRows(
-        start: Instant,
-        end: Instant,
-        zoneId: ZoneId
-    ): List<MonthlyEventRow> {
-        val monthField = monthBucketField(ANALYTICS_EVENTS.CREATED_AT, zoneId, "month")
-        val activeUsersField = DSL.countDistinct(ANALYTICS_EVENTS.USER_ID).cast(SQLDataType.BIGINT).`as`("active_users")
-        val searchesField = sumCase(searchEventCondition(), "searches")
-
-        return ctx
-            .select(monthField, activeUsersField, searchesField)
-            .from(ANALYTICS_EVENTS)
-            .where(ANALYTICS_EVENTS.CREATED_AT.ge(start).and(ANALYTICS_EVENTS.CREATED_AT.lt(end)))
-            .groupBy(monthField)
-            .orderBy(monthField.asc())
-            .fetch()
-            .map { record ->
-                MonthlyEventRow(
-                    month = requireNotNull(record.get(monthField)),
-                    activeUsers = record.get(activeUsersField) ?: 0L,
-                    searches = record.get(searchesField) ?: 0L
-                )
-            }
     }
 
-    private fun fetchMonthlyNewUsers(
-        start: Instant,
-        end: Instant,
-        zoneId: ZoneId
-    ): List<MonthlyNewUsersRow> {
-        val monthField = monthBucketField(USERS.CREATED_AT, zoneId, "month")
-        val newUsersField = DSL.count().cast(SQLDataType.BIGINT).`as`("new_users")
+    private fun fetchMonthlyEventRows(start: Instant, end: Instant, zoneId: ZoneId): List<MonthlyEventRow> {
+        val sql = """
+            SELECT
+                to_char(date_trunc('month', timezone(:zoneId, created_at)), 'YYYY-MM') as month,
+                COUNT(DISTINCT user_id) as active_users,
+                SUM(CASE WHEN event IN ('NEAREST_RESTROOMS_RETURNED', 'NEAREST_RESTROOMS_NO_RESULTS') THEN 1 ELSE 0 END) as searches
+            FROM analytics_events
+            WHERE created_at >= :start AND created_at < :end
+            GROUP BY month
+            ORDER BY month ASC
+        """.trimIndent()
 
-        return ctx
-            .select(monthField, newUsersField)
-            .from(USERS)
-            .where(USERS.CREATED_AT.ge(start).and(USERS.CREATED_AT.lt(end)))
-            .groupBy(monthField)
-            .orderBy(monthField.asc())
-            .fetch()
-            .map { record ->
-                MonthlyNewUsersRow(
-                    month = requireNotNull(record.get(monthField)),
-                    newUsers = record.get(newUsersField) ?: 0L
-                )
-            }
-    }
+        val params = MapSqlParameterSource()
+            .addValue("zoneId", zoneId.id)
+            .addValue("start", java.sql.Timestamp.from(start))
+            .addValue("end", java.sql.Timestamp.from(end))
 
-    private fun analyticsWindowCondition(window: AnalyticsWindow?): Condition {
-        if (window == null) {
-            return DSL.trueCondition()
+        return jdbcTemplate.query(sql, params) { rs, _ ->
+            MonthlyEventRow(
+                month = rs.getString("month"),
+                activeUsers = rs.getLong("active_users"),
+                searches = rs.getLong("searches")
+            )
         }
-        return ANALYTICS_EVENTS.CREATED_AT.ge(window.start).and(ANALYTICS_EVENTS.CREATED_AT.lt(window.end))
     }
 
-    private fun searchEventCondition(): Condition =
-        ANALYTICS_EVENTS.EVENT.`in`(
-            ProductAnalyticsEvent.NEAREST_RESTROOMS_RETURNED.value,
-            ProductAnalyticsEvent.NEAREST_RESTROOMS_NO_RESULTS.value
-        )
+    private fun fetchMonthlyNewUsers(start: Instant, end: Instant, zoneId: ZoneId): List<MonthlyNewUsersRow> {
+        val sql = """
+            SELECT
+                to_char(date_trunc('month', timezone(:zoneId, created_at)), 'YYYY-MM') as month,
+                COUNT(*) as new_users
+            FROM users
+            WHERE created_at >= :start AND created_at < :end
+            GROUP BY month
+            ORDER BY month ASC
+        """.trimIndent()
 
-    private fun sumCase(
-        condition: Condition,
-        alias: String
-    ): Field<Long> =
-        DSL
-            .coalesce(
-                DSL
-                    .sum(
-                        DSL.`when`(condition, 1).otherwise(0)
-                    ).cast(SQLDataType.BIGINT),
-                DSL.inline(0L)
-            ).`as`(alias)
+        val params = MapSqlParameterSource()
+            .addValue("zoneId", zoneId.id)
+            .addValue("start", java.sql.Timestamp.from(start))
+            .addValue("end", java.sql.Timestamp.from(end))
 
-    private fun sumSearchResults(
-        condition: Condition,
-        alias: String
-    ): Field<Long> =
-        DSL
-            .coalesce(
-                DSL
-                    .sum(
-                        DSL.`when`(condition, DSL.coalesce(ANALYTICS_EVENTS.RESULTS_COUNT, 0)).otherwise(0)
-                    ).cast(SQLDataType.BIGINT),
-                DSL.inline(0L)
-            ).`as`(alias)
+        return jdbcTemplate.query(sql, params) { rs, _ ->
+            MonthlyNewUsersRow(
+                month = rs.getString("month"),
+                newUsers = rs.getLong("new_users")
+            )
+        }
+    }
 
-    private fun dayBucketField(
-        field: Field<Instant?>,
-        zoneId: ZoneId,
-        alias: String
-    ): Field<java.time.LocalDate> =
-        DSL
-            .field(
-                "date(timezone({0}, {1}))",
-                SQLDataType.LOCALDATE,
-                DSL.inline(zoneId.id),
-                field
-            ).`as`(alias)
-
-    private fun monthBucketField(
-        field: Field<Instant?>,
-        zoneId: ZoneId,
-        alias: String
-    ): Field<String> =
-        DSL
-            .field(
-                "to_char(date_trunc('month', timezone({0}, {1})), 'YYYY-MM')",
-                SQLDataType.VARCHAR(7),
-                DSL.inline(zoneId.id),
-                field
-            ).`as`(alias)
-
-    private fun monthStartInstant(
-        month: YearMonth,
-        zoneId: ZoneId
-    ): Instant = month.atDay(1).atStartOfDay(zoneId).toInstant()
-
-    private data class MonthlyNewUsersRow(
-        val month: String,
-        val newUsers: Long
-    )
-
-    private data class MonthlyEventRow(
-        val month: String,
-        val activeUsers: Long,
-        val searches: Long
-    )
+    private data class MonthlyNewUsersRow(val month: String, val newUsers: Long)
+    private data class MonthlyEventRow(val month: String, val activeUsers: Long, val searches: Long)
 }

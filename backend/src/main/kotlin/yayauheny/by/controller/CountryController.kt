@@ -1,75 +1,75 @@
 package yayauheny.by.controller
 
-import io.ktor.http.HttpStatusCode
-import io.ktor.server.request.receive
-import io.ktor.server.response.respond
-import io.ktor.server.routing.Route
-import io.ktor.server.routing.delete
-import io.ktor.server.routing.get
-import io.ktor.server.routing.post
-import io.ktor.server.routing.put
-import io.ktor.server.routing.route
+import org.springframework.http.HttpStatus
+import org.springframework.http.ResponseEntity
+import org.springframework.web.bind.annotation.*
 import yayauheny.by.common.errors.NotFoundException
+import yayauheny.by.common.query.PageResponse
+import yayauheny.by.common.query.PaginationRequest
 import yayauheny.by.model.country.CountryCreateDto
+import yayauheny.by.model.country.CountryResponseDto
+import yayauheny.by.model.country.CountryUpdateDto
 import yayauheny.by.service.CountryService
 import yayauheny.by.service.validation.validateCountryOnCreate
 import yayauheny.by.service.validation.validateCountryOnUpdate
 import yayauheny.by.service.validation.validateOrThrow
-import yayauheny.by.util.getStringFromPath
-import yayauheny.by.util.getUuidFromPath
-import yayauheny.by.util.toPaginationRequest
+import java.util.UUID
 
+@RestController
+@RequestMapping("/api/v1/countries")
 class CountryController(
     private val countryService: CountryService
 ) {
-    fun Route.countryRoutes() {
-        route("/countries") {
-            get {
-                val pagination = call.request.queryParameters.toPaginationRequest()
-                val pageResponse = countryService.getAllCountries(pagination)
-                call.respond(HttpStatusCode.OK, pageResponse)
-            }
+    @GetMapping
+    fun getAllCountries(
+        @RequestParam(defaultValue = "0") page: Int,
+        @RequestParam(defaultValue = "20") size: Int,
+        @RequestParam(defaultValue = "name") sort: String,
+        @RequestParam(defaultValue = "asc") order: String
+    ): ResponseEntity<PageResponse<CountryResponseDto>> {
+        val pagination = PaginationRequest(page = page, size = size, sort = sort, direction = yayauheny.by.common.query.SortDirection.valueOf(order.uppercase()))
+        val pageResponse = countryService.getAllCountries(pagination)
+        return ResponseEntity.ok(pageResponse)
+    }
 
-            get("/{id}") {
-                val id = call.parameters.getUuidFromPath("id")
-                val country =
-                    countryService.getCountryById(id)
-                        ?: throw NotFoundException("Страна с ID '$id' не найдена")
-                call.respond(HttpStatusCode.OK, country)
-            }
+    @GetMapping("/{id}")
+    fun getCountryById(@PathVariable id: UUID): ResponseEntity<CountryResponseDto> {
+        val country = countryService.getCountryById(id)
+            ?: throw NotFoundException("Страна с ID '$id' не найдена")
+        return ResponseEntity.ok(country)
+    }
 
-            get("/code/{code}") {
-                val code = call.parameters.getStringFromPath("code")
-                val country =
-                    countryService.getCountryByCode(code)
-                        ?: throw NotFoundException("Страна с кодом '$code' не найдена")
-                call.respond(HttpStatusCode.OK, country)
-            }
+    @GetMapping("/code/{code}")
+    fun getCountryByCode(@PathVariable code: String): ResponseEntity<CountryResponseDto> {
+        val country = countryService.getCountryByCode(code)
+            ?: throw NotFoundException("Страна с кодом '$code' не найдена")
+        return ResponseEntity.ok(country)
+    }
 
-            post {
-                val createDto = call.receive<CountryCreateDto>()
-                createDto.validateOrThrow(validateCountryOnCreate)
-                val country = countryService.createCountry(createDto)
-                call.respond(HttpStatusCode.Created, country)
-            }
+    @PostMapping
+    fun createCountry(@RequestBody createDto: CountryCreateDto): ResponseEntity<CountryResponseDto> {
+        // createDto.validateOrThrow(validateCountryOnCreate)
+        val country = countryService.createCountry(createDto)
+        return ResponseEntity.status(HttpStatus.CREATED).body(country)
+    }
 
-            put("/{id}") {
-                val id = call.parameters.getUuidFromPath("id")
-                val updateDto = call.receive<yayauheny.by.model.country.CountryUpdateDto>()
-                updateDto.validateOrThrow(validateCountryOnUpdate)
-                val country = countryService.updateCountry(id, updateDto)
-                call.respond(HttpStatusCode.OK, country)
-            }
+    @PutMapping("/{id}")
+    fun updateCountry(
+        @PathVariable id: UUID,
+        @RequestBody updateDto: CountryUpdateDto
+    ): ResponseEntity<CountryResponseDto> {
+        // updateDto.validateOrThrow(validateCountryOnUpdate)
+        val country = countryService.updateCountry(id, updateDto)
+        return ResponseEntity.ok(country)
+    }
 
-            delete("/{id}") {
-                val id = call.parameters.getUuidFromPath("id")
-                val deleted = countryService.deleteCountry(id)
-                if (deleted) {
-                    call.respond(HttpStatusCode.OK, mapOf("deleted" to true))
-                } else {
-                    call.respond(HttpStatusCode.NotFound)
-                }
-            }
+    @DeleteMapping("/{id}")
+    fun deleteCountry(@PathVariable id: UUID): ResponseEntity<Map<String, Boolean>> {
+        val deleted = countryService.deleteCountry(id)
+        return if (deleted) {
+            ResponseEntity.ok(mapOf("deleted" to true))
+        } else {
+            ResponseEntity.notFound().build()
         }
     }
 }

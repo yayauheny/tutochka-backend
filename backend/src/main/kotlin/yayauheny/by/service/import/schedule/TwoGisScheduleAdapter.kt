@@ -1,10 +1,8 @@
 package yayauheny.by.service.import.schedule
 
+import com.fasterxml.jackson.databind.JsonNode
 import java.time.LocalTime
 import java.util.EnumMap
-import kotlinx.serialization.json.JsonArray
-import kotlinx.serialization.json.JsonObject
-import kotlinx.serialization.json.JsonPrimitive
 import yayauheny.by.model.enums.ImportProvider
 import yayauheny.by.model.schedule.DaySchedule
 import yayauheny.by.model.schedule.Schedule
@@ -13,47 +11,35 @@ import yayauheny.by.model.schedule.WorkingInterval
 
 /**
  * Adapter for converting 2ГИС schedule format to our canonical Schedule format
- *
- * 2ГИС format example:
- * {
- *   "Mon": { "working_hours": [{ "from": "00:00", "to": "24:00" }] },
- *   "Tue": { "working_hours": [{ "from": "00:00", "to": "24:00" }] },
- *   ...
- *   "is_24x7": true
- * }
  */
 class TwoGisScheduleAdapter : ScheduleAdapter {
     override fun supports(provider: ImportProvider): Boolean {
         return provider == ImportProvider.TWO_GIS
     }
 
-    override fun toSchedule(rawSchedule: JsonObject?): Schedule {
-        if (rawSchedule == null || rawSchedule.isEmpty()) {
+    override fun toSchedule(rawSchedule: JsonNode?): Schedule {
+        if (rawSchedule == null || rawSchedule.isEmpty || !rawSchedule.isObject) {
             return Schedule.EMPTY
         }
 
-        val is24x7 =
-            (rawSchedule["is_24x7"] as? JsonPrimitive)?.let { prim ->
-                when {
-                    prim.content == "true" -> true
-                    prim.content == "false" -> false
-                    prim.content == "1" -> true
-                    prim.content == "0" -> false
-                    else -> false
-                }
-            } ?: false
+        val is24x7 = if (rawSchedule.has("is_24x7")) {
+            val node = rawSchedule.get("is_24x7")
+            if (node.isBoolean) node.asBoolean() else node.asText() == "true" || node.asText() == "1"
+        } else false
 
         val days = EnumMap<Weekday, DaySchedule>(Weekday::class.java)
 
         val dayKeys = listOf("Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun")
 
         for (dayKey in dayKeys) {
-            val dayElement = rawSchedule[dayKey]
-            if (dayElement != null && dayElement is JsonObject) {
-                val workingHours = parseWorkingHours(dayElement)
-                if (workingHours.isNotEmpty()) {
-                    val weekday = Weekday.fromTwoGisKey(dayKey)
-                    days[weekday] = DaySchedule(workingHours)
+            if (rawSchedule.has(dayKey)) {
+                val dayElement = rawSchedule.get(dayKey)
+                if (dayElement.isObject) {
+                    val workingHours = parseWorkingHours(dayElement)
+                    if (workingHours.isNotEmpty()) {
+                        val weekday = Weekday.fromTwoGisKey(dayKey)
+                        days[weekday] = DaySchedule(workingHours)
+                    }
                 }
             }
         }
@@ -61,35 +47,32 @@ class TwoGisScheduleAdapter : ScheduleAdapter {
         return Schedule(days, is24x7)
     }
 
-    private fun parseWorkingHours(dayNode: JsonObject): List<WorkingInterval> {
-        val workingHoursElement = dayNode["working_hours"]
-        if (workingHoursElement == null || workingHoursElement !is JsonArray) {
+    private fun parseWorkingHours(dayNode: JsonNode): List<WorkingInterval> {
+        if (!dayNode.has("working_hours")) return emptyList()
+        val workingHoursElement = dayNode.get("working_hours")
+        if (!workingHoursElement.isArray) {
             return emptyList()
         }
 
-        return workingHoursElement.mapNotNull { intervalElement ->
-            if (intervalElement !is JsonObject) {
-                return@mapNotNull null
-            }
+        val result = mutableListOf<WorkingInterval>()
+        for (intervalElement in workingHoursElement) {
+            if (!intervalElement.isObject) continue
 
-            val fromElement = intervalElement["from"]
-            val toElement = intervalElement["to"]
+            val fromNode = intervalElement.get("from")
+            val toNode = intervalElement.get("to")
 
-            val fromStr = (fromElement as? JsonPrimitive)?.content
-            val toStr = (toElement as? JsonPrimitive)?.content
+            val fromStr = if (fromNode?.isTextual == true) fromNode.asText() else null
+            val toStr = if (toNode?.isTextual == true) toNode.asText() else null
 
             if (fromStr != null && toStr != null) {
                 val from = parseTimeOrNull(fromStr)
                 val to = parseTimeOrNull(toStr)
                 if (from != null && to != null) {
-                    WorkingInterval(from, to)
-                } else {
-                    null
+                    result.add(WorkingInterval(from, to))
                 }
-            } else {
-                null
             }
         }
+        return result
     }
 
     private fun parseTimeOrNull(value: String): LocalTime? {

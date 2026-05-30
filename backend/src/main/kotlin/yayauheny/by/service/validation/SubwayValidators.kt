@@ -1,10 +1,10 @@
 package yayauheny.by.service.validation
 
 import io.konform.validation.Validation
-import io.konform.validation.constraints.maxLength
-import io.konform.validation.constraints.minLength
-import io.konform.validation.constraints.pattern
-import yayauheny.by.config.ApiConstants
+import io.konform.validation.jsonschema.maxLength
+import io.konform.validation.jsonschema.minLength
+import io.konform.validation.jsonschema.pattern
+import yayauheny.by.common.config.ApiConstants
 import yayauheny.by.model.subway.SubwayLineCreateDto
 import yayauheny.by.model.subway.SubwayStationCreateDto
 

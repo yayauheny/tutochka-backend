@@ -1,69 +1,106 @@
 package yayauheny.by.service
+import yayauheny.by.util.toPageResponse
 
-import java.util.UUID
-import yayauheny.by.common.query.FilterCriteria
-import yayauheny.by.common.query.FilterOperator
+import org.springframework.data.domain.PageRequest
+import org.springframework.stereotype.Service
+import org.springframework.transaction.annotation.Transactional
+import yayauheny.by.common.errors.ConflictException
 import yayauheny.by.common.query.PageResponse
 import yayauheny.by.common.query.PaginationRequest
+import yayauheny.by.entity.CityEntity
 import yayauheny.by.model.city.CityCreateDto
 import yayauheny.by.model.city.CityResponseDto
 import yayauheny.by.model.city.CityUpdateDto
-import yayauheny.by.repository.CityRepository
-import yayauheny.by.repository.CountryRepository
+import yayauheny.by.repository.CityJpaRepository
+import yayauheny.by.repository.CountryJpaRepository
+import java.util.UUID
 
+
+fun CityEntity.toDto() = CityResponseDto(
+    id = this.id!!,
+    countryId = this.country!!.id!!,
+    nameRu = this.nameRu,
+    nameEn = this.nameEn,
+    region = this.region,
+    coordinates = yayauheny.by.model.dto.Coordinates(
+        lat = this.coordinates?.y ?: 0.0,
+        lon = this.coordinates?.x ?: 0.0
+    )
+)
+
+@Service
+@Transactional
 class CityService(
-    private val cityRepository: CityRepository,
-    private val countryRepository: CountryRepository
+    private val cityRepository: CityJpaRepository,
+    private val countryRepository: CountryJpaRepository
 ) {
-    suspend fun getAllCities(pagination: PaginationRequest): PageResponse<CityResponseDto> = cityRepository.findAll(pagination)
-
-    suspend fun getCityById(id: UUID): CityResponseDto? = cityRepository.findById(id)
-
-    suspend fun getCitiesByCountry(
-        countryId: UUID,
-        pagination: PaginationRequest
-    ): PageResponse<CityResponseDto> = cityRepository.findByCountryId(countryId, pagination)
-
-    suspend fun searchCitiesByName(
-        name: String,
-        pagination: PaginationRequest
-    ): PageResponse<CityResponseDto> = cityRepository.findByName(name, pagination)
-
-    suspend fun createCity(createDto: CityCreateDto): CityResponseDto {
-        countryRepository.findById(createDto.countryId)
-            ?: throw IllegalArgumentException("Страна с ID '${createDto.countryId}' не найдена")
-
-        val existingByRu =
-            cityRepository.findSingle(
-                listOf(
-                    FilterCriteria("countryId", FilterOperator.EQ, createDto.countryId.toString()),
-                    FilterCriteria("nameRu", FilterOperator.EQ, createDto.nameRu)
-                )
-            )
-        if (existingByRu != null) {
-            throw yayauheny.by.common.errors
-                .ConflictException("Город с названием '${createDto.nameRu}' уже существует в этой стране")
-        }
-
-        val existingByEn =
-            cityRepository.findSingle(
-                listOf(
-                    FilterCriteria("countryId", FilterOperator.EQ, createDto.countryId.toString()),
-                    FilterCriteria("nameEn", FilterOperator.EQ, createDto.nameEn)
-                )
-            )
-        if (existingByEn != null) {
-            throw yayauheny.by.common.errors
-                .ConflictException("Город с названием '${createDto.nameEn}' уже существует в этой стране")
-        }
-
-        return cityRepository.save(createDto)
+    @Transactional(readOnly = true)
+    fun getAllCities(pagination: PaginationRequest): PageResponse<CityResponseDto> {
+        val pageRequest = PageRequest.of(pagination.page, pagination.size)
+        val page = cityRepository.findAll(pageRequest)
+        return page.map { it.toDto() }.toPageResponse()
     }
 
-    suspend fun updateCity(
-        id: UUID,
-        updateDto: CityUpdateDto
-    ): CityResponseDto = cityRepository.update(id, updateDto)
+    @Transactional(readOnly = true)
+    fun getCityById(id: UUID): CityResponseDto? {
+        return cityRepository.findById(id).orElse(null)?.toDto()
+    }
 
-    suspend fun deleteCity(id: UUID): Boolean = cityRepository.deleteById(id)
+    @Transactional(readOnly = true)
+    fun getCitiesByCountry(countryId: UUID, pagination: PaginationRequest): PageResponse<CityResponseDto> {
+        val pageRequest = PageRequest.of(pagination.page, pagination.size)
+        val page = cityRepository.findByCountryId(countryId, pageRequest)
+        return page.map { it.toDto() }.toPageResponse()
+    }
+
+    @Transactional(readOnly = true)
+    fun searchCitiesByName(name: String, pagination: PaginationRequest): PageResponse<CityResponseDto> {
+        val pageRequest = PageRequest.of(pagination.page, pagination.size)
+        val page = cityRepository.findByNameRuContainingIgnoreCaseOrNameEnContainingIgnoreCase(name, name, pageRequest)
+        return page.map { it.toDto() }.toPageResponse()
+    }
+
+    fun createCity(createDto: CityCreateDto): CityResponseDto {
+        val country = countryRepository.findById(createDto.countryId).orElseThrow {
+            IllegalArgumentException("Страна с ID '${createDto.countryId}' не найдена")
+        }
+
+        if (cityRepository.findByCountryIdAndNameRu(createDto.countryId, createDto.nameRu) != null) {
+            throw ConflictException("Город с названием '${createDto.nameRu}' уже существует в этой стране")
+        }
+
+        if (cityRepository.findByCountryIdAndNameEn(createDto.countryId, createDto.nameEn) != null) {
+            throw ConflictException("Город с названием '${createDto.nameEn}' уже существует в этой стране")
+        }
+
+        val entity = CityEntity().apply {
+            this.country = country
+            this.nameRu = createDto.nameRu
+            this.nameEn = createDto.nameEn
+            this.region = createDto.region
+            // this.coordinates = ... mapping logic here
+        }
+
+        return cityRepository.save(entity).toDto()
+    }
+
+    fun updateCity(id: UUID, updateDto: CityUpdateDto): CityResponseDto {
+        val entity = cityRepository.findById(id).orElseThrow {
+            IllegalArgumentException("City not found")
+        }
+        
+        updateDto.nameRu?.let { entity.nameRu = it }
+        updateDto.nameEn?.let { entity.nameEn = it }
+        updateDto.region?.let { entity.region = it }
+        
+        return cityRepository.save(entity).toDto()
+    }
+
+    fun deleteCity(id: UUID): Boolean {
+        if (cityRepository.existsById(id)) {
+            cityRepository.deleteById(id)
+            return true
+        }
+        return false
+    }
 }

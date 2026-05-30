@@ -142,6 +142,9 @@ class BuildingEntity : BaseEntity() {
     @Enumerated(EnumType.STRING)
     @Column(name = "import_status", nullable = false, length = 20)
     var importStatus: BuildingImportStatus = BuildingImportStatus.COMPLETED
+
+    @Column(name = "building_match_key", length = 64)
+    var buildingMatchKey: String? = null
 }
 
 @Entity
@@ -239,6 +242,9 @@ class RestroomEntity : BaseEntity() {
 
     @Column(name = "origin_id", length = 100)
     var originId: String? = null
+
+    @Column(name = "restroom_match_key", length = 64)
+    var restroomMatchKey: String? = null
 }
 
 @Entity
@@ -255,6 +261,30 @@ class RestroomImportEntity {
     @Enumerated(EnumType.STRING)
     @Column(name = "payload_type", nullable = false, length = 50)
     var payloadType: ImportPayloadType? = null
+
+    @Column(name = "entity_type", nullable = false, length = 30)
+    var entityType: String = "place"
+
+    @Column(name = "external_id", length = 128)
+    var externalId: String? = null
+
+    @Column(name = "source_url", columnDefinition = "text")
+    var sourceUrl: String? = null
+
+    @Column(name = "scraped_at")
+    var scrapedAt: Instant? = null
+
+    @Column(name = "payload_hash", length = 64)
+    var payloadHash: String? = null
+
+    @Column(name = "attempts", nullable = false)
+    var attempts: Int = 0
+
+    @Column(name = "last_attempt_at")
+    var lastAttemptAt: Instant? = null
+
+    @Column(name = "next_retry_at")
+    var nextRetryAt: Instant? = null
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "city_id")
@@ -285,4 +315,39 @@ class RestroomImportEntity {
 
     @Column(name = "processed_at")
     var processedAt: Instant? = null
+}
+
+@Entity
+@Table(name = "restroom_duplicate_suspicions")
+class DuplicateSuspicionEntity {
+    @Id
+    @GeneratedValue(strategy = GenerationType.UUID)
+    var id: UUID? = null
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "existing_restroom_id", nullable = false)
+    var existingRestroom: RestroomEntity? = null
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "candidate_restroom_id", nullable = false)
+    var candidateRestroom: RestroomEntity? = null
+
+    @Column(name = "distance_m", nullable = false)
+    var distanceM: Double = 0.0
+
+    @Column(name = "reason", nullable = false, length = 100)
+    var reason: String = ""
+
+    @Column(name = "status", nullable = false, length = 20)
+    var status: String = "PENDING"
+
+    @Column(name = "provider", nullable = false, length = 50)
+    var provider: String = ""
+
+    @Column(name = "external_id", length = 128)
+    var externalId: String? = null
+
+    @CreationTimestamp
+    @Column(name = "created_at", nullable = false, updatable = false)
+    var createdAt: Instant? = null
 }

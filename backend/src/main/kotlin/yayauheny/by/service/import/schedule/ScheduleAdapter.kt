@@ -1,6 +1,6 @@
 package yayauheny.by.service.import.schedule
 
-import kotlinx.serialization.json.JsonObject
+import com.fasterxml.jackson.databind.JsonNode
 import yayauheny.by.model.enums.ImportProvider
 import yayauheny.by.model.schedule.Schedule
 
@@ -18,5 +18,5 @@ interface ScheduleAdapter {
      * @param rawSchedule raw schedule JSON from provider
      * @return Schedule in our canonical format, or Schedule.EMPTY if schedule is null/empty
      */
-    fun toSchedule(rawSchedule: JsonObject?): Schedule
+    fun toSchedule(rawSchedule: JsonNode?): Schedule
 }
