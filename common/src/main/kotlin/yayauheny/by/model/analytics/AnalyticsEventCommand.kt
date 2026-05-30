@@ -1,7 +1,9 @@
 package yayauheny.by.model.analytics
 
+
+
 import java.math.BigDecimal
-import kotlinx.serialization.json.JsonObject
+
 
 data class AnalyticsEventCommand(
     val event: ProductAnalyticsEvent,
@@ -14,5 +16,5 @@ data class AnalyticsEventCommand(
     val resultsCount: Int? = null,
     val durationMs: Int? = null,
     val acquisitionTag: AcquisitionTag? = null,
-    val metadata: JsonObject = JsonObject(emptyMap())
+    val metadata: Map<String, Any> = emptyMap()
 )

@@ -1,17 +1,19 @@
 package yayauheny.by.model.analytics
 
-import kotlinx.serialization.SerialName
-import kotlinx.serialization.Serializable
+import com.fasterxml.jackson.annotation.JsonProperty
 
-@Serializable
+
+
+
+
 enum class AcquisitionTag(val value: String) {
-    @SerialName("direct")
+    @JsonProperty("direct")
     DIRECT("direct"),
 
-    @SerialName("website")
+    @JsonProperty("website")
     WEBSITE("website"),
 
-    @SerialName("other")
+    @JsonProperty("other")
     OTHER("other");
 
     companion object {

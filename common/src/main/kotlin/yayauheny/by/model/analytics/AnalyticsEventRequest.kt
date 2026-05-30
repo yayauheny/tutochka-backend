@@ -1,9 +1,11 @@
 package yayauheny.by.model.analytics
 
-import kotlinx.serialization.Serializable
-import kotlinx.serialization.json.JsonObject
 
-@Serializable
+
+
+
+
+
 data class AnalyticsEventRequest(
     val event: ProductAnalyticsEvent,
     val lat: Double? = null,
@@ -11,5 +13,5 @@ data class AnalyticsEventRequest(
     val resultsCount: Int? = null,
     val durationMs: Int? = null,
     val acquisitionTag: AcquisitionTag? = null,
-    val metadata: JsonObject = JsonObject(emptyMap())
+    val metadata: Map<String, Any> = emptyMap()
 )

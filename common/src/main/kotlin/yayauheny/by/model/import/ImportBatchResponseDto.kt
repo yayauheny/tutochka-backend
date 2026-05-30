@@ -2,10 +2,10 @@ package yayauheny.by.model.import
 
 import io.swagger.v3.oas.annotations.media.Schema
 import java.util.UUID
-import kotlinx.serialization.Contextual
-import kotlinx.serialization.Serializable
 
-@Serializable
+
+
+
 enum class ImportStatus {
     CREATED,
     UPDATED,
@@ -14,14 +14,14 @@ enum class ImportStatus {
     FAILED
 }
 
-@Serializable
+
 @Schema(description = "Response DTO for batch import operation")
 data class ImportBatchResponseDto(
     @field:Schema(
         description = "Import job ID",
         example = "123e4567-e89b-12d3-a456-426614174000"
     )
-    @Contextual
+    
     val importId: UUID,
     @field:Schema(
         description = "Total number of items processed",
@@ -42,7 +42,7 @@ data class ImportBatchResponseDto(
     val results: List<ImportItemResultDto>
 )
 
-@Serializable
+
 @Schema(description = "Result for a single item in batch import")
 data class ImportItemResultDto(
     @field:Schema(
@@ -64,19 +64,19 @@ data class ImportItemResultDto(
         description = "Created or updated restroom ID",
         example = "123e4567-e89b-12d3-a456-426614174000"
     )
-    @Contextual
+    
     val restroomId: UUID?,
     @field:Schema(
         description = "Created or updated building ID (if applicable)",
         example = "123e4567-e89b-12d3-a456-426614174000"
     )
-    @Contextual
+    
     val buildingId: UUID?,
     @field:Schema(
         description = "Existing restroom ID that was linked as a duplicate target",
         example = "123e4567-e89b-12d3-a456-426614174000"
     )
-    @Contextual
+    
     val duplicateOfRestroomId: UUID? = null,
     @field:Schema(
         description = "Reason for duplicate linking or skipping",

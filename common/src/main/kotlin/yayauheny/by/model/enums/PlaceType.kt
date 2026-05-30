@@ -1,60 +1,62 @@
 package yayauheny.by.model.enums
 
+import com.fasterxml.jackson.annotation.JsonProperty
+
 import com.fasterxml.jackson.annotation.JsonCreator
 import com.fasterxml.jackson.annotation.JsonValue
 import kotlin.jvm.JvmStatic
-import kotlinx.serialization.SerialName
-import kotlinx.serialization.Serializable
 
-@Serializable
+
+
+
 enum class PlaceType(
     @get:JsonValue val code: String,
     val ruName: String,
     val enName: String
 ) {
-    @SerialName("public_toilet")
+    @JsonProperty("public_toilet")
     PUBLIC("public_toilet", "Общественный туалет", "Public Toilet"),
 
-    @SerialName("mall")
+    @JsonProperty("mall")
     MALL("mall", "Торговый центр", "Shopping Mall"),
 
-    @SerialName("gas_station")
+    @JsonProperty("gas_station")
     GAS_STATION("gas_station", "Заправка", "Gas Station"),
 
-    @SerialName("fast_food")
+    @JsonProperty("fast_food")
     FAST_FOOD("fast_food", "Фастфуд", "Fast Food"),
 
-    @SerialName("park")
+    @JsonProperty("park")
     PARK("park", "Парк/Сквер", "Park"),
 
-    @SerialName("restaurant")
+    @JsonProperty("restaurant")
     RESTAURANT("restaurant", "Кафе/Ресторан", "Cafe/Restaurant"),
 
-    @SerialName("market")
+    @JsonProperty("market")
     MARKET("market", "Рынок", "Market"),
 
-    @SerialName("culture")
+    @JsonProperty("culture")
     CULTURE("culture", "Культура", "Cultural Place"),
 
-    @SerialName("transport")
+    @JsonProperty("transport")
     TRANSPORT("transport", "Вокзал/Аэропорт", "Transport Station"),
 
-    @SerialName("medical")
+    @JsonProperty("medical")
     MEDICAL("medical", "Медицина", "Medical Facility"),
 
-    @SerialName("administrative")
+    @JsonProperty("administrative")
     ADMINISTRATIVE("administrative", "Госучреждение", "Government Building"),
 
-    @SerialName("education")
+    @JsonProperty("education")
     EDUCATION("education", "Учеба", "Education"),
 
-    @SerialName("office")
+    @JsonProperty("office")
     OFFICE("office", "Офис/Бизнес-центр", "Office Center"),
 
-    @SerialName("residential")
+    @JsonProperty("residential")
     RESIDENTIAL("residential", "Жилой дом", "Residential Building"),
 
-    @SerialName("other")
+    @JsonProperty("other")
     OTHER("other", "Прочее", "Other");
 
     companion object {

@@ -1,9 +1,9 @@
 package yayauheny.by.model.country
 
 import io.swagger.v3.oas.annotations.media.Schema
-import kotlinx.serialization.Serializable
 
-@Serializable
+
+
 @Schema(description = "Data for creating a new country")
 data class CountryCreateDto(
     @field:Schema(description = "Country name in Russian", example = "Соединенные Штаты", required = true)
