@@ -1,7 +1,5 @@
 package yayauheny.by.repository
 
-import org.springframework.data.domain.Page
-import org.springframework.data.domain.Pageable
 import org.springframework.data.jpa.repository.JpaRepository
 import org.springframework.data.jpa.repository.Query
 import org.springframework.stereotype.Repository
@@ -9,14 +7,12 @@ import yayauheny.by.entity.*
 import java.util.UUID
 
 @Repository
-interface CountryJpaRepository : JpaRepository<CountryEntity, UUID> {
+interface CountryJpaRepository : JpaRepository<CountryEntity, UUID>, CountryFilterRepository {
     fun findByCode(code: String): CountryEntity?
 }
 
 @Repository
-interface CityJpaRepository : JpaRepository<CityEntity, UUID> {
-    fun findByCountryId(countryId: UUID, pageable: Pageable): Page<CityEntity>
-    fun findByNameRuContainingIgnoreCaseOrNameEnContainingIgnoreCase(nameRu: String, nameEn: String, pageable: Pageable): Page<CityEntity>
+interface CityJpaRepository : JpaRepository<CityEntity, UUID>, CityFilterRepository {
     fun findByCountryIdAndNameRu(countryId: UUID, nameRu: String): CityEntity?
     fun findByCountryIdAndNameEn(countryId: UUID, nameEn: String): CityEntity?
 }
@@ -38,9 +34,7 @@ interface SubwayStationJpaRepository : JpaRepository<SubwayStationEntity, UUID> 
 }
 
 @Repository
-interface RestroomJpaRepository : JpaRepository<RestroomEntity, UUID> {
-    fun findByCityId(cityId: UUID, pageable: Pageable): Page<RestroomEntity>
-    
+interface RestroomJpaRepository : JpaRepository<RestroomEntity, UUID>, RestroomFilterRepository {
     @Query(value = "SELECT * FROM restrooms WHERE ST_DWithin(coordinates, ST_SetSRID(ST_MakePoint(:lon, :lat), 4326), :distanceMeters, true) ORDER BY coordinates <-> ST_SetSRID(ST_MakePoint(:lon, :lat), 4326) LIMIT :limit", nativeQuery = true)
     fun findNearest(lon: Double, lat: Double, distanceMeters: Int, limit: Int): List<RestroomEntity>
 }

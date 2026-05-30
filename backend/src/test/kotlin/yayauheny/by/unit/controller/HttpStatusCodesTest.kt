@@ -3,11 +3,11 @@ package yayauheny.by.unit.controller
 import io.ktor.http.HttpStatusCode
 import io.mockk.coEvery
 import java.util.UUID
-import kotlin.test.assertEquals
 import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.DisplayName
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
+import org.junit.jupiter.api.Assertions.assertEquals
 import yayauheny.by.common.errors.BadRequestException
 import yayauheny.by.common.errors.ConflictException
 import yayauheny.by.common.errors.FieldError
@@ -195,7 +195,7 @@ class HttpStatusCodesTest : RoutingTestBase() {
         @DisplayName("GIVEN service unavailable WHEN request fails THEN return 503")
         fun service_unavailable_returns_503() =
             runTest {
-                coEvery { cityService.getAllCities(any()) } throws
+                coEvery { cityService.getAllCities(any(), any()) } throws
                     ServiceUnavailableException("Service temporarily unavailable", retryAfter = 60)
 
                 withRoutingApp { client ->

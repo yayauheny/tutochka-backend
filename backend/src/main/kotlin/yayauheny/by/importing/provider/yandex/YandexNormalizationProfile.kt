@@ -10,7 +10,7 @@ import yayauheny.by.model.enums.FeeType
 import yayauheny.by.model.enums.LocationType
 import yayauheny.by.model.enums.PlaceType
 import yayauheny.by.model.enums.RestroomStatus
-import yayauheny.by.model.import.BuildingContext
+import yayauheny.by.model.imports.BuildingContext
 
 internal object YandexNormalizationProfile : ProviderNormalizationProfile<YandexMapsScrapedPlace> {
     private val mapper = jacksonObjectMapper()

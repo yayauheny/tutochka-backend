@@ -1,4 +1,4 @@
-package yayauheny.by.model.import
+package yayauheny.by.model.imports
 
 import java.util.UUID
 

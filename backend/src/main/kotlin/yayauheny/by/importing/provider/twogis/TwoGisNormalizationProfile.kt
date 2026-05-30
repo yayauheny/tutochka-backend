@@ -13,7 +13,7 @@ import yayauheny.by.model.enums.PlaceType
 import yayauheny.by.model.enums.RestroomStatus
 import yayauheny.by.model.enums.TwoGisCategory
 import yayauheny.by.model.enums.TwoGisRubric
-import yayauheny.by.model.import.BuildingContext
+import yayauheny.by.model.imports.BuildingContext
 
 internal object TwoGisNormalizationProfile : ProviderNormalizationProfile<TwoGisScrapedPlace> {
     private val mapper = jacksonObjectMapper()

@@ -6,6 +6,7 @@ plugins {
     alias(libs.plugins.springDependencyManagementPlugin)
     alias(libs.plugins.kotlinSpringPlugin)
     alias(libs.plugins.kotlinJpaPlugin)
+    kotlin("kapt")
 
     jacoco
 }
@@ -29,15 +30,24 @@ dependencies {
     implementation(libs.bundles.swaggerBundle)
     implementation("org.springframework.boot:spring-boot-starter-validation")
     implementation("com.fasterxml.jackson.module:jackson-module-kotlin")
+    implementation("com.querydsl:querydsl-jpa:${libs.versions.querydsl.get()}:jakarta")
     // Database
     implementation(libs.postgresql)
     implementation(libs.postgis)
     implementation(libs.liquibaseCore)
 
+    kapt("com.querydsl:querydsl-apt:${libs.versions.querydsl.get()}:jakarta")
+    kapt("jakarta.annotation:jakarta.annotation-api")
+    kapt("jakarta.persistence:jakarta.persistence-api")
+
     testImplementation(libs.bundles.testingBundle)
     testImplementation(libs.bundles.testcontainersBundle)
     testImplementation(libs.springBootStarterTest)
     testImplementation(libs.assertj)
+}
+
+kapt {
+    correctErrorTypes = true
 }
 
 val testsParallel = providers.gradleProperty("tests.parallel").map(String::toBoolean).orElse(false)

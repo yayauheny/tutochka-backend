@@ -1,18 +1,17 @@
 package yayauheny.by.service
-import yayauheny.by.util.toPageResponse
 
-import org.springframework.data.domain.PageRequest
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
 import yayauheny.by.common.errors.ConflictException
 import yayauheny.by.common.query.PageResponse
 import yayauheny.by.common.query.PaginationRequest
 import yayauheny.by.entity.CountryEntity
+import yayauheny.by.model.country.CountryFilter
 import yayauheny.by.model.country.CountryCreateDto
 import yayauheny.by.model.country.CountryResponseDto
 import yayauheny.by.model.country.CountryUpdateDto
 import yayauheny.by.repository.CountryJpaRepository
-import yayauheny.by.util.toPageRequest
+import yayauheny.by.util.toPageResponse
 import java.util.UUID
 
 fun CountryEntity.toDto() = CountryResponseDto(
@@ -30,8 +29,12 @@ class CountryService(
 ) {
     @Transactional(readOnly = true)
     fun getAllCountries(pagination: PaginationRequest): PageResponse<CountryResponseDto> {
-        val pageRequest = pagination.toPageRequest("nameRu")
-        val page = countryRepository.findAll(pageRequest)
+        return getAllCountries(CountryFilter(), pagination)
+    }
+
+    @Transactional(readOnly = true)
+    fun getAllCountries(filter: CountryFilter, pagination: PaginationRequest): PageResponse<CountryResponseDto> {
+        val page = countryRepository.findAllByFilter(filter, pagination)
         val dtoPage = page.map { it.toDto() }
         return dtoPage.toPageResponse()
     }

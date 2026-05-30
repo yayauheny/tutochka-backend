@@ -1,7 +1,7 @@
 package yayauheny.by.importing.model
 
 import java.util.UUID
-import yayauheny.by.model.import.ImportStatus
+import yayauheny.by.model.imports.ImportStatus
 
 data class ImportPipelineResult(
     val outcome: ImportStatus,

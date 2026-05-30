@@ -154,6 +154,18 @@ class PlaceTypeJpaConverter : AttributeConverter<PlaceType, String> {
     override fun convertToEntityAttribute(dbData: String?): PlaceType = PlaceType.fromCode(dbData)
 }
 
+@Converter(autoApply = false)
+class AccessibilityTypeJpaConverter : AttributeConverter<AccessibilityType, String> {
+    override fun convertToDatabaseColumn(attribute: AccessibilityType?): String? = attribute?.name
+
+    override fun convertToEntityAttribute(dbData: String?): AccessibilityType =
+        when (dbData?.trim()?.uppercase()) {
+            null -> AccessibilityType.UNKNOWN
+            "DISABLED" -> AccessibilityType.INACCESSIBLE
+            else -> runCatching { AccessibilityType.valueOf(dbData) }.getOrDefault(AccessibilityType.UNKNOWN)
+        }
+}
+
 @Entity
 @Table(name = "restrooms")
 class RestroomEntity : BaseEntity() {
@@ -193,7 +205,7 @@ class RestroomEntity : BaseEntity() {
     @Column(name = "gender_type", nullable = false, length = 20)
     var genderType: GenderType = GenderType.UNKNOWN
 
-    @Enumerated(EnumType.STRING)
+    @Convert(converter = AccessibilityTypeJpaConverter::class)
     @Column(name = "accessibility_type", nullable = false, length = 20)
     var accessibilityType: AccessibilityType = AccessibilityType.UNKNOWN
 
@@ -224,7 +236,7 @@ class RestroomEntity : BaseEntity() {
 
     @JdbcTypeCode(SqlTypes.JSON)
     @Column(name = "external_maps", columnDefinition = "jsonb")
-    var externalMaps: Map<String, String>? = null
+    var externalMaps: Map<String, Any>? = null
 
     @Enumerated(EnumType.STRING)
     @Column(name = "data_source", nullable = false, length = 50)

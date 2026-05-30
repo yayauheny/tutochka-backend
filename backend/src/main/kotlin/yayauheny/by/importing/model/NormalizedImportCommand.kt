@@ -1,5 +1,5 @@
 package yayauheny.by.importing.model
 
-import yayauheny.by.model.import.NormalizedRestroomCandidate
+import yayauheny.by.model.imports.NormalizedRestroomCandidate
 
 typealias NormalizedImportCommand = NormalizedRestroomCandidate

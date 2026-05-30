@@ -10,10 +10,10 @@ import yayauheny.by.importing.provider.ImportCapabilities
 import yayauheny.by.model.enums.ImportJobStatus
 import yayauheny.by.model.enums.ImportPayloadType
 import yayauheny.by.model.enums.ImportProvider
-import yayauheny.by.model.import.ImportBatchResult
-import yayauheny.by.model.import.ImportExecutionResult
-import yayauheny.by.model.import.ImportItemResult
-import yayauheny.by.model.import.ImportStatus
+import yayauheny.by.model.imports.ImportBatchResult
+import yayauheny.by.model.imports.ImportExecutionResult
+import yayauheny.by.model.imports.ImportItemResult
+import yayauheny.by.model.imports.ImportStatus
 import yayauheny.by.repository.CityJpaRepository
 
 import org.springframework.transaction.annotation.Transactional

@@ -1,39 +1,38 @@
 package yayauheny.by.controller
 
+import jakarta.servlet.http.HttpServletRequest
+import jakarta.validation.Valid
 import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
 import org.springframework.web.bind.annotation.*
 import yayauheny.by.common.config.ApiProperties
 import yayauheny.by.common.errors.NotFoundException
 import yayauheny.by.common.query.PageResponse
-import yayauheny.by.common.query.PaginationRequest
+import yayauheny.by.model.country.CountryFilter
 import yayauheny.by.model.country.CountryCreateDto
 import yayauheny.by.model.country.CountryResponseDto
 import yayauheny.by.model.country.CountryUpdateDto
 import yayauheny.by.service.CountryService
-import jakarta.validation.Valid
+import yayauheny.by.util.toPaginationRequest
 import java.util.UUID
 
 @RestController
 @RequestMapping("/api/v1/countries")
 class CountryController(
     private val countryService: CountryService,
-    private val apiProperties: ApiProperties = ApiProperties()
+    private val apiProperties: ApiProperties
 ) {
     @GetMapping
     fun getAllCountries(
-        @RequestParam(required = false) page: Int?,
-        @RequestParam(required = false) size: Int?,
-        @RequestParam(defaultValue = "nameRu") sort: String,
-        @RequestParam(defaultValue = "asc") order: String
+        @ModelAttribute filter: CountryFilter,
+        request: HttpServletRequest
     ): ResponseEntity<PageResponse<CountryResponseDto>> {
-        val pagination = PaginationRequest(
-            page = page ?: apiProperties.defaults.page,
-            size = size ?: apiProperties.defaults.pageSize,
-            sort = sort,
-            direction = yayauheny.by.common.query.SortDirection.valueOf(order.uppercase())
+        val pagination = request.toPaginationRequest(
+            defaultPage = apiProperties.defaults.page,
+            defaultSize = apiProperties.defaults.pageSize,
+            maxSize = apiProperties.limits.maxPageSize
         )
-        val pageResponse = countryService.getAllCountries(pagination)
+        val pageResponse = countryService.getAllCountries(filter, pagination)
         return ResponseEntity.ok(pageResponse)
     }
 

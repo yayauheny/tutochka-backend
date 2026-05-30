@@ -1,4 +1,4 @@
-package yayauheny.by.model.import
+package yayauheny.by.model.imports
 
 import io.swagger.v3.oas.annotations.media.Schema
 import java.util.UUID

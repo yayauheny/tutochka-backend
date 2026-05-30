@@ -4,11 +4,11 @@ import io.ktor.http.HttpStatusCode
 import io.mockk.coEvery
 import io.mockk.coVerify
 import java.util.UUID
-import kotlin.test.assertEquals
 import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.DisplayName
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
+import org.junit.jupiter.api.Assertions.assertEquals
 import yayauheny.by.helpers.TestDataHelpers
 import yayauheny.by.helpers.assertJsonContentType
 import yayauheny.by.helpers.testGet
@@ -24,7 +24,7 @@ class CityControllerTest : RoutingTestBase() {
         @DisplayName("GIVEN cities endpoint WHEN GET /api/v1/cities THEN return 200 and call service with default pagination")
         fun cities_endpoint_returns_200_and_calls_service_with_default_pagination() =
             runTest {
-                coEvery { cityService.getAllCities(any()) } returns PageResponse(emptyList<CityResponseDto>(), 0, 20, 0, 0, true, true)
+                coEvery { cityService.getAllCities(any(), any()) } returns PageResponse(emptyList<CityResponseDto>(), 0, 20, 0, 0, true, true)
 
                 withRoutingApp { client ->
                     val response = client.testGet("/api/v1/cities")
@@ -34,7 +34,7 @@ class CityControllerTest : RoutingTestBase() {
                 }
 
                 coVerify(exactly = 1) {
-                    cityService.getAllCities(any())
+                    cityService.getAllCities(any(), any())
                 }
             }
 
@@ -42,7 +42,7 @@ class CityControllerTest : RoutingTestBase() {
         @DisplayName("GIVEN pagination parameters WHEN GET cities THEN pass parameters to service")
         fun cities_with_pagination_parameters_passes_to_service() =
             runTest {
-                coEvery { cityService.getAllCities(any()) } returns PageResponse(emptyList<CityResponseDto>(), 1, 10, 0, 0, false, true)
+                coEvery { cityService.getAllCities(any(), any()) } returns PageResponse(emptyList<CityResponseDto>(), 1, 10, 0, 0, false, true)
 
                 withRoutingApp { client ->
                     val response = client.testGet("/api/v1/cities", mapOf("page" to "1", "size" to "10"))
@@ -51,7 +51,7 @@ class CityControllerTest : RoutingTestBase() {
                 }
 
                 coVerify(exactly = 1) {
-                    cityService.getAllCities(any())
+                    cityService.getAllCities(any(), any())
                 }
             }
 
@@ -59,7 +59,7 @@ class CityControllerTest : RoutingTestBase() {
         @DisplayName("GIVEN negative pagination parameters WHEN GET cities THEN clamp to valid values")
         fun cities_with_negative_pagination_clamps_values() =
             runTest {
-                coEvery { cityService.getAllCities(any()) } returns PageResponse(emptyList<CityResponseDto>(), 0, 1, 0, 0, true, true)
+                coEvery { cityService.getAllCities(any(), any()) } returns PageResponse(emptyList<CityResponseDto>(), 0, 1, 0, 0, true, true)
 
                 withRoutingApp { client ->
                     val response = client.testGet("/api/v1/cities", mapOf("page" to "-1", "size" to "-5"))
@@ -68,7 +68,7 @@ class CityControllerTest : RoutingTestBase() {
                 }
 
                 coVerify(exactly = 1) {
-                    cityService.getAllCities(any())
+                    cityService.getAllCities(any(), any())
                 }
             }
     }

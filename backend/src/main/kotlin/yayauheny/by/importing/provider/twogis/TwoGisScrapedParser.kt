@@ -5,7 +5,7 @@ import org.slf4j.LoggerFactory
 import yayauheny.by.importing.exception.InvalidImportPayload
 import yayauheny.by.importing.model.ImportAdapterContext
 import yayauheny.by.importing.provider.Parser
-import yayauheny.by.model.import.NormalizedRestroomCandidate
+import yayauheny.by.model.imports.NormalizedRestroomCandidate
 
 class TwoGisScrapedParser : Parser<TwoGisScrapedPlace> {
     private val logger = LoggerFactory.getLogger(TwoGisScrapedParser::class.java)

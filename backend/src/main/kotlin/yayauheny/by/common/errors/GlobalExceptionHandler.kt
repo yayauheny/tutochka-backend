@@ -12,6 +12,7 @@ import org.springframework.web.bind.annotation.RestControllerAdvice
 import jakarta.servlet.http.HttpServletRequest
 import jakarta.validation.ConstraintViolationException
 import org.springframework.http.converter.HttpMessageNotReadableException
+import java.lang.reflect.UndeclaredThrowableException
 
 @RestControllerAdvice
 class GlobalExceptionHandler {
@@ -86,6 +87,23 @@ class GlobalExceptionHandler {
             path = request.requestURI
         )
         return ResponseEntity.badRequest().body(response)
+    }
+
+    @ExceptionHandler(UndeclaredThrowableException::class)
+    fun handleUndeclaredThrowableException(e: UndeclaredThrowableException, request: HttpServletRequest): ResponseEntity<ErrorResponse> {
+        val cause = e.undeclaredThrowable ?: e.cause ?: e
+        return when (cause) {
+            is ValidationException, is NotFoundException, is ConflictException, is BadRequestException, is ServiceUnavailableException, is NotImplementedException ->
+                handleRestException(cause as Exception, request)
+            is EntityNotFoundException -> handleEntityNotFoundException(cause, request)
+            is MethodArgumentNotValidException -> handleValidationExceptions(cause, request)
+            is MethodArgumentTypeMismatchException,
+            is HttpMessageNotReadableException,
+            is ConstraintViolationException,
+            is MissingServletRequestParameterException,
+            is HttpMediaTypeNotSupportedException -> handleBadRequestExceptions(cause as Exception, request)
+            else -> handleGenericException(cause as Exception, request)
+        }
     }
 
     @ExceptionHandler(Exception::class)

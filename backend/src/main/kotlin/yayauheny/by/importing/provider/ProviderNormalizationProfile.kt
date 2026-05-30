@@ -7,7 +7,7 @@ import yayauheny.by.model.enums.GenderType
 import yayauheny.by.model.enums.LocationType
 import yayauheny.by.model.enums.PlaceType
 import yayauheny.by.model.enums.RestroomStatus
-import yayauheny.by.model.import.BuildingContext
+import yayauheny.by.model.imports.BuildingContext
 
 internal interface ProviderNormalizationProfile<T> {
     fun resolve(providerDto: T): ProviderResolvedFields

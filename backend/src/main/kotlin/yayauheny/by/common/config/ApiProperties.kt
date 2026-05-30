@@ -22,6 +22,7 @@ data class ApiProperties(
         val maxCountryCodeLength: Int = 2,
         val maxDescriptionLength: Int = 1000,
         val maxAddressLength: Int = 255,
-        val maxJsonStringLength: Int = 5000
+        val maxJsonStringLength: Int = 5000,
+        val maxPageSize: Int = 100
     )
 }

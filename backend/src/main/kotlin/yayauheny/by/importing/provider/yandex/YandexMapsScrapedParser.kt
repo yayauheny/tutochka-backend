@@ -4,7 +4,7 @@ import com.fasterxml.jackson.databind.JsonNode
 import yayauheny.by.importing.exception.InvalidImportPayload
 import yayauheny.by.importing.model.ImportAdapterContext
 import yayauheny.by.importing.provider.Parser
-import yayauheny.by.model.import.NormalizedRestroomCandidate
+import yayauheny.by.model.imports.NormalizedRestroomCandidate
 
 class YandexMapsScrapedParser : Parser<YandexMapsScrapedPlace> {
     override fun parse(jsonObject: JsonNode): YandexMapsScrapedPlace {

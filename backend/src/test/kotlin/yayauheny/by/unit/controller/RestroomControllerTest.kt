@@ -4,11 +4,11 @@ import io.ktor.http.HttpStatusCode
 import io.mockk.coEvery
 import io.mockk.coVerify
 import java.util.UUID
-import kotlin.test.assertEquals
 import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.DisplayName
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
+import org.junit.jupiter.api.Assertions.assertEquals
 import yayauheny.by.common.query.PageResponse
 import yayauheny.by.helpers.TestDataHelpers
 import yayauheny.by.helpers.assertJsonContentType
@@ -24,7 +24,7 @@ class RestroomControllerTest : RoutingTestBase() {
         @DisplayName("GIVEN restrooms endpoint WHEN GET /api/v1/restrooms THEN return 200 and call service with default pagination")
         fun restrooms_endpoint_returns_200_and_calls_service_with_default_pagination() =
             runTest {
-                coEvery { restroomService.getAllRestrooms(any()) } returns
+                coEvery { restroomService.getAllRestrooms(any(), any()) } returns
                     PageResponse(emptyList<RestroomResponseDto>(), 0, 20, 0, 0, true, true)
 
                 withRoutingApp { client ->
@@ -34,14 +34,14 @@ class RestroomControllerTest : RoutingTestBase() {
                     response.assertJsonContentType()
                 }
 
-                coVerify(exactly = 1) { restroomService.getAllRestrooms(any()) }
+                coVerify(exactly = 1) { restroomService.getAllRestrooms(any(), any()) }
             }
 
         @Test
         @DisplayName("GIVEN pagination parameters WHEN GET restrooms THEN pass parameters to service")
         fun restrooms_with_pagination_parameters_passes_to_service() =
             runTest {
-                coEvery { restroomService.getAllRestrooms(any()) } returns
+                coEvery { restroomService.getAllRestrooms(any(), any()) } returns
                     PageResponse(emptyList(), 1, 10, 0, 0, false, true)
 
                 withRoutingApp { client ->
@@ -51,7 +51,7 @@ class RestroomControllerTest : RoutingTestBase() {
                 }
 
                 coVerify(exactly = 1) {
-                    restroomService.getAllRestrooms(any())
+                    restroomService.getAllRestrooms(any(), any())
                 }
             }
     }

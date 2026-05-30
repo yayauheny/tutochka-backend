@@ -13,9 +13,9 @@ import yayauheny.by.importing.service.ImportService
 import yayauheny.by.common.errors.BadRequestException
 import yayauheny.by.model.enums.ImportPayloadType
 import yayauheny.by.model.enums.ImportProvider
-import yayauheny.by.model.import.ImportBatchResponseDto
-import yayauheny.by.model.import.ImportItemResultDto
-import yayauheny.by.model.import.ImportResponseDto
+import yayauheny.by.model.imports.ImportBatchResponseDto
+import yayauheny.by.model.imports.ImportItemResultDto
+import yayauheny.by.model.imports.ImportResponseDto
 import java.util.UUID
 
 @RestController

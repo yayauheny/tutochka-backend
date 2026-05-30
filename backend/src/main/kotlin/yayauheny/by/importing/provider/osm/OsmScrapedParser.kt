@@ -8,7 +8,7 @@ import com.fasterxml.jackson.databind.JsonNode
 import yayauheny.by.importing.exception.InvalidImportPayload
 import yayauheny.by.importing.model.ImportAdapterContext
 import yayauheny.by.importing.provider.Parser
-import yayauheny.by.model.import.NormalizedRestroomCandidate
+import yayauheny.by.model.imports.NormalizedRestroomCandidate
 
 class OsmScrapedParser : Parser<OsmScrapedToilet> {
     fun extractLocation(rawPayload: JsonNode): OsmScrapedLocation = parseLocation(rawPayload)

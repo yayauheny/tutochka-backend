@@ -1,10 +1,15 @@
 package yayauheny.by.controller
 
+import jakarta.servlet.http.HttpServletRequest
+import jakarta.validation.Valid
+import jakarta.validation.constraints.Max
+import jakarta.validation.constraints.Min
 import org.slf4j.LoggerFactory
 import org.springframework.http.HttpHeaders
 import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
 import org.springframework.web.bind.annotation.*
+import org.springframework.validation.annotation.Validated
 import yayauheny.by.common.config.ApiProperties
 import yayauheny.by.analytics.service.AnalyticsService
 import yayauheny.by.common.errors.EntityNotFoundException
@@ -15,14 +20,12 @@ import yayauheny.by.metrics.SearchMetricBuckets
 import yayauheny.by.metrics.MetricLabelWhitelist
 import yayauheny.by.model.analytics.AnalyticsSource
 import yayauheny.by.model.dto.Coordinates
+import yayauheny.by.model.restroom.RestroomFilter
 import yayauheny.by.model.restroom.RestroomCreateDto
 import yayauheny.by.model.restroom.RestroomUpdateDto
 import yayauheny.by.service.RestroomService
-import jakarta.validation.Valid
-import jakarta.validation.constraints.Max
-import jakarta.validation.constraints.Min
-import org.springframework.validation.annotation.Validated
 import yayauheny.by.analytics.model.AnalyticsIdentityHeaders
+import yayauheny.by.util.toPaginationRequest
 import java.util.UUID
 
 @RestController
@@ -32,24 +35,21 @@ class RestroomController(
     private val restroomService: RestroomService,
     private val backendSearchMetrics: BackendSearchMetrics,
     private val analyticsService: AnalyticsService,
-    private val apiProperties: ApiProperties = ApiProperties()
+    private val apiProperties: ApiProperties
 ) {
     private val log = LoggerFactory.getLogger(RestroomController::class.java)
 
     @GetMapping
     fun getAllRestrooms(
-        @RequestParam(required = false) page: Int?,
-        @RequestParam(required = false) size: Int?,
-        @RequestParam(defaultValue = "id") sort: String,
-        @RequestParam(defaultValue = "desc") order: String
+        @ModelAttribute filter: RestroomFilter,
+        request: HttpServletRequest
     ): ResponseEntity<Any> {
-        val pagination = PaginationRequest(
-            page = page ?: apiProperties.defaults.page,
-            size = size ?: apiProperties.defaults.pageSize,
-            sort = sort,
-            direction = yayauheny.by.common.query.SortDirection.valueOf(order.uppercase())
+        val pagination = request.toPaginationRequest(
+            defaultPage = apiProperties.defaults.page,
+            defaultSize = apiProperties.defaults.pageSize,
+            maxSize = apiProperties.limits.maxPageSize
         )
-        val pageResponse = restroomService.getAllRestrooms(pagination)
+        val pageResponse = restroomService.getAllRestrooms(filter, pagination)
         return ResponseEntity.ok(pageResponse)
     }
 
@@ -63,16 +63,12 @@ class RestroomController(
     @GetMapping("/city/{cityId}")
     fun getRestroomsByCity(
         @PathVariable cityId: UUID,
-        @RequestParam(required = false) page: Int?,
-        @RequestParam(required = false) size: Int?,
-        @RequestParam(defaultValue = "id") sort: String,
-        @RequestParam(defaultValue = "desc") order: String
+        request: HttpServletRequest
     ): ResponseEntity<Any> {
-        val pagination = PaginationRequest(
-            page = page ?: apiProperties.defaults.page,
-            size = size ?: apiProperties.defaults.pageSize,
-            sort = sort,
-            direction = yayauheny.by.common.query.SortDirection.valueOf(order.uppercase())
+        val pagination = request.toPaginationRequest(
+            defaultPage = apiProperties.defaults.page,
+            defaultSize = apiProperties.defaults.pageSize,
+            maxSize = apiProperties.limits.maxPageSize
         )
         val pageResponse = restroomService.getRestroomsByCity(cityId, pagination)
         return ResponseEntity.ok(pageResponse)

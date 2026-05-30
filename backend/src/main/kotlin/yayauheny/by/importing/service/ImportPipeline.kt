@@ -4,7 +4,7 @@ import java.util.UUID
 import org.springframework.stereotype.Service
 import yayauheny.by.importing.model.ImportPipelineResult
 import yayauheny.by.importing.provider.ProviderImportEnvelope
-import yayauheny.by.model.import.ImportStatus
+import yayauheny.by.model.imports.ImportStatus
 
 @Service
 class ImportPipeline {

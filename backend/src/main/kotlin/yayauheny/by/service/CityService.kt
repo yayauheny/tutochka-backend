@@ -10,12 +10,12 @@ import yayauheny.by.common.query.PageResponse
 import yayauheny.by.common.query.PaginationRequest
 import yayauheny.by.entity.CityEntity
 import yayauheny.by.model.dto.Coordinates
+import yayauheny.by.model.city.CityFilter
 import yayauheny.by.model.city.CityCreateDto
 import yayauheny.by.model.city.CityResponseDto
 import yayauheny.by.model.city.CityUpdateDto
 import yayauheny.by.repository.CityJpaRepository
 import yayauheny.by.repository.CountryJpaRepository
-import yayauheny.by.util.toPageRequest
 import yayauheny.by.util.toPageResponse
 import java.util.UUID
 
@@ -44,8 +44,12 @@ class CityService(
 ) {
     @Transactional(readOnly = true)
     fun getAllCities(pagination: PaginationRequest): PageResponse<CityResponseDto> {
-        val pageRequest = pagination.toPageRequest("nameRu")
-        val page = cityRepository.findAll(pageRequest)
+        return getAllCities(CityFilter(), pagination)
+    }
+
+    @Transactional(readOnly = true)
+    fun getAllCities(filter: CityFilter, pagination: PaginationRequest): PageResponse<CityResponseDto> {
+        val page = cityRepository.findAllByFilter(filter, pagination)
         return page.map { it.toDto() }.toPageResponse()
     }
 
@@ -56,16 +60,12 @@ class CityService(
 
     @Transactional(readOnly = true)
     fun getCitiesByCountry(countryId: UUID, pagination: PaginationRequest): PageResponse<CityResponseDto> {
-        val pageRequest = pagination.toPageRequest("nameRu")
-        val page = cityRepository.findByCountryId(countryId, pageRequest)
-        return page.map { it.toDto() }.toPageResponse()
+        return getAllCities(CityFilter(countryId = countryId), pagination)
     }
 
     @Transactional(readOnly = true)
     fun searchCitiesByName(name: String, pagination: PaginationRequest): PageResponse<CityResponseDto> {
-        val pageRequest = pagination.toPageRequest("nameRu")
-        val page = cityRepository.findByNameRuContainingIgnoreCaseOrNameEnContainingIgnoreCase(name, name, pageRequest)
-        return page.map { it.toDto() }.toPageResponse()
+        return getAllCities(CityFilter(name = name), pagination)
     }
 
     fun createCity(createDto: CityCreateDto): CityResponseDto {

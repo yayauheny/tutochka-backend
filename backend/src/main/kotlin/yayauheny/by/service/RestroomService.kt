@@ -15,6 +15,7 @@ import yayauheny.by.entity.SubwayStationEntity
 import yayauheny.by.model.building.BuildingResponseDto
 import yayauheny.by.model.dto.Coordinates
 import yayauheny.by.model.restroom.NearestRestroomSlimDto
+import yayauheny.by.model.restroom.RestroomFilter
 import yayauheny.by.model.restroom.RestroomCreateDto
 import yayauheny.by.model.restroom.RestroomResponseDto
 import yayauheny.by.model.restroom.RestroomUpdateDto
@@ -24,7 +25,6 @@ import yayauheny.by.repository.BuildingJpaRepository
 import yayauheny.by.repository.CityJpaRepository
 import yayauheny.by.repository.RestroomJpaRepository
 import yayauheny.by.repository.SubwayStationJpaRepository
-import yayauheny.by.util.toPageRequest
 import yayauheny.by.util.toPageResponse
 import java.util.UUID
 import kotlin.math.atan2
@@ -135,7 +135,12 @@ class RestroomService(
 ) {
     @Transactional(readOnly = true)
     fun getAllRestrooms(pagination: PaginationRequest): PageResponse<RestroomResponseDto> {
-        val page = restroomRepository.findAll(pagination.toPageRequest("id"))
+        return getAllRestrooms(RestroomFilter(), pagination)
+    }
+
+    @Transactional(readOnly = true)
+    fun getAllRestrooms(filter: RestroomFilter, pagination: PaginationRequest): PageResponse<RestroomResponseDto> {
+        val page = restroomRepository.findAllByFilter(filter, pagination)
         return page.map { it.toDto() }.toPageResponse()
     }
 
@@ -146,8 +151,7 @@ class RestroomService(
 
     @Transactional(readOnly = true)
     fun getRestroomsByCity(cityId: UUID, pagination: PaginationRequest): PageResponse<RestroomResponseDto> {
-        val page = restroomRepository.findByCityId(cityId, pagination.toPageRequest("id"))
-        return page.map { it.toDto() }.toPageResponse()
+        return getAllRestrooms(RestroomFilter(cityId = cityId), pagination)
     }
 
     @Transactional(readOnly = true)

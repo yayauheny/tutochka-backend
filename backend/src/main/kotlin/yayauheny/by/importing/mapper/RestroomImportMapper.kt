@@ -7,7 +7,7 @@ import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import yayauheny.by.model.enums.DataSourceType
 import yayauheny.by.model.enums.GenderType
 import yayauheny.by.model.enums.ImportProvider
-import yayauheny.by.model.import.NormalizedRestroomCandidate
+import yayauheny.by.model.imports.NormalizedRestroomCandidate
 import yayauheny.by.model.restroom.RestroomCreateDto
 
 object RestroomImportMapper {
