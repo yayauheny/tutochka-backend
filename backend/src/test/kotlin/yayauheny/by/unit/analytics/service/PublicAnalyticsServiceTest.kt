@@ -117,6 +117,70 @@ class PublicAnalyticsServiceTest {
             assertEquals("Route opened", response.eventTotals.first().label)
     }
 
+    @Test
+    fun `GIVEN zero search metrics WHEN building response THEN success rate and average results stay zero`() {
+        val repository =
+            FakePublicAnalyticsRepository(
+                totalUsers = 1,
+                newUsersByWindow = emptyMap(),
+                activeUsersByWindow = emptyMap(),
+                metricsByWindow = emptyMap(),
+                dailySeries = emptyList(),
+                monthlySeries = emptyList(),
+                eventTotals = emptyList()
+            )
+
+        val response = PublicAnalyticsService(repository, fixedClock).getPublicAnalytics()
+
+        assertEquals(0.0, response.summary.successRate)
+        assertEquals(0.0, response.summary.averageResultsPerSearch)
+        assertEquals(PublicAnalyticsTrend.FLAT, response.headlineKpis.first { it.key == "success_rate" }.trend)
+    }
+
+    @Test
+    fun `GIVEN previous window zeros WHEN building response THEN positive current values yield 100 percent increase`() {
+        val last30DaysWindow = rollingWindow(today, 30)
+        val repository =
+            FakePublicAnalyticsRepository(
+                totalUsers = 1,
+                newUsersByWindow = mapOf(last30DaysWindow to 5),
+                activeUsersByWindow = emptyMap(),
+                metricsByWindow = mapOf(last30DaysWindow to PublicAnalyticsEventMetrics(3, 3, 0, 6, 0, 0)),
+                dailySeries = emptyList(),
+                monthlySeries = emptyList(),
+                eventTotals = emptyList()
+            )
+
+        val response = PublicAnalyticsService(repository, fixedClock).getPublicAnalytics()
+
+        assertEquals(100.0, response.headlineKpis.first { it.key == "new_users_30d" }.changePct)
+        assertEquals(PublicAnalyticsTrend.UP, response.headlineKpis.first { it.key == "new_users_30d" }.trend)
+        assertEquals(100.0, response.headlineKpis.first { it.key == "searches_30d" }.changePct)
+    }
+
+    @Test
+    fun `GIVEN unknown event totals WHEN building response THEN unknown keys are filtered out`() {
+        val repository =
+            FakePublicAnalyticsRepository(
+                totalUsers = 1,
+                newUsersByWindow = emptyMap(),
+                activeUsersByWindow = emptyMap(),
+                metricsByWindow = emptyMap(),
+                dailySeries = emptyList(),
+                monthlySeries = emptyList(),
+                eventTotals =
+                    listOf(
+                        PublicAnalyticsEventCount("unknown_event", 20),
+                        PublicAnalyticsEventCount(ProductAnalyticsEvent.ROUTE_CLICKED.value, 15)
+                    )
+            )
+
+        val response = PublicAnalyticsService(repository, fixedClock).getPublicAnalytics()
+
+        assertEquals(1, response.eventTotals.size)
+        assertEquals(ProductAnalyticsEvent.ROUTE_CLICKED.value, response.eventTotals.single().eventKey)
+    }
+
     private fun rollingWindow(
         anchorDate: LocalDate,
         days: Long

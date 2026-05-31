@@ -2,7 +2,9 @@ package yayauheny.by.bot.service
 
 import org.junit.jupiter.api.Test
 import org.mockito.Mockito.mock
+import org.mockito.Mockito.never
 import org.mockito.Mockito.verify
+import org.mockito.Mockito.`when`
 import org.telegram.telegrambots.meta.api.objects.CallbackQuery
 import org.telegram.telegrambots.meta.api.objects.Update
 import org.telegram.telegrambots.meta.api.objects.User
@@ -87,5 +89,21 @@ class UpdateHandlingServiceTest {
         }
 
         verify(botMetrics).incrementTelegramUpdate("message")
+    }
+
+    @Test
+    fun `handle increments metrics and routes update on success`() {
+        val update = Update()
+        update.message =
+            Message().apply {
+                chat = Chat.builder().id(1L).type("private").build()
+                text = "hello"
+                from = User.builder().id(1L).isBot(false).firstName("Test").build()
+            }
+
+        service.handle(update)
+
+        verify(botMetrics).incrementTelegramUpdate("message")
+        verify(router).route(update)
     }
 }
