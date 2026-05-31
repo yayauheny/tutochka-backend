@@ -23,6 +23,7 @@ dependencies {
     api("jakarta.validation:jakarta.validation-api:3.0.2")
     implementation(libs.swaggerAnnotations)
 
+    testImplementation(libs.jacksonModuleKotlin)
     testImplementation(libs.junitJupiter)
     testImplementation(libs.assertj)
     testRuntimeOnly(libs.junitPlatformLauncher)

@@ -1,44 +1,30 @@
 package yayauheny.by.model
 
+import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
+import com.fasterxml.jackson.module.kotlin.readValue
 import java.time.Instant
 import java.util.UUID
-import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.Assertions.assertEquals
-import kotlinx.serialization.KSerializer
-import kotlinx.serialization.descriptors.PrimitiveKind
-import kotlinx.serialization.descriptors.PrimitiveSerialDescriptor
-import kotlinx.serialization.descriptors.SerialDescriptor
-import kotlinx.serialization.encoding.Decoder
-import kotlinx.serialization.encoding.Encoder
-import kotlinx.serialization.json.Json
-import kotlinx.serialization.json.JsonElement
-import kotlinx.serialization.json.JsonObject
-import kotlinx.serialization.json.JsonPrimitive
-import kotlinx.serialization.json.buildJsonObject
-import kotlinx.serialization.modules.SerializersModule
-import yayauheny.by.model.building.BuildingResponseDto
+import org.junit.jupiter.api.Test
 import yayauheny.by.model.analytics.AcquisitionTag
+import yayauheny.by.model.building.BuildingResponseDto
 import yayauheny.by.model.dto.Coordinates
 import yayauheny.by.model.enums.AccessibilityType
 import yayauheny.by.model.enums.DataSourceType
 import yayauheny.by.model.enums.FeeType
 import yayauheny.by.model.enums.ImportProvider
-import yayauheny.by.model.import.ImportBatchResponseDto
-import yayauheny.by.model.import.ImportStatus
-import yayauheny.by.model.import.ImportItemResultDto
 import yayauheny.by.model.enums.PlaceType
 import yayauheny.by.model.enums.RestroomStatus
+import yayauheny.by.model.imports.ImportBatchResponseDto
+import yayauheny.by.model.imports.ImportItemResultDto
+import yayauheny.by.model.imports.ImportStatus
 import yayauheny.by.model.restroom.NearestRestroomSlimDto
 import yayauheny.by.model.restroom.RestroomResponseDto
 import yayauheny.by.model.subway.SubwayLineResponseDto
 import yayauheny.by.model.subway.SubwayStationResponseDto
 
 class ContractSerializationTest {
-    private val json =
-        Json {
-            serializersModule = serializersModule
-            encodeDefaults = true
-        }
+    private val objectMapper = jacksonObjectMapper()
 
     @Test
     fun restroomResponseDto_roundTrips_with_json_fields() {
@@ -51,8 +37,8 @@ class ContractSerializationTest {
                 subwayStationId = UUID.randomUUID(),
                 name = "Central restroom",
                 address = "Main street",
-                phones = jsonObject("main" to JsonPrimitive("+375291234567")),
-                workTime = jsonObject("monday" to JsonPrimitive("08:00-20:00")),
+                phones = mapOf("main" to "+375291234567"),
+                workTime = mapOf("monday" to "08:00-20:00"),
                 feeType = FeeType.FREE,
                 genderType = null,
                 accessibilityType = AccessibilityType.WHEELCHAIR,
@@ -60,8 +46,8 @@ class ContractSerializationTest {
                 coordinates = Coordinates(53.9, 27.56),
                 dataSource = DataSourceType.MANUAL,
                 status = RestroomStatus.ACTIVE,
-                amenities = jsonObject("wifi" to JsonPrimitive(true)),
-                externalMaps = jsonObject("2gis" to JsonPrimitive("abc123")),
+                amenities = mapOf("wifi" to true),
+                externalMaps = mapOf("2gis" to "abc123"),
                 accessNote = "Lift available",
                 directionGuide = "Near the lobby",
                 inheritBuildingSchedule = true,
@@ -80,9 +66,9 @@ class ContractSerializationTest {
                         name = "Mall",
                         address = "Main street",
                         buildingType = PlaceType.MALL,
-                        workTime = jsonObject("sunday" to JsonPrimitive("closed")),
+                        workTime = mapOf("sunday" to "closed"),
                         coordinates = Coordinates(53.91, 27.57),
-                        externalIds = jsonObject("2gis" to JsonPrimitive("b-1")),
+                        externalIds = mapOf("2gis" to "b-1"),
                         isDeleted = false,
                         createdAt = Instant.parse("2025-01-01T00:00:00Z"),
                         updatedAt = Instant.parse("2025-01-02T00:00:00Z")
@@ -111,7 +97,7 @@ class ContractSerializationTest {
                     )
             )
 
-        val decoded = json.decodeFromString(RestroomResponseDto.serializer(), json.encodeToString(RestroomResponseDto.serializer(), restroom))
+        val decoded = objectMapper.readValue<RestroomResponseDto>(objectMapper.writeValueAsString(restroom))
 
         assertEquals(restroom, decoded)
     }
@@ -128,26 +114,26 @@ class ContractSerializationTest {
                 restroomCoordinates = Coordinates(53.9005, 27.5605)
             )
 
-        val decoded = json.decodeFromString(NearestRestroomSlimDto.serializer(), json.encodeToString(NearestRestroomSlimDto.serializer(), dto))
+        val decoded = objectMapper.readValue<NearestRestroomSlimDto>(objectMapper.writeValueAsString(dto))
 
         assertEquals(dto, decoded)
     }
 
     @Test
     fun placeType_uses_wire_code() {
-        val encoded = json.encodeToString(PlaceType.serializer(), PlaceType.PUBLIC)
+        val encoded = objectMapper.writeValueAsString(PlaceType.PUBLIC)
 
         assertEquals("\"public_toilet\"", encoded)
-        assertEquals(PlaceType.PUBLIC, json.decodeFromString(PlaceType.serializer(), encoded))
+        assertEquals(PlaceType.PUBLIC, objectMapper.readValue(encoded))
         assertEquals(PlaceType.OTHER, PlaceType.fromCode("missing"))
     }
 
     @Test
     fun acquisitionTag_uses_wire_code() {
-        val encoded = json.encodeToString(AcquisitionTag.serializer(), AcquisitionTag.WEBSITE)
+        val encoded = objectMapper.writeValueAsString(AcquisitionTag.WEBSITE)
 
         assertEquals("\"website\"", encoded)
-        assertEquals(AcquisitionTag.WEBSITE, json.decodeFromString(AcquisitionTag.serializer(), encoded))
+        assertEquals(AcquisitionTag.WEBSITE, objectMapper.readValue(encoded))
         assertEquals(AcquisitionTag.OTHER, AcquisitionTag.fromValue("other"))
     }
 
@@ -180,41 +166,8 @@ class ContractSerializationTest {
                     )
             )
 
-        val decoded = json.decodeFromString(ImportBatchResponseDto.serializer(), json.encodeToString(ImportBatchResponseDto.serializer(), dto))
+        val decoded = objectMapper.readValue<ImportBatchResponseDto>(objectMapper.writeValueAsString(dto))
 
         assertEquals(dto, decoded)
-    }
-
-    private fun jsonObject(vararg pairs: Pair<String, JsonElement>): JsonObject =
-        buildJsonObject {
-            pairs.forEach { (key, value) -> put(key, value) }
-        }
-
-    private val serializersModule =
-        SerializersModule {
-            contextual(UUID::class, UuidAsStringSerializer)
-            contextual(Instant::class, InstantAsStringSerializer)
-        }
-
-    private object UuidAsStringSerializer : KSerializer<UUID> {
-        override val descriptor: SerialDescriptor =
-            PrimitiveSerialDescriptor("UUID", PrimitiveKind.STRING)
-
-        override fun serialize(encoder: Encoder, value: UUID) {
-            encoder.encodeString(value.toString())
-        }
-
-        override fun deserialize(decoder: Decoder): UUID = UUID.fromString(decoder.decodeString())
-    }
-
-    private object InstantAsStringSerializer : KSerializer<Instant> {
-        override val descriptor: SerialDescriptor =
-            PrimitiveSerialDescriptor("Instant", PrimitiveKind.STRING)
-
-        override fun serialize(encoder: Encoder, value: Instant) {
-            encoder.encodeString(value.toString())
-        }
-
-        override fun deserialize(decoder: Decoder): Instant = Instant.parse(decoder.decodeString())
     }
 }
