@@ -21,3 +21,9 @@ spring:
   mvc:
     converters:
       preferred-json-mapper: jackson
+
+telegram:
+  bot:
+    token: "dummy-test-token"
+    webhook-secret-token: "dummy-test-secret"
+    webhook-path: "/telegram/webhook"
