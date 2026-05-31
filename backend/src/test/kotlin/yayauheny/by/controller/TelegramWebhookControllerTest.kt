@@ -116,4 +116,20 @@ class TelegramWebhookControllerTest {
 
         verify(exactly = 0) { botUpdateService.process(any()) }
     }
+
+    @Test
+    fun `returns server error when update processing fails`() {
+        val update = Update().apply { updateId = 123 }
+        every { botUpdateService.process(any()) } throws IllegalStateException("boom")
+
+        mockMvc.perform(
+            post("/telegram/webhook")
+                .header("X-Telegram-Bot-Api-Secret-Token", "secret-token")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(update))
+        )
+            .andExpect(status().isInternalServerError)
+
+        verify { botUpdateService.process(any()) }
+    }
 }
