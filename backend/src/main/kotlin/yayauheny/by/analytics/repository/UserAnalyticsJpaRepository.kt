@@ -12,6 +12,17 @@ import java.util.UUID
 interface UserAnalyticsJpaRepository : JpaRepository<UserAnalyticsEntity, UUID> {
     @Modifying
     @Query(
+        value = """
+            INSERT INTO user_analytics (user_id)
+            VALUES (:userId)
+            ON CONFLICT (user_id) DO NOTHING
+        """,
+        nativeQuery = true
+    )
+    fun ensureUserAnalyticsRow(userId: UUID)
+
+    @Modifying
+    @Query(
         """
         UPDATE UserAnalyticsEntity ua 
         SET ua.searchesCount = ua.searchesCount + :searchesInc,

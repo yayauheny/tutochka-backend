@@ -2,6 +2,8 @@ package yayauheny.by.analytics.service
 
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
+import jakarta.persistence.EntityManager
+import jakarta.persistence.PersistenceContext
 import yayauheny.by.analytics.entity.AnalyticsEventEntity
 import yayauheny.by.analytics.entity.UserAnalyticsEntity
 import yayauheny.by.analytics.entity.UserEntity
@@ -16,6 +18,7 @@ import yayauheny.by.model.analytics.ProductAnalyticsEvent
 import yayauheny.by.util.EncryptionService
 import yayauheny.by.common.util.toBigDecimalRounded
 import java.time.Instant
+import java.util.UUID
 
 @Service
 class AnalyticsService(
@@ -24,6 +27,9 @@ class AnalyticsService(
     private val analyticsEventJpaRepository: AnalyticsEventJpaRepository,
     private val encryptionService: EncryptionService
 ) {
+    @PersistenceContext
+    private lateinit var entityManager: EntityManager
+
     @Transactional
     fun trackProductEvent(command: AnalyticsEventCommand) {
         when {
@@ -63,22 +69,18 @@ class AnalyticsService(
     private fun trackEncryptedProductEvent(command: EncryptedAnalyticsEventCommand) {
         var user: UserEntity? = null
         if (command.tgUserId != null) {
-            user = userJpaRepository.findByTgUserId(command.tgUserId!!)
-            if (user == null) {
-                user = UserEntity().apply {
-                    this.tgUserId = command.tgUserId!!
-                    this.tgChatId = command.tgChatId ?: ""
-                    this.username = command.username
-                    this.source = command.source.value
-                }
-                user = userJpaRepository.save(user)
+            // TODO improve: replace native SQL upsert with cleaner Hibernate/JPA approach when behavior is fully covered.
+            val userId =
+                upsertUser(
+                    tgUserId = command.tgUserId!!,
+                    tgChatId = requireNotNull(command.tgChatId),
+                    source = command.source.value,
+                    username = command.username,
+                    acquisitionTag = command.acquisitionTag?.value
+                )
+            user = userJpaRepository.getReferenceById(userId)
+            userAnalyticsJpaRepository.ensureUserAnalyticsRow(userId)
 
-                val userAnalytics = UserAnalyticsEntity().apply {
-                    this.user = userJpaRepository.getReferenceById(requireNotNull(user.id))
-                }
-                userAnalyticsJpaRepository.save(userAnalytics)
-            }
-            
             val isSearch = command.event == ProductAnalyticsEvent.NEAREST_RESTROOMS_RETURNED ||
                     command.event == ProductAnalyticsEvent.NEAREST_RESTROOMS_NO_RESULTS
             val isSuccessSearch = command.event == ProductAnalyticsEvent.NEAREST_RESTROOMS_RETURNED
@@ -146,5 +148,52 @@ class AnalyticsService(
             acquisitionTag = null,
             metadata = metadata
         )
+    }
+
+    private fun upsertUser(
+        tgUserId: String,
+        tgChatId: String,
+        source: String,
+        username: String?,
+        acquisitionTag: String?
+    ): UUID {
+        val sql =
+            """
+                INSERT INTO users (
+                    tg_user_id,
+                    tg_chat_id,
+                    source,
+                    username,
+                    acquisition_tag
+                )
+                VALUES (
+                    :tgUserId,
+                    :tgChatId,
+                    :source,
+                    :username,
+                    COALESCE(:acquisitionTag, 'direct')
+                )
+                ON CONFLICT (tg_user_id) DO UPDATE
+                SET tg_chat_id = EXCLUDED.tg_chat_id,
+                    source = EXCLUDED.source,
+                    username = COALESCE(EXCLUDED.username, users.username),
+                    acquisition_tag = COALESCE(CAST(:acquisitionTag AS text), users.acquisition_tag),
+                    updated_at = now()
+                RETURNING id
+            """.trimIndent()
+
+        val result =
+            entityManager.createNativeQuery(sql)
+                .setParameter("tgUserId", tgUserId)
+                .setParameter("tgChatId", tgChatId)
+                .setParameter("source", source)
+                .setParameter("username", username)
+                .setParameter("acquisitionTag", acquisitionTag)
+                .singleResult
+
+        return when (result) {
+            is UUID -> result
+            else -> UUID.fromString(result.toString())
+        }
     }
 }

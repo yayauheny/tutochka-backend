@@ -30,6 +30,9 @@ class UserEntity {
     @Column(name = "username")
     var username: String? = null
 
+    @Column(name = "acquisition_tag", nullable = false)
+    var acquisitionTag: String = "direct"
+
     @CreationTimestamp
     @Column(name = "created_at", nullable = false, updatable = false)
     var createdAt: Instant? = null
