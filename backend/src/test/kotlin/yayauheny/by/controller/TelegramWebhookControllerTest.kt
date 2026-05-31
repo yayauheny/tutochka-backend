@@ -132,4 +132,17 @@ class TelegramWebhookControllerTest {
 
         verify { botUpdateService.process(any()) }
     }
+
+    @Test
+    fun `accepts unsupported update when secret is correct`() {
+        mockMvc.perform(
+            post("/telegram/webhook")
+                .header("X-Telegram-Bot-Api-Secret-Token", "secret-token")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content("{}")
+        )
+            .andExpect(status().isOk)
+
+        verify { botUpdateService.process(any()) }
+    }
 }

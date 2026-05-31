@@ -5,6 +5,7 @@ import io.micrometer.prometheusmetrics.PrometheusConfig
 import integration.base.BaseIntegrationTest
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
+import org.junit.jupiter.api.Tag
 import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.boot.test.mock.mockito.MockBean
 import org.springframework.context.annotation.Import
@@ -27,6 +28,7 @@ import org.mockito.Mockito.doThrow
 import yayauheny.by.Application
 
 @SpringBootTest(classes = [Application::class])
+@Tag("integration")
 @Import(RestroomMetricsIntegrationTest.MetricsTestConfiguration::class)
 class RestroomMetricsIntegrationTest : BaseIntegrationTest() {
     @MockBean
