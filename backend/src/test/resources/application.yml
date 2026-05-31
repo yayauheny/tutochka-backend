@@ -24,6 +24,7 @@ spring:
 
 telegram:
   bot:
+    enabled: true
     token: "dummy-test-token"
     webhook-secret-token: "dummy-test-secret"
     webhook-path: "/telegram/webhook"

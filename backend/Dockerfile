@@ -6,7 +6,6 @@ COPY gradle/ gradle/
 COPY build.gradle.kts settings.gradle.kts libs.versions.toml gradle.properties ./
 COPY backend/build.gradle.kts backend/
 COPY common/build.gradle.kts common/
-COPY bot/build.gradle.kts bot/
 
 RUN chmod +x ./gradlew
 

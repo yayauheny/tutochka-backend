@@ -36,6 +36,13 @@ services:
       DB_MAX_LIFETIME: ${DB_MAX_LIFETIME:-1800000}
       APP_PORT: ${APP_PORT:-8080}
       APP_ENV: ${APP_ENV:-production}
+      TELEGRAM_BOT_ENABLED: ${TELEGRAM_BOT_ENABLED:-true}
+      TELEGRAM_BOT_TOKEN: ${TELEGRAM_BOT_TOKEN}
+      TELEGRAM_BOT_USERNAME: ${TELEGRAM_BOT_USERNAME}
+      BOT_WEBHOOK_PATH: ${BOT_WEBHOOK_PATH:-/telegram/webhook}
+      BOT_WEBHOOK_PUBLIC_URL: ${BOT_WEBHOOK_PUBLIC_URL}
+      BOT_WEBHOOK_SECRET_TOKEN: ${BOT_WEBHOOK_SECRET_TOKEN}
+      BOT_ADMIN_IDS: ${BOT_ADMIN_IDS:-}
       JAVA_TOOL_OPTIONS: "-XX:MaxRAMPercentage=55 -XX:+UseG1GC"
     networks:
       - tutochka_net
@@ -47,42 +54,6 @@ services:
     mem_limit: 220m
     mem_reservation: 160m
     memswap_limit: 320m
-    mem_swappiness: 25
-
-  bot:
-    image: ghcr.io/yayauheny/tutochka-bot@sha256:6806f7f3b5bea4e96f19c8caa7da4ec2d0e777f7ec7e2dc603af28246d90cf23
-    platform: linux/amd64
-    container_name: tutochka_bot
-    restart: always
-    environment:
-      TELEGRAM_BOT_TOKEN: ${TELEGRAM_BOT_TOKEN}
-      TELEGRAM_BOT_USERNAME: ${TELEGRAM_BOT_USERNAME}
-      BOT_WEBHOOK_PATH: ${BOT_WEBHOOK_PATH:-/telegram/webhook}
-      BOT_ASYNC_PROCESSING: ${BOT_ASYNC_PROCESSING:-true}
-      BOT_WEBHOOK_PUBLIC_URL: ${BOT_WEBHOOK_PUBLIC_URL}
-      BOT_WEBHOOK_SECRET_TOKEN: ${BOT_WEBHOOK_SECRET_TOKEN:?BOT_WEBHOOK_SECRET_TOKEN required}
-      BOT_ADMIN_IDS: ${BOT_ADMIN_IDS:-}
-      BACKEND_BASE_URL: ${BACKEND_BASE_URL:-http://backend:8080/api/v1}
-      BACKEND_CONNECT_TIMEOUT_MS: ${BACKEND_CONNECT_TIMEOUT_MS:-3000}
-      BACKEND_READ_TIMEOUT_MS: ${BACKEND_READ_TIMEOUT_MS:-5000}
-      BACKEND_RETRY_ATTEMPTS: ${BACKEND_RETRY_ATTEMPTS:-2}
-      BACKEND_RETRY_DELAY_MS: ${BACKEND_RETRY_DELAY_MS:-200}
-      PORT: ${PORT:-8081}
-      SPRING_PROFILES_ACTIVE: ${SPRING_PROFILES_ACTIVE:-prod}
-      JAVA_TOOL_OPTIONS: "-XX:MaxRAMPercentage=55 -XX:+UseG1GC"
-    depends_on:
-      backend:
-        condition: service_healthy
-    networks:
-      - tutochka_net
-    healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:8081/actuator/health/liveness"]
-      interval: 30s
-      timeout: 10s
-      retries: 3
-    mem_limit: 280m
-    mem_reservation: 200m
-    memswap_limit: 400m
     mem_swappiness: 25
 
 volumes:

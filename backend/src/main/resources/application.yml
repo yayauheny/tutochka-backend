@@ -60,9 +60,10 @@ encryption:
 
 telegram:
   bot:
+    enabled: ${TELEGRAM_BOT_ENABLED:true}
     username: ${TELEGRAM_BOT_USERNAME:your_bot_username}
-    token: ${TELEGRAM_BOT_TOKEN:your_bot_token}
+    token: ${TELEGRAM_BOT_TOKEN:}
     webhook-path: ${BOT_WEBHOOK_PATH:/telegram/webhook}
     webhook-public-url: ${BOT_WEBHOOK_PUBLIC_URL:}
-    webhook-secret-token: ${BOT_WEBHOOK_SECRET_TOKEN:your_webhook_secret}
+    webhook-secret-token: ${BOT_WEBHOOK_SECRET_TOKEN:}
     admin-ids: ${BOT_ADMIN_IDS:}

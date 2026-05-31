@@ -68,6 +68,13 @@ services:
       DB_MAX_LIFETIME: ${DB_MAX_LIFETIME:-1800000}
       APP_PORT: ${APP_PORT:-8080}
       APP_ENV: ${APP_ENV:-development}
+      TELEGRAM_BOT_ENABLED: ${TELEGRAM_BOT_ENABLED:-true}
+      TELEGRAM_BOT_TOKEN: ${TELEGRAM_BOT_TOKEN:?TELEGRAM_BOT_TOKEN required}
+      TELEGRAM_BOT_USERNAME: ${TELEGRAM_BOT_USERNAME:?TELEGRAM_BOT_USERNAME required}
+      BOT_WEBHOOK_PATH: ${BOT_WEBHOOK_PATH:-/telegram/webhook}
+      BOT_WEBHOOK_PUBLIC_URL: ${BOT_WEBHOOK_PUBLIC_URL:-}
+      BOT_WEBHOOK_SECRET_TOKEN: ${BOT_WEBHOOK_SECRET_TOKEN:?BOT_WEBHOOK_SECRET_TOKEN required}
+      BOT_ADMIN_IDS: ${BOT_ADMIN_IDS:-}
     ports:
       - "8080:8080"
     depends_on:
@@ -87,50 +94,10 @@ services:
         reservations:
           memory: 200M
 
-  bot:
-    build:
-      context: ..
-      dockerfile: bot/Dockerfile
-    container_name: tutochka_bot_local
-    restart: unless-stopped
-    environment:
-      TELEGRAM_BOT_TOKEN: ${TELEGRAM_BOT_TOKEN:?TELEGRAM_BOT_TOKEN required}
-      TELEGRAM_BOT_USERNAME: ${TELEGRAM_BOT_USERNAME:?TELEGRAM_BOT_USERNAME required}
-      BOT_WEBHOOK_PATH: ${BOT_WEBHOOK_PATH:-/telegram/webhook}
-      BOT_ASYNC_PROCESSING: ${BOT_ASYNC_PROCESSING:-true}
-      BOT_WEBHOOK_PUBLIC_URL: ${BOT_WEBHOOK_PUBLIC_URL:-}
-      BOT_WEBHOOK_SECRET_TOKEN: ${BOT_WEBHOOK_SECRET_TOKEN:?BOT_WEBHOOK_SECRET_TOKEN required}
-      BOT_ADMIN_IDS: ${BOT_ADMIN_IDS:-}
-      BACKEND_BASE_URL: ${BACKEND_BASE_URL:-http://backend:8080/api/v1}
-      BACKEND_CONNECT_TIMEOUT_MS: ${BACKEND_CONNECT_TIMEOUT_MS:-3000}
-      BACKEND_READ_TIMEOUT_MS: ${BACKEND_READ_TIMEOUT_MS:-5000}
-      BACKEND_RETRY_ATTEMPTS: ${BACKEND_RETRY_ATTEMPTS:-2}
-      BACKEND_RETRY_DELAY_MS: ${BACKEND_RETRY_DELAY_MS:-200}
-      PORT: ${PORT:-8081}
-      SPRING_PROFILES_ACTIVE: ${SPRING_PROFILES_ACTIVE:-prod}
-    ports:
-      - "8081:8081"
-    depends_on:
-      backend:
-        condition: service_healthy
-    networks:
-      - tutochka_network
-    healthcheck:
-      test: [ "CMD", "curl", "-f", "http://localhost:8081/actuator/health/liveness" ]
-      interval: 30s
-      timeout: 10s
-      retries: 3
-    deploy:
-      resources:
-        limits:
-          memory: 450M
-        reservations:
-          memory: 250M
-
   ngrok:
     image: ngrok/ngrok:latest
     container_name: tutochka_ngrok
-    command: ["http", "bot:8081", "--log=stdout"]
+    command: ["http", "backend:8080", "--log=stdout"]
     environment:
       NGROK_AUTHTOKEN: ${NGROK_AUTHTOKEN:-}
     ports:
@@ -141,26 +108,6 @@ services:
       - tutochka_network
     profiles:
       - ngrok
-
-  webhook-registrar:
-    image: alpine:latest
-    container_name: tutochka_webhook_registrar
-    environment:
-      NGROK_HOST: ngrok
-      NGROK_PORT: "4040"
-      TELEGRAM_BOT_TOKEN: ${TELEGRAM_BOT_TOKEN:?TELEGRAM_BOT_TOKEN required}
-      BOT_WEBHOOK_PATH: ${BOT_WEBHOOK_PATH:-/telegram/webhook}
-      BOT_WEBHOOK_SECRET_TOKEN: ${BOT_WEBHOOK_SECRET_TOKEN:?BOT_WEBHOOK_SECRET_TOKEN required}
-    volumes:
-      - ./scripts:/scripts:ro
-    command: ["sh", "-c", "apk add --no-cache curl && sh /scripts/register-webhook.sh"]
-    depends_on:
-      - ngrok
-    networks:
-      - tutochka_network
-    profiles:
-      - ngrok
-    restart: "no"
 
 networks:
   tutochka_network:

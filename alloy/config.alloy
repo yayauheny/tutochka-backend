@@ -50,34 +50,3 @@ loki.source.file "backend" {
   forward_to = [loki.write.cloud.receiver]
   tail_from_end = true
 }
-
-local.file_match "bot" {
-  path_targets = [{
-    __path__     = "/var/log/tutochka/bot/*.log",
-    container    = "tutochka_bot",
-    environment  = "prod",
-    job          = "tutochka",
-    service_name = "bot",
-  }]
-
-  sync_period = "10s"
-}
-
-loki.source.file "bot" {
-  targets       = local.file_match.bot.targets
-  forward_to = [loki.write.cloud.receiver]
-  tail_from_end = true
-}
-
-prometheus.scrape "bot" {
-  job_name        = "bot"
-  scrape_interval = "60s"
-  scrape_timeout  = "10s"
-
-  targets = [{
-    __address__      = coalesce(sys.env("BOT_METRICS_TARGET"), "bot:" + coalesce(sys.env("BOT_PORT"), "8081")),
-    __metrics_path__ = "/actuator/prometheus",
-  }]
-
-  forward_to = [prometheus.remote_write.cloud.receiver]
-}

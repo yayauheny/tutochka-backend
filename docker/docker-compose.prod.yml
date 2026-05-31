@@ -9,7 +9,7 @@ services:
     mem_reservation: 64m
     cpus: 0.50
     environment:
-      BOT_PORT: ${BOT_PORT:-8081}
+      BACKEND_PORT: ${BACKEND_PORT:-8080}
     ports:
       - "80:80"
       - "443:443"
@@ -49,6 +49,13 @@ services:
       ENCRYPTION_KEYSET_JSON: ${ENCRYPTION_KEYSET_JSON}
       BACKEND_PORT: ${BACKEND_PORT:-8080}
       APP_ENV: ${APP_ENV:-production}
+      TELEGRAM_BOT_ENABLED: ${TELEGRAM_BOT_ENABLED:-true}
+      TELEGRAM_BOT_TOKEN: ${TELEGRAM_BOT_TOKEN}
+      TELEGRAM_BOT_USERNAME: ${TELEGRAM_BOT_USERNAME}
+      BOT_WEBHOOK_PATH: ${BOT_WEBHOOK_PATH:-/telegram/webhook}
+      BOT_WEBHOOK_PUBLIC_URL: ${BOT_WEBHOOK_PUBLIC_URL}
+      BOT_WEBHOOK_SECRET_TOKEN: ${BOT_WEBHOOK_SECRET_TOKEN}
+      BOT_ADMIN_IDS: ${BOT_ADMIN_IDS:-}
       BACKEND_LOG_DIR: /app/logs
       JAVA_TOOL_OPTIONS: >-
         -Xms256m
@@ -73,58 +80,6 @@ services:
         max-size: "20m"
         max-file: "5"
 
-  bot:
-    image: ghcr.io/yayauheny/tutochka-bot:${BOT_TAG:-prod}
-    pull_policy: always
-    platform: linux/amd64
-    container_name: tutochka_bot
-    restart: always
-    init: true
-    mem_limit: 1024m
-    mem_reservation: 512m
-    cpus: 1.00
-    environment:
-      TELEGRAM_BOT_TOKEN: ${TELEGRAM_BOT_TOKEN}
-      TELEGRAM_BOT_USERNAME: ${TELEGRAM_BOT_USERNAME}
-      BOT_WEBHOOK_PATH: ${BOT_WEBHOOK_PATH:?set BOT_WEBHOOK_PATH to a secret webhook path}
-      BOT_ASYNC_PROCESSING: ${BOT_ASYNC_PROCESSING:-false}
-      BOT_WEBHOOK_PUBLIC_URL: ${BOT_WEBHOOK_PUBLIC_URL}
-      BOT_WEBHOOK_SECRET_TOKEN: ${BOT_WEBHOOK_SECRET_TOKEN}
-      BOT_ADMIN_IDS: ${BOT_ADMIN_IDS:-}
-      BACKEND_BASE_URL: ${BACKEND_BASE_URL:-http://backend:8080/api/v1}
-      BACKEND_CONNECT_TIMEOUT_MS: ${BACKEND_CONNECT_TIMEOUT_MS:-3000}
-      BACKEND_READ_TIMEOUT_MS: ${BACKEND_READ_TIMEOUT_MS:-5000}
-      BACKEND_RETRY_ATTEMPTS: ${BACKEND_RETRY_ATTEMPTS:-1}
-      BACKEND_RETRY_DELAY_MS: ${BACKEND_RETRY_DELAY_MS:-200}
-      BOT_PORT: ${BOT_PORT:-8081}
-      SPRING_PROFILES_ACTIVE: ${SPRING_PROFILES_ACTIVE:-prod}
-      BOT_LOG_DIR: /app/logs
-      JAVA_TOOL_OPTIONS: >-
-        -Xms128m
-        -Xmx768m
-        -XX:MaxMetaspaceSize=192m
-        -XX:MaxDirectMemorySize=64m
-        -Xss512k
-        -XX:+UseContainerSupport
-        -XX:+ExitOnOutOfMemoryError
-    depends_on:
-      backend:
-        condition: service_healthy
-    networks:
-      - tutochka_net
-    volumes:
-      - bot_logs:/app/logs
-    healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:8081/actuator/health/liveness"]
-      interval: 30s
-      timeout: 10s
-      retries: 3
-    logging:
-      driver: json-file
-      options:
-        max-size: "20m"
-        max-file: "5"
-
   alloy:
     image: grafana/alloy:v1.15.1
     platform: linux/amd64
@@ -137,7 +92,6 @@ services:
     command: ["run", "--storage.path=/var/lib/alloy/data", "/etc/alloy/config.alloy"]
     environment:
       BACKEND_PORT: ${BACKEND_PORT:-8080}
-      BOT_PORT: ${BOT_PORT:-8081}
       GRAFANA_CLOUD_URL: ${GRAFANA_CLOUD_URL}
       GRAFANA_CLOUD_USERNAME: ${GRAFANA_CLOUD_USERNAME}
       GRAFANA_CLOUD_LOKI_URL: ${GRAFANA_CLOUD_LOKI_URL}
@@ -147,11 +101,8 @@ services:
       - ../alloy/config.alloy:/etc/alloy/config.alloy:ro
       - alloy_data:/var/lib/alloy
       - backend_logs:/var/log/tutochka/backend:ro
-      - bot_logs:/var/log/tutochka/bot:ro
     depends_on:
       backend:
-        condition: service_healthy
-      bot:
         condition: service_healthy
     networks:
       - tutochka_net
@@ -165,7 +116,6 @@ volumes:
   caddy_data:
   alloy_data:
   backend_logs:
-  bot_logs:
 
 networks:
   tutochka_net:

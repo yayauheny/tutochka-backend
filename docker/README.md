@@ -9,18 +9,12 @@ docker compose -f docker/docker-compose.prod.yml up -d --wait
 
 По умолчанию production stack использует:
 - `ghcr.io/yayauheny/tutochka-backend:prod`
-- `ghcr.io/yayauheny/tutochka-bot:prod`
 
-Для `backend` и `bot` включен `pull_policy: always`, поэтому повторный `docker compose up` подтянет свежий образ с тегом `prod` и пересоздаст контейнер, если образ обновился.
+Для `backend` включен `pull_policy: always`, поэтому повторный `docker compose up` подтянет свежий образ с тегом `prod` и пересоздаст контейнер, если образ обновился.
 
-Rollback или точечный deploy на одинаковый immutable tag для обоих сервисов:
+Rollback или точечный deploy на immutable tag:
 ```bash
-BACKEND_TAG=sha-0123456789ab BOT_TAG=sha-0123456789ab docker compose -f docker/docker-compose.prod.yml up -d --wait
-```
-
-Если нужно раскатить разные версии backend и bot:
-```bash
-BACKEND_TAG=sha-0123456789ab BOT_TAG=sha-fedcba987654 docker compose -f docker/docker-compose.prod.yml up -d --wait
+BACKEND_TAG=sha-0123456789ab docker compose -f docker/docker-compose.prod.yml up -d --wait
 ```
 
 ## Full Local Stack
@@ -36,8 +30,7 @@ docker compose --env-file docker/env.local -f docker/docker-compose-local.yml --
 Порядок запуска:
 1. `postgres`
 2. `backend`
-3. `bot`
-4. `ngrok` и `webhook-registrar` только если нужен внешний Telegram-доступ
+3. `ngrok` только если нужен внешний Telegram-доступ
 
 Для webhook-режима обязательно задать `BOT_WEBHOOK_SECRET_TOKEN`, иначе регистрация webhook не выполнится.
 
@@ -46,10 +39,9 @@ docker compose --env-file docker/env.local -f docker/docker-compose-local.yml --
 docker compose --env-file docker/env.local -f docker/docker-compose-debug.yml up -d
 set -a; source docker/env.local; set +a
 ./gradlew :backend:run
-./gradlew :bot:bootRun
 ```
 
-В hybrid-режиме backend и bot работают на хосте, поэтому для них `DB_HOST` должен быть `localhost`.
+В hybrid-режиме backend работает на хосте, поэтому для него `DB_HOST` должен быть `localhost`.
 
 ## Проверка
 ```bash
