@@ -57,12 +57,12 @@ class PublicAnalyticsRepositoryImpl(
 
         val sql = """
             SELECT
-                SUM(CASE WHEN event IN ('NEAREST_RESTROOMS_RETURNED', 'NEAREST_RESTROOMS_NO_RESULTS') THEN 1 ELSE 0 END) as total_searches,
-                SUM(CASE WHEN event = 'NEAREST_RESTROOMS_RETURNED' THEN 1 ELSE 0 END) as successful_searches,
-                SUM(CASE WHEN event = 'NEAREST_RESTROOMS_NO_RESULTS' THEN 1 ELSE 0 END) as empty_searches,
-                SUM(CASE WHEN event IN ('NEAREST_RESTROOMS_RETURNED', 'NEAREST_RESTROOMS_NO_RESULTS') THEN COALESCE(results_count, 0) ELSE 0 END) as total_results,
-                SUM(CASE WHEN event = 'ROUTE_CLICKED' THEN 1 ELSE 0 END) as route_clicks,
-                SUM(CASE WHEN event = 'RESTROOM_DETAILS_OPENED' THEN 1 ELSE 0 END) as details_opened
+                SUM(CASE WHEN event IN ('nearest_restrooms_returned', 'nearest_restrooms_no_results') THEN 1 ELSE 0 END) as total_searches,
+                SUM(CASE WHEN event = 'nearest_restrooms_returned' THEN 1 ELSE 0 END) as successful_searches,
+                SUM(CASE WHEN event = 'nearest_restrooms_no_results' THEN 1 ELSE 0 END) as empty_searches,
+                SUM(CASE WHEN event IN ('nearest_restrooms_returned', 'nearest_restrooms_no_results') THEN COALESCE(results_count, 0) ELSE 0 END) as total_results,
+                SUM(CASE WHEN event = 'route_clicked' THEN 1 ELSE 0 END) as route_clicks,
+                SUM(CASE WHEN event = 'restroom_details_opened' THEN 1 ELSE 0 END) as details_opened
             FROM analytics_events
             $condition
         """.trimIndent()
@@ -87,15 +87,15 @@ class PublicAnalyticsRepositoryImpl(
             SELECT
                 date(timezone(:zoneId, created_at)) as day,
                 COUNT(DISTINCT user_id) as active_users,
-                SUM(CASE WHEN event IN ('NEAREST_RESTROOMS_RETURNED', 'NEAREST_RESTROOMS_NO_RESULTS') THEN 1 ELSE 0 END) as searches,
-                SUM(CASE WHEN event = 'NEAREST_RESTROOMS_RETURNED' THEN 1 ELSE 0 END) as successful_searches,
-                SUM(CASE WHEN event = 'NEAREST_RESTROOMS_NO_RESULTS' THEN 1 ELSE 0 END) as empty_searches,
-                SUM(CASE WHEN event = 'ROUTE_CLICKED' THEN 1 ELSE 0 END) as route_clicks,
-                SUM(CASE WHEN event = 'RESTROOM_DETAILS_OPENED' THEN 1 ELSE 0 END) as details_opened
+                SUM(CASE WHEN event IN ('nearest_restrooms_returned', 'nearest_restrooms_no_results') THEN 1 ELSE 0 END) as searches,
+                SUM(CASE WHEN event = 'nearest_restrooms_returned' THEN 1 ELSE 0 END) as successful_searches,
+                SUM(CASE WHEN event = 'nearest_restrooms_no_results' THEN 1 ELSE 0 END) as empty_searches,
+                SUM(CASE WHEN event = 'route_clicked' THEN 1 ELSE 0 END) as route_clicks,
+                SUM(CASE WHEN event = 'restroom_details_opened' THEN 1 ELSE 0 END) as details_opened
             FROM analytics_events
             WHERE created_at >= :start AND created_at < :end
-            GROUP BY date(timezone(:zoneId, created_at))
-            ORDER BY day ASC
+            GROUP BY 1
+            ORDER BY 1 ASC
         """.trimIndent()
 
         val params = MapSqlParameterSource()
@@ -167,7 +167,7 @@ class PublicAnalyticsRepositoryImpl(
             SELECT
                 to_char(date_trunc('month', timezone(:zoneId, created_at)), 'YYYY-MM') as month,
                 COUNT(DISTINCT user_id) as active_users,
-                SUM(CASE WHEN event IN ('NEAREST_RESTROOMS_RETURNED', 'NEAREST_RESTROOMS_NO_RESULTS') THEN 1 ELSE 0 END) as searches
+                SUM(CASE WHEN event IN ('nearest_restrooms_returned', 'nearest_restrooms_no_results') THEN 1 ELSE 0 END) as searches
             FROM analytics_events
             WHERE created_at >= :start AND created_at < :end
             GROUP BY month

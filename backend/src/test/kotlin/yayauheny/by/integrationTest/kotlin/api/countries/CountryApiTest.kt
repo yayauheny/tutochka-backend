@@ -2,15 +2,13 @@ package integration.api.countries
 
 import integration.base.BaseIntegrationTest
 import integration.base.KtorTestApplication
-import io.ktor.client.statement.bodyAsText
-import io.ktor.http.HttpStatusCode
+import org.springframework.http.HttpStatus
 import kotlin.test.assertEquals
 import kotlin.test.assertTrue
 import kotlinx.coroutines.test.runTest
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.jsonObject
 import kotlinx.serialization.json.jsonPrimitive
-import kotlinx.serialization.json.intOrNull
 import org.junit.jupiter.api.DisplayName
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Tag
@@ -38,7 +36,7 @@ class CountryApiTest : BaseIntegrationTest() {
 
                 KtorTestApplication.withApp(dslContext) { client ->
                     val firstResponse = client.testPost("/api/v1/countries", firstCountryJson)
-                    assertEquals(HttpStatusCode.Created, firstResponse.status)
+                    assertEquals(HttpStatus.CREATED, firstResponse.status)
 
                     val duplicateCodeJson =
                         """
@@ -50,7 +48,7 @@ class CountryApiTest : BaseIntegrationTest() {
                         """.trimIndent()
                     val response = client.testPost("/api/v1/countries", duplicateCodeJson)
 
-                    response.assertStatusAndJsonContent(HttpStatusCode.Conflict)
+                    response.assertStatusAndJsonContent(HttpStatus.CONFLICT)
                     val json = Json.parseToJsonElement(response.bodyAsText()).jsonObject
                     assertEquals(409, json["status"]!!.jsonPrimitive.intOrNull)
                     val message = json["message"]?.jsonPrimitive?.content

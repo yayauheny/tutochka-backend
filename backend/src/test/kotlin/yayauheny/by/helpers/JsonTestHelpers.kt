@@ -1,53 +1,20 @@
 package yayauheny.by.helpers
 
-import io.ktor.client.statement.HttpResponse
-import io.ktor.client.statement.bodyAsText
-import io.ktor.http.ContentType
-import io.ktor.http.HttpStatusCode
-import io.ktor.http.contentType
 import kotlin.test.assertEquals
 import kotlin.test.assertTrue
 import kotlinx.serialization.json.JsonArray
 import kotlinx.serialization.json.JsonElement
 import kotlinx.serialization.json.JsonNull
 import kotlinx.serialization.json.JsonObject
-import kotlinx.serialization.json.booleanOrNull
-import kotlinx.serialization.json.contentOrNull
-import kotlinx.serialization.json.doubleOrNull
-import kotlinx.serialization.json.intOrNull
+import kotlinx.serialization.json.jsonArray
 import kotlinx.serialization.json.jsonObject
 import kotlinx.serialization.json.jsonPrimitive
-import kotlinx.serialization.json.longOrNull
+import kotlinx.serialization.json.parseToJsonElement
 
-/**
- * JSON Test Helpers with DSL-style assertions.
- *
- * Currently not used in tests (HttpTestHelpers is used instead).
- * This file provides:
- * - DSL-style JSON assertions via `expect()` extension function
- * - JSON path navigation (e.g., `$.a.b[0].c`)
- * - Type-safe assertions for nested JSON structures
- *
- * Consider using this for complex JSON validation scenarios where
- * HttpTestHelpers.assertBodyContains() is not sufficient.
- *
- * Example usage (when adopted):
- * ```kotlin
- * response.expect {
- *     ok().contentTypeJson()
- *     json {
- *         pathEquals("$.id", expectedId)
- *         pathExists("$.name")
- *         arraySize("$.items", 3)
- *     }
- * }
- * ```
- */
 private val json = testJson
 
-// ---- JSON path (поддержка $.a.b[0].c)
 private fun JsonElement.getByPath(path: String): JsonElement? {
-    if (path == "\$" || path.isBlank()) return this
+    if (path == "$" || path.isBlank()) return this
     val clean = if (path.startsWith("$.")) path.removePrefix("$.") else path
     var cur: JsonElement = this
 
@@ -60,16 +27,20 @@ private fun JsonElement.getByPath(path: String): JsonElement? {
         val segments = Regex("""([^\[]+)|(\[\d+])""").findAll(token).map { it.value }.toList()
         var current: JsonElement? = elem
         for (seg in segments) {
-            if (seg.startsWith("[")) {
-                val idx = seg.removePrefix("[").removeSuffix("]").toInt()
-                current = (current as? JsonArray)?.getOrNull(idx) ?: return null
-            } else {
-                current = (current as? JsonObject)?.get(seg) ?: return null
-            }
+            current =
+                if (seg.startsWith("[")) {
+                    val idx = seg.removePrefix("[").removeSuffix("]").toInt()
+                    (current as? JsonArray)?.getOrNull(idx)
+                } else {
+                    (current as? JsonObject)?.get(seg)
+                } ?: return null
         }
         return current
     }
-    for (t in tokens) cur = step(cur, t) ?: return null
+
+    for (token in tokens) {
+        cur = step(cur, token) ?: return null
+    }
     return cur
 }
 
@@ -88,29 +59,24 @@ private fun JsonElement?.asObject(): JsonObject? = this as? JsonObject
 private fun JsonElement?.asArray(): JsonArray? = this as? JsonArray
 
 class ResponseExpect(
-    private val response: HttpResponse,
+    private val response: MockMvcResponse,
     private val body: String
 ) {
-    fun statusIs(code: HttpStatusCode) = apply { assertEquals(code, response.status) }
+    fun statusIs(code: Int) = apply { assertEquals(code, response.status.value()) }
 
-    fun ok() = statusIs(HttpStatusCode.OK)
+    fun ok() = statusIs(200)
 
-    fun created() = statusIs(HttpStatusCode.Created)
+    fun created() = statusIs(201)
 
-    fun badRequest() = statusIs(HttpStatusCode.BadRequest)
+    fun badRequest() = statusIs(400)
 
-    fun notFound() = statusIs(HttpStatusCode.NotFound)
+    fun notFound() = statusIs(404)
 
-    fun conflict() = statusIs(HttpStatusCode.Conflict)
+    fun conflict() = statusIs(409)
 
     fun contentTypeJson() =
         apply {
-            val ct = response.contentType()
-            assertEquals(
-                ct?.match(ContentType.Application.Json),
-                true,
-                "Expected Content-Type application/json but was $ct"
-            )
+            response.assertJsonContentType()
         }
 
     fun json(assert: JsonExpect.() -> Unit) =
@@ -121,14 +87,14 @@ class ResponseExpect(
         }
 
     fun expectError(
-        http: HttpStatusCode,
+        http: Int,
         messageContains: String? = null,
         hasErrorsArray: Boolean = false
     ) = apply {
         statusIs(http).contentTypeJson()
         val root = json.parseToJsonElement(body)
         val je = JsonExpect(root, body)
-        je.pathEquals("$.status", http.value)
+        je.pathEquals("$.status", http)
         je.pathExists("$.error")
         if (messageContains != null) je.pathContains("$.message", messageContains)
         if (hasErrorsArray) je.pathExists("$.errors")
@@ -216,12 +182,12 @@ class JsonExpect(
     }
 }
 
-suspend fun HttpResponse.expect(block: ResponseExpect.() -> Unit) {
-    val body = this.bodyAsText() // кэшируем
+fun MockMvcResponse.expect(block: ResponseExpect.() -> Unit) {
+    val body = this.bodyAsText()
     ResponseExpect(this, body).block()
 }
 
-suspend fun HttpResponse.assertPagination(
+fun MockMvcResponse.assertPagination(
     page: Int,
     size: Int
 ) {

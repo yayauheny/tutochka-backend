@@ -7,7 +7,6 @@ import java.time.ZoneId
 import java.time.ZoneOffset
 import java.time.YearMonth
 import kotlin.test.assertEquals
-import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.DisplayName
 import org.junit.jupiter.api.Test
 import yayauheny.by.analytics.model.AnalyticsWindow
@@ -28,63 +27,62 @@ class PublicAnalyticsServiceTest {
 
     @Test
     @DisplayName("GIVEN live aggregates WHEN building public analytics response THEN compute summary, deltas, and safe series")
-    fun given_live_aggregates_when_building_public_analytics_response_then_compute_summary_deltas_and_safe_series() =
-        runTest {
-            val todayWindow = dayWindow(today)
-            val yesterdayWindow = dayWindow(today.minusDays(1))
-            val last7DaysWindow = rollingWindow(today, 7)
-            val last30DaysWindow = rollingWindow(today, 30)
-            val previous30DaysWindow = previousRollingWindow(today, 30)
+    fun given_live_aggregates_when_building_public_analytics_response_then_compute_summary_deltas_and_safe_series() {
+        val todayWindow = dayWindow(today)
+        val yesterdayWindow = dayWindow(today.minusDays(1))
+        val last7DaysWindow = rollingWindow(today, 7)
+        val last30DaysWindow = rollingWindow(today, 30)
+        val previous30DaysWindow = previousRollingWindow(today, 30)
 
-            val repository =
-                FakePublicAnalyticsRepository(
-                    totalUsers = 250,
-                    newUsersByWindow =
-                        mapOf(
-                            todayWindow to 2,
-                            last7DaysWindow to 11,
-                            last30DaysWindow to 40,
-                            previous30DaysWindow to 20
-                        ),
-                    activeUsersByWindow =
-                        mapOf(
-                            todayWindow to 18,
-                            yesterdayWindow to 12,
-                            last30DaysWindow to 110,
-                            previous30DaysWindow to 90
-                        ),
-                    metricsByWindow =
-                        mapOf(
-                            null to PublicAnalyticsEventMetrics(40, 30, 10, 120, 15, 12),
-                            todayWindow to PublicAnalyticsEventMetrics(8, 6, 2, 22, 2, 3),
-                            last7DaysWindow to PublicAnalyticsEventMetrics(21, 16, 5, 61, 5, 6),
-                            last30DaysWindow to PublicAnalyticsEventMetrics(28, 21, 7, 84, 9, 8),
-                            previous30DaysWindow to PublicAnalyticsEventMetrics(20, 10, 10, 40, 3, 4)
-                        ),
-                    dailySeries =
-                        listOf(
-                            PublicAnalyticsDailyAggregate(today.minusDays(2).toString(), 7, 9, 7, 2, 1, 2),
-                            PublicAnalyticsDailyAggregate(today.toString(), 18, 8, 6, 2, 2, 3)
-                        ),
-                    monthlySeries =
-                        listOf(
-                            PublicAnalyticsMonthlyAggregate(YearMonth.from(today).minusMonths(5).toString(), 0, 0, 0),
-                            PublicAnalyticsMonthlyAggregate(YearMonth.from(today).minusMonths(4).toString(), 0, 0, 0),
-                            PublicAnalyticsMonthlyAggregate(YearMonth.from(today).minusMonths(3).toString(), 0, 0, 0),
-                            PublicAnalyticsMonthlyAggregate(YearMonth.from(today).minusMonths(2).toString(), 0, 0, 0),
-                            PublicAnalyticsMonthlyAggregate(YearMonth.from(today).minusMonths(1).toString(), 14, 38, 19),
-                            PublicAnalyticsMonthlyAggregate(YearMonth.from(today).toString(), 26, 54, 28)
-                        ),
-                    eventTotals =
-                        listOf(
-                            PublicAnalyticsEventCount(ProductAnalyticsEvent.ROUTE_CLICKED.value, 15),
-                            PublicAnalyticsEventCount(ProductAnalyticsEvent.RESTROOM_DETAILS_OPENED.value, 12)
-                        )
-                )
+        val repository =
+            FakePublicAnalyticsRepository(
+                totalUsers = 250,
+                newUsersByWindow =
+                    mapOf(
+                        todayWindow to 2,
+                        last7DaysWindow to 11,
+                        last30DaysWindow to 40,
+                        previous30DaysWindow to 20
+                    ),
+                activeUsersByWindow =
+                    mapOf(
+                        todayWindow to 18,
+                        yesterdayWindow to 12,
+                        last30DaysWindow to 110,
+                        previous30DaysWindow to 90
+                    ),
+                metricsByWindow =
+                    mapOf(
+                        null to PublicAnalyticsEventMetrics(40, 30, 10, 120, 15, 12),
+                        todayWindow to PublicAnalyticsEventMetrics(8, 6, 2, 22, 2, 3),
+                        last7DaysWindow to PublicAnalyticsEventMetrics(21, 16, 5, 61, 5, 6),
+                        last30DaysWindow to PublicAnalyticsEventMetrics(28, 21, 7, 84, 9, 8),
+                        previous30DaysWindow to PublicAnalyticsEventMetrics(20, 10, 10, 40, 3, 4)
+                    ),
+                dailySeries =
+                    listOf(
+                        PublicAnalyticsDailyAggregate(today.minusDays(2).toString(), 7, 9, 7, 2, 1, 2),
+                        PublicAnalyticsDailyAggregate(today.toString(), 18, 8, 6, 2, 2, 3)
+                    ),
+                monthlySeries =
+                    listOf(
+                        PublicAnalyticsMonthlyAggregate(YearMonth.from(today).minusMonths(5).toString(), 0, 0, 0),
+                        PublicAnalyticsMonthlyAggregate(YearMonth.from(today).minusMonths(4).toString(), 0, 0, 0),
+                        PublicAnalyticsMonthlyAggregate(YearMonth.from(today).minusMonths(3).toString(), 0, 0, 0),
+                        PublicAnalyticsMonthlyAggregate(YearMonth.from(today).minusMonths(2).toString(), 0, 0, 0),
+                        PublicAnalyticsMonthlyAggregate(YearMonth.from(today).minusMonths(1).toString(), 14, 38, 19),
+                        PublicAnalyticsMonthlyAggregate(YearMonth.from(today).toString(), 26, 54, 28)
+                    ),
+                eventTotals =
+                    listOf(
+                        PublicAnalyticsEventCount(ProductAnalyticsEvent.ROUTE_CLICKED.value, 15),
+                        PublicAnalyticsEventCount(ProductAnalyticsEvent.RESTROOM_DETAILS_OPENED.value, 12)
+                    )
+            )
 
-            val service = PublicAnalyticsService(repository, fixedClock)
+        val service = PublicAnalyticsService(repository, fixedClock)
 
-            val response = service.getPublicAnalytics()
+        val response = service.getPublicAnalytics()
 
             assertEquals("Europe/Minsk", response.timezone)
             assertEquals(250, response.summary.totalUsers)
@@ -117,7 +115,7 @@ class PublicAnalyticsServiceTest {
             assertEquals(8, response.dailySeries.last().searches)
             assertEquals(6, response.monthlySeries.size)
             assertEquals("Route opened", response.eventTotals.first().label)
-        }
+    }
 
     private fun rollingWindow(
         anchorDate: LocalDate,
@@ -149,26 +147,26 @@ class PublicAnalyticsServiceTest {
         private val monthlySeries: List<PublicAnalyticsMonthlyAggregate>,
         private val eventTotals: List<PublicAnalyticsEventCount>
     ) : PublicAnalyticsRepository {
-        override suspend fun countTotalUsers(): Long = totalUsers
+        override fun countTotalUsers(): Long = totalUsers
 
-        override suspend fun countNewUsers(window: AnalyticsWindow): Long = newUsersByWindow[window] ?: 0
+        override fun countNewUsers(window: AnalyticsWindow): Long = newUsersByWindow[window] ?: 0
 
-        override suspend fun countActiveUsers(window: AnalyticsWindow): Long = activeUsersByWindow[window] ?: 0
+        override fun countActiveUsers(window: AnalyticsWindow): Long = activeUsersByWindow[window] ?: 0
 
-        override suspend fun aggregateEventMetrics(window: AnalyticsWindow?): PublicAnalyticsEventMetrics =
+        override fun aggregateEventMetrics(window: AnalyticsWindow?): PublicAnalyticsEventMetrics =
             metricsByWindow[window] ?: PublicAnalyticsEventMetrics()
 
-        override suspend fun fetchDailySeries(
+        override fun fetchDailySeries(
             window: AnalyticsWindow,
             zoneId: ZoneId
         ): List<PublicAnalyticsDailyAggregate> = dailySeries
 
-        override suspend fun fetchMonthlySeries(
+        override fun fetchMonthlySeries(
             startMonth: YearMonth,
             monthsCount: Int,
             zoneId: ZoneId
         ): List<PublicAnalyticsMonthlyAggregate> = monthlySeries
 
-        override suspend fun fetchEventTotals(minimumCount: Long): List<PublicAnalyticsEventCount> = eventTotals
+        override fun fetchEventTotals(minimumCount: Long): List<PublicAnalyticsEventCount> = eventTotals
     }
 }

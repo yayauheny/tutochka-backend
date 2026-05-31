@@ -2,9 +2,6 @@ package integration.api.analytics
 
 import integration.base.BaseIntegrationTest
 import integration.base.KtorTestApplication
-import io.ktor.client.request.get
-import io.ktor.client.statement.bodyAsText
-import io.ktor.http.HttpStatusCode
 import java.time.Instant
 import java.time.ZoneId
 import java.time.YearMonth
@@ -15,9 +12,11 @@ import kotlinx.coroutines.test.runTest
 import kotlinx.serialization.json.jsonArray
 import kotlinx.serialization.json.jsonObject
 import kotlinx.serialization.json.jsonPrimitive
+import kotlinx.serialization.json.parseToJsonElement
 import org.junit.jupiter.api.DisplayName
 import org.junit.jupiter.api.Tag
 import org.junit.jupiter.api.Test
+import org.springframework.http.HttpStatus
 import yayauheny.by.helpers.DatabaseTestHelper
 import yayauheny.by.helpers.assertJsonContentType
 import yayauheny.by.helpers.testJson
@@ -136,7 +135,7 @@ class PublicAnalyticsApiTest : BaseIntegrationTest() {
             KtorTestApplication.withApp(dslContext) { client ->
                 val response = client.get("/api/v1/public/analytics")
 
-                assertEquals(HttpStatusCode.OK, response.status)
+                assertEquals(HttpStatus.OK, response.status)
                 response.assertJsonContentType()
 
                 val body = response.bodyAsText()

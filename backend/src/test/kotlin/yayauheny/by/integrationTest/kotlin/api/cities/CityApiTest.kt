@@ -2,16 +2,14 @@ package integration.api.cities
 
 import integration.base.BaseIntegrationTest
 import integration.base.KtorTestApplication
-import io.ktor.client.statement.bodyAsText
-import io.ktor.http.HttpStatusCode
 import java.util.UUID
 import kotlin.test.assertEquals
 import kotlin.test.assertTrue
 import kotlinx.coroutines.test.runTest
 import kotlinx.serialization.json.Json
-import kotlinx.serialization.json.intOrNull
 import kotlinx.serialization.json.jsonObject
 import kotlinx.serialization.json.jsonPrimitive
+import org.springframework.http.HttpStatus
 import org.junit.jupiter.api.DisplayName
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Tag
@@ -37,7 +35,7 @@ class CityApiTest : BaseIntegrationTest() {
                 KtorTestApplication.withApp(dslContext) { client ->
                     val response = client.testGet("/api/v1/cities/country/${testEnv.countryId}")
 
-                    response.assertStatusAndJsonContent(HttpStatusCode.OK)
+                    response.assertStatusAndJsonContent(HttpStatus.OK)
                     response.assertBodyContainsAll("\"content\"", "\"totalElements\"")
                 }
             }
@@ -51,7 +49,7 @@ class CityApiTest : BaseIntegrationTest() {
                 KtorTestApplication.withApp(dslContext) { client ->
                     val response = client.testGet("/api/v1/cities/country/invalid-uuid")
 
-                    response.assertStatusAndJsonContent(HttpStatusCode.BadRequest)
+                    response.assertStatusAndJsonContent(HttpStatus.BAD_REQUEST)
                 }
             }
     }
@@ -66,7 +64,7 @@ class CityApiTest : BaseIntegrationTest() {
                 KtorTestApplication.withApp(dslContext) { client ->
                     val response = client.testGet("/api/v1/cities/search", mapOf("name" to "Test"))
 
-                    response.assertStatusAndJsonContent(HttpStatusCode.OK)
+                    response.assertStatusAndJsonContent(HttpStatus.OK)
                     response.assertBodyContainsAll("\"content\"", "\"totalElements\"")
                 }
             }
@@ -78,7 +76,7 @@ class CityApiTest : BaseIntegrationTest() {
                 KtorTestApplication.withApp(dslContext) { client ->
                     val response = client.testGet("/api/v1/cities/search")
 
-                    response.assertStatusAndJsonContent(HttpStatusCode.BadRequest)
+                    response.assertStatusAndJsonContent(HttpStatus.BAD_REQUEST)
                     val json = Json.parseToJsonElement(response.bodyAsText()).jsonObject
                     assertEquals(400, json["status"]!!.jsonPrimitive.intOrNull)
                 }
@@ -97,7 +95,7 @@ class CityApiTest : BaseIntegrationTest() {
                 KtorTestApplication.withApp(dslContext) { client ->
                     val response = client.testGet("/api/v1/cities/$nonExistentId")
 
-                    response.assertStatusAndJsonContent(HttpStatusCode.NotFound)
+                    response.assertStatusAndJsonContent(HttpStatus.NOT_FOUND)
                     val json = Json.parseToJsonElement(response.bodyAsText()).jsonObject
                     val message = json["message"]?.jsonPrimitive?.content
                     assertTrue(message != null && (message.lowercase().contains("not found") || message.contains("не найден")))
@@ -113,7 +111,7 @@ class CityApiTest : BaseIntegrationTest() {
                 KtorTestApplication.withApp(dslContext) { client ->
                     val response = client.testGet("/api/v1/cities/country/$nonExistentCountryId")
 
-                    response.assertStatusAndJsonContent(HttpStatusCode.OK)
+                    response.assertStatusAndJsonContent(HttpStatus.OK)
                     val json = Json.parseToJsonElement(response.bodyAsText()).jsonObject
                     assertEquals(0, json["totalElements"]!!.jsonPrimitive.intOrNull)
                 }
@@ -129,7 +127,7 @@ class CityApiTest : BaseIntegrationTest() {
                 KtorTestApplication.withApp(dslContext) { client ->
                     val response = client.testPost("/api/v1/cities", invalidCountryIdJson)
 
-                    response.assertStatusAndJsonContent(HttpStatusCode.BadRequest)
+                    response.assertStatusAndJsonContent(HttpStatus.BAD_REQUEST)
                 }
             }
 
@@ -147,7 +145,7 @@ class CityApiTest : BaseIntegrationTest() {
                 KtorTestApplication.withApp(dslContext) { client ->
                     val response = client.testPost("/api/v1/cities", nonExistentCountryIdJson)
 
-                    response.assertStatusAndJsonContent(HttpStatusCode.BadRequest)
+                    response.assertStatusAndJsonContent(HttpStatus.BAD_REQUEST)
                 }
             }
 
@@ -172,7 +170,7 @@ class CityApiTest : BaseIntegrationTest() {
                 KtorTestApplication.withApp(dslContext) { client ->
                     val response = client.testPost("/api/v1/cities", invalidLatJson)
 
-                    response.assertStatusAndJsonContent(HttpStatusCode.BadRequest)
+                    response.assertStatusAndJsonContent(HttpStatus.BAD_REQUEST)
                 }
             }
     }

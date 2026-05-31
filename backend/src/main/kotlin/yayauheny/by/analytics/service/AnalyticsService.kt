@@ -74,8 +74,7 @@ class AnalyticsService(
                 user = userJpaRepository.save(user)
 
                 val userAnalytics = UserAnalyticsEntity().apply {
-                    this.userId = user?.id
-                    this.user = user
+                    this.user = userJpaRepository.getReferenceById(requireNotNull(user.id))
                 }
                 userAnalyticsJpaRepository.save(userAnalytics)
             }

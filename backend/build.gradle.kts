@@ -40,10 +40,14 @@ dependencies {
     kapt("jakarta.annotation:jakarta.annotation-api")
     kapt("jakarta.persistence:jakarta.persistence-api")
 
-    testImplementation(libs.bundles.testingBundle)
-    testImplementation(libs.bundles.testcontainersBundle)
     testImplementation(libs.springBootStarterTest)
+    testImplementation(libs.bundles.testcontainersBundle)
+    testImplementation(libs.mockk)
+    testImplementation(libs.kotlinxCoroutinesTest)
     testImplementation(libs.assertj)
+    testImplementation(kotlin("test"))
+
+    testRuntimeOnly(libs.junitPlatformLauncher)
 }
 
 kapt {

@@ -1,15 +1,15 @@
 package yayauheny.by.unit.controller
 
-import io.ktor.client.request.get
-import io.ktor.client.statement.bodyAsText
-import io.ktor.http.HttpStatusCode
-import io.mockk.coEvery
-import kotlin.test.assertEquals
-import kotlin.test.assertFalse
-import kotlin.test.assertTrue
-import kotlinx.coroutines.test.runTest
+import java.time.Instant
+import org.junit.jupiter.api.Assertions.assertEquals
+import org.junit.jupiter.api.Assertions.assertFalse
+import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.DisplayName
 import org.junit.jupiter.api.Test
+import org.mockito.BDDMockito.given
+import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest
+import org.springframework.http.HttpStatus
+import yayauheny.by.analytics.api.PublicAnalyticsController
 import yayauheny.by.analytics.model.PublicAnalyticsDailySeriesPoint
 import yayauheny.by.analytics.model.PublicAnalyticsEventTotal
 import yayauheny.by.analytics.model.PublicAnalyticsHeadlineKpi
@@ -18,47 +18,48 @@ import yayauheny.by.analytics.model.PublicAnalyticsResponse
 import yayauheny.by.analytics.model.PublicAnalyticsSummary
 import yayauheny.by.analytics.model.PublicAnalyticsTrend
 import yayauheny.by.helpers.assertJsonContentType
+import yayauheny.by.helpers.assertBodyContains
+import yayauheny.by.helpers.testGet
 
+@WebMvcTest(PublicAnalyticsController::class)
 @DisplayName("PublicAnalyticsController Tests")
 class PublicAnalyticsControllerTest : RoutingTestBase() {
     @Test
     @DisplayName("GIVEN backend routing WHEN GET root THEN return not found")
-    fun given_backend_routing_when_get_root_then_return_not_found() =
-        runTest {
-            withRoutingApp { client ->
-                val response = client.get("/")
+    fun given_backend_routing_when_get_root_then_return_not_found() {
+        withRoutingApp {
+            val response = testGet("/")
 
-                assertEquals(HttpStatusCode.NotFound, response.status)
-            }
+            assertEquals(HttpStatus.NOT_FOUND, response.status)
         }
+    }
 
     @Test
     @DisplayName("GIVEN public analytics route WHEN GET endpoint THEN return safe JSON aggregates")
-    fun given_public_analytics_route_when_get_endpoint_then_return_safe_json_aggregates() =
-        runTest {
-            coEvery { publicAnalyticsService.getPublicAnalytics() } returns sampleResponse()
+    fun given_public_analytics_route_when_get_endpoint_then_return_safe_json_aggregates() {
+        given(publicAnalyticsService.getPublicAnalytics()).willReturn(sampleResponse())
 
-            withRoutingApp { client ->
-                val response = client.get("/api/v1/public/analytics")
+        withRoutingApp {
+            val response = testGet("/api/v1/public/analytics")
 
-                assertEquals(HttpStatusCode.OK, response.status)
-                response.assertJsonContentType()
-                val body = response.bodyAsText()
-                assertTrue(body.contains("\"timezone\":\"Europe/Minsk\""))
-                assertTrue(body.contains("\"headlineKpis\""))
-                assertTrue(body.contains("\"dailySeries\""))
-                assertFalse(body.contains("tg_user_id"))
-                assertFalse(body.contains("tg_chat_id"))
-                assertFalse(body.contains("username"))
-                assertFalse(body.contains("\"lat\""))
-                assertFalse(body.contains("\"lon\""))
-                assertFalse(body.contains("metadata"))
-            }
+            assertEquals(HttpStatus.OK, response.status)
+            response.assertJsonContentType()
+            val body = response.bodyAsText()
+            assertTrue(body.contains("\"timezone\":\"Europe/Minsk\""))
+            assertTrue(body.contains("\"headlineKpis\""))
+            assertTrue(body.contains("\"dailySeries\""))
+            assertFalse(body.contains("tg_user_id"))
+            assertFalse(body.contains("tg_chat_id"))
+            assertFalse(body.contains("username"))
+            assertFalse(body.contains("\"lat\""))
+            assertFalse(body.contains("\"lon\""))
+            assertFalse(body.contains("metadata"))
         }
+    }
 
     private fun sampleResponse() =
         PublicAnalyticsResponse(
-            generatedAt = java.time.Instant.parse("2026-05-15T09:00:00Z"),
+            generatedAt = Instant.parse("2026-05-15T09:00:00Z"),
             timezone = "Europe/Minsk",
             headlineKpis =
                 listOf(

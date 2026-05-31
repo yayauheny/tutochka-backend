@@ -1,12 +1,19 @@
 package yayauheny.by.helpers
 
 import java.time.Instant
+import java.sql.Timestamp
 import java.util.UUID
-import kotlinx.serialization.json.JsonObject
-import kotlinx.serialization.json.JsonPrimitive
-import kotlinx.serialization.json.buildJsonObject
-import org.jooq.DSLContext
-import org.jooq.impl.DSL
+import org.locationtech.jts.geom.Coordinate
+import org.locationtech.jts.geom.GeometryFactory
+import org.locationtech.jts.geom.Point
+import org.springframework.jdbc.core.JdbcTemplate
+import yayauheny.by.analytics.entity.AnalyticsEventEntity
+import yayauheny.by.analytics.entity.UserAnalyticsEntity
+import yayauheny.by.analytics.entity.UserEntity
+import yayauheny.by.analytics.repository.AnalyticsEventJpaRepository
+import yayauheny.by.analytics.repository.UserAnalyticsJpaRepository
+import yayauheny.by.analytics.repository.UserJpaRepository
+import yayauheny.by.importing.dedup.MatchKeyGenerator
 import yayauheny.by.model.enums.AccessibilityType
 import yayauheny.by.model.enums.DataSourceType
 import yayauheny.by.model.enums.FeeType
@@ -14,19 +21,46 @@ import yayauheny.by.model.enums.GenderType
 import yayauheny.by.model.enums.LocationType
 import yayauheny.by.model.enums.PlaceType
 import yayauheny.by.model.enums.RestroomStatus
-import yayauheny.by.importing.dedup.MatchKeyGenerator
 import yayauheny.by.model.analytics.AcquisitionTag
 import yayauheny.by.model.analytics.AnalyticsSource
-import yayauheny.by.tables.references.BUILDINGS
-import yayauheny.by.tables.references.ANALYTICS_EVENTS
-import yayauheny.by.tables.references.CITIES
-import yayauheny.by.tables.references.COUNTRIES
-import yayauheny.by.tables.references.RESTROOM_IMPORTS
-import yayauheny.by.tables.references.RESTROOMS
-import yayauheny.by.tables.references.USER_ANALYTICS
-import yayauheny.by.tables.references.USERS
-import yayauheny.by.util.pointExpr
-import yayauheny.by.util.toJSONB
+import yayauheny.by.entity.BuildingEntity
+import yayauheny.by.entity.CityEntity
+import yayauheny.by.entity.CountryEntity
+import yayauheny.by.entity.RestroomEntity
+import yayauheny.by.entity.SubwayLineEntity
+import yayauheny.by.entity.SubwayStationEntity
+import yayauheny.by.repository.BuildingJpaRepository
+import yayauheny.by.repository.CityJpaRepository
+import yayauheny.by.repository.CountryJpaRepository
+import yayauheny.by.repository.RestroomJpaRepository
+import yayauheny.by.repository.SubwayLineJpaRepository
+import yayauheny.by.repository.SubwayStationJpaRepository
+import yayauheny.by.util.EnvironmentConfig
+import kotlinx.serialization.json.JsonObject
+import kotlinx.serialization.json.JsonPrimitive
+import kotlinx.serialization.json.buildJsonObject
+import kotlinx.serialization.json.jsonPrimitive
+
+private val geometryFactory = GeometryFactory()
+
+private fun point(
+    lon: Double,
+    lat: Double
+): Point = geometryFactory.createPoint(Coordinate(lon, lat))
+
+private fun JsonObject?.toBooleanMap(): Map<String, Any>? =
+    this?.values?.entries?.associate { (key, value) ->
+        key to when (value) {
+            is JsonPrimitive -> value.booleanOrNull ?: value.content
+            else -> value.toString()
+        }
+    }
+
+private fun JsonObject?.toStringMap(): Map<String, String>? =
+    this?.values?.entries?.associate { (key, value) -> key to value.jsonPrimitive.content }
+
+private fun JsonObject?.toStringList(): List<String>? =
+    this?.values?.values?.map { it.jsonPrimitive.content }
 
 data class TestCountryData(
     val nameRu: String = "Test Country RU",
@@ -87,6 +121,19 @@ data class TestAnalyticsEventData(
 )
 
 object DatabaseTestHelper {
+    private val geometryFactory = GeometryFactory()
+
+    lateinit var jdbcTemplate: JdbcTemplate
+    lateinit var countryRepository: CountryJpaRepository
+    lateinit var cityRepository: CityJpaRepository
+    lateinit var restroomRepository: RestroomJpaRepository
+    lateinit var buildingRepository: BuildingJpaRepository
+    lateinit var subwayLineRepository: SubwayLineJpaRepository
+    lateinit var subwayStationRepository: SubwayStationJpaRepository
+    lateinit var userRepository: UserJpaRepository
+    lateinit var userAnalyticsRepository: UserAnalyticsJpaRepository
+    lateinit var analyticsEventRepository: AnalyticsEventJpaRepository
+
     fun createTestCountryData(
         nameRu: String = "Test Country RU",
         nameEn: String = "Test Country EN",
@@ -167,179 +214,112 @@ object DatabaseTestHelper {
     ) = TestAnalyticsEventData(event, userId, source, resultsCount, createdAt)
 
     fun insertTestCountry(
-        dslContext: DSLContext,
+        dslContext: Any? = null,
         data: TestCountryData = createTestCountryData()
-    ): UUID =
-        dslContext.transactionResult { configuration ->
-            val ctx = DSL.using(configuration)
-            val now = Instant.now()
-            val id = UUID.randomUUID()
-
-            ctx
-                .insertInto(COUNTRIES)
-                .set(COUNTRIES.ID, id)
-                .set(COUNTRIES.CODE, data.code)
-                .set(COUNTRIES.NAME_RU, data.nameRu)
-                .set(COUNTRIES.NAME_EN, data.nameEn)
-                .set(COUNTRIES.CREATED_AT, now)
-                .set(COUNTRIES.UPDATED_AT, now)
-                .returning(COUNTRIES.ID)
-                .fetchOne()
-                ?.getValue(COUNTRIES.ID)
-                ?: error("Failed to insert test country")
-        }
+    ): UUID {
+        val entity =
+            CountryEntity().apply {
+                code = data.code
+                nameRu = data.nameRu
+                nameEn = data.nameEn
+            }
+        return countryRepository.saveAndFlush(entity).id ?: error("Failed to insert test country")
+    }
 
     fun insertTestCity(
-        dslContext: DSLContext,
+        dslContext: Any? = null,
         countryId: UUID,
         data: TestCityData = createTestCityData()
-    ): UUID =
-        dslContext.transactionResult { configuration ->
-            val ctx = DSL.using(configuration)
-            val now = Instant.now()
-            val id = UUID.randomUUID()
-
-            ctx
-                .insertInto(CITIES)
-                .set(CITIES.ID, id)
-                .set(CITIES.COUNTRY_ID, countryId)
-                .set(CITIES.NAME_RU, data.nameRu)
-                .set(CITIES.NAME_EN, data.nameEn)
-                .set(
-                    CITIES.COORDINATES,
-                    pointExpr(data.lon, data.lat, CITIES.COORDINATES)
-                ).set(CITIES.CREATED_AT, now)
-                .set(CITIES.UPDATED_AT, now)
-                .returning(CITIES.ID)
-                .fetchOne()
-                ?.getValue(CITIES.ID)
-                ?: error("Failed to insert test city")
-        }
+    ): UUID {
+        val country = countryRepository.findById(countryId).orElseThrow { error("Country not found") }
+        val entity =
+            CityEntity().apply {
+                this.country = country
+                this.nameRu = data.nameRu
+                this.nameEn = data.nameEn
+                this.coordinates = geometryFactory.createPoint(Coordinate(data.lon, data.lat))
+            }
+        return cityRepository.saveAndFlush(entity).id ?: error("Failed to insert test city")
+    }
 
     fun insertTestRestroom(
-        dslContext: DSLContext,
+        dslContext: Any? = null,
         cityId: UUID? = null,
         data: TestRestroomData = createTestRestroomData()
-    ): UUID =
-        dslContext.transactionResult { configuration ->
-            val ctx = DSL.using(configuration)
-            val now = Instant.now()
-            val id = UUID.randomUUID()
-
-            ctx
-                .insertInto(RESTROOMS)
-                .set(RESTROOMS.ID, id)
-                .set(RESTROOMS.CITY_ID, cityId)
-                .set(RESTROOMS.BUILDING_ID, data.buildingId)
-                .set(RESTROOMS.SUBWAY_STATION_ID, data.subwayStationId)
-                .set(RESTROOMS.NAME, data.name)
-                .set(RESTROOMS.ADDRESS, data.address)
-                .set(RESTROOMS.PHONES, data.phones.toJSONB())
-                .set(RESTROOMS.WORK_TIME, data.workTime.toJSONB())
-                .set(RESTROOMS.FEE_TYPE, data.feeType.name)
-                .set(
-                    DSL.field(
-                        "gender_type",
-                        org.jooq.impl.SQLDataType
-                            .VARCHAR(20)
-                    ),
-                    data.genderType.name
-                ).set(RESTROOMS.ACCESSIBILITY_TYPE, data.accessibilityType.name)
-                .set(RESTROOMS.PLACE_TYPE, data.placeType.code)
-                .set(
-                    RESTROOMS.COORDINATES,
-                    pointExpr(data.lon, data.lat, RESTROOMS.COORDINATES)
-                ).set(RESTROOMS.DATA_SOURCE, data.dataSource.name)
-                .set(RESTROOMS.STATUS, data.status.name)
-                .set(RESTROOMS.AMENITIES, data.amenities.toJSONB())
-                .set(RESTROOMS.EXTERNAL_MAPS, data.externalMaps.toJSONB())
-                .set(RESTROOMS.ACCESS_NOTE, data.accessNote)
-                .set(RESTROOMS.DIRECTION_GUIDE, data.directionGuide)
-                .set(RESTROOMS.INHERIT_BUILDING_SCHEDULE, data.inheritBuildingSchedule)
-                .set(RESTROOMS.HAS_PHOTOS, data.hasPhotos)
-                .set(RESTROOMS.CREATED_AT, now)
-                .set(RESTROOMS.UPDATED_AT, now)
-                .returning(RESTROOMS.ID)
-                .fetchOne()
-                ?.getValue(RESTROOMS.ID)
-                ?: error("Failed to insert test restroom")
-        }
+    ): UUID {
+        val entity =
+            RestroomEntity().apply {
+                this.city = cityId?.let { cityRepository.findById(it).orElseThrow { error("City not found") } }
+                this.building = data.buildingId?.let { buildingRepository.findById(it).orElseThrow { error("Building not found") } }
+                this.subwayStation = data.subwayStationId?.let { subwayStationRepository.findById(it).orElseThrow { error("Subway station not found") } }
+                this.name = data.name
+                this.address = data.address
+                this.phones = data.phones.toStringList()
+                this.workTime = data.workTime.toStringMap()?.toMutableMap()
+                this.feeType = data.feeType
+                this.genderType = data.genderType
+                this.accessibilityType = data.accessibilityType
+                this.placeType = data.placeType
+                this.coordinates = point(data.lon, data.lat)
+                this.dataSource = data.dataSource
+                this.status = data.status
+                this.amenities = data.amenities.toBooleanMap()?.toMutableMap()
+                this.externalMaps = data.externalMaps.toStringMap()?.toMutableMap()
+                this.accessNote = data.accessNote
+                this.directionGuide = data.directionGuide
+                this.inheritBuildingSchedule = data.inheritBuildingSchedule
+                this.hasPhotos = data.hasPhotos
+                this.locationType = if (data.buildingId != null) LocationType.INSIDE_BUILDING else LocationType.STANDALONE
+                this.originProvider = yayauheny.by.model.enums.ImportProvider.MANUAL
+                this.originId = null
+                this.isHidden = false
+            }
+        return restroomRepository.saveAndFlush(entity).id ?: error("Failed to insert test restroom")
+    }
 
     fun insertTestBuilding(
-        dslContext: DSLContext,
+        dslContext: Any? = null,
         cityId: UUID,
         address: String,
         name: String? = null,
         lat: Double,
         lon: Double
-    ): UUID =
-        dslContext.transactionResult { configuration ->
-            val ctx = DSL.using(configuration)
-            val now = Instant.now()
-            val id = UUID.randomUUID()
-            val buildingMatchKeyField =
-                DSL.field(
-                    "building_match_key",
-                    org.jooq.impl.SQLDataType
-                        .VARCHAR(64)
-                )
-
-            ctx
-                .insertInto(BUILDINGS)
-                .set(BUILDINGS.ID, id)
-                .set(BUILDINGS.CITY_ID, cityId)
-                .set(BUILDINGS.NAME, name)
-                .set(BUILDINGS.ADDRESS, address)
-                .set(buildingMatchKeyField, MatchKeyGenerator.buildingMatchKey(cityId, address, lat, lon))
-                .set(BUILDINGS.COORDINATES, pointExpr(lon, lat, BUILDINGS.COORDINATES))
-                .set(BUILDINGS.CREATED_AT, now)
-                .set(BUILDINGS.UPDATED_AT, now)
-                .returning(BUILDINGS.ID)
-                .fetchOne()
-                ?.getValue(BUILDINGS.ID)
-                ?: error("Failed to insert test building")
-        }
+    ): UUID {
+        val city = cityRepository.findById(cityId).orElseThrow { error("City not found") }
+        val entity =
+            BuildingEntity().apply {
+                this.city = city
+                this.address = address
+                this.name = name
+                this.coordinates = point(lon, lat)
+                this.buildingMatchKey = MatchKeyGenerator.buildingMatchKey(cityId, address, lat, lon)
+            }
+        return buildingRepository.saveAndFlush(entity).id ?: error("Failed to insert test building")
+    }
 
     fun insertStandaloneRestroom(
-        dslContext: DSLContext,
+        dslContext: Any? = null,
         cityId: UUID,
         name: String,
         address: String,
         lat: Double,
         lon: Double
-    ): UUID =
-        dslContext.transactionResult { configuration ->
-            val ctx = DSL.using(configuration)
-            val now = Instant.now()
-            val id = UUID.randomUUID()
-            val locationTypeField =
-                DSL.field(
-                    "location_type",
-                    org.jooq.impl.SQLDataType
-                        .VARCHAR(20)
-                )
-            val restroomMatchKeyField =
-                DSL.field(
-                    "restroom_match_key",
-                    org.jooq.impl.SQLDataType
-                        .VARCHAR(64)
-                )
-
-            ctx
-                .insertInto(RESTROOMS)
-                .set(RESTROOMS.ID, id)
-                .set(RESTROOMS.CITY_ID, cityId)
-                .set(RESTROOMS.NAME, name)
-                .set(RESTROOMS.ADDRESS, address)
-                .set(RESTROOMS.FEE_TYPE, FeeType.FREE.name)
-                .set(locationTypeField, LocationType.STANDALONE.name)
-                .set(RESTROOMS.ACCESSIBILITY_TYPE, AccessibilityType.UNKNOWN.name)
-                .set(RESTROOMS.PLACE_TYPE, PlaceType.PUBLIC.code)
-                .set(RESTROOMS.STATUS, RestroomStatus.ACTIVE.name)
-                .set(RESTROOMS.DATA_SOURCE, DataSourceType.MANUAL.name)
-                .set(RESTROOMS.AMENITIES, buildJsonObject { }.toJSONB())
-                .set(
-                    restroomMatchKeyField,
+    ): UUID {
+        val city = cityRepository.findById(cityId).orElseThrow { error("City not found") }
+        val entity =
+            RestroomEntity().apply {
+                this.city = city
+                this.name = name
+                this.address = address
+                this.feeType = FeeType.FREE
+                this.locationType = LocationType.STANDALONE
+                this.accessibilityType = AccessibilityType.UNKNOWN
+                this.placeType = PlaceType.PUBLIC
+                this.status = RestroomStatus.ACTIVE
+                this.dataSource = DataSourceType.MANUAL
+                this.amenities = emptyMap<String, Any>().toMutableMap()
+                this.coordinates = point(lon, lat)
+                this.restroomMatchKey =
                     MatchKeyGenerator.restroomMatchKey(
                         cityId = cityId,
                         buildingId = null,
@@ -349,79 +329,90 @@ object DatabaseTestHelper {
                         lon = lon,
                         locationType = LocationType.STANDALONE
                     )
-                ).set(RESTROOMS.COORDINATES, pointExpr(lon, lat, RESTROOMS.COORDINATES))
-                .set(RESTROOMS.CREATED_AT, now)
-                .set(RESTROOMS.UPDATED_AT, now)
-                .returning(RESTROOMS.ID)
-                .fetchOne()
-                ?.getValue(RESTROOMS.ID)
-                ?: error("Failed to insert standalone restroom")
-        }
+            }
+        return restroomRepository.saveAndFlush(entity).id ?: error("Failed to insert standalone restroom")
+    }
 
     fun insertAnalyticsUser(
-        dslContext: DSLContext,
+        dslContext: Any? = null,
         data: TestAnalyticsUserData = createTestAnalyticsUserData()
-    ): UUID =
-        dslContext.transactionResult { configuration ->
-            val ctx = DSL.using(configuration)
-            val id = UUID.randomUUID()
+    ): UUID {
+        val userId =
+            jdbcTemplate.queryForObject(
+                """
+                INSERT INTO users (tg_user_id, tg_chat_id, source, username, created_at, updated_at)
+                VALUES (?, ?, ?, ?, ?, ?)
+                RETURNING id
+                """.trimIndent(),
+                UUID::class.java,
+                data.tgUserId,
+                data.tgChatId,
+                data.source,
+                data.username,
+                Timestamp.from(data.createdAt),
+                Timestamp.from(data.updatedAt)
+            ) ?: error("Failed to insert analytics user")
 
-            ctx
-                .insertInto(USERS)
-                .set(USERS.ID, id)
-                .set(USERS.TG_USER_ID, data.tgUserId)
-                .set(USERS.TG_CHAT_ID, data.tgChatId)
-                .set(USERS.SOURCE, data.source)
-                .set(USERS.ACQUISITION_TAG, data.acquisitionTag.value)
-                .set(USERS.USERNAME, data.username)
-                .set(USERS.CREATED_AT, data.createdAt)
-                .set(USERS.UPDATED_AT, data.updatedAt)
-                .returning(USERS.ID)
-                .fetchOne()
-                ?.getValue(USERS.ID)
-                ?: error("Failed to insert analytics user")
-        }
+        jdbcTemplate.update(
+            """
+            INSERT INTO user_analytics (
+                user_id,
+                searches_count,
+                successful_searches_count,
+                empty_searches_count,
+                details_opened_count,
+                routes_clicked_count,
+                last_event,
+                last_event_at
+            ) VALUES (?, 0, 0, 0, 0, 0, NULL, NULL)
+            """.trimIndent(),
+            userId
+        )
+        return userId
+    }
 
     fun insertAnalyticsEvent(
-        dslContext: DSLContext,
+        dslContext: Any? = null,
         data: TestAnalyticsEventData
-    ): UUID =
-        dslContext.transactionResult { configuration ->
-            val ctx = DSL.using(configuration)
-            val id = UUID.randomUUID()
+    ): UUID {
+        return jdbcTemplate.queryForObject(
+            """
+            INSERT INTO analytics_events (event, created_at, user_id, source, results_count)
+            VALUES (?, ?, ?, ?, ?)
+            RETURNING id
+            """.trimIndent(),
+            UUID::class.java,
+            data.event,
+            Timestamp.from(data.createdAt),
+            data.userId,
+            data.source,
+            data.resultsCount
+        ) ?: error("Failed to insert analytics event")
+    }
 
-            ctx
-                .insertInto(ANALYTICS_EVENTS)
-                .set(ANALYTICS_EVENTS.ID, id)
-                .set(ANALYTICS_EVENTS.EVENT, data.event)
-                .set(ANALYTICS_EVENTS.CREATED_AT, data.createdAt)
-                .set(ANALYTICS_EVENTS.USER_ID, data.userId)
-                .set(ANALYTICS_EVENTS.SOURCE, data.source)
-                .set(ANALYTICS_EVENTS.RESULTS_COUNT, data.resultsCount)
-                .returning(ANALYTICS_EVENTS.ID)
-                .fetchOne()
-                ?.getValue(ANALYTICS_EVENTS.ID)
-                ?: error("Failed to insert analytics event")
-        }
-
-    fun createTestEnvironment(dslContext: DSLContext): TestEnvironment {
+    fun createTestEnvironment(dslContext: Any? = null): TestEnvironment {
         val countryId = insertTestCountry(dslContext)
         val cityId = insertTestCity(dslContext, countryId)
         return TestEnvironment(countryId, cityId)
     }
 
-    fun truncateAllTables(dslContext: DSLContext) {
-        dslContext.transaction { configuration ->
-            val ctx = DSL.using(configuration)
-            ctx.deleteFrom(ANALYTICS_EVENTS).execute()
-            ctx.deleteFrom(USER_ANALYTICS).execute()
-            ctx.deleteFrom(USERS).execute()
-            ctx.deleteFrom(RESTROOM_IMPORTS).execute()
-            ctx.deleteFrom(RESTROOMS).execute()
-            ctx.deleteFrom(BUILDINGS).execute()
-            ctx.deleteFrom(CITIES).execute()
-            ctx.deleteFrom(COUNTRIES).execute()
-        }
+    fun truncateAllTables(dslContext: Any? = null) {
+        jdbcTemplate.execute(
+            """
+            TRUNCATE TABLE
+                analytics_events,
+                user_analytics,
+                users,
+                restroom_imports,
+                restrooms,
+                buildings,
+                subway_stations,
+                subway_lines,
+                cities,
+                countries
+            RESTART IDENTITY CASCADE
+            """
+        )
     }
 
     data class TestEnvironment(

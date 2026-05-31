@@ -2,7 +2,7 @@ package yayauheny.by.unit.importing.dedup
 
 import kotlin.test.assertEquals
 import kotlinx.serialization.json.buildJsonObject
-import kotlinx.serialization.json.put
+import kotlinx.serialization.json.toJacksonNode
 import org.junit.jupiter.api.DisplayName
 import org.junit.jupiter.api.Test
 import yayauheny.by.importing.dedup.PayloadHashing
@@ -37,8 +37,8 @@ class PayloadHashingTest {
             }
 
         assertEquals(
-            PayloadHashing.canonicalPayloadHash(first),
-            PayloadHashing.canonicalPayloadHash(second)
+            PayloadHashing.canonicalPayloadHash(first.toJacksonNode()),
+            PayloadHashing.canonicalPayloadHash(second.toJacksonNode())
         )
     }
 }

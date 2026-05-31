@@ -9,13 +9,19 @@ import org.springframework.web.bind.MissingServletRequestParameterException
 import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException
 import org.springframework.web.bind.annotation.ExceptionHandler
 import org.springframework.web.bind.annotation.RestControllerAdvice
+import org.springframework.web.servlet.NoHandlerFoundException
+import org.springframework.web.servlet.resource.NoResourceFoundException
 import jakarta.servlet.http.HttpServletRequest
 import jakarta.validation.ConstraintViolationException
 import org.springframework.http.converter.HttpMessageNotReadableException
 import java.lang.reflect.UndeclaredThrowableException
+import yayauheny.by.metrics.BackendSearchMetrics
+import yayauheny.by.metrics.MetricLabelWhitelist
 
 @RestControllerAdvice
-class GlobalExceptionHandler {
+class GlobalExceptionHandler(
+    private val backendSearchMetrics: BackendSearchMetrics
+) {
 
     private val log = LoggerFactory.getLogger(GlobalExceptionHandler::class.java)
 
@@ -73,6 +79,16 @@ class GlobalExceptionHandler {
         return ResponseEntity.badRequest().body(response)
     }
 
+    @ExceptionHandler(IllegalArgumentException::class)
+    fun handleIllegalArgumentException(e: IllegalArgumentException, request: HttpServletRequest): ResponseEntity<ErrorResponse> {
+        val response = ErrorResponse(
+            status = HttpStatus.BAD_REQUEST.value(),
+            message = e.message ?: "Bad Request",
+            path = request.requestURI
+        )
+        return ResponseEntity.badRequest().body(response)
+    }
+
     @ExceptionHandler(
         MethodArgumentTypeMismatchException::class,
         HttpMessageNotReadableException::class,
@@ -81,12 +97,39 @@ class GlobalExceptionHandler {
         HttpMediaTypeNotSupportedException::class
     )
     fun handleBadRequestExceptions(e: Exception, request: HttpServletRequest): ResponseEntity<ErrorResponse> {
+        if (request.requestURI == "/api/v1/restrooms/nearest") {
+            val clientType = MetricLabelWhitelist.clientTypeOrDefault(request.getHeader("X-Client-Type"))
+            backendSearchMetrics.incrementSearchRequest(clientType, "unknown")
+            backendSearchMetrics.incrementSearchFailure("validation")
+        }
+        val fieldErrors =
+            if (e is ConstraintViolationException) {
+                e.constraintViolations.map { violation ->
+                    FieldError(
+                        field = violation.propertyPath.toString().substringAfterLast('.'),
+                        message = violation.message
+                    )
+                }
+            } else {
+                null
+            }
         val response = ErrorResponse(
             status = HttpStatus.BAD_REQUEST.value(),
             message = e.message ?: "Bad Request",
-            path = request.requestURI
+            path = request.requestURI,
+            errors = fieldErrors
         )
         return ResponseEntity.badRequest().body(response)
+    }
+
+    @ExceptionHandler(NoHandlerFoundException::class, NoResourceFoundException::class)
+    fun handleNotFoundExceptions(e: Exception, request: HttpServletRequest): ResponseEntity<ErrorResponse> {
+        val response = ErrorResponse(
+            status = HttpStatus.NOT_FOUND.value(),
+            message = e.message ?: "Not Found",
+            path = request.requestURI
+        )
+        return ResponseEntity.status(HttpStatus.NOT_FOUND).body(response)
     }
 
     @ExceptionHandler(UndeclaredThrowableException::class)
@@ -96,6 +139,7 @@ class GlobalExceptionHandler {
             is ValidationException, is NotFoundException, is ConflictException, is BadRequestException, is ServiceUnavailableException, is NotImplementedException ->
                 handleRestException(cause as Exception, request)
             is EntityNotFoundException -> handleEntityNotFoundException(cause, request)
+            is IllegalArgumentException -> handleIllegalArgumentException(cause, request)
             is MethodArgumentNotValidException -> handleValidationExceptions(cause, request)
             is MethodArgumentTypeMismatchException,
             is HttpMessageNotReadableException,

@@ -1,169 +1,162 @@
 package yayauheny.by.helpers
 
-import io.ktor.client.HttpClient
-import io.ktor.client.request.delete
-import io.ktor.client.request.get
-import io.ktor.client.request.post
-import io.ktor.client.request.put
-import io.ktor.client.request.setBody
-import io.ktor.client.statement.HttpResponse
-import io.ktor.client.statement.bodyAsText
-import io.ktor.http.ContentType
-import io.ktor.http.HttpStatusCode
-import io.ktor.http.contentType
+import com.fasterxml.jackson.databind.JsonNode
+import org.springframework.http.HttpHeaders
+import org.springframework.http.HttpStatus
+import org.springframework.http.MediaType
+import org.springframework.test.web.servlet.MvcResult
+import org.springframework.test.web.servlet.MockMvc
+import org.springframework.test.web.servlet.request.MockMvcRequestBuilders
 import java.time.Instant
 import java.util.UUID
-import kotlin.test.assertEquals
-import kotlin.test.assertTrue
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.buildJsonObject
-import kotlinx.serialization.json.put
-import kotlinx.serialization.modules.SerializersModule
+import kotlinx.serialization.json.decodeFromString
 import yayauheny.by.common.errors.ErrorResponse
-import yayauheny.by.util.InstantSerializer
-import yayauheny.by.util.UUIDSerializer
 
 val testJson =
     Json {
         ignoreUnknownKeys = true
         prettyPrint = false
-        serializersModule =
-            SerializersModule {
-                contextual(UUID::class, UUIDSerializer)
-                contextual(Instant::class, InstantSerializer)
-            }
     }
 
-suspend fun HttpClient.testGet(
+class MockMvcResponse internal constructor(
+    private val result: MvcResult
+) {
+    val status: HttpStatus
+        get() = HttpStatus.valueOf(result.response.status)
+
+    fun bodyAsText(): String = result.response.contentAsString
+
+    fun header(name: String): String? = result.response.getHeader(name)
+}
+
+fun MockMvc.testGet(
     path: String,
-    query: Map<String, String> = emptyMap()
-): HttpResponse =
-    get(path) {
-        url { query.forEach { (k, v) -> parameters.append(k, v) } }
-        headers.append("Accept", ContentType.Application.Json.toString())
-    }
+    query: Map<String, String> = emptyMap(),
+    headers: Map<String, String> = emptyMap()
+): MockMvcResponse {
+    val request =
+        MockMvcRequestBuilders
+            .get(path)
+            .accept(MediaType.APPLICATION_JSON)
+            .apply {
+                query.forEach { (key, value) ->
+                    param(key, value)
+                }
+                headers.forEach { (key, value) ->
+                    header(key, value)
+                }
+            }
+    return MockMvcResponse(this.perform(request).andReturn())
+}
 
-suspend fun HttpClient.testPost(
+fun MockMvc.testPost(
     path: String,
     jsonBody: String,
     headers: Map<String, String> = emptyMap()
-): HttpResponse =
-    post(path) {
-        contentType(ContentType.Application.Json)
-        headers.forEach { (k, v) -> this.headers.append(k, v) }
-        setBody(jsonBody)
-    }
+): MockMvcResponse {
+    val builder =
+        MockMvcRequestBuilders
+            .post(path)
+            .accept(MediaType.APPLICATION_JSON)
+            .apply {
+                if (jsonBody.isNotBlank()) {
+                    contentType(MediaType.APPLICATION_JSON)
+                    content(jsonBody)
+                }
+                headers.forEach { (key, value) ->
+                    header(key, value)
+                }
+            }
+    return MockMvcResponse(this.perform(builder).andReturn())
+}
 
-suspend fun HttpClient.testPut(
+fun MockMvc.testPut(
     path: String,
     jsonBody: String
-): HttpResponse =
-    put(path) {
-        contentType(ContentType.Application.Json)
-        setBody(jsonBody)
-    }
-
-suspend fun HttpClient.testDelete(path: String): HttpResponse =
-    delete(path) {
-        headers.append("Accept", ContentType.Application.Json.toString())
-    }
-
-suspend fun HttpResponse.parseErrorResponse(): ErrorResponse {
-    val body = this.bodyAsText()
-    return testJson
-        .decodeFromString<ErrorResponse>(body)
+): MockMvcResponse {
+    val request =
+        MockMvcRequestBuilders
+            .put(path)
+            .contentType(MediaType.APPLICATION_JSON)
+            .accept(MediaType.APPLICATION_JSON)
+            .content(jsonBody)
+    return MockMvcResponse(this.perform(request).andReturn())
 }
+
+fun MockMvc.testDelete(path: String): MockMvcResponse {
+    val request =
+        MockMvcRequestBuilders
+            .delete(path)
+            .accept(MediaType.APPLICATION_JSON)
+    return MockMvcResponse(this.perform(request).andReturn())
+}
+
+fun MockMvcResponse.parseErrorResponse(): ErrorResponse =
+    testJson.decodeFromString(bodyAsText())
 
 fun ErrorResponse.assertHasFieldError(
     field: String,
     expectedMessage: String? = null
 ) {
-    assertEquals(
-        this.errors?.any { it.field == field },
-        true,
-        "Error response should contain field error for '$field', but got: ${this.errors}"
-    )
-
-    if (expectedMessage != null) {
-        val fieldError = this.errors?.find { it.field == field }
-        assertEquals(
-            fieldError?.message?.contains(expectedMessage),
-            true,
-            "Field error for '$field' should contain message '$expectedMessage', but got: '${fieldError?.message}'"
-        )
-    }
+    org.assertj.core.api.Assertions.assertThat(this.errors)
+        .withFailMessage("Error response should contain field error for '%s', but got: %s", field, this.errors)
+        .anySatisfy { error ->
+            org.assertj.core.api.Assertions.assertThat(error.field).isEqualTo(field)
+            if (expectedMessage != null) {
+                org.assertj.core.api.Assertions.assertThat(error.message).contains(expectedMessage)
+            }
+        }
 }
 
 fun ErrorResponse.assertHasValidationErrors() {
-    assertTrue(
-        this.errors != null && this.errors.isNotEmpty(),
-        "Error response should contain validation errors, but got: ${this.errors}"
-    )
+    org.assertj.core.api.Assertions.assertThat(this.errors)
+        .withFailMessage("Error response should contain validation errors, but got: %s", this.errors)
+        .isNotNull
+    org.assertj.core.api.Assertions.assertThat(this.errors).isNotEmpty
 }
 
-/**
- * Asserts that the response has JSON content type.
- */
-fun HttpResponse.assertJsonContentType() {
-    val contentType = this.headers["Content-Type"]
-    assertEquals(
-        contentType?.contains("application/json"),
-        true,
-        "Expected Content-Type to contain 'application/json', but got: $contentType"
-    )
+fun MockMvcResponse.assertJsonContentType() {
+    val contentType = header(HttpHeaders.CONTENT_TYPE)
+    org.assertj.core.api.Assertions.assertThat(contentType)
+        .withFailMessage("Expected Content-Type to contain 'application/json', but got: %s", contentType)
+        .contains("application/json")
 }
 
-/**
- * Asserts that the HTTP response has the expected status code and JSON content type.
- * Provides clear error messages if assertions fail.
- */
-fun HttpResponse.assertStatusAndJsonContent(
-    expectedStatus: HttpStatusCode,
+fun MockMvcResponse.assertStatusAndJsonContent(
+    expectedStatus: HttpStatus,
     message: String? = null
 ) {
-    assertEquals(
-        expectedStatus,
-        this.status,
-        message ?: "Expected status $expectedStatus but got ${this.status}"
-    )
-    this.assertJsonContentType()
+    org.assertj.core.api.Assertions.assertThat(status)
+        .withFailMessage(message ?: "Expected status %s but got %s", expectedStatus, status)
+        .isEqualTo(expectedStatus)
+    assertJsonContentType()
 }
 
-/**
- * Asserts that the response body contains the specified text.
- * Provides clear error message with actual body content.
- */
-suspend fun HttpResponse.assertBodyContains(
+fun MockMvcResponse.assertBodyContains(
     expectedText: String,
     message: String? = null
 ) {
-    val body = this.bodyAsText()
-    assertTrue(
-        body.contains(expectedText),
-        message ?: "Response body should contain '$expectedText', but got: ${body.take(200)}"
-    )
+    val body = bodyAsText()
+    org.assertj.core.api.Assertions.assertThat(body)
+        .withFailMessage(message ?: "Response body should contain '%s', but got: %s", expectedText, body.take(200))
+        .contains(expectedText)
 }
 
-/**
- * Asserts that the response body contains all specified texts.
- */
-suspend fun HttpResponse.assertBodyContainsAll(
+fun MockMvcResponse.assertBodyContainsAll(
     vararg expectedTexts: String,
     message: String? = null
 ) {
-    val body = this.bodyAsText()
+    val body = bodyAsText()
     expectedTexts.forEach { expectedText ->
-        assertTrue(
-            body.contains(expectedText),
-            message ?: "Response body should contain '$expectedText', but got: ${body.take(200)}"
-        )
+        org.assertj.core.api.Assertions.assertThat(body)
+            .withFailMessage(message ?: "Response body should contain '%s', but got: %s", expectedText, body.take(200))
+            .contains(expectedText)
     }
 }
 
-/**
- * Creates a JSON string for city creation request.
- */
 fun createCityJson(
     countryId: UUID,
     nameRu: String,
@@ -191,9 +184,6 @@ fun createCityJson(
     return json.toString()
 }
 
-/**
- * Creates a JSON string for country creation request.
- */
 fun createCountryJson(
     nameRu: String,
     nameEn: String,
@@ -208,9 +198,6 @@ fun createCountryJson(
     return json.toString()
 }
 
-/**
- * Creates a JSON string for city update request.
- */
 fun createCityUpdateJson(dto: yayauheny.by.model.city.CityUpdateDto): String {
     val json =
         buildJsonObject {
@@ -231,9 +218,6 @@ fun createCityUpdateJson(dto: yayauheny.by.model.city.CityUpdateDto): String {
     return json.toString()
 }
 
-/**
- * Creates a JSON string for city creation request from DTO.
- */
 fun createCityJson(dto: yayauheny.by.model.city.CityCreateDto): String {
     val json =
         buildJsonObject {
@@ -254,9 +238,6 @@ fun createCityJson(dto: yayauheny.by.model.city.CityCreateDto): String {
     return json.toString()
 }
 
-/**
- * Creates a JSON string for restroom creation request.
- */
 fun createRestroomJson(
     cityId: UUID? = null,
     name: String? = null,
@@ -296,9 +277,6 @@ fun createRestroomJson(
     return json.toString()
 }
 
-/**
- * Creates a JSON string for restroom creation request from TestRestroomData.
- */
 fun createRestroomJsonFromTestData(
     testData: yayauheny.by.helpers.TestRestroomData,
     cityId: java.util.UUID? = null

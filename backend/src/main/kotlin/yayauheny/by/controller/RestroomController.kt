@@ -2,11 +2,14 @@ package yayauheny.by.controller
 
 import jakarta.servlet.http.HttpServletRequest
 import jakarta.validation.Valid
+import jakarta.validation.constraints.DecimalMax
+import jakarta.validation.constraints.DecimalMin
 import jakarta.validation.constraints.Max
 import jakarta.validation.constraints.Min
 import org.slf4j.LoggerFactory
 import org.springframework.http.HttpHeaders
 import org.springframework.http.HttpStatus
+import org.springframework.http.MediaType
 import org.springframework.http.ResponseEntity
 import org.springframework.web.bind.annotation.*
 import org.springframework.validation.annotation.Validated
@@ -81,8 +84,8 @@ class RestroomController(
         @RequestHeader(name = "X-Tg-Chat-Id", required = false) tgChatId: String?,
         @RequestHeader(name = "X-Tg-Username", required = false) username: String?,
         @RequestHeader(name = "X-Analytics-Source", required = false) sourceHeader: String?,
-        @RequestParam lat: Double,
-        @RequestParam lon: Double,
+        @RequestParam @DecimalMin(value = "-90.0", message = "должно быть не менее -90 градусов") @DecimalMax(value = "90.0", message = "не более 90 градусов") lat: Double,
+        @RequestParam @DecimalMin(value = "-180.0", message = "должно быть не менее -180 градусов") @DecimalMax(value = "180.0", message = "не более 180 градусов") lon: Double,
         @RequestParam(required = false) @Min(1) @Max(100) limit: Int?,
         @RequestParam(required = false) @Min(1) @Max(10000) distanceMeters: Int?
     ): ResponseEntity<Any> {
@@ -91,6 +94,7 @@ class RestroomController(
         val clientType = MetricLabelWhitelist.clientTypeOrDefault(clientTypeHeader)
         val radiusBucket = SearchMetricBuckets.radiusBucketOrFallback(resolvedDistanceMeters.toString())
         backendSearchMetrics.incrementSearchRequest(clientType, radiusBucket)
+        val normalizedUsername = username?.trim()?.takeIf { it.isNotEmpty() }
 
         try {
             val restrooms = restroomService.findNearestRestrooms(
@@ -116,7 +120,7 @@ class RestroomController(
             val identity = AnalyticsIdentityHeaders(
                 tgUserId = tgUserId,
                 tgChatId = tgChatId,
-                username = username,
+                username = normalizedUsername,
                 source = source
             )
             runCatching {
@@ -141,13 +145,13 @@ class RestroomController(
         }
     }
 
-    @PostMapping
+    @PostMapping(consumes = [MediaType.APPLICATION_JSON_VALUE])
     fun createRestroom(@Valid @RequestBody createDto: RestroomCreateDto): ResponseEntity<Any> {
         val restroom = restroomService.createRestroom(createDto)
         return ResponseEntity.status(HttpStatus.CREATED).body(restroom)
     }
 
-    @PutMapping("/{id}")
+    @PutMapping(value = ["/{id}"], consumes = [MediaType.APPLICATION_JSON_VALUE])
     fun updateRestroom(@PathVariable id: UUID, @Valid @RequestBody updateDto: RestroomUpdateDto): ResponseEntity<Any> {
         val restroom = restroomService.updateRestroom(id, updateDto)
         return ResponseEntity.ok(restroom)

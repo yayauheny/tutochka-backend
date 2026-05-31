@@ -5,7 +5,7 @@ import kotlin.test.assertEquals
 import kotlin.test.assertNotNull
 import kotlin.test.assertNull
 import kotlinx.serialization.json.buildJsonObject
-import kotlinx.serialization.json.put
+import kotlinx.serialization.json.toJacksonNode
 import org.junit.jupiter.api.DisplayName
 import org.junit.jupiter.api.Test
 import yayauheny.by.importing.model.ImportAdapterContext
@@ -36,7 +36,7 @@ class ImportAdapterMetadataTest {
                 )
             }
 
-        val envelope = adapter.parseEnvelope(payload, ImportAdapterContext(ImportPayloadType.TWO_GIS_SCRAPED_PLACE_JSON, UUID.randomUUID()))
+        val envelope = adapter.parseEnvelope(payload.toJacksonNode(), ImportAdapterContext(ImportPayloadType.TWO_GIS_SCRAPED_PLACE_JSON, UUID.randomUUID()))
 
         assertEquals("2gis-123", envelope.inboxMetadata.externalId)
         assertEquals("https://2gis.by/minsk/firm/2gis-123", envelope.inboxMetadata.sourceUrl)
@@ -59,7 +59,7 @@ class ImportAdapterMetadataTest {
                 )
             }
 
-        val sourceLocation = adapter.extractSourceLocation(payload)
+        val sourceLocation = adapter.extractSourceLocation(payload.toJacksonNode())
 
         assertEquals("Республика Беларусь", sourceLocation.country)
         assertEquals("Минск", sourceLocation.city)
@@ -87,7 +87,7 @@ class ImportAdapterMetadataTest {
 
         val envelope =
             adapter.parseEnvelope(
-                payload,
+                payload.toJacksonNode(),
                 ImportAdapterContext(ImportPayloadType.YANDEX_MAPS_SCRAPED_PLACE_JSON, UUID.randomUUID())
             )
 
@@ -113,7 +113,7 @@ class ImportAdapterMetadataTest {
                 )
             }
 
-        val sourceLocation = adapter.extractSourceLocation(payload)
+        val sourceLocation = adapter.extractSourceLocation(payload.toJacksonNode())
 
         assertEquals("Беларусь", sourceLocation.country)
         assertEquals("Боровляны", sourceLocation.city)
@@ -137,7 +137,7 @@ class ImportAdapterMetadataTest {
                 )
             }
 
-        val sourceLocation = adapter.extractSourceLocation(payload)
+        val sourceLocation = adapter.extractSourceLocation(payload.toJacksonNode())
 
         assertNull(sourceLocation.city)
     }
@@ -151,7 +151,7 @@ class ImportAdapterMetadataTest {
                 mapOf("scrapedAt" to "2026-05-24T09:25:00.392Z")
             )
 
-        val envelope = adapter.parseEnvelope(payload, ImportAdapterContext(ImportPayloadType.OSM_TOILET_JSON, UUID.randomUUID()))
+        val envelope = adapter.parseEnvelope(payload.toJacksonNode(), ImportAdapterContext(ImportPayloadType.OSM_TOILET_JSON, UUID.randomUUID()))
 
         assertEquals("4115239922", envelope.inboxMetadata.externalId)
         assertEquals("https://www.openstreetmap.org/node/4115239922", envelope.inboxMetadata.sourceUrl)
@@ -163,7 +163,7 @@ class ImportAdapterMetadataTest {
         val adapter = OsmImportAdapter()
         val payload = OsmOriginalRows.addressTaggedPaid()
 
-        val sourceLocation = adapter.extractSourceLocation(payload)
+        val sourceLocation = adapter.extractSourceLocation(payload.toJacksonNode())
 
         assertEquals("BY", sourceLocation.country)
         assertEquals("Мінск", sourceLocation.city)

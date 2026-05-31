@@ -8,6 +8,18 @@ import java.util.UUID
 
 @Repository
 interface RestroomJpaRepository : JpaRepository<RestroomEntity, UUID>, RestroomFilterRepository {
-    @Query(value = "SELECT * FROM restrooms WHERE ST_DWithin(coordinates, ST_SetSRID(ST_MakePoint(:lon, :lat), 4326), :distanceMeters, true) ORDER BY coordinates <-> ST_SetSRID(ST_MakePoint(:lon, :lat), 4326) LIMIT :limit", nativeQuery = true)
+    @Query(
+        value = """
+            SELECT *
+            FROM restrooms
+            WHERE status = 'ACTIVE'
+              AND is_hidden = false
+              AND is_deleted = false
+              AND ST_DWithin(coordinates, ST_SetSRID(ST_MakePoint(:lon, :lat), 4326), :distanceMeters, true)
+            ORDER BY coordinates <-> ST_SetSRID(ST_MakePoint(:lon, :lat), 4326)
+            LIMIT :limit
+        """,
+        nativeQuery = true
+    )
     fun findNearest(lon: Double, lat: Double, distanceMeters: Int, limit: Int): List<RestroomEntity>
 }

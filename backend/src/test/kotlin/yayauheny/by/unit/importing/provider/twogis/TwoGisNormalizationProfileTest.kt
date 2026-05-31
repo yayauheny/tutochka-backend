@@ -4,7 +4,7 @@ import kotlin.test.assertEquals
 import kotlin.test.assertNotNull
 import kotlin.test.assertNull
 import kotlinx.serialization.json.buildJsonObject
-import kotlinx.serialization.json.put
+import kotlinx.serialization.json.toJacksonNode
 import org.junit.jupiter.api.DisplayName
 import org.junit.jupiter.api.Test
 import yayauheny.by.importing.provider.twogis.TwoGisNormalizationProfile
@@ -118,7 +118,7 @@ class TwoGisNormalizationProfileTest {
 
     @Test
     fun `inside building preserves building context and gender resolution`() {
-        val workingHours = buildJsonObject { put("mon", "10:00-18:00") }
+        val workingHours = buildJsonObject { put("mon", "10:00-18:00") }.toJacksonNode()
         val resolved =
             TwoGisNormalizationProfile.resolve(
                 TwoGisScrapedPlace(

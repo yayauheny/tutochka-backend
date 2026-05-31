@@ -3,14 +3,12 @@ package integration.api.restrooms
 import yayauheny.by.model.enums.RestroomStatus
 import integration.base.BaseIntegrationTest
 import integration.base.KtorTestApplication
-import io.ktor.client.statement.bodyAsText
-import io.ktor.http.HttpStatusCode
+import org.springframework.http.HttpStatus
 import kotlin.test.assertEquals
 import kotlin.test.assertNotNull
 import kotlin.test.assertTrue
 import kotlinx.coroutines.test.runTest
 import kotlinx.serialization.json.Json
-import kotlinx.serialization.json.doubleOrNull
 import kotlinx.serialization.json.jsonArray
 import kotlinx.serialization.json.jsonObject
 import kotlinx.serialization.json.jsonPrimitive
@@ -58,7 +56,7 @@ class RestroomApiTest : BaseIntegrationTest() {
                         mapOf("lat" to "55.7558", "lon" to "37.6176", "limit" to "5")
                     )
 
-                response.assertStatusAndJsonContent(HttpStatusCode.OK)
+                response.assertStatusAndJsonContent(HttpStatus.OK)
                 val jsonArray = Json.parseToJsonElement(response.bodyAsText()).jsonArray
                 assertTrue(jsonArray.isNotEmpty(), "Response should contain at least one restroom")
                 val firstRestroom = jsonArray.first().jsonObject
@@ -84,7 +82,7 @@ class RestroomApiTest : BaseIntegrationTest() {
                         mapOf("lat" to "55.7558", "lon" to "37.6176", "limit" to "5")
                     )
 
-                assertEquals(HttpStatusCode.OK, response.status)
+                assertEquals(HttpStatus.OK, response.status)
                 response.assertJsonContentType()
                 val body = response.bodyAsText()
                 assertEquals(body, "[]", "Response should be an empty array when no restrooms exist")
@@ -131,7 +129,7 @@ class RestroomApiTest : BaseIntegrationTest() {
                         mapOf("lat" to "55.7558", "lon" to "37.6176", "limit" to "10")
                     )
 
-                assertEquals(HttpStatusCode.OK, response.status)
+                assertEquals(HttpStatus.OK, response.status)
                 response.assertJsonContentType()
                 val body = response.bodyAsText()
 
@@ -161,15 +159,15 @@ class RestroomApiTest : BaseIntegrationTest() {
                 }
 
                 val firstRestroom = jsonArray.first()
-                val firstName = firstRestroom["displayName"]?.toString()?.removeSurrounding("\"")
-                assertEquals(firstName, "Close Restroom", "The closest restroom should be returned first")
+                val firstName = firstRestroom["displayName"]?.jsonPrimitive?.content
+                assertEquals("Close Restroom", firstName, "The closest restroom should be returned first")
 
                 assertTrue(jsonArray.size <= 10, "Response size should not exceed limit")
                 assertEquals(3, jsonArray.size, "Should return exactly 3 restrooms")
 
                 val closeRestroom =
                     jsonArray.find {
-                        it["displayName"]?.toString()?.removeSurrounding("\"") == "Close Restroom"
+                        it["displayName"]?.jsonPrimitive?.content == "Close Restroom"
                     }
                 assertNotNull(closeRestroom, "Close Restroom should be found in results")
                 val closeDistance = closeRestroom["distanceMeters"]?.jsonPrimitive?.doubleOrNull
@@ -178,7 +176,7 @@ class RestroomApiTest : BaseIntegrationTest() {
 
                 val mediumRestroom =
                     jsonArray.find {
-                        it["displayName"]?.toString()?.removeSurrounding("\"") == "Medium Restroom"
+                        it["displayName"]?.jsonPrimitive?.content == "Medium Restroom"
                     }
                 assertNotNull(mediumRestroom, "Medium Restroom should be found in results")
                 val mediumDistance = mediumRestroom["distanceMeters"]?.jsonPrimitive?.doubleOrNull
@@ -187,7 +185,7 @@ class RestroomApiTest : BaseIntegrationTest() {
 
                 val farRestroom =
                     jsonArray.find {
-                        it["displayName"]?.toString()?.removeSurrounding("\"") == "Far Restroom"
+                        it["displayName"]?.jsonPrimitive?.content == "Far Restroom"
                     }
                 assertNotNull(farRestroom, "Far Restroom should be found in results")
                 val farDistance = farRestroom["distanceMeters"]?.jsonPrimitive?.doubleOrNull
@@ -223,7 +221,7 @@ class RestroomApiTest : BaseIntegrationTest() {
                         mapOf("lat" to "55.7558", "lon" to "37.6176", "limit" to "3")
                     )
 
-                assertEquals(HttpStatusCode.OK, response.status)
+                assertEquals(HttpStatus.OK, response.status)
                 response.assertJsonContentType()
                 val body = response.bodyAsText()
 
@@ -277,7 +275,7 @@ class RestroomApiTest : BaseIntegrationTest() {
                         mapOf("lat" to "55.7558", "lon" to "37.6176", "limit" to "10")
                     )
 
-                assertEquals(HttpStatusCode.OK, response.status)
+                assertEquals(HttpStatus.OK, response.status)
                 response.assertJsonContentType()
                 val body = response.bodyAsText()
 
@@ -286,7 +284,7 @@ class RestroomApiTest : BaseIntegrationTest() {
                 assertEquals(1, jsonArray.size, "Should return only 1 restroom (the active one)")
 
                 val returnedRestroom = jsonArray.first()
-                val name = returnedRestroom["displayName"]?.toString()?.removeSurrounding("\"")
+                val name = returnedRestroom["displayName"]?.jsonPrimitive?.content
                 assertEquals("Active Restroom", name, "Should return the active restroom, not the inactive one")
 
                 val distanceValue = returnedRestroom["distanceMeters"]?.jsonPrimitive
@@ -306,7 +304,7 @@ class RestroomApiTest : BaseIntegrationTest() {
             runTest {
                 KtorTestApplication.withApp(dslContext) { client ->
                     val response = client.testGet("/api/v1/restrooms/nearest", mapOf("lat" to "abc", "lon" to "37.6"))
-                    response.assertStatusAndJsonContent(HttpStatusCode.BadRequest)
+                    response.assertStatusAndJsonContent(HttpStatus.BAD_REQUEST)
                 }
             }
 
@@ -316,17 +314,16 @@ class RestroomApiTest : BaseIntegrationTest() {
             runTest {
                 KtorTestApplication.withApp(dslContext) { client ->
                     val response = client.testGet("/api/v1/restrooms/nearest", mapOf("lat" to "91.0", "lon" to "37.6"))
-                    response.assertStatusAndJsonContent(HttpStatusCode.BadRequest)
+                    response.assertStatusAndJsonContent(HttpStatus.BAD_REQUEST)
 
                     val errorResponse = response.parseErrorResponse()
                     errorResponse.assertHasValidationErrors()
                     assertEquals(
                         errorResponse.errors?.any {
-                            (it.field == "coordinates.lat" || it.field == "coordinates") &&
-                                it.message.contains("не более 90 градусов")
+                            it.field == "lat" && it.message.contains("не более 90 градусов")
                         },
                         true,
-                        "Error response should contain field error for 'coordinates.lat' or 'coordinates' with message about 90 degrees, but got: ${errorResponse.errors}"
+                        "Error response should contain field error for 'lat' with message about 90 degrees, but got: ${errorResponse.errors}"
                     )
                 }
             }

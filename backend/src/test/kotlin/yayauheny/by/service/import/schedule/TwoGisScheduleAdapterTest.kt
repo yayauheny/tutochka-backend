@@ -4,7 +4,8 @@ import java.time.LocalTime
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.buildJsonObject
 import kotlinx.serialization.json.jsonArray
-import kotlinx.serialization.json.put
+import kotlinx.serialization.json.parseToJsonElement
+import kotlinx.serialization.json.toJacksonNode
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertFalse
 import org.junit.jupiter.api.Assertions.assertTrue
@@ -38,7 +39,7 @@ class TwoGisScheduleAdapterTest {
     @Test
     fun `toSchedule returns EMPTY for empty JSON`() {
         val emptyJson = buildJsonObject { }
-        val schedule = adapter.toSchedule(emptyJson)
+        val schedule = adapter.toSchedule(emptyJson.toJacksonNode())
         assertEquals(Schedule.EMPTY, schedule)
     }
 
@@ -49,7 +50,7 @@ class TwoGisScheduleAdapterTest {
                 put("is_24x7", true)
             }
 
-        val schedule = adapter.toSchedule(jsonSchedule)
+        val schedule = adapter.toSchedule(jsonSchedule.toJacksonNode())
         assertTrue(schedule.is24x7)
         assertTrue(schedule.days.isEmpty())
     }
@@ -75,7 +76,7 @@ class TwoGisScheduleAdapterTest {
                 put("is_24x7", false)
             }
 
-        val schedule = adapter.toSchedule(jsonSchedule)
+        val schedule = adapter.toSchedule(jsonSchedule.toJacksonNode())
         assertFalse(schedule.is24x7)
         assertTrue(schedule.hasDay(Weekday.MON))
 
@@ -120,7 +121,7 @@ class TwoGisScheduleAdapterTest {
                 put("is_24x7", false)
             }
 
-        val schedule = adapter.toSchedule(jsonSchedule)
+        val schedule = adapter.toSchedule(jsonSchedule.toJacksonNode())
         assertTrue(schedule.hasDay(Weekday.MON))
         assertTrue(schedule.hasDay(Weekday.TUE))
         assertFalse(schedule.hasDay(Weekday.WED))
@@ -153,7 +154,7 @@ class TwoGisScheduleAdapterTest {
                 put("is_24x7", false)
             }
 
-        val schedule = adapter.toSchedule(jsonSchedule)
+        val schedule = adapter.toSchedule(jsonSchedule.toJacksonNode())
         val mondaySchedule = schedule.days[Weekday.MON]!!
         assertEquals(2, mondaySchedule.workingHours.size)
         assertEquals(LocalTime.of(9, 0), mondaySchedule.workingHours[0].from)
@@ -183,7 +184,7 @@ class TwoGisScheduleAdapterTest {
                 put("is_24x7", false)
             }
 
-        val schedule = adapter.toSchedule(jsonSchedule)
+        val schedule = adapter.toSchedule(jsonSchedule.toJacksonNode())
         val mondaySchedule = schedule.days[Weekday.MON]!!
         assertEquals(1, mondaySchedule.workingHours.size)
         assertEquals(LocalTime.of(22, 0), mondaySchedule.workingHours[0].from)
@@ -214,7 +215,7 @@ class TwoGisScheduleAdapterTest {
                 put("is_24x7", false)
             }
 
-        val schedule = adapter.toSchedule(jsonSchedule)
+        val schedule = adapter.toSchedule(jsonSchedule.toJacksonNode())
         val mondaySchedule = schedule.days[Weekday.MON]!!
         // Should only have one valid interval
         assertEquals(1, mondaySchedule.workingHours.size)
@@ -241,7 +242,7 @@ class TwoGisScheduleAdapterTest {
                 put("is_24x7", false)
             }
 
-        val schedule = adapter.toSchedule(jsonSchedule)
+        val schedule = adapter.toSchedule(jsonSchedule.toJacksonNode())
         val mondaySchedule = schedule.days[Weekday.MON]!!
         assertEquals(1, mondaySchedule.workingHours.size)
         // "24:00" should be converted to MIDNIGHT (00:00)
@@ -270,7 +271,7 @@ class TwoGisScheduleAdapterTest {
                 put("is_24x7", false)
             }
 
-        val schedule = adapter.toSchedule(jsonSchedule)
+        val schedule = adapter.toSchedule(jsonSchedule.toJacksonNode())
         val mondaySchedule = schedule.days[Weekday.MON]!!
         assertEquals(1, mondaySchedule.workingHours.size)
         assertEquals(LocalTime.of(10, 0), mondaySchedule.workingHours[0].from)
@@ -298,7 +299,7 @@ class TwoGisScheduleAdapterTest {
                 )
             }
 
-        val schedule = adapter.toSchedule(jsonSchedule)
+        val schedule = adapter.toSchedule(jsonSchedule.toJacksonNode())
         // is_24x7 flag should take precedence
         assertTrue(schedule.is24x7)
     }

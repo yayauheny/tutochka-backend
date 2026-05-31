@@ -13,6 +13,7 @@ import yayauheny.by.importing.provider.osm.OsmScrapedParser
 import yayauheny.by.model.enums.FeeType
 import yayauheny.by.model.enums.ImportPayloadType
 import yayauheny.by.testfixtures.OsmOriginalRows
+import kotlinx.serialization.json.toJacksonNode
 
 @DisplayName("OsmScrapedParser Tests")
 class OsmScrapedParserTest {
@@ -22,7 +23,7 @@ class OsmScrapedParserTest {
     fun `given web mercator geom when parse then coordinates are converted to wgs84`() {
         val payload = OsmOriginalRows.accessCustomersWheelchair()
 
-        val parsed = parser.parse(payload)
+        val parsed = parser.parse(payload.toJacksonNode())
 
         assertEquals("4115239922", parsed.nodeId)
         assertEquals("customers", parsed.tags["access"])
@@ -35,13 +36,13 @@ class OsmScrapedParserTest {
         val payload = OsmOriginalRows.accessPrivateChemical()
 
         assertFailsWith<InvalidImportPayload> {
-            parser.parse(payload)
+            parser.parse(payload.toJacksonNode())
         }
     }
 
     @Test
     fun `given wc name from original json when parse then payload is accepted`() {
-        val parsed = parser.parse(OsmOriginalRows.wcNameOnly())
+        val parsed = parser.parse(OsmOriginalRows.wcNameOnly().toJacksonNode())
 
         assertEquals("5925889233", parsed.nodeId)
         assertEquals("WC", parsed.tags["name"])
@@ -49,7 +50,7 @@ class OsmScrapedParserTest {
 
     @Test
     fun `given building toilets row from original json when parse then payload is accepted`() {
-        val parsed = parser.parse(OsmOriginalRows.buildingToiletsOnly())
+        val parsed = parser.parse(OsmOriginalRows.buildingToiletsOnly().toJacksonNode())
 
         assertEquals("12960751816", parsed.nodeId)
         assertEquals("toilets", parsed.tags["building"])
@@ -57,7 +58,7 @@ class OsmScrapedParserTest {
 
     @Test
     fun `given description matched row from original json when parse then payload is accepted`() {
-        val parsed = parser.parse(OsmOriginalRows.descriptionMatchedCampSite())
+        val parsed = parser.parse(OsmOriginalRows.descriptionMatchedCampSite().toJacksonNode())
 
         assertEquals("3664477258", parsed.nodeId)
         assertNotNull(parsed.tags["description"])
@@ -67,7 +68,7 @@ class OsmScrapedParserTest {
     fun `given valid payload when convert then normalized restroom candidate is returned`() {
         val payload = OsmOriginalRows.femaleFree()
 
-        val candidate = parser.convert(payload, ImportAdapterContext(ImportPayloadType.OSM_TOILET_JSON, UUID.randomUUID()))
+        val candidate = parser.convert(payload.toJacksonNode(), ImportAdapterContext(ImportPayloadType.OSM_TOILET_JSON, UUID.randomUUID()))
 
         assertEquals("4865147166", candidate.providerObjectId)
         assertEquals("Туалет", candidate.name)

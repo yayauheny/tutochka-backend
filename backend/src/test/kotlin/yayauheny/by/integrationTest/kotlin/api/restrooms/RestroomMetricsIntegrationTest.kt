@@ -1,259 +1,142 @@
 package integration.api.restrooms
 
-import io.ktor.client.request.get
-import io.ktor.client.request.header
-import io.ktor.client.statement.bodyAsText
-import io.ktor.http.HttpStatusCode
-import io.ktor.serialization.kotlinx.json.json
-import io.ktor.server.application.install
-import io.ktor.server.plugins.contentnegotiation.ContentNegotiation
-import io.ktor.server.testing.testApplication
-import io.micrometer.prometheusmetrics.PrometheusConfig
 import io.micrometer.prometheusmetrics.PrometheusMeterRegistry
-import io.mockk.coEvery
-import io.mockk.mockk
-import kotlin.test.assertEquals
-import kotlin.test.assertTrue
-import org.jooq.DSLContext
-import org.junit.jupiter.api.Tag
+import io.micrometer.prometheusmetrics.PrometheusConfig
+import integration.base.BaseIntegrationTest
+import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
-import org.koin.dsl.module
-import org.koin.ktor.plugin.Koin
-import yayauheny.by.common.plugins.configureErrorHandling
-import yayauheny.by.analytics.api.AnalyticsController
-import yayauheny.by.analytics.api.PublicAnalyticsController
-import yayauheny.by.config.configureMetrics
-import yayauheny.by.config.configureRouting
-import yayauheny.by.helpers.testJson
-import yayauheny.by.importing.api.ImportController
-import yayauheny.by.importing.service.ImportService
-import yayauheny.by.metrics.BackendSearchMetrics
+import org.springframework.boot.test.context.SpringBootTest
+import org.springframework.boot.test.mock.mockito.MockBean
+import org.springframework.context.annotation.Import
+import org.springframework.http.HttpStatus
+import org.springframework.boot.test.context.TestConfiguration
+import org.springframework.context.annotation.Bean
+import yayauheny.by.analytics.model.AnalyticsIdentityHeaders
 import yayauheny.by.analytics.service.AnalyticsService
-import yayauheny.by.analytics.service.PublicAnalyticsService
+import yayauheny.by.helpers.any
+import yayauheny.by.helpers.anyDouble
+import yayauheny.by.helpers.anyInt
+import yayauheny.by.helpers.testGet
 import yayauheny.by.model.dto.Coordinates
 import yayauheny.by.model.enums.FeeType
 import yayauheny.by.model.restroom.NearestRestroomSlimDto
-import yayauheny.by.service.CityService
-import yayauheny.by.service.CountryService
 import yayauheny.by.service.RestroomService
+import java.util.UUID
+import org.mockito.BDDMockito.given
+import org.mockito.Mockito.doThrow
+import yayauheny.by.Application
 
-@Tag("integration")
-class RestroomMetricsIntegrationTest {
+@SpringBootTest(classes = [Application::class])
+@Import(RestroomMetricsIntegrationTest.MetricsTestConfiguration::class)
+class RestroomMetricsIntegrationTest : BaseIntegrationTest() {
+    @MockBean
+    private lateinit var restroomService: RestroomService
+
+    @MockBean
+    private lateinit var analyticsService: AnalyticsService
+
+    @org.springframework.beans.factory.annotation.Autowired
+    private lateinit var meterRegistry: PrometheusMeterRegistry
+
+    @TestConfiguration
+    class MetricsTestConfiguration {
+        @Bean
+        fun prometheusMeterRegistry(): PrometheusMeterRegistry = PrometheusMeterRegistry(PrometheusConfig.DEFAULT)
+    }
+
     @Test
-    fun `nearest endpoint should record custom search metrics and expose them on scrape endpoint`() =
-        testApplication {
-            val restroomService = mockk<RestroomService>()
-            val countryService = mockk<CountryService>(relaxed = true)
-            val cityService = mockk<CityService>(relaxed = true)
-            val importService = mockk<ImportService>(relaxed = true)
-            val dslContext = mockk<DSLContext>(relaxed = true)
-            val registry = PrometheusMeterRegistry(PrometheusConfig.DEFAULT)
-            val backendSearchMetrics = BackendSearchMetrics(registry)
-
-            coEvery {
-                restroomService.findNearestRestrooms(53.9, 27.56, 5, 300)
-            } returns
-                listOf(
-                    NearestRestroomSlimDto(
-                        id = java.util.UUID.randomUUID(),
-                        displayName = "Test restroom",
-                        distanceMeters = 250.0,
-                        feeType = FeeType.FREE,
-                        queryCoordinates = Coordinates(53.9, 27.56),
-                        restroomCoordinates = Coordinates(53.9005, 27.5605)
-                    )
+    fun nearest_endpoint_should_record_custom_search_metrics_and_expose_them_on_scrape_endpoint() {
+        given(restroomService.findNearestRestrooms(53.9, 27.56, 5, 300)).willReturn(
+            listOf(
+                NearestRestroomSlimDto(
+                    id = UUID.randomUUID(),
+                    displayName = "Test restroom",
+                    distanceMeters = 250.0,
+                    feeType = FeeType.FREE,
+                    queryCoordinates = Coordinates(53.9, 27.56),
+                    restroomCoordinates = Coordinates(53.9005, 27.5605)
                 )
+            )
+        )
 
-            application {
-                install(Koin) {
-                    modules(
-                        module {
-                            single<CountryService> { countryService }
-                            single<CityService> { cityService }
-                            single<RestroomService> { restroomService }
-                            single<ImportService> { importService }
-                            single<DSLContext> { dslContext }
-                            single<PrometheusMeterRegistry> { registry }
-                            single<BackendSearchMetrics> { backendSearchMetrics }
-                            single<AnalyticsService> { mockk(relaxed = true) }
-                            single<PublicAnalyticsService> { mockk(relaxed = true) }
-                        },
-                        module {
-                            single { yayauheny.by.controller.CountryController(get()) }
-                            single { yayauheny.by.controller.CityController(get()) }
-                            single { yayauheny.by.controller.RestroomController(get(), get(), get()) }
-                            single { yayauheny.by.controller.HealthController(get()) }
-                            single { ImportController(get()) }
-                            single { AnalyticsController(get()) }
-                            single { PublicAnalyticsController(get()) }
-                        }
-                    )
-                }
-                install(ContentNegotiation) { json(testJson) }
-                configureMetrics(registry)
-                configureErrorHandling()
-                configureRouting()
-            }
+        val nearestResponse =
+            mockMvc.testGet(
+                "/api/v1/restrooms/nearest",
+                mapOf("lat" to "53.9", "lon" to "27.56", "distanceMeters" to "300", "limit" to "5"),
+                headers = mapOf("X-Client-Type" to "telegram_bot")
+            )
+        assertThat(nearestResponse.status).isEqualTo(HttpStatus.OK)
 
-            val nearestResponse =
-                client.get("/api/v1/restrooms/nearest?lat=53.9&lon=27.56&distanceMeters=300&limit=5") {
-                    header("X-Client-Type", "telegram_bot")
-                }
-            assertEquals(HttpStatusCode.OK, nearestResponse.status)
-
-            val metricsResponse = client.get("/metrics")
-            assertEquals(HttpStatusCode.OK, metricsResponse.status)
-            val body = metricsResponse.bodyAsText()
-
-            assertTrue(body.contains("search_requests_total"))
-            assertTrue(body.contains("client_type=\"telegram_bot\""))
-            assertTrue(body.contains("radius_bucket=\"0_300\""))
-            assertTrue(body.contains("search_results_total"))
-            assertTrue(body.contains("result_bucket=\"1_2\""))
-            assertTrue(body.contains("search_quality_total"))
-            assertTrue(body.contains("quality_bucket=\"poor\""))
-            assertNoForbiddenMetricLabels(body)
-        }
+        val body = meterRegistry.scrape()
+        assertThat(body).contains("search_requests_total")
+        assertThat(body).contains("client_type=\"telegram_bot\"")
+        assertThat(body).contains("radius_bucket=\"0_300\"")
+        assertThat(body).contains("search_results_total")
+        assertThat(body).contains("result_bucket=\"1_2\"")
+        assertThat(body).contains("search_quality_total")
+        assertThat(body).contains("quality_bucket=\"poor\"")
+        assertNoForbiddenMetricLabels(body)
+    }
 
     @Test
-    fun `nearest endpoint invalid query params should still record request metric with safe radius bucket`() =
-        testApplication {
-            val restroomService = mockk<RestroomService>()
-            val countryService = mockk<CountryService>(relaxed = true)
-            val cityService = mockk<CityService>(relaxed = true)
-            val importService = mockk<ImportService>(relaxed = true)
-            val dslContext = mockk<DSLContext>(relaxed = true)
-            val registry = PrometheusMeterRegistry(PrometheusConfig.DEFAULT)
-            val backendSearchMetrics = BackendSearchMetrics(registry)
+    fun nearest_endpoint_invalid_query_params_should_still_record_request_metric_with_safe_radius_bucket() {
+        val nearestResponse =
+            mockMvc.testGet(
+                "/api/v1/restrooms/nearest",
+                mapOf("lat" to "abc", "lon" to "27.56", "distanceMeters" to "abc", "limit" to "5")
+            )
+        assertThat(nearestResponse.status).isEqualTo(HttpStatus.BAD_REQUEST)
 
-            application {
-                install(Koin) {
-                    modules(
-                        module {
-                            single<CountryService> { countryService }
-                            single<CityService> { cityService }
-                            single<RestroomService> { restroomService }
-                            single<ImportService> { importService }
-                            single<DSLContext> { dslContext }
-                            single<PrometheusMeterRegistry> { registry }
-                            single<BackendSearchMetrics> { backendSearchMetrics }
-                            single<AnalyticsService> { mockk(relaxed = true) }
-                            single<PublicAnalyticsService> { mockk(relaxed = true) }
-                        },
-                        module {
-                            single { yayauheny.by.controller.CountryController(get()) }
-                            single { yayauheny.by.controller.CityController(get()) }
-                            single { yayauheny.by.controller.RestroomController(get(), get(), get()) }
-                            single { yayauheny.by.controller.HealthController(get()) }
-                            single { ImportController(get()) }
-                            single { AnalyticsController(get()) }
-                            single { PublicAnalyticsController(get()) }
-                        }
-                    )
-                }
-                install(ContentNegotiation) { json(testJson) }
-                configureMetrics(registry)
-                configureErrorHandling()
-                configureRouting()
-            }
-
-            val nearestResponse = client.get("/api/v1/restrooms/nearest?lat=abc&lon=27.56&distanceMeters=abc&limit=5")
-            assertEquals(HttpStatusCode.BadRequest, nearestResponse.status)
-
-            val metricsResponse = client.get("/metrics")
-            assertEquals(HttpStatusCode.OK, metricsResponse.status)
-            val body = metricsResponse.bodyAsText()
-
-            assertTrue(body.contains("search_requests_total"))
-            assertTrue(body.contains("radius_bucket=\"unknown\""))
-            assertTrue(body.contains("search_failures_total"))
-            assertTrue(body.contains("reason=\"validation\""))
-            assertNoForbiddenMetricLabels(body)
-        }
+        val body = meterRegistry.scrape()
+        assertThat(body).contains("search_requests_total")
+        assertThat(body).contains("radius_bucket=\"unknown\"")
+        assertThat(body).contains("search_failures_total")
+        assertThat(body).contains("reason=\"validation\"")
+        assertNoForbiddenMetricLabels(body)
+    }
 
     @Test
-    fun `nearest endpoint should return restrooms even when analytics tracking fails`() =
-        testApplication {
-            val restroomService = mockk<RestroomService>()
-            val countryService = mockk<CountryService>(relaxed = true)
-            val cityService = mockk<CityService>(relaxed = true)
-            val importService = mockk<ImportService>(relaxed = true)
-            val dslContext = mockk<DSLContext>(relaxed = true)
-            val registry = PrometheusMeterRegistry(PrometheusConfig.DEFAULT)
-            val backendSearchMetrics = BackendSearchMetrics(registry)
-            val analyticsService = mockk<AnalyticsService>()
-
-            coEvery {
-                restroomService.findNearestRestrooms(53.9, 27.56, 5, 300)
-            } returns
-                listOf(
-                    NearestRestroomSlimDto(
-                        id = java.util.UUID.randomUUID(),
-                        displayName = "Analytics fallback restroom",
-                        distanceMeters = 250.0,
-                        feeType = FeeType.FREE,
-                        queryCoordinates = Coordinates(53.9, 27.56),
-                        restroomCoordinates = Coordinates(53.9005, 27.5605)
-                    )
+    fun nearest_endpoint_should_return_restrooms_even_when_analytics_tracking_fails() {
+        given(restroomService.findNearestRestrooms(53.9, 27.56, 5, 300)).willReturn(
+            listOf(
+                NearestRestroomSlimDto(
+                    id = UUID.randomUUID(),
+                    displayName = "Analytics fallback restroom",
+                    distanceMeters = 250.0,
+                    feeType = FeeType.FREE,
+                    queryCoordinates = Coordinates(53.9, 27.56),
+                    restroomCoordinates = Coordinates(53.9005, 27.5605)
                 )
-            coEvery { analyticsService.trackNearestRestroomsSearch(any(), any(), any(), any()) } throws RuntimeException("boom")
+            )
+        )
+        doThrow(RuntimeException("boom")).`when`(analyticsService)
+            .trackNearestRestroomsSearch(any<AnalyticsIdentityHeaders>(), anyInt(), anyDouble(), anyDouble())
 
-            application {
-                install(Koin) {
-                    modules(
-                        module {
-                            single<CountryService> { countryService }
-                            single<CityService> { cityService }
-                            single<RestroomService> { restroomService }
-                            single<ImportService> { importService }
-                            single<DSLContext> { dslContext }
-                            single<PrometheusMeterRegistry> { registry }
-                            single<BackendSearchMetrics> { backendSearchMetrics }
-                            single<AnalyticsService> { analyticsService }
-                            single<PublicAnalyticsService> { mockk(relaxed = true) }
-                        },
-                        module {
-                            single { yayauheny.by.controller.CountryController(get()) }
-                            single { yayauheny.by.controller.CityController(get()) }
-                            single { yayauheny.by.controller.RestroomController(get(), get(), get()) }
-                            single { yayauheny.by.controller.HealthController(get()) }
-                            single { ImportController(get()) }
-                            single { AnalyticsController(get()) }
-                            single { PublicAnalyticsController(get()) }
-                        }
-                    )
-                }
-                install(ContentNegotiation) { json(testJson) }
-                configureMetrics(registry)
-                configureErrorHandling()
-                configureRouting()
-            }
+        val nearestResponse =
+            mockMvc.testGet(
+                "/api/v1/restrooms/nearest",
+                mapOf("lat" to "53.9", "lon" to "27.56", "distanceMeters" to "300", "limit" to "5"),
+                headers = mapOf(
+                    "X-Client-Type" to "telegram_bot",
+                    "X-Tg-User-Id" to "123",
+                    "X-Tg-Chat-Id" to "chat-1"
+                )
+            )
 
-            val nearestResponse =
-                client.get("/api/v1/restrooms/nearest?lat=53.9&lon=27.56&distanceMeters=300&limit=5") {
-                    header("X-Client-Type", "telegram_bot")
-                }
-
-            assertEquals(HttpStatusCode.OK, nearestResponse.status)
-            assertTrue(nearestResponse.bodyAsText().contains("Analytics fallback restroom"))
-        }
+        assertThat(nearestResponse.status).isEqualTo(HttpStatus.OK)
+        assertThat(nearestResponse.bodyAsText()).contains("Analytics fallback restroom")
+    }
 
     private fun assertNoForbiddenMetricLabels(body: String) {
-        val forbiddenFragments =
-            listOf(
-                "lat=",
-                "lon=",
-                "user_id=",
-                "userId=",
-                "chat_id=",
-                "restroom_id="
-            )
-
-        forbiddenFragments.forEach { fragment ->
-            assertTrue(
-                !body.contains(fragment),
-                "Custom metrics output must not contain forbidden fragment: $fragment"
-            )
+        listOf(
+            "lat=",
+            "lon=",
+            "user_id=",
+            "userId=",
+            "chat_id=",
+            "restroom_id="
+        ).forEach { fragment ->
+            assertThat(body).doesNotContain(fragment)
         }
     }
 }

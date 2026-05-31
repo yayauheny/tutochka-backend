@@ -1,7 +1,7 @@
 package yayauheny.by.unit.importing.mapper
 
 import kotlinx.serialization.json.buildJsonObject
-import kotlinx.serialization.json.put
+import kotlinx.serialization.json.toJacksonNode
 import java.util.UUID
 import kotlin.test.assertEquals
 import kotlin.test.assertNotNull
@@ -14,7 +14,7 @@ import yayauheny.by.model.enums.LocationType
 import yayauheny.by.model.enums.ImportProvider
 import yayauheny.by.model.enums.PlaceType
 import yayauheny.by.model.enums.RestroomStatus
-import yayauheny.by.model.import.NormalizedRestroomCandidate
+import yayauheny.by.model.imports.NormalizedRestroomCandidate
 
 @DisplayName("RestroomImportMapper Tests")
 class RestroomImportMapperTest {
@@ -40,7 +40,7 @@ class RestroomImportMapperTest {
                     buildJsonObject {
                         put("wifi", true)
                         put("accessible_entrance", true)
-                    },
+                    }.toJacksonNode(),
                 rawSchedule = null
             )
 
@@ -85,7 +85,7 @@ class RestroomImportMapperTest {
                 feeType = FeeType.UNKNOWN,
                 accessibilityType = AccessibilityType.UNKNOWN,
                 status = RestroomStatus.ACTIVE,
-                amenities = buildJsonObject {},
+                amenities = buildJsonObject {}.toJacksonNode(),
                 rawSchedule = null
             )
 

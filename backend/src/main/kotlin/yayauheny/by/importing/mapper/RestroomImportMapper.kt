@@ -25,7 +25,7 @@ object RestroomImportMapper {
             if (inheritBuildingSchedule) {
                 null
             } else {
-                candidate.rawSchedule
+                candidate.rawSchedule?.let { mapper.convertValue(it, Map::class.java) as Map<String, Any> }
             }
 
         return RestroomCreateDto(
@@ -36,15 +36,15 @@ object RestroomImportMapper {
             name = candidate.name?.trim().takeIf { !it.isNullOrBlank() && !it.equals("null", ignoreCase = true) } ?: "Туалет",
             address = candidate.address,
             phones = null,
-            workTime = emptyMap(),
+            workTime = workTime,
             feeType = candidate.feeType,
             genderType = resolvedGender,
             accessibilityType = candidate.accessibilityType,
             placeType = candidate.placeType,
             coordinates = candidate.toCoordinates(),
             dataSource = DataSourceType.IMPORT,
-            amenities = emptyMap(),
-            externalMaps = emptyMap(),
+            amenities = candidate.amenities?.let { mapper.convertValue(it, Map::class.java) as Map<String, Any> } ?: emptyMap(),
+            externalMaps = externalMaps.let { mapper.convertValue(it, Map::class.java) as Map<String, Any> },
             accessNote = null,
             directionGuide = null,
             inheritBuildingSchedule = inheritBuildingSchedule,

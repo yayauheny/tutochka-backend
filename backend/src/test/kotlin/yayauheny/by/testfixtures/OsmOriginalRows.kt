@@ -4,9 +4,7 @@ import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.JsonPrimitive
 import kotlinx.serialization.json.buildJsonObject
-import kotlinx.serialization.json.contentOrNull
 import kotlinx.serialization.json.jsonObject
-import kotlinx.serialization.json.put
 
 object OsmOriginalRows {
     fun accessCustomersWheelchair(): JsonObject =
@@ -206,7 +204,7 @@ object OsmOriginalRows {
         values: Map<String, String>
     ): JsonObject =
         buildJsonObject {
-            payload.forEach { (key, value) -> put(key, value) }
+            payload.values.forEach { (key, value) -> put(key, value) }
             values.forEach { (key, value) -> put(key, JsonPrimitive(value)) }
         }
 
@@ -220,7 +218,7 @@ object OsmOriginalRows {
                 ?.let { Json.parseToJsonElement(it).jsonObject }
                 ?: JsonObject(emptyMap())
         return buildJsonObject {
-            payload.forEach { (key, value) ->
+            payload.values.forEach { (key, value) ->
                 if (key != "tags") {
                     put(key, value)
                 }
@@ -229,7 +227,7 @@ object OsmOriginalRows {
                 "tags",
                 JsonPrimitive(
                     buildJsonObject {
-                        existingTags.forEach { (key, value) -> put(key, value) }
+                        existingTags.values.forEach { (key, value) -> put(key, value) }
                         values.forEach { (key, value) -> put(key, JsonPrimitive(value)) }
                     }.toString()
                 )

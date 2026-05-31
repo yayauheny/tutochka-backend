@@ -2,24 +2,18 @@ package integration.api.error
 
 import integration.base.BaseIntegrationTest
 import integration.base.KtorTestApplication
-import io.ktor.client.request.post
-import io.ktor.client.request.setBody
-import io.ktor.client.statement.bodyAsText
-import io.ktor.http.ContentType
-import io.ktor.http.HttpStatusCode
-import io.ktor.http.contentType
 import java.util.UUID
 import kotlin.test.assertEquals
 import kotlin.test.assertNotNull
 import kotlin.test.assertTrue
 import kotlinx.coroutines.test.runTest
 import kotlinx.serialization.json.Json
-import kotlinx.serialization.json.intOrNull
 import kotlinx.serialization.json.jsonObject
 import kotlinx.serialization.json.jsonPrimitive
 import org.junit.jupiter.api.DisplayName
 import org.junit.jupiter.api.Tag
 import org.junit.jupiter.api.Test
+import org.springframework.http.HttpStatus
 import yayauheny.by.helpers.DatabaseTestHelper
 
 @Tag("integration")
@@ -45,19 +39,19 @@ class PSQLExceptionHandlingTest : BaseIntegrationTest() {
             KtorTestApplication.withApp(dslContext) { client ->
                 val firstResponse =
                     client.post("/api/v1/cities") {
-                        contentType(ContentType.Application.Json)
+                        contentType("application/json")
                         setBody(cityJson)
                     }
-                assertEquals(HttpStatusCode.Created, firstResponse.status)
+                assertEquals(HttpStatus.CREATED, firstResponse.status)
 
                 val duplicateResponse =
                     client.post("/api/v1/cities") {
-                        contentType(ContentType.Application.Json)
+                        contentType("application/json")
                         setBody(cityJson)
                     }
 
                 assertEquals(
-                    HttpStatusCode.Conflict,
+                    HttpStatus.CONFLICT,
                     duplicateResponse.status,
                     "Duplicate city should return 409 Conflict"
                 )
@@ -86,16 +80,16 @@ class PSQLExceptionHandlingTest : BaseIntegrationTest() {
             KtorTestApplication.withApp(dslContext) { client ->
                 val response =
                     client.post("/api/v1/cities") {
-                        contentType(ContentType.Application.Json)
+                        contentType("application/json")
                         setBody(cityJson)
                     }
 
                 assertTrue(
-                    response.status == HttpStatusCode.BadRequest ||
-                        response.status == HttpStatusCode.NotFound
+                    response.status == HttpStatus.BAD_REQUEST ||
+                        response.status == HttpStatus.NOT_FOUND
                 )
 
-                if (response.status == HttpStatusCode.BadRequest) {
+                if (response.status == HttpStatus.BAD_REQUEST) {
                     val errorBody = Json.parseToJsonElement(response.bodyAsText()).jsonObject
                     assertEquals(400, errorBody["status"]?.jsonPrimitive?.intOrNull)
                     assertNotNull(errorBody["message"]?.jsonPrimitive?.content)
@@ -131,16 +125,16 @@ class PSQLExceptionHandlingTest : BaseIntegrationTest() {
             KtorTestApplication.withApp(dslContext) { client ->
                 val response =
                     client.post("/api/v1/restrooms") {
-                        contentType(ContentType.Application.Json)
+                        contentType("application/json")
                         setBody(restroomJson)
                     }
 
                 assertTrue(
-                    response.status == HttpStatusCode.BadRequest ||
-                        response.status == HttpStatusCode.NotFound
+                    response.status == HttpStatus.BAD_REQUEST ||
+                        response.status == HttpStatus.NOT_FOUND
                 )
 
-                if (response.status == HttpStatusCode.BadRequest) {
+                if (response.status == HttpStatus.BAD_REQUEST) {
                     val errorBody = Json.parseToJsonElement(response.bodyAsText()).jsonObject
                     assertEquals(400, errorBody["status"]?.jsonPrimitive?.intOrNull)
                     assertNotNull(errorBody["message"]?.jsonPrimitive?.content)
@@ -168,11 +162,11 @@ class PSQLExceptionHandlingTest : BaseIntegrationTest() {
             KtorTestApplication.withApp(dslContext) { client ->
                 val response =
                     client.post("/api/v1/cities") {
-                        contentType(ContentType.Application.Json)
+                        contentType("application/json")
                         setBody(cityJson)
                     }
 
-                assertEquals(response.status, HttpStatusCode.BadRequest)
+                assertEquals(HttpStatus.BAD_REQUEST, response.status)
 
                 val errorBody = Json.parseToJsonElement(response.bodyAsText()).jsonObject
                 assertEquals(400, errorBody["status"]?.jsonPrimitive?.intOrNull)

@@ -2,9 +2,6 @@ package yayauheny.by.helpers
 
 import java.time.Instant
 import java.util.UUID
-import kotlinx.serialization.json.JsonObject
-import kotlinx.serialization.json.JsonPrimitive
-import kotlinx.serialization.json.buildJsonObject
 import yayauheny.by.model.building.BuildingCreateDto
 import yayauheny.by.model.building.BuildingResponseDto
 import yayauheny.by.model.building.BuildingUpdateDto
@@ -142,8 +139,8 @@ object TestDataHelpers {
         subwayStationId: UUID? = null,
         name: String = "Minsk Central Restroom",
         address: String? = "123 Independence Avenue, Minsk, Belarus",
-        phones: JsonObject? = createBasicPhones(),
-        workTime: JsonObject? = createBasicWorkTime(),
+        phones: Map<String, Any>? = createBasicPhones(),
+        workTime: Map<String, Any>? = createBasicWorkTime(),
         feeType: FeeType = FeeType.FREE,
         genderType: GenderType = GenderType.UNISEX,
         accessibilityType: AccessibilityType = AccessibilityType.WHEELCHAIR,
@@ -152,12 +149,12 @@ object TestDataHelpers {
         lon: Double = -73.9654,
         dataSource: DataSourceType = DataSourceType.MANUAL,
         status: RestroomStatus = RestroomStatus.ACTIVE,
-        amenities: JsonObject = createBasicAmenities(),
-        externalMaps: JsonObject? =
-            buildJsonObject {
-                put("yandex", JsonPrimitive("https://yandex.ru/maps/-/CCUqM0VhXD"))
-                put("google", JsonPrimitive("https://maps.google.com/?q=53.9006,27.5590"))
-            },
+        amenities: Map<String, Any> = createBasicAmenities(),
+        externalMaps: Map<String, Any>? =
+            mapOf(
+                "yandex" to "https://yandex.ru/maps/-/CCUqM0VhXD",
+                "google" to "https://maps.google.com/?q=53.9006,27.5590"
+            ),
         accessNote: String? = "Доступен для людей с ограниченными возможностями",
         directionGuide: String? = "Находится на первом этаже, рядом с главным входом",
         inheritBuildingSchedule: Boolean = false,
@@ -192,8 +189,8 @@ object TestDataHelpers {
         subwayStationId: UUID? = null,
         name: String? = "Updated Restroom",
         address: String? = "Updated Address",
-        phones: JsonObject? = createBasicPhones(),
-        workTime: JsonObject? = createBasicWorkTime(),
+        phones: Map<String, Any>? = createBasicPhones(),
+        workTime: Map<String, Any>? = createBasicWorkTime(),
         feeType: FeeType = FeeType.FREE,
         genderType: GenderType? = GenderType.UNISEX,
         accessibilityType: AccessibilityType? = AccessibilityType.WHEELCHAIR,
@@ -201,12 +198,12 @@ object TestDataHelpers {
         coordinates: Coordinates =
             Coordinates(lat = 40.7829, lon = -73.9654),
         status: RestroomStatus = RestroomStatus.ACTIVE,
-        amenities: JsonObject? = createBasicAmenities(),
-        externalMaps: JsonObject? =
-            buildJsonObject {
-                put("yandex", JsonPrimitive("https://yandex.ru/maps/-/CCUqM0VhXD"))
-                put("google", JsonPrimitive("https://maps.google.com/?q=53.9006,27.5590"))
-            },
+        amenities: Map<String, Any>? = createBasicAmenities(),
+        externalMaps: Map<String, Any>? =
+            mapOf(
+                "yandex" to "https://yandex.ru/maps/-/CCUqM0VhXD",
+                "google" to "https://maps.google.com/?q=53.9006,27.5590"
+            ),
         accessNote: String? = "Доступен для людей с ограниченными возможностями",
         directionGuide: String? = "Находится на первом этаже, рядом с главным входом",
         inheritBuildingSchedule: Boolean = false,
@@ -240,8 +237,8 @@ object TestDataHelpers {
         subwayStationId: UUID? = null,
         name: String? = "Minsk Central Restroom",
         address: String = "123 Independence Avenue, Minsk, Belarus",
-        phones: JsonObject? = createBasicPhones(),
-        workTime: JsonObject? = createBasicWorkTime(),
+        phones: Map<String, Any>? = createBasicPhones(),
+        workTime: Map<String, Any>? = createBasicWorkTime(),
         feeType: FeeType = FeeType.FREE,
         genderType: GenderType = GenderType.UNISEX,
         accessibilityType: AccessibilityType = AccessibilityType.WHEELCHAIR,
@@ -250,12 +247,12 @@ object TestDataHelpers {
         lon: Double = -73.9654,
         dataSource: DataSourceType = DataSourceType.MANUAL,
         status: RestroomStatus = RestroomStatus.ACTIVE,
-        amenities: JsonObject? = createBasicAmenities(),
-        externalMaps: JsonObject? =
-            buildJsonObject {
-                put("yandex", JsonPrimitive("https://yandex.ru/maps/-/CCUqM0VhXD"))
-                put("google", JsonPrimitive("https://maps.google.com/?q=53.9006,27.5590"))
-            },
+        amenities: Map<String, Any>? = createBasicAmenities(),
+        externalMaps: Map<String, Any>? =
+            mapOf(
+                "yandex" to "https://yandex.ru/maps/-/CCUqM0VhXD",
+                "google" to "https://maps.google.com/?q=53.9006,27.5590"
+            ),
         accessNote: String? = "Доступен для людей с ограниченными возможностями",
         directionGuide: String? = "Находится на первом этаже, рядом с главным входом",
         inheritBuildingSchedule: Boolean = false,
@@ -344,43 +341,43 @@ object TestDataHelpers {
             )
         }
 
-    fun createBasicPhones(): JsonObject =
-        buildJsonObject {
-            put("primary", JsonPrimitive("+1-555-0123"))
-            put("secondary", JsonPrimitive("+1-555-0124"))
-        }
+    fun createBasicPhones(): Map<String, Any> =
+        mapOf(
+            "primary" to "+1-555-0123",
+            "secondary" to "+1-555-0124"
+        )
 
-    fun createBasicWorkTime(): JsonObject =
-        buildJsonObject {
-            put("monday", JsonPrimitive("09:00-18:00"))
-            put("tuesday", JsonPrimitive("09:00-18:00"))
-            put("wednesday", JsonPrimitive("09:00-18:00"))
-            put("thursday", JsonPrimitive("09:00-18:00"))
-            put("friday", JsonPrimitive("09:00-18:00"))
-            put("saturday", JsonPrimitive("10:00-16:00"))
-            put("sunday", JsonPrimitive("closed"))
-        }
+    fun createBasicWorkTime(): Map<String, Any> =
+        mapOf(
+            "monday" to "09:00-18:00",
+            "tuesday" to "09:00-18:00",
+            "wednesday" to "09:00-18:00",
+            "thursday" to "09:00-18:00",
+            "friday" to "09:00-18:00",
+            "saturday" to "10:00-16:00",
+            "sunday" to "closed"
+        )
 
-    fun createBasicAmenities(): JsonObject =
-        buildJsonObject {
-            put("wheelchair_accessible", JsonPrimitive(true))
-            put("baby_changing", JsonPrimitive(false))
-            put("hand_dryer", JsonPrimitive(true))
-            put("soap", JsonPrimitive(true))
-            put("toilet_paper", JsonPrimitive(true))
-        }
+    fun createBasicAmenities(): Map<String, Any> =
+        mapOf(
+            "wheelchair_accessible" to true,
+            "baby_changing" to false,
+            "hand_dryer" to true,
+            "soap" to true,
+            "toilet_paper" to true
+        )
 
-    fun createPremiumAmenities(): JsonObject =
-        buildJsonObject {
-            put("wheelchair_accessible", JsonPrimitive(true))
-            put("baby_changing", JsonPrimitive(true))
-            put("hand_dryer", JsonPrimitive(true))
-            put("soap", JsonPrimitive(true))
-            put("toilet_paper", JsonPrimitive(true))
-            put("air_conditioning", JsonPrimitive(true))
-            put("music", JsonPrimitive(true))
-            put("perfume", JsonPrimitive(true))
-        }
+    fun createPremiumAmenities(): Map<String, Any> =
+        mapOf(
+            "wheelchair_accessible" to true,
+            "baby_changing" to true,
+            "hand_dryer" to true,
+            "soap" to true,
+            "toilet_paper" to true,
+            "air_conditioning" to true,
+            "music" to true,
+            "perfume" to true
+        )
 
     fun createInvalidCountryData(): Map<String, Any> =
         mapOf(
@@ -414,12 +411,12 @@ object TestDataHelpers {
         buildingType: PlaceType? = PlaceType.MALL,
         lat: Double = 53.9006,
         lon: Double = 27.5590,
-        workTime: JsonObject? = createBasicWorkTime(),
-        externalIds: JsonObject? =
-            buildJsonObject {
-                put("yandex", JsonPrimitive("12345"))
-                put("google", JsonPrimitive("67890"))
-            }
+        workTime: Map<String, Any>? = createBasicWorkTime(),
+        externalIds: Map<String, Any>? =
+            mapOf(
+                "yandex" to "12345",
+                "google" to "67890"
+            )
     ) = BuildingCreateDto(
         cityId = cityId,
         name = name,
@@ -438,12 +435,12 @@ object TestDataHelpers {
         buildingType: PlaceType? = PlaceType.MALL,
         lat: Double = 53.9006,
         lon: Double = 27.5590,
-        workTime: JsonObject? = createBasicWorkTime(),
-        externalIds: JsonObject? =
-            buildJsonObject {
-                put("yandex", JsonPrimitive("12345"))
-                put("google", JsonPrimitive("67890"))
-            },
+        workTime: Map<String, Any>? = createBasicWorkTime(),
+        externalIds: Map<String, Any>? =
+            mapOf(
+                "yandex" to "12345",
+                "google" to "67890"
+            ),
         isDeleted: Boolean = false,
         createdAt: Instant = Instant.now(),
         updatedAt: Instant = Instant.now()
@@ -467,11 +464,11 @@ object TestDataHelpers {
         address: String? = "Updated Address",
         buildingType: PlaceType? = PlaceType.OFFICE,
         coordinates: Coordinates? = Coordinates(lat = 53.9006, lon = 27.5590),
-        workTime: JsonObject? = createBasicWorkTime(),
-        externalIds: JsonObject? =
-            buildJsonObject {
-                put("yandex", JsonPrimitive("99999"))
-            }
+        workTime: Map<String, Any>? = createBasicWorkTime(),
+        externalIds: Map<String, Any>? =
+            mapOf(
+                "yandex" to "99999"
+            )
     ) = BuildingUpdateDto(
         cityId = cityId,
         name = name,
@@ -521,7 +518,7 @@ object TestDataHelpers {
         nameRu: String = "Площадь Победы",
         nameEn: String = "Victory Square",
         isTransfer: Boolean = false,
-        externalIds: JsonObject? = null,
+        externalIds: Map<String, Any>? = null,
         lat: Double = 53.9006,
         lon: Double = 27.5590
     ) = SubwayStationCreateDto(

@@ -1,24 +1,17 @@
 package yayauheny.by.unit.controller
 
-import io.ktor.client.HttpClient
-import io.ktor.serialization.kotlinx.json.json
-import io.ktor.server.application.install
-import io.ktor.server.plugins.contentnegotiation.ContentNegotiation
-import io.ktor.server.testing.ApplicationTestBuilder
-import io.ktor.server.testing.testApplication
-import io.mockk.every
-import io.mockk.mockk
-import org.jooq.Record1
-import org.jooq.SelectSelectStep
-import org.jooq.impl.DSL
-import org.koin.core.module.Module
-import org.koin.dsl.module
-import org.koin.ktor.plugin.Koin
-import yayauheny.by.helpers.testJson
-import yayauheny.by.common.plugins.configureErrorHandling
-import yayauheny.by.config.configureRouting
+import org.junit.jupiter.api.BeforeEach
+import org.mockito.BDDMockito.given
+import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.boot.test.mock.mockito.MockBean
+import org.springframework.http.HttpStatus
+import org.springframework.test.web.servlet.MockMvc
+import javax.sql.DataSource
 import yayauheny.by.analytics.api.AnalyticsController
 import yayauheny.by.analytics.api.PublicAnalyticsController
+import yayauheny.by.analytics.service.AnalyticsService
+import yayauheny.by.analytics.service.PublicAnalyticsService
+import yayauheny.by.common.config.ApiProperties
 import yayauheny.by.controller.CityController
 import yayauheny.by.controller.CountryController
 import yayauheny.by.controller.HealthController
@@ -26,58 +19,67 @@ import yayauheny.by.controller.RestroomController
 import yayauheny.by.importing.api.ImportController
 import yayauheny.by.importing.service.ImportService
 import yayauheny.by.metrics.BackendSearchMetrics
-import org.jooq.DSLContext
 import yayauheny.by.service.CityService
 import yayauheny.by.service.CountryService
 import yayauheny.by.service.RestroomService
-import yayauheny.by.analytics.service.AnalyticsService
-import yayauheny.by.analytics.service.PublicAnalyticsService
 
 abstract class RoutingTestBase {
-    protected val countryService = mockk<CountryService>()
-    protected val cityService = mockk<CityService>()
-    protected val restroomService = mockk<RestroomService>()
-    protected val importService = mockk<ImportService>(relaxed = true)
-    protected val publicAnalyticsService = mockk<PublicAnalyticsService>(relaxed = true)
-    private val dslContext =
-        mockk<DSLContext>(relaxed = true) {
-            val mockSelectStep = mockk<SelectSelectStep<Record1<Any>>>(relaxed = true)
-            val mockRecord = mockk<Record1<Any>>(relaxed = true)
-            every { select(DSL.field("1")) } returns mockSelectStep
-            every { mockSelectStep.fetchOne() } returns mockRecord
-        }
+    @Autowired
+    protected lateinit var mockMvc: MockMvc
 
-    private fun buildMockModules(): List<Module> =
-        listOf(
-            module {
-                single<CountryService> { countryService }
-                single<CityService> { cityService }
-                single<RestroomService> { restroomService }
-                single<ImportService> { importService }
-                single<DSLContext> { dslContext }
-                single<AnalyticsService> { mockk(relaxed = true) }
-                single<PublicAnalyticsService> { publicAnalyticsService }
-            },
-            module {
-                single { CountryController(get()) }
-                single { CityController(get()) }
-                single { RestroomController(get(), mockk<BackendSearchMetrics>(relaxed = true), get()) }
-                single { HealthController(get()) }
-                single { ImportController(get()) }
-                single { AnalyticsController(get()) }
-                single { PublicAnalyticsController(get()) }
-            }
+    @MockBean
+    protected lateinit var apiProperties: ApiProperties
+
+    @MockBean
+    protected lateinit var countryService: CountryService
+
+    @MockBean
+    protected lateinit var cityService: CityService
+
+    @MockBean
+    protected lateinit var restroomService: RestroomService
+
+    @MockBean
+    protected lateinit var importService: ImportService
+
+    @MockBean
+    protected lateinit var publicAnalyticsService: PublicAnalyticsService
+
+    @MockBean
+    protected lateinit var analyticsService: AnalyticsService
+
+    @MockBean
+    protected lateinit var backendSearchMetrics: BackendSearchMetrics
+
+    @MockBean
+    protected lateinit var dataSource: DataSource
+
+    @BeforeEach
+    fun stubApiProperties() {
+        given(apiProperties.defaults).willReturn(
+            ApiProperties.Defaults(
+                page = 0,
+                pageSize = 20,
+                maxNearestRestroomsSize = 50,
+                maxDistanceMeters = 5000
+            )
         )
+        given(apiProperties.limits).willReturn(
+            ApiProperties.Limits(
+                maxNameLength = 100,
+                minNameLength = 0,
+                minNameLengthRequired = 1,
+                maxRegionLength = 100,
+                maxCountryCodeLength = 2,
+                maxDescriptionLength = 1000,
+                maxAddressLength = 255,
+                maxJsonStringLength = 5000,
+                maxPageSize = 100
+            )
+        )
+    }
 
-    fun withRoutingApp(block: suspend ApplicationTestBuilder.(client: HttpClient) -> Unit) =
-        testApplication {
-            application {
-                install(Koin) { modules(buildMockModules()) }
-                install(ContentNegotiation) { json(yayauheny.by.helpers.testJson) }
-                configureErrorHandling()
-                configureRouting()
-            }
-            val client = createClient { expectSuccess = false }
-            block(client)
-        }
+    protected fun withRoutingApp(block: MockMvc.() -> Unit) {
+        mockMvc.block()
+    }
 }

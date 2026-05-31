@@ -26,12 +26,13 @@ class AnalyticsController(
         @RequestHeader(name = "X-Analytics-Source", required = false) sourceHeader: String?
     ): ResponseEntity<Void> {
         val source = sourceHeader?.let { AnalyticsSource.fromValue(it) } ?: AnalyticsSource.API
+        val normalizedUsername = username?.trim()?.takeIf { it.isNotEmpty() }
         
         val command = AnalyticsEventCommand(
             event = request.event,
             tgUserId = tgUserId,
             tgChatId = tgChatId,
-            username = username,
+            username = normalizedUsername,
             source = source,
             lat = request.lat?.toBigDecimalRounded(),
             lon = request.lon?.toBigDecimalRounded(),

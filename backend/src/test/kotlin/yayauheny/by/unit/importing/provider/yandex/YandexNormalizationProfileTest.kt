@@ -1,24 +1,23 @@
 package yayauheny.by.unit.importing.provider.yandex
 
-import kotlin.test.assertEquals
-import kotlin.test.assertNotNull
-import kotlinx.serialization.json.JsonPrimitive
-import kotlinx.serialization.json.buildJsonObject
-import kotlinx.serialization.json.put
+import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.DisplayName
 import org.junit.jupiter.api.Test
 import yayauheny.by.importing.provider.yandex.YandexMapsScrapedLocation
 import yayauheny.by.importing.provider.yandex.YandexMapsScrapedPlace
 import yayauheny.by.importing.provider.yandex.YandexMapsScrapedWorkingHour
+import yayauheny.by.importing.provider.yandex.YandexMapsScrapedWorkingInterval
 import yayauheny.by.importing.provider.yandex.YandexNormalizationProfile
 import yayauheny.by.model.enums.FeeType
 import yayauheny.by.model.enums.LocationType
 import yayauheny.by.model.enums.RestroomStatus
+import kotlinx.serialization.json.buildJsonObject
+import kotlinx.serialization.json.toJacksonNode
 
 @DisplayName("YandexNormalizationProfile Tests")
 class YandexNormalizationProfileTest {
     @Test
-    fun `short title wins over title`() {
+    fun short_title_wins_over_title() {
         val resolved =
             YandexNormalizationProfile.resolve(
                 YandexMapsScrapedPlace(
@@ -29,11 +28,11 @@ class YandexNormalizationProfileTest {
                 )
             )
 
-        assertEquals("Short Name", resolved.name)
+        assertThat(resolved.name).isEqualTo("Short Name")
     }
 
     @Test
-    fun `title fallback is preserved when short title is missing`() {
+    fun title_fallback_is_preserved_when_short_title_is_missing() {
         val resolved =
             YandexNormalizationProfile.resolve(
                 YandexMapsScrapedPlace(
@@ -43,11 +42,11 @@ class YandexNormalizationProfileTest {
                 )
             )
 
-        assertEquals("Main Name", resolved.name)
+        assertThat(resolved.name).isEqualTo("Main Name")
     }
 
     @Test
-    fun `missing names fall back to default toilet name`() {
+    fun missing_names_fall_back_to_default_toilet_name() {
         val resolved =
             YandexNormalizationProfile.resolve(
                 YandexMapsScrapedPlace(
@@ -58,11 +57,11 @@ class YandexNormalizationProfileTest {
                 )
             )
 
-        assertEquals("Туалет", resolved.name)
+        assertThat(resolved.name).isEqualTo("Туалет")
     }
 
     @Test
-    fun `address cleanup and location heuristic are preserved`() {
+    fun address_cleanup_and_location_heuristic_are_preserved() {
         val resolved =
             YandexNormalizationProfile.resolve(
                 YandexMapsScrapedPlace(
@@ -73,12 +72,12 @@ class YandexNormalizationProfileTest {
                 )
             )
 
-        assertEquals("Торговый центр Green", resolved.address)
-        assertEquals(LocationType.INSIDE_BUILDING, resolved.locationType)
+        assertThat(resolved.address).isEqualTo("Торговый центр Green")
+        assertThat(resolved.locationType).isEqualTo(LocationType.INSIDE_BUILDING)
     }
 
     @Test
-    fun `fee status amenities and raw schedule are preserved`() {
+    fun fee_status_amenities_and_raw_schedule_are_preserved() {
         val workingHours =
             listOf(
                 YandexMapsScrapedWorkingHour(
@@ -100,25 +99,25 @@ class YandexNormalizationProfileTest {
                 )
             )
 
-        assertEquals(FeeType.FREE, resolved.feeType)
-        assertEquals(RestroomStatus.INACTIVE, resolved.status)
-        assertNotNull(resolved.amenities["accessible_entrance"])
-        assertNotNull(resolved.amenities["accessible_toilet"])
-        assertNotNull(resolved.rawSchedule)
+        assertThat(resolved.feeType).isEqualTo(FeeType.FREE)
+        assertThat(resolved.status).isEqualTo(RestroomStatus.INACTIVE)
+        assertThat(resolved.amenities["accessible_entrance"]).isNotNull()
+        assertThat(resolved.amenities["accessible_toilet"]).isNotNull()
+        assertThat(resolved.rawSchedule).isNotNull()
     }
 
     @Test
-    fun `building context is preserved for inside building locations`() {
+    fun building_context_is_preserved_for_inside_building_locations() {
         val rawSchedule =
             buildJsonObject {
                 put(
                     "mon",
                     buildJsonObject {
-                        put("from", JsonPrimitive("10:00"))
-                        put("to", JsonPrimitive("18:00"))
+                        put("from", "10:00")
+                        put("to", "18:00")
                     }
                 )
-            }
+            }.toJacksonNode()
         val resolved =
             YandexNormalizationProfile.resolve(
                 YandexMapsScrapedPlace(
@@ -130,13 +129,13 @@ class YandexNormalizationProfileTest {
                 )
             )
 
-        assertNotNull(resolved.buildingContext)
-        assertEquals("Торговый центр Green", resolved.buildingContext!!.address)
-        assertEquals(rawSchedule, resolved.rawSchedule)
+        assertThat(resolved.buildingContext).isNotNull()
+        assertThat(resolved.buildingContext!!.address).isEqualTo("Торговый центр Green")
+        assertThat(resolved.rawSchedule?.toString()).isEqualTo(rawSchedule.toString())
     }
 
     @Test
-    fun `raw schedule preserves structured intervals`() {
+    fun raw_schedule_preserves_structured_intervals() {
         val resolved =
             YandexNormalizationProfile.resolve(
                 YandexMapsScrapedPlace(
@@ -151,11 +150,11 @@ class YandexNormalizationProfileTest {
                                 to = "12:00",
                                 intervals =
                                     listOf(
-                                        yayauheny.by.importing.provider.yandex.YandexMapsScrapedWorkingInterval(
+                                        YandexMapsScrapedWorkingInterval(
                                             from = "09:00",
                                             to = "12:00"
                                         ),
-                                        yayauheny.by.importing.provider.yandex.YandexMapsScrapedWorkingInterval(
+                                        YandexMapsScrapedWorkingInterval(
                                             from = "12:30",
                                             to = "21:00"
                                         )
@@ -165,9 +164,6 @@ class YandexNormalizationProfileTest {
                 )
             )
 
-        assertEquals(
-            """{"mon":{"from":"09:00","to":"12:00","intervals":[{"from":"09:00","to":"12:00"},{"from":"12:30","to":"21:00"}]}}""",
-            resolved.rawSchedule.toString()
-        )
+        assertThat(resolved.rawSchedule?.toString()).isEqualTo("""{"mon":{"from":"09:00","to":"12:00","intervals":[{"from":"09:00","to":"12:00"},{"from":"12:30","to":"21:00"}]}}""")
     }
 }

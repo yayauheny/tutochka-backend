@@ -9,7 +9,7 @@ import kotlinx.serialization.json.JsonNull
 import kotlinx.serialization.json.JsonPrimitive
 import kotlinx.serialization.json.buildJsonArray
 import kotlinx.serialization.json.buildJsonObject
-import kotlinx.serialization.json.put
+import kotlinx.serialization.json.toJacksonNode
 import org.junit.jupiter.api.DisplayName
 import org.junit.jupiter.api.Test
 import yayauheny.by.importing.exception.InvalidImportPayload
@@ -68,7 +68,7 @@ class TwoGisScrapedParserTest {
                         add(JsonPrimitive("toilet"))
                     }
                 )
-            }
+            }.toJacksonNode()
 
         val place = parser.parse(json)
 
@@ -98,7 +98,7 @@ class TwoGisScrapedParserTest {
                         put("lng", 27.5)
                     }
                 )
-            }
+            }.toJacksonNode()
 
         val place = parser.parse(json)
 
@@ -124,7 +124,7 @@ class TwoGisScrapedParserTest {
                         put("lng", 27.5)
                     }
                 )
-            }
+            }.toJacksonNode()
 
         assertFailsWith<InvalidImportPayload> {
             parser.parse(json)
@@ -148,7 +148,7 @@ class TwoGisScrapedParserTest {
                         put("lng", 27.5)
                     }
                 )
-            }
+            }.toJacksonNode()
 
         val place = parser.parse(json)
         assertNull(place.title)
@@ -166,7 +166,7 @@ class TwoGisScrapedParserTest {
                         put("lng", 27.5)
                     }
                 )
-            }
+            }.toJacksonNode()
 
         val place = parser.parse(json)
         assertNull(place.title)
@@ -186,7 +186,7 @@ class TwoGisScrapedParserTest {
                         put("lng", 27.5)
                     }
                 )
-            }
+            }.toJacksonNode()
 
         val place = parser.parse(json)
         assertNull(place.address)
@@ -209,7 +209,7 @@ class TwoGisScrapedParserTest {
                         put("lng", 27.5)
                     }
                 )
-            }
+            }.toJacksonNode()
 
         val place = parser.parse(json)
         assertNull(place.address)
@@ -224,7 +224,7 @@ class TwoGisScrapedParserTest {
                 put("id", "12345")
                 put("title", "Test")
                 put("address", "Test Street")
-            }
+            }.toJacksonNode()
 
         assertFailsWith<InvalidImportPayload> {
             parser.parse(json)
@@ -245,7 +245,7 @@ class TwoGisScrapedParserTest {
                         put("lng", 27.5)
                     }
                 )
-            }
+            }.toJacksonNode()
 
         val place = parser.parse(json)
         assertNull(place.address)
@@ -266,7 +266,7 @@ class TwoGisScrapedParserTest {
                     }
                 )
                 put("working_hours", JsonNull)
-            }
+            }.toJacksonNode()
 
         val place = parser.parse(json)
         assertNull(place.workingHours)
