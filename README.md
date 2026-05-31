@@ -1,7 +1,7 @@
 # ТуТочка Backend
 
 Монорепо с активным модулем `backend`:
-- `backend` - Spring Boot REST API, PostgreSQL/PostGIS, Liquibase и Telegram bot runtime.
+- `backend` - Spring Boot REST API, PostgreSQL/PostGIS, Liquibase и runtime Telegram bot backend.
 
 Источник правды для контрактов и маршрутов - код и `backend/src/main/resources/openapi.yaml`.
 
