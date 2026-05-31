@@ -36,6 +36,14 @@ dependencies {
     implementation(libs.postgis)
     implementation(libs.liquibaseCore)
 
+    // Bot
+    implementation(libs.telegrambotsClient)
+    implementation(libs.telegrambotsWebhook)
+    implementation(libs.caffeine)
+    implementation(libs.resilience4jRetry)
+    implementation("org.apache.httpcomponents.client5:httpclient5")
+    implementation("org.apache.httpcomponents.core5:httpcore5")
+
     kapt("com.querydsl:querydsl-apt:${libs.versions.querydsl.get()}:jakarta")
     kapt("jakarta.annotation:jakarta.annotation-api")
     kapt("jakarta.persistence:jakarta.persistence-api")
