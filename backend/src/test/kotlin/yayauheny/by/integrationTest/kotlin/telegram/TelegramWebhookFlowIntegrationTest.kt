@@ -141,6 +141,30 @@ class TelegramWebhookFlowIntegrationTest : BaseIntegrationTest() {
     }
 
     @Test
+    fun `start command goes through webhook and sends welcome message`() {
+        val update = commandUpdate("/start website", userId = 10L, chatId = 123L, username = "test-user-10")
+        performWebhook(update)
+
+        val call = messageSender.sendTextCalls.single()
+        assertThat(call.chatId).isEqualTo(123L)
+        assertThat(call.text).isEqualTo(Messages.WELCOME_MESSAGE)
+
+        val user = userRepository.findByTgUserId(encryptionService.encrypt("10"))!!
+        assertThat(user.acquisitionTag).isEqualTo("website")
+        assertThat(user.source).isEqualTo("telegram_bot")
+    }
+
+    @Test
+    fun `help command goes through webhook and sends help message`() {
+        val update = commandUpdate("/help", userId = 20L, chatId = 124L, username = "test-user-20")
+        performWebhook(update)
+
+        val call = messageSender.sendTextCalls.single()
+        assertThat(call.chatId).isEqualTo(124L)
+        assertThat(call.text).isEqualTo(Messages.HELP_MESSAGE)
+    }
+
+    @Test
     fun `location search success real webhook flow`() {
         seedStableSearchArea()
 
@@ -150,11 +174,18 @@ class TelegramWebhookFlowIntegrationTest : BaseIntegrationTest() {
         val call = messageSender.sendTextCalls.single()
         assertThat(call.chatId).isEqualTo(123L)
         assertThat(call.text).contains("Найдено 2 туалетов поблизости:")
+        assertThat(call.text).doesNotContain("Hidden")
+        assertThat(call.text).doesNotContain("Inactive")
         
         val buttons = call.inlineKeyboard?.keyboard ?: emptyList()
-        assertThat(buttons).isNotEmpty
-        val firstButtonData = buttons[0][0].callbackData
-        assertThat(firstButtonData).isEqualTo("detail:$nearestRestroomId")
+        val detailCallbacks = buttons.flatten()
+            .map { it.callbackData }
+            .filter { it.startsWith("detail:") }
+
+        assertThat(detailCallbacks).containsExactly(
+            "detail:$nearestRestroomId",
+            "detail:$secondNearestRestroomId"
+        )
 
         val users = userRepository.findAll()
         assertThat(users).hasSize(1)
@@ -185,10 +216,15 @@ class TelegramWebhookFlowIntegrationTest : BaseIntegrationTest() {
 
         val calls = messageSender.sendTextCalls
         assertThat(calls).hasSize(2)
-        assertThat(calls[0].text).isEqualTo(Messages.NO_TOILETS_FOUND)
         
+        // First message says NO_TOILETS_FOUND and offers radius expansion
+        assertThat(calls[0].text).isEqualTo(Messages.NO_TOILETS_FOUND)
         val radiusButtons = calls[0].inlineKeyboard?.keyboard?.flatten() ?: emptyList()
         assertThat(radiusButtons.map { it.callbackData }).contains("radius:500", "radius:1000", "radius:2000")
+
+        // Second message prompts user to share location again
+        assertThat(calls[1].text).isEqualTo("Или попробуйте другую точку:")
+        assertThat(calls[1].replyKeyboard?.keyboard?.first()?.first()?.text).isEqualTo(Messages.BUTTON_SHARE_LOCATION)
 
         val user = userRepository.findByTgUserId(encryptionService.encrypt("200"))!!
         val analytics = userAnalyticsRepository.findById(user.id!!).get()
@@ -231,8 +267,9 @@ class TelegramWebhookFlowIntegrationTest : BaseIntegrationTest() {
         val locUpdate = locationUpdate(userId = 400L, chatId = 126L, username = "test-400", lat = 53.900, lon = 27.560)
         performWebhook(locUpdate)
         
-        val listCallText = messageSender.sendTextCalls.single().text
-        val detailCallbackData = messageSender.sendTextCalls.single().inlineKeyboard?.keyboard?.first()?.first()?.callbackData!!
+        val listCall = messageSender.sendTextCalls.single()
+        val listCallText = listCall.text
+        val detailCallbackData = listCall.inlineKeyboard?.keyboard?.first()?.first()?.callbackData!!
         messageSender.clear()
 
         val detailUpdate = callbackUpdate(detailCallbackData, userId = 400L, chatId = 126L, username = "test-400")
@@ -309,7 +346,7 @@ class TelegramWebhookFlowIntegrationTest : BaseIntegrationTest() {
                 MessageEntity.builder()
                     .type("bot_command")
                     .offset(0)
-                    .length("/start".length)
+                    .length(text.split(" ").first().length)
                     .build()
             )
         update.message = message
@@ -385,6 +422,8 @@ class RecordingMessageSender : MessageSender {
         answerCallbackQueries.clear()
     }
 
+    // Intentionally fail if the webhook flow starts using the low-level Telegram API methods directly.
+    // These tests record the higher-level MessageSender operations used by bot handlers.
     override fun sendMessage(message: SendMessage) {
         throw UnsupportedOperationException("not used in tests")
     }
