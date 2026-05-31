@@ -1,6 +1,7 @@
 package yayauheny.by.importing.provider.osm
 
 import com.fasterxml.jackson.databind.JsonNode
+import org.springframework.stereotype.Component
 import yayauheny.by.importing.dedup.PayloadHashing
 import yayauheny.by.importing.exception.InvalidImportPayload
 import yayauheny.by.importing.model.ImportAdapterContext
@@ -12,6 +13,7 @@ import yayauheny.by.importing.provider.ImportSourceAdapter
 import yayauheny.by.importing.provider.ProviderImportEnvelope
 import yayauheny.by.model.enums.ImportProvider
 
+@Component
 class OsmImportAdapter : ImportSourceAdapter {
     override val provider: ImportProvider = ImportProvider.OSM
 

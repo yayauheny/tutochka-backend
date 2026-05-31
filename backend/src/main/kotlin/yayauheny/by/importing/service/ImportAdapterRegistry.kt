@@ -1,9 +1,11 @@
 package yayauheny.by.importing.service
 
+import org.springframework.stereotype.Component
 import yayauheny.by.importing.exception.UnsupportedImportProvider
 import yayauheny.by.importing.provider.ImportSourceAdapter
 import yayauheny.by.model.enums.ImportProvider
 
+@Component
 class ImportAdapterRegistry(
     adapters: List<ImportSourceAdapter>
 ) {
