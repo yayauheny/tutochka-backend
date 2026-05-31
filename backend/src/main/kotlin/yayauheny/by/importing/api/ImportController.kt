@@ -1,6 +1,7 @@
 package yayauheny.by.importing.api
 
 import com.fasterxml.jackson.databind.JsonNode
+import com.fasterxml.jackson.databind.node.JsonNodeFactory
 import org.springframework.http.HttpHeaders
 import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
@@ -15,7 +16,6 @@ import yayauheny.by.model.enums.ImportPayloadType
 import yayauheny.by.model.enums.ImportProvider
 import yayauheny.by.model.imports.ImportBatchResponseDto
 import yayauheny.by.model.imports.ImportItemResultDto
-import yayauheny.by.model.imports.ImportResponseDto
 import java.util.UUID
 
 @RestController
@@ -23,38 +23,6 @@ import java.util.UUID
 class ImportController(
     private val importService: ImportService
 ) {
-    @PostMapping
-    fun importSingle(
-        headers: HttpHeaders,
-        @RequestBody body: JsonNode
-    ): ResponseEntity<ImportResponseDto> {
-        val parsedProvider = headers.importProvider()
-        val parsedPayloadType = headers.importPayloadType()
-        val parsedCityId = headers.importCityId()
-
-        val payload = if (body.has("items") && body.get("items").isArray) {
-            body.get("items").first()
-        } else {
-            body
-        }
-
-        val result = importService.import(
-            provider = parsedProvider,
-            payloadType = parsedPayloadType,
-            cityId = parsedCityId,
-            payload = payload
-        )
-
-        return ResponseEntity.status(HttpStatus.CREATED).body(
-            ImportResponseDto(
-                importId = result.importId,
-                restroomId = result.restroomId,
-                buildingId = result.buildingId,
-                status = result.status
-            )
-        )
-    }
-
     @PostMapping("/batch")
     fun importBatch(
         headers: HttpHeaders,
@@ -68,7 +36,7 @@ class ImportController(
             provider = parsedProvider,
             payloadType = parsedPayloadType,
             cityId = parsedCityId,
-            payload = body
+            payload = normalizeBatchBody(body)
         )
 
         return ResponseEntity.status(HttpStatus.CREATED).body(
@@ -92,6 +60,13 @@ class ImportController(
                 }
             )
         )
+    }
+
+    private fun normalizeBatchBody(body: JsonNode): JsonNode {
+        if (body.isArray) {
+            return JsonNodeFactory.instance.objectNode().set<JsonNode>("items", body)
+        }
+        return body
     }
 
     private fun HttpHeaders.importProvider(): ImportProvider {

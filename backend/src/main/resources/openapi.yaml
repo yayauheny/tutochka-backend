@@ -69,62 +69,10 @@ paths:
                     type: string
                     example: TuTochka API
 
-  /import:
-    post:
-      summary: Import one item
-      description: Import one provider payload item
-      parameters:
-        - name: Import-Provider
-          in: header
-          required: true
-          description: Import provider
-          schema:
-            type: string
-            enum: [TWO_GIS, YANDEX_MAPS, GOOGLE_MAPS, OSM, USER, MANUAL]
-        - name: Import-Payload-Type
-          in: header
-          required: true
-          description: Import payload type
-          schema:
-            type: string
-            enum: [TWO_GIS_SCRAPED_PLACE_JSON, YANDEX_MAPS_SCRAPED_PLACE_JSON, OSM_TOILET_JSON, MANUAL]
-        - name: Import-City-Id
-          in: header
-          required: false
-          description: Optional city ID override
-          schema:
-            type: string
-            format: uuid
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/ImportRequestDto'
-      responses:
-        '501':
-          description: Import is not implemented yet
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
-        '400':
-          description: Validation error
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
-        '500':
-          description: Internal server error
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
-
   /import/batch:
     post:
       summary: Import a batch
-      description: Import multiple provider payload items
+      description: Import multiple provider payload items. The request body may be a raw array or an object with an `items` array.
       parameters:
         - name: Import-Provider
           in: header
@@ -153,11 +101,11 @@ paths:
           application/json:
             schema:
               oneOf:
-                - $ref: '#/components/schemas/ImportRequestDto'
                 - type: array
                   items:
                     type: object
                     additionalProperties: true
+                - $ref: '#/components/schemas/ImportRequestDto'
       responses:
         '501':
           description: Batch import is not implemented yet
@@ -946,27 +894,6 @@ components:
           items:
             type: object
             additionalProperties: true
-
-    ImportResponseDto:
-      type: object
-      properties:
-        importId:
-          type: string
-          format: uuid
-          description: Import job ID
-        restroomId:
-          type: string
-          format: uuid
-          description: Restroom ID
-        buildingId:
-          type: string
-          format: uuid
-          nullable: true
-          description: Building ID
-        status:
-          type: string
-          enum: [PENDING, SUCCESS, FAILED]
-          description: Import status
 
     ImportBatchResponseDto:
       type: object
