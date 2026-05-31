@@ -10,9 +10,6 @@ import yayauheny.by.bot.service.FormatterService
 import yayauheny.by.bot.util.Links
 import yayauheny.by.model.restroom.NearestRestroomSlimDto
 import yayauheny.by.model.restroom.RestroomResponseDto
-import kotlinx.serialization.json.JsonElement
-import kotlinx.serialization.json.JsonObject
-import kotlinx.serialization.json.JsonPrimitive
 
 @Component
 class InlineKeyboardFactory(
@@ -145,20 +142,20 @@ class InlineKeyboardFactory(
         return builder(toilet.coordinates!!.lat, toilet.coordinates!!.lon)
     }
 
-    private fun extractTwoGisBranchId(externalMaps: JsonObject?): String? {
+    private fun extractTwoGisBranchId(externalMaps: Map<String, Any>?): String? {
         if (externalMaps == null) {
             return null
         }
 
         val twoGis = externalMaps["2gis"]
-        if (twoGis is JsonPrimitive) {
-            return twoGis.content
+        if (twoGis is String) {
+            return twoGis
         }
 
-        if (twoGis is JsonObject) {
+        if (twoGis is Map<*, *>) {
             val branchId = twoGis["branch_id"]
-            if (branchId is JsonPrimitive) {
-                return branchId.content
+            if (branchId is String) {
+                return branchId
             }
         }
 

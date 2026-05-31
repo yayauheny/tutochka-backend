@@ -1,11 +1,5 @@
 package yayauheny.by.bot.util
 
-import kotlinx.serialization.json.JsonArray
-import kotlinx.serialization.json.JsonElement
-import kotlinx.serialization.json.JsonObject
-import kotlinx.serialization.json.JsonPrimitive
-import kotlinx.serialization.json.booleanOrNull
-
 object WorkTimeFormatter {
 
     private val DAY_NAMES = mapOf(
@@ -20,8 +14,8 @@ object WorkTimeFormatter {
 
     private val DAY_ORDER = arrayOf("Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun")
 
-    fun formatWorkTime(workTime: JsonObject?): String {
-        if (workTime == null || workTime.isEmpty()) {
+    fun formatWorkTime(workTime: Map<String, Any>?): String {
+        if (workTime.isNullOrEmpty()) {
             return "Время работы не указано"
         }
 
@@ -30,7 +24,7 @@ object WorkTimeFormatter {
         }
 
         val result = java.lang.StringBuilder()
-        val comment = extractComment(workTime)
+        val comment = asString(workTime["comment"])
         if (!comment.isNullOrBlank()) {
             result.append(comment).append("\n")
         }
@@ -57,8 +51,8 @@ object WorkTimeFormatter {
         return result.toString()
     }
 
-    fun getSimplifiedWorkTime(workTime: JsonObject?): String? {
-        if (workTime == null || workTime.isEmpty()) return null
+    fun getSimplifiedWorkTime(workTime: Map<String, Any>?): String? {
+        if (workTime.isNullOrEmpty()) return null
 
         var firstDaySchedule: String? = null
         var allDaysSame = true
@@ -90,21 +84,17 @@ object WorkTimeFormatter {
         return null
     }
 
-    private fun extractComment(workTime: JsonObject): String? {
-        return asString(workTime["comment"])
-    }
-
-    private fun formatDaySchedule(dayData: JsonElement?): String {
-        if (dayData !is JsonObject) {
+    private fun formatDaySchedule(dayData: Any?): String {
+        if (dayData !is Map<*, *>) {
             return "не указано"
         }
 
         val workingHoursObj = dayData["working_hours"]
-        if (workingHoursObj is JsonArray && workingHoursObj.isNotEmpty()) {
+        if (workingHoursObj is List<*> && workingHoursObj.isNotEmpty()) {
             val dayResult = StringBuilder()
             var firstPeriod = true
             for (period in workingHoursObj) {
-                if (period is JsonObject) {
+                if (period is Map<*, *>) {
                     val from = asString(period["from"])
                     val to = asString(period["to"])
                     if (from.isNullOrBlank() || to.isNullOrBlank()) continue
@@ -130,13 +120,12 @@ object WorkTimeFormatter {
         return "не указано"
     }
 
-    private fun asString(value: JsonElement?): String? {
-        return if (value is JsonPrimitive) value.content else value?.toString()
+    private fun asString(value: Any?): String? {
+        return value?.toString()
     }
 
-    private fun isTrue(value: JsonElement?): Boolean {
-        if (value !is JsonPrimitive) return false
-        return value.booleanOrNull == true
+    private fun isTrue(value: Any?): Boolean {
+        return value == true || value == "true"
     }
 
     private fun is24x7(from: String, to: String): Boolean {

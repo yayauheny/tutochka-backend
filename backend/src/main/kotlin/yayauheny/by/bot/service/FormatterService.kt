@@ -13,9 +13,6 @@ import yayauheny.by.model.enums.FeeType
 import yayauheny.by.model.restroom.NearestRestroomSlimDto
 import yayauheny.by.model.restroom.RestroomResponseDto
 import yayauheny.by.model.subway.SubwayStationResponseDto
-import kotlinx.serialization.json.JsonObject
-import kotlinx.serialization.json.JsonPrimitive
-import kotlinx.serialization.json.booleanOrNull
 
 @Service
 class FormatterService {
@@ -55,7 +52,7 @@ class FormatterService {
     fun toiletListItem(toilet: NearestRestroomSlimDto): String {
         val normalized = TextUtil.normalizeNullableText(toilet.displayName)
         val name = if (!normalized.isNullOrBlank()) normalized else "Туалет"
-        val distance = DistanceFormat.meters(toilet.distanceMeters)
+        val distance = DistanceFormat.meters(toilet.distanceMeters.toDouble())
         val feeType = toilet.feeType
         val feeIcon = getFeeIcon(feeType)
         val feeSegment = if (feeIcon.isEmpty()) "" else "  $feeIcon"
@@ -65,7 +62,7 @@ class FormatterService {
     private fun formatSubwayInfo(station: SubwayStationResponseDto?): String {
         if (station == null) return ""
 
-        val emoji = EmojiConstants.getEmojiForColor(station.lineColor)
+        val emoji = EmojiConstants.getEmojiForColor(station.lineColor())
         val stationName = station.displayName("ru")
 
         if (stationName.isNullOrBlank()) return ""
@@ -200,10 +197,9 @@ class FormatterService {
         return "<b>Ориентир:</b> $result\n"
     }
 
-    private fun is24x7(workTime: JsonObject?): Boolean {
+    private fun is24x7(workTime: Map<String, Any>?): Boolean {
         if (workTime == null) return false
         val value = workTime["is_24x7"]
-        if (value !is JsonPrimitive) return false
-        return value.booleanOrNull == true
+        return value == true || value == "true"
     }
 }
