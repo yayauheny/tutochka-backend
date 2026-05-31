@@ -12,7 +12,6 @@
 - не загрязнять обычные `RestroomRepository` и `BuildingRepository` import-методами
 
 Поддерживаемые HTTP routes не менялись:
-- `POST /api/v1/import`
 - `POST /api/v1/import/batch`
 
 ## Слои
@@ -60,7 +59,7 @@ backend/src/main/kotlin/yayauheny/by/importing/
 - `service/ImportService.kt`
   - проверяет supported `(provider, payloadType)`
   - проверяет существование `cityId`
-  - оркестрирует single и batch import
+  - оркестрирует batch import
 
 - `service/ImportBatchProcessor.kt`
   - режет batch на чанки

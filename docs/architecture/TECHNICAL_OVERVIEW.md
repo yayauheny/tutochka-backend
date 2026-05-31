@@ -52,7 +52,7 @@ Canonical, non-marketing description of the **tutochka-backend** monorepo: **Spr
 
 **Backend ↔ Telegram bot:**
 
-- Bot is a **consumer** of the REST API. All authoritative data lives in **PostgreSQL** behind the Ktor backend.
+- Bot is a **consumer** of the REST API. All authoritative data lives in **PostgreSQL** behind the Spring Boot backend.
 
 **Implementation status (high level):**
 
@@ -77,7 +77,7 @@ Canonical, non-marketing description of the **tutochka-backend** monorepo: **Spr
 | Real photos | Planned | `hasPhotos` only |
 | User submissions | Planned | Not exposed as product flow |
 | Admin moderation UI | Planned | Not in repo as product |
-| Automated imports from map providers | Not implemented in stage 1.75 | `POST /api/v1/import`, `POST /api/v1/import/batch` currently return `501 Not Implemented` |
+| Automated imports from map providers | Batch import endpoint is available | `POST /api/v1/import/batch` accepts raw arrays and `{ "items": [...] }` |
 | OpenAPI / Swagger UI | Partial | `openapi.yaml` committed; verify Swagger UI route on running server |
 
 ---
@@ -235,7 +235,7 @@ flowchart LR
   tg[Telegram]
   bot[Spring_Bot]
   http[HTTP_JSON]
-  api[Ktor_Backend]
+  api[Spring_Backend]
   jooq[jOOQ]
   db[(PostgreSQL_PostGIS)]
   lb[Liquibase]
@@ -250,7 +250,7 @@ flowchart LR
 
 | Layer | Role |
 |-------|------|
-| **Ktor backend** | REST API, validation, serialization (kotlinx.serialization), DI (Koin). |
+| **Spring backend** | REST API, validation, serialization (Jackson), DI (Spring). |
 | **PostgreSQL + PostGIS** | Single source of truth; spatial indexes for coordinates. |
 | **Liquibase** | Schema migrations under `backend/src/main/resources/db/changelog/`. |
 | **jOOQ** | Type-safe SQL; generated tables in `backend/src/generated/kotlin`. |
@@ -323,7 +323,7 @@ Nearest endpoint combines a **distance cap**, **KNN ordering**, and filters for 
 
 ## Stack versions (reference)
 
-See [`libs.versions.toml`](../../libs.versions.toml) and Gradle modules for authoritative versions. Indicative: Kotlin (JVM 21), Ktor 3.x, jOOQ 3.20.x, PostgreSQL driver 42.x, Liquibase 2.x, PostGIS in database.
+See [`libs.versions.toml`](../../libs.versions.toml) and Gradle modules for authoritative versions. Indicative: Kotlin (JVM 21), Spring Boot, jOOQ 3.20.x, PostgreSQL driver 42.x, Liquibase 2.x, PostGIS in database.
 
 ---
 

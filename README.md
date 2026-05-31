@@ -16,7 +16,7 @@
 - `GET /api/v1/restrooms/nearest`
 - `POST /api/v1/analytics/events`
 - `GET /api/v1/public/analytics`
-- `POST /api/v1/import` and `POST /api/v1/import/batch` return `501 Not Implemented` for now
+- `POST /api/v1/import/batch` is the only import endpoint and accepts either a raw JSON array or `{ "items": [...] }`
 
 ## Быстрый старт
 - Backend: `./gradlew :backend:run`

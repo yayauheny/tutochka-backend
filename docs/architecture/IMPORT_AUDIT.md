@@ -37,7 +37,7 @@ Legacy strategy-based orchestration under `yayauheny.by.service.import` has been
 
 ## What the subsystem supports well
 
-- compact single and batch responses
+- batch responses
 - partial batch success
 - exact provider-origin dedup
 - deterministic building match-key dedup
