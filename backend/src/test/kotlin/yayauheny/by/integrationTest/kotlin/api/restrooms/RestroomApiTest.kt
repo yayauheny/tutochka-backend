@@ -9,22 +9,37 @@ import kotlin.test.assertNotNull
 import kotlin.test.assertTrue
 import kotlinx.coroutines.test.runTest
 import kotlinx.serialization.json.Json
+import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.jsonArray
 import kotlinx.serialization.json.jsonObject
 import kotlinx.serialization.json.jsonPrimitive
+import kotlinx.serialization.json.toJacksonNode
 import org.junit.jupiter.api.DisplayName
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Tag
 import org.junit.jupiter.api.Test
+import org.springframework.beans.factory.annotation.Autowired
 import yayauheny.by.helpers.DatabaseTestHelper
 import yayauheny.by.helpers.assertHasValidationErrors
 import yayauheny.by.helpers.assertJsonContentType
 import yayauheny.by.helpers.assertStatusAndJsonContent
+import yayauheny.by.helpers.loadImportResourceItems
 import yayauheny.by.helpers.parseErrorResponse
 import yayauheny.by.helpers.testGet
+import yayauheny.by.importing.mapper.RestroomImportMapper
+import yayauheny.by.importing.model.ImportAdapterContext
+import yayauheny.by.importing.provider.ImportSourceAdapter
+import yayauheny.by.importing.provider.twogis.TwoGisImportAdapter
+import yayauheny.by.importing.provider.yandex.YandexImportAdapter
+import yayauheny.by.model.enums.ImportPayloadType
+import yayauheny.by.service.RestroomService
+import java.util.UUID
 
 @Tag("integration")
 class RestroomApiTest : BaseIntegrationTest() {
+    @Autowired
+    private lateinit var restroomService: RestroomService
+
     @Test
     @DisplayName("GIVEN existing restrooms WHEN GET nearest with valid coordinates THEN return nearest restrooms with distance")
     fun given_existing_restrooms_when_get_nearest_with_valid_coordinates_then_return_nearest_restrooms() =
@@ -242,6 +257,85 @@ class RestroomApiTest : BaseIntegrationTest() {
         }
 
     @Test
+    @DisplayName("GIVEN near and far restrooms WHEN GET nearest without distance parameter THEN use default 5km radius")
+    fun given_near_and_far_restrooms_when_get_nearest_without_distance_parameter_then_use_default_radius() =
+        runTest {
+            val testEnv = DatabaseTestHelper.createTestEnvironment(dslContext)
+            DatabaseTestHelper.insertTestRestroom(
+                dslContext,
+                testEnv.cityId,
+                DatabaseTestHelper.createTestRestroomData(
+                    name = "Near Restroom",
+                    lat = 53.9000,
+                    lon = 27.5600
+                )
+            )
+            DatabaseTestHelper.insertTestRestroom(
+                dslContext,
+                testEnv.cityId,
+                DatabaseTestHelper.createTestRestroomData(
+                    name = "Far Restroom",
+                    lat = 53.9600,
+                    lon = 27.5600
+                )
+            )
+
+            KtorTestApplication.withApp(dslContext) { client ->
+                val response =
+                    client.testGet(
+                        "/api/v1/restrooms/nearest",
+                        mapOf("lat" to "53.9000", "lon" to "27.5600", "limit" to "10")
+                    )
+
+                response.assertStatusAndJsonContent(HttpStatus.OK)
+                val jsonArray = Json.parseToJsonElement(response.bodyAsText()).jsonArray
+
+                assertEquals(1, jsonArray.size)
+                assertEquals("Near Restroom", jsonArray.single().jsonObject["displayName"]?.jsonPrimitive?.content)
+            }
+        }
+
+    @Test
+    @DisplayName("GIVEN near and far restrooms WHEN GET nearest with explicit larger radius THEN include both")
+    fun given_near_and_far_restrooms_when_get_nearest_with_explicit_larger_radius_then_include_both() =
+        runTest {
+            val testEnv = DatabaseTestHelper.createTestEnvironment(dslContext)
+            DatabaseTestHelper.insertTestRestroom(
+                dslContext,
+                testEnv.cityId,
+                DatabaseTestHelper.createTestRestroomData(
+                    name = "Near Restroom",
+                    lat = 53.9000,
+                    lon = 27.5600
+                )
+            )
+            DatabaseTestHelper.insertTestRestroom(
+                dslContext,
+                testEnv.cityId,
+                DatabaseTestHelper.createTestRestroomData(
+                    name = "Far Restroom",
+                    lat = 53.9600,
+                    lon = 27.5600
+                )
+            )
+
+            KtorTestApplication.withApp(dslContext) { client ->
+                val response =
+                    client.testGet(
+                        "/api/v1/restrooms/nearest",
+                        mapOf("lat" to "53.9000", "lon" to "27.5600", "limit" to "10", "distanceMeters" to "10000")
+                    )
+
+                response.assertStatusAndJsonContent(HttpStatus.OK)
+                val jsonArray = Json.parseToJsonElement(response.bodyAsText()).jsonArray
+
+                assertEquals(2, jsonArray.size)
+                assertEquals("Near Restroom", jsonArray[0].jsonObject["displayName"]?.jsonPrimitive?.content)
+                assertEquals("Far Restroom", jsonArray[1].jsonObject["displayName"]?.jsonPrimitive?.content)
+            }
+        }
+
+    @Test
     @DisplayName("GIVEN active and inactive restrooms WHEN GET nearest THEN return only active restrooms")
     fun given_active_and_inactive_restrooms_when_get_nearest_then_return_only_active_restrooms() =
         runTest {
@@ -295,6 +389,157 @@ class RestroomApiTest : BaseIntegrationTest() {
             }
         }
 
+    @Test
+    @DisplayName("GIVEN real 2GIS import fixtures WHEN GET nearest THEN return imported toilets ordered by actual distance")
+    fun given_real_twogis_import_fixtures_when_get_nearest_then_return_imported_toilets_ordered_by_distance() =
+        runTest {
+            val testEnv = DatabaseTestHelper.createTestEnvironment(dslContext)
+            importFixtureRestroom(
+                adapter = TwoGisImportAdapter(),
+                resourcePath = "import/2gis/2gis_scraped_places.json",
+                idField = "id",
+                resourceId = "70000001042444951",
+                payloadType = ImportPayloadType.TWO_GIS_SCRAPED_PLACE_JSON,
+                cityId = testEnv.cityId
+            )
+            importFixtureRestroom(
+                adapter = TwoGisImportAdapter(),
+                resourcePath = "import/2gis/2gis_scraped_places.json",
+                idField = "id",
+                resourceId = "70000001057290977",
+                payloadType = ImportPayloadType.TWO_GIS_SCRAPED_PLACE_JSON,
+                cityId = testEnv.cityId
+            )
+
+            KtorTestApplication.withApp(dslContext) { client ->
+                val response =
+                    client.testGet(
+                        "/api/v1/restrooms/nearest",
+                        mapOf("lat" to "53.933332", "lon" to "27.651295", "limit" to "10")
+                    )
+
+                response.assertStatusAndJsonContent(HttpStatus.OK)
+                val jsonArray = Json.parseToJsonElement(response.bodyAsText()).jsonArray
+
+                assertEquals(2, jsonArray.size)
+                assertEquals(
+                    "Dana Mall, торгово-развлекательный комплекс",
+                    jsonArray[0].jsonObject["displayName"]?.jsonPrimitive?.content
+                )
+                assertEquals(
+                    "Платный туалет",
+                    jsonArray[1].jsonObject["displayName"]?.jsonPrimitive?.content
+                )
+                assertEquals(53.933332, jsonArray[0].jsonObject["restroomCoordinates"]!!.jsonObject["lat"]!!.jsonPrimitive.content.toDouble())
+                assertEquals(27.651295, jsonArray[0].jsonObject["restroomCoordinates"]!!.jsonObject["lon"]!!.jsonPrimitive.content.toDouble())
+
+                val distances = jsonArray.map { it.jsonObject["distanceMeters"]!!.jsonPrimitive.content.toDouble() }
+                assertTrue(distances[0] in 0.0..0.01, "Expected the exact queried 2GIS restroom to be effectively at zero distance")
+                assertEquals(
+                    haversineMeters(53.933332, 27.651295, 53.834559, 27.628516),
+                    distances[1],
+                    0.01
+                )
+                assertTrue(distances[0] < distances[1], "Expected nearest results to stay sorted by distance")
+            }
+        }
+
+    @Test
+    @DisplayName("GIVEN real Yandex import fixtures WHEN GET nearest THEN exclude inactive imported toilet and return active match")
+    fun given_real_yandex_import_fixtures_when_get_nearest_then_exclude_inactive_imported_toilet_and_return_active_match() =
+        runTest {
+            val testEnv = DatabaseTestHelper.createTestEnvironment(dslContext)
+            importFixtureRestroom(
+                adapter = YandexImportAdapter(),
+                resourcePath = "import/yandex/yandex_scraped_places.json",
+                idField = "placeId",
+                resourceId = "137246000290",
+                payloadType = ImportPayloadType.YANDEX_MAPS_SCRAPED_PLACE_JSON,
+                cityId = testEnv.cityId
+            )
+            importFixtureRestroom(
+                adapter = YandexImportAdapter(),
+                resourcePath = "import/yandex/yandex_scraped_places.json",
+                idField = "placeId",
+                resourceId = "239919493009",
+                payloadType = ImportPayloadType.YANDEX_MAPS_SCRAPED_PLACE_JSON,
+                cityId = testEnv.cityId
+            )
+
+            KtorTestApplication.withApp(dslContext) { client ->
+                val response =
+                    client.testGet(
+                        "/api/v1/restrooms/nearest",
+                        mapOf("lat" to "53.909435", "lon" to "27.573736", "limit" to "10")
+                    )
+
+                response.assertStatusAndJsonContent(HttpStatus.OK)
+                val jsonArray = Json.parseToJsonElement(response.bodyAsText()).jsonArray
+
+                assertEquals(1, jsonArray.size, "Expected only the active Yandex restroom to be searchable")
+                val returned = jsonArray.single().jsonObject
+                assertEquals("Туалет", returned["displayName"]?.jsonPrimitive?.content)
+                assertEquals(53.890334, returned["restroomCoordinates"]!!.jsonObject["lat"]!!.jsonPrimitive.content.toDouble())
+                assertEquals(27.553889, returned["restroomCoordinates"]!!.jsonObject["lon"]!!.jsonPrimitive.content.toDouble())
+                assertEquals(
+                    haversineMeters(53.909435, 27.573736, 53.890334, 27.553889),
+                    returned["distanceMeters"]!!.jsonPrimitive.content.toDouble(),
+                    0.01
+                )
+            }
+        }
+
+    @Test
+    @DisplayName("GIVEN mixed imported provider fixtures WHEN GET nearest THEN return all providers in actual distance order")
+    fun given_mixed_imported_provider_fixtures_when_get_nearest_then_return_all_providers_in_actual_distance_order() =
+        runTest {
+            val testEnv = DatabaseTestHelper.createTestEnvironment(dslContext)
+            importFixtureRestroom(
+                adapter = TwoGisImportAdapter(),
+                resourcePath = "import/2gis/2gis_scraped_places.json",
+                idField = "id",
+                resourceId = "70000001042444951",
+                payloadType = ImportPayloadType.TWO_GIS_SCRAPED_PLACE_JSON,
+                cityId = testEnv.cityId
+            )
+            importFixtureRestroom(
+                adapter = YandexImportAdapter(),
+                resourcePath = "import/yandex/yandex_scraped_places.json",
+                idField = "placeId",
+                resourceId = "239919493009",
+                payloadType = ImportPayloadType.YANDEX_MAPS_SCRAPED_PLACE_JSON,
+                cityId = testEnv.cityId
+            )
+
+            KtorTestApplication.withApp(dslContext) { client ->
+                val response =
+                    client.testGet(
+                        "/api/v1/restrooms/nearest",
+                        mapOf("lat" to "53.9000", "lon" to "27.5600", "limit" to "10", "distanceMeters" to "10000")
+                    )
+
+                response.assertStatusAndJsonContent(HttpStatus.OK)
+                val jsonArray = Json.parseToJsonElement(response.bodyAsText()).jsonArray
+
+                assertEquals(2, jsonArray.size)
+                val firstDistance = jsonArray[0].jsonObject["distanceMeters"]!!.jsonPrimitive.content.toDouble()
+                val secondDistance = jsonArray[1].jsonObject["distanceMeters"]!!.jsonPrimitive.content.toDouble()
+                assertEquals("Туалет", jsonArray[0].jsonObject["displayName"]?.jsonPrimitive?.content)
+                assertEquals("Dana Mall, торгово-развлекательный комплекс", jsonArray[1].jsonObject["displayName"]?.jsonPrimitive?.content)
+                assertEquals(
+                    haversineMeters(53.9000, 27.5600, 53.890334, 27.553889),
+                    firstDistance,
+                    0.01
+                )
+                assertEquals(
+                    haversineMeters(53.9000, 27.5600, 53.933332, 27.651295),
+                    secondDistance,
+                    0.01
+                )
+                assertTrue(firstDistance < secondDistance)
+            }
+        }
+
     @Nested
     @DisplayName("E2E Negative Test Cases for /nearest endpoint")
     inner class NearestNegativeTestCases {
@@ -327,5 +572,49 @@ class RestroomApiTest : BaseIntegrationTest() {
                     )
                 }
             }
+    }
+
+    private fun importFixtureRestroom(
+        adapter: ImportSourceAdapter,
+        resourcePath: String,
+        idField: String,
+        resourceId: String,
+        payloadType: ImportPayloadType,
+        cityId: UUID
+    ) {
+        val payload = loadImportResourceItems(resourcePath).firstFixture(idField, resourceId).toJacksonNode()
+        val envelope =
+            adapter.parseEnvelope(
+                payload,
+                ImportAdapterContext(
+                    payloadType = payloadType,
+                    cityId = cityId
+                )
+            )
+
+        restroomService.createRestroom(RestroomImportMapper.toCreateDto(envelope.command))
+    }
+
+    private fun List<JsonObject>.firstFixture(
+        idField: String,
+        resourceId: String
+    ): JsonObject =
+        first { item -> item[idField]?.jsonPrimitive?.content == resourceId }
+
+    private fun haversineMeters(
+        lat1: Double,
+        lon1: Double,
+        lat2: Double,
+        lon2: Double
+    ): Double {
+        val earthRadius = 6_371_000.0
+        val dLat = Math.toRadians(lat2 - lat1)
+        val dLon = Math.toRadians(lon2 - lon1)
+        val a =
+            kotlin.math.sin(dLat / 2) * kotlin.math.sin(dLat / 2) +
+                kotlin.math.cos(Math.toRadians(lat1)) * kotlin.math.cos(Math.toRadians(lat2)) *
+                kotlin.math.sin(dLon / 2) * kotlin.math.sin(dLon / 2)
+        val c = 2 * kotlin.math.atan2(kotlin.math.sqrt(a), kotlin.math.sqrt(1 - a))
+        return earthRadius * c
     }
 }

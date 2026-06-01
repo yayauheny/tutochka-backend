@@ -24,6 +24,7 @@ import yayauheny.by.repository.CityJpaRepository
 import yayauheny.by.repository.RestroomJpaRepository
 import yayauheny.by.repository.SubwayStationJpaRepository
 import yayauheny.by.service.RestroomService
+import yayauheny.by.model.enums.PlaceType
 import yayauheny.by.model.enums.RestroomStatus
 import yayauheny.by.model.dto.Coordinates
 import java.util.Optional
@@ -85,6 +86,54 @@ class RestroomServiceTest {
     }
 
     @Test
+    fun `getRestroomById maps nested building subway and collection fields`() {
+        val lineEntity = yayauheny.by.entity.SubwayLineEntity().apply {
+            id = UUID.randomUUID()
+            city = cityEntity()
+            nameRu = "Московская"
+            nameEn = "Moskovskaya"
+            shortCode = "1"
+            hexColor = "#FF0000"
+            createdAt = java.time.Instant.now()
+        }
+        val building =
+            buildingEntity().apply {
+                name = "Mall"
+                address = "Mall address"
+                buildingType = PlaceType.MALL.code
+                externalIds = mapOf("2gis" to "building-1")
+                workTime = mapOf("is_24x7" to true)
+            }
+        val station =
+            subwayStationEntity().apply {
+                subwayLine = lineEntity
+                nameRu = "Восток"
+                nameEn = "Vostok"
+            }
+        val restroom =
+            restroomEntity(name = "Central", address = "Main st").apply {
+                this.building = building
+                this.subwayStation = station
+                this.phones = listOf("+123", "+456")
+                this.amenities = mapOf("soap" to "true", "paper" to false)
+                this.externalMaps = mapOf("yandex" to "map-link")
+            }
+        every { restroomRepository.findById(restroom.id!!) } returns Optional.of(restroom)
+
+        val result = restroomService.getRestroomById(restroom.id!!)
+
+        assertThat(result?.building?.name).isEqualTo("Mall")
+        assertThat(result?.building?.buildingType).isEqualTo(PlaceType.MALL)
+        assertThat(result?.building?.externalIds).containsEntry("2gis", "building-1")
+        assertThat(result?.subwayStation?.nameRu).isEqualTo("Восток")
+        assertThat(result?.subwayStation?.line?.hexColor).isEqualTo("#FF0000")
+        assertThat(result?.phones).containsEntry("+123", "+123")
+        assertThat(result?.amenities).containsEntry("soap", true)
+        assertThat(result?.amenities).containsEntry("paper", false)
+        assertThat(result?.externalMaps).containsEntry("yandex", "map-link")
+    }
+
+    @Test
     fun `getRestroomsByCity uses city filter`() {
         val cityId = UUID.randomUUID()
         val pagination = PaginationRequest(page = 0, size = 10)
@@ -116,6 +165,21 @@ class RestroomServiceTest {
     }
 
     @Test
+    fun `findNearestRestrooms treats whitespace only name and address as missing`() {
+        val lat = 53.9
+        val lon = 27.56
+        val restroom = restroomEntity().apply {
+            name = "   "
+            address = "   "
+        }
+        every { restroomRepository.findNearest(lon, lat, 5000, 1) } returns listOf(restroom)
+
+        val result = restroomService.findNearestRestrooms(lat, lon, 1)
+
+        assertThat(result.single().displayName).isEqualTo("Unknown")
+    }
+
+    @Test
     fun `findNearestRestrooms sets queryCoordinates and computes service-side distance`() {
         val lat = 53.9
         val lon = 27.56
@@ -127,7 +191,12 @@ class RestroomServiceTest {
         val dto = result.single()
         assertThat(dto.queryCoordinates).isEqualTo(Coordinates(lat = lat, lon = lon))
         assertThat(dto.restroomCoordinates).isEqualTo(Coordinates(lat = 53.9005, lon = 27.5605))
-        assertThat(dto.distanceMeters).isGreaterThan(0.0)
+        assertThat(dto.id).isEqualTo(restroom.id)
+        assertThat(dto.distanceMeters).isBetween(
+            haversineMeters(lat, lon, 53.9005, 27.5605) - 0.01,
+            haversineMeters(lat, lon, 53.9005, 27.5605) + 0.01
+        )
+        verify { restroomRepository.findNearest(lon, lat, 5000, 1) }
     }
 
     // Create behavior tests
@@ -156,12 +225,17 @@ class RestroomServiceTest {
             }
         }
 
-        restroomService.createRestroom(createDto)
+        val result = restroomService.createRestroom(createDto)
 
         val saved = entitySlot.captured
         assertThat(saved.city).isEqualTo(city)
         assertThat(saved.building).isEqualTo(building)
         assertThat(saved.subwayStation).isEqualTo(station)
+        assertThat(result.cityId).isEqualTo(city.id)
+        assertThat(result.buildingId).isEqualTo(building.id)
+        assertThat(result.subwayStationId).isEqualTo(station.id)
+        assertThat(result.name).isEqualTo(createDto.name)
+        assertThat(result.address).isEqualTo(createDto.address)
     }
 
     @Test
@@ -210,6 +284,37 @@ class RestroomServiceTest {
         assertThat(saved.externalMaps).containsEntry("yandex", "http://yandex")
         assertThat(saved.hasPhotos).isTrue()
         assertThat(saved.inheritBuildingSchedule).isFalse()
+    }
+
+    @Test
+    fun `createRestroom keeps entity defaults when nullable optional values are absent`() {
+        val city = cityEntity()
+        val createDto =
+            TestDataHelpers.createRestroomCreateDto(cityId = city.id!!).copy(
+                phones = null,
+                feeType = null,
+                genderType = null,
+                externalMaps = null
+            )
+        every { cityRepository.findById(city.id!!) } returns Optional.of(city)
+        val entitySlot = slot<RestroomEntity>()
+        every { restroomRepository.save(capture(entitySlot)) } answers {
+            firstArg<RestroomEntity>().apply {
+                id = UUID.randomUUID()
+                createdAt = java.time.Instant.now()
+                updatedAt = java.time.Instant.now()
+            }
+        }
+
+        val result = restroomService.createRestroom(createDto)
+
+        val saved = entitySlot.captured
+        assertThat(saved.phones).isNull()
+        assertThat(saved.externalMaps).isNull()
+        assertThat(saved.feeType).isEqualTo(yayauheny.by.model.enums.FeeType.UNKNOWN)
+        assertThat(saved.genderType).isEqualTo(yayauheny.by.model.enums.GenderType.UNKNOWN)
+        assertThat(result.feeType).isEqualTo(yayauheny.by.model.enums.FeeType.UNKNOWN)
+        assertThat(result.genderType).isEqualTo(yayauheny.by.model.enums.GenderType.UNKNOWN)
     }
 
     // Update behavior tests
@@ -320,6 +425,41 @@ class RestroomServiceTest {
     }
 
     @Test
+    fun `updateRestroom preserves existing nullable fields when omitted`() {
+        val id = UUID.randomUUID()
+        val entity =
+            restroomEntity().apply {
+                accessNote = "keep-note"
+                directionGuide = "keep-guide"
+                externalMaps = mapOf("google" to "keep-map")
+                originId = "keep-origin"
+            }
+        val updateDto =
+            TestDataHelpers.createRestroomUpdateDto(
+                accessNote = null,
+                directionGuide = null
+            ).copy(
+                cityId = null,
+                buildingId = null,
+                subwayStationId = null,
+                externalMaps = null,
+                originId = null
+            )
+
+        every { restroomRepository.findById(id) } returns Optional.of(entity)
+        val entitySlot = slot<RestroomEntity>()
+        every { restroomRepository.save(capture(entitySlot)) } answers { firstArg() }
+
+        restroomService.updateRestroom(id, updateDto)
+
+        val saved = entitySlot.captured
+        assertThat(saved.accessNote).isEqualTo("keep-note")
+        assertThat(saved.directionGuide).isEqualTo("keep-guide")
+        assertThat(saved.externalMaps).containsEntry("google", "keep-map")
+        assertThat(saved.originId).isEqualTo("keep-origin")
+    }
+
+    @Test
     fun `deleteRestroom returns true when entity exists`() {
         val id = UUID.randomUUID()
         every { restroomRepository.existsById(id) } returns true
@@ -419,4 +559,21 @@ class RestroomServiceTest {
             createdAt = java.time.Instant.now()
             updatedAt = java.time.Instant.now()
         }
+
+    private fun haversineMeters(
+        lat1: Double,
+        lon1: Double,
+        lat2: Double,
+        lon2: Double
+    ): Double {
+        val earthRadius = 6_371_000.0
+        val dLat = Math.toRadians(lat2 - lat1)
+        val dLon = Math.toRadians(lon2 - lon1)
+        val a =
+            kotlin.math.sin(dLat / 2) * kotlin.math.sin(dLat / 2) +
+                kotlin.math.cos(Math.toRadians(lat1)) * kotlin.math.cos(Math.toRadians(lat2)) *
+                kotlin.math.sin(dLon / 2) * kotlin.math.sin(dLon / 2)
+        val c = 2 * kotlin.math.atan2(kotlin.math.sqrt(a), kotlin.math.sqrt(1 - a))
+        return earthRadius * c
+    }
 }

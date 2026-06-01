@@ -109,12 +109,44 @@ class FormatterServiceTest {
     }
 
     @Test
+    fun `toiletDetail renders exact compact template for representative restroom`() {
+        val restroom = sampleRestroom().copy(
+            feeType = FeeType.PAID,
+            accessibilityType = AccessibilityType.WHEELCHAIR
+        )
+
+        val formatted = formatterService.toiletDetail(restroom, null)
+
+        assertThat(formatted).isEqualTo(
+            """
+            <b>&lt;b&gt;Bad&lt;/b&gt;</b>
+                    
+                    📍 Main &lt;script&gt;alert(1)&lt;/script&gt; Street
+                    
+                    <b>Платно • МГН</b>
+                    
+                    <b>Тип:</b> Прочее
+                    
+                    <b>Как найти:</b> Find it near &lt;b&gt;exit&lt;/b&gt;
+            <b>Ориентир:</b> HQ &lt;script&gt;, метро Victory &lt;b&gt;Square&lt;/b&gt;
+            """.trimIndent()
+        )
+    }
+
+    @Test
     fun `toiletDetail suppresses long direction guide`() {
         val restroom = sampleRestroom().copy(directionGuide = "a".repeat(101))
 
         val formatted = formatterService.toiletDetail(restroom, null)
 
         assertThat(formatted).doesNotContain("Как найти:")
+    }
+
+    @Test
+    fun `colorToEmoji maps known colors and falls back for unknown`() {
+        assertThat(formatterService.colorToEmoji("#FF0000")).isEqualTo("🔴")
+        assertThat(formatterService.colorToEmoji("#does-not-exist")).isEqualTo("🚇")
+        assertThat(formatterService.colorToEmoji(null)).isEqualTo("🚇")
     }
 
     @Test
@@ -135,6 +167,46 @@ class FormatterServiceTest {
         assertThat(paid).contains("💰")
         assertThat(unknown).doesNotContain("💰")
         assertThat(unknown).doesNotContain("🆓")
+    }
+
+    @Test
+    fun `toiletListItem formats fallback name and distance without fee separator for unknown fee`() {
+        val item =
+            formatterService.toiletListItem(
+                sampleNearestRestroom(feeType = FeeType.UNKNOWN).copy(
+                    displayName = "   ",
+                    distanceMeters = 120.0
+                )
+            )
+
+        assertThat(item).isEqualTo("🚶 120 м  Туалет")
+    }
+
+    @Test
+    fun `toiletListItem formats kilometers and free icon`() {
+        val item =
+            formatterService.toiletListItem(
+                sampleNearestRestroom(feeType = FeeType.FREE).copy(
+                    displayName = "Nearest",
+                    distanceMeters = 1500.0
+                )
+            )
+
+        assertThat(item).isEqualTo("🚶 1,5 км  🆓  Nearest")
+    }
+
+    @Test
+    fun `toiletDetail ignores building 24x7 when schedule inheritance is disabled`() {
+        val restroom =
+            sampleRestroom().copy(
+                workTime = null,
+                inheritBuildingSchedule = false,
+                building = sampleBuilding(workTime = mapOf("is_24x7" to true))
+            )
+
+        val formatted = formatterService.toiletDetail(restroom, null)
+
+        assertThat(formatted).doesNotContain("Круглосуточно")
     }
 
     @Test
