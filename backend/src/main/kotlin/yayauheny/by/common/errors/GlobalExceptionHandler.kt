@@ -15,6 +15,7 @@ import jakarta.servlet.http.HttpServletRequest
 import jakarta.validation.ConstraintViolationException
 import org.springframework.http.converter.HttpMessageNotReadableException
 import java.lang.reflect.UndeclaredThrowableException
+import yayauheny.by.importing.exception.ImportException
 import yayauheny.by.metrics.BackendSearchMetrics
 import yayauheny.by.metrics.MetricLabelWhitelist
 
@@ -94,7 +95,8 @@ class GlobalExceptionHandler(
         HttpMessageNotReadableException::class,
         ConstraintViolationException::class,
         MissingServletRequestParameterException::class,
-        HttpMediaTypeNotSupportedException::class
+        HttpMediaTypeNotSupportedException::class,
+        ImportException::class
     )
     fun handleBadRequestExceptions(e: Exception, request: HttpServletRequest): ResponseEntity<ErrorResponse> {
         if (request.requestURI == "/api/v1/restrooms/nearest") {
@@ -145,7 +147,8 @@ class GlobalExceptionHandler(
             is HttpMessageNotReadableException,
             is ConstraintViolationException,
             is MissingServletRequestParameterException,
-            is HttpMediaTypeNotSupportedException -> handleBadRequestExceptions(cause as Exception, request)
+            is HttpMediaTypeNotSupportedException,
+            is ImportException -> handleBadRequestExceptions(cause as Exception, request)
             else -> handleGenericException(cause as Exception, request)
         }
     }

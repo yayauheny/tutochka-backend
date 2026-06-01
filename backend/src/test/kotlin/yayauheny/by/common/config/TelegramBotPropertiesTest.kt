@@ -21,7 +21,6 @@ class TelegramBotPropertiesTest {
             "telegram.bot.enabled=false",
             "telegram.bot.token=valid-token",
             "telegram.bot.webhook-secret-token=secret",
-            "telegram.bot.username=my-bot",
             "telegram.bot.webhook-path=/custom/path"
         ).run { context ->
             assertThat(context).hasNotFailed()
@@ -29,7 +28,6 @@ class TelegramBotPropertiesTest {
             assertThat(properties.enabled).isFalse()
             assertThat(properties.token).isEqualTo("valid-token")
             assertThat(properties.webhookSecretToken).isEqualTo("secret")
-            assertThat(properties.username).isEqualTo("my-bot")
             assertThat(properties.webhookPath).isEqualTo("/custom/path")
         }
     }
@@ -46,7 +44,6 @@ class TelegramBotPropertiesTest {
             assertThat(properties.enabled).isTrue()
             assertThat(properties.token).isEqualTo("valid-token")
             assertThat(properties.webhookSecretToken).isEqualTo("secret")
-            assertThat(properties.username).isEqualTo("your_bot_username")
             assertThat(properties.webhookPath).isEqualTo("/telegram/webhook")
             assertThat(properties.webhookPublicUrl).isEmpty()
             assertThat(properties.adminIds).isEmpty()

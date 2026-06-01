@@ -10,8 +10,8 @@ import org.springframework.web.bind.annotation.RequestBody
 import org.springframework.web.bind.annotation.RequestHeader
 import org.springframework.web.bind.annotation.RequestMapping
 import org.springframework.web.bind.annotation.RestController
-import yayauheny.by.importing.service.ImportService
 import yayauheny.by.common.errors.BadRequestException
+import yayauheny.by.importing.service.ImportService
 import yayauheny.by.model.enums.ImportPayloadType
 import yayauheny.by.model.enums.ImportProvider
 import yayauheny.by.model.imports.ImportBatchResponseDto
@@ -25,17 +25,14 @@ class ImportController(
 ) {
     @PostMapping("/batch")
     fun importBatch(
+        @RequestHeader
         headers: HttpHeaders,
         @RequestBody body: JsonNode
     ): ResponseEntity<ImportBatchResponseDto> {
-        val parsedProvider = headers.importProvider()
-        val parsedPayloadType = headers.importPayloadType()
-        val parsedCityId = headers.importCityId()
-
         val result = importService.importBatch(
-            provider = parsedProvider,
-            payloadType = parsedPayloadType,
-            cityId = parsedCityId,
+            provider = headers.importProvider(),
+            payloadType = headers.importPayloadType(),
+            cityId = headers.importCityId(),
             payload = normalizeBatchBody(body)
         )
 
@@ -62,25 +59,25 @@ class ImportController(
         )
     }
 
-    private fun normalizeBatchBody(body: JsonNode): JsonNode {
+    private fun normalizeBatchBody(body: JsonNode): JsonNode =
         if (body.isArray) {
-            return JsonNodeFactory.instance.objectNode().set<JsonNode>("items", body)
+            JsonNodeFactory.instance.objectNode().set<JsonNode>("items", body)
+        } else {
+            body
         }
-        return body
-    }
 
     private fun HttpHeaders.importProvider(): ImportProvider {
-        val raw = firstOrNull("Import-Provider") ?: firstOrNull("X-Import-Provider")
+        val raw = firstValue("Import-Provider") ?: firstValue("X-Import-Provider")
         return parseEnum(raw, "Import-Provider", ImportProvider::valueOf)
     }
 
     private fun HttpHeaders.importPayloadType(): ImportPayloadType {
-        val raw = firstOrNull("Import-Payload-Type") ?: firstOrNull("X-Import-Payload-Type")
+        val raw = firstValue("Import-Payload-Type") ?: firstValue("X-Import-Payload-Type")
         return parseEnum(raw, "Import-Payload-Type", ImportPayloadType::valueOf)
     }
 
     private fun HttpHeaders.importCityId(): UUID? {
-        val raw = firstOrNull("Import-City-Id") ?: firstOrNull("X-Import-City-Id")
+        val raw = firstValue("Import-City-Id") ?: firstValue("X-Import-City-Id")
         return raw?.let {
             try {
                 UUID.fromString(it)
@@ -90,7 +87,7 @@ class ImportController(
         }
     }
 
-    private fun HttpHeaders.firstOrNull(name: String): String? = this[name]?.firstOrNull()
+    private fun HttpHeaders.firstValue(name: String): String? = this[name]?.firstOrNull()
 
     private fun <T> parseEnum(
         raw: String?,

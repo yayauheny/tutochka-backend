@@ -14,8 +14,8 @@ Canonical, non-marketing description of the **tutochka-backend** monorepo: **Spr
 - **Nearest restrooms** by user coordinates (geodesic proximity, not routing time).
 - **Paginated** restroom lists (global and per city).
 - **CRUD** for countries and cities (API).
-- **Import pipeline** for external payloads (HTTP API + `restroom_imports` queue).
-- **Telegram bot** presents search results by calling the backend over HTTP.
+- **Import subsystem** is active through the Spring backend HTTP runtime.
+- **Telegram bot runtime** is owned by the backend and uses the same Spring application.
 
 **Core domain entities (relational model):**
 
@@ -28,7 +28,7 @@ Canonical, non-marketing description of the **tutochka-backend** monorepo: **Spr
 
 - **REST API** under `/api/v1` (prefix); health is available at `/health` and `/api/v1/health`.
 - **OpenAPI 3** specification: [`backend/src/main/resources/openapi.yaml`](../../backend/src/main/resources/openapi.yaml) (served as static resource; interactive UI may be documented in README — verify deployment).
-- **Telegram bot** (Spring Boot): HTTP client to backend `BACKEND_BASE_URL` — not a second source of truth.
+- **Telegram webhook and bot runtime** are owned by the backend. No separate bot service is part of the active runtime.
 
 **Supported (implemented in this repo):**
 
@@ -44,7 +44,7 @@ Canonical, non-marketing description of the **tutochka-backend** monorepo: **Spr
 - Reviews/ratings (not in schema).
 - **Real photo storage** — `hasPhotos` is a boolean flag only.
 - Turn-by-turn **indoor** navigation — only textual `directionGuide` / metadata.
-- Fully automated, production-ready **imports from 2GIS/Yandex** as the primary operational path — import exists but end-to-end rollout is ongoing.
+- Production HTTP **imports from 2GIS/Yandex** through `POST /api/v1/import/batch`.
 
 **Region / data status:**
 
@@ -56,9 +56,9 @@ Canonical, non-marketing description of the **tutochka-backend** monorepo: **Spr
 
 **Implementation status (high level):**
 
-- Backend API and bot modules exist and integrate via HTTP.
+- Backend API and Telegram bot runtime live in the same Spring application.
 - Building/subway linkage is modeled and served on restroom payloads.
-- Data import and production rollout remain **in progress** (see Capability Status).
+- Data import rollout is active in the public runtime (see Capability Status).
 
 ---
 
@@ -77,7 +77,7 @@ Canonical, non-marketing description of the **tutochka-backend** monorepo: **Spr
 | Real photos | Planned | `hasPhotos` only |
 | User submissions | Planned | Not exposed as product flow |
 | Admin moderation UI | Planned | Not in repo as product |
-| Automated imports from map providers | Batch import endpoint is available | `POST /api/v1/import/batch` accepts raw arrays and `{ "items": [...] }` |
+| Automated imports from map providers | Implemented | `POST /api/v1/import/batch` imports provider payload batches with partial success reporting |
 | OpenAPI / Swagger UI | Partial | `openapi.yaml` committed; verify Swagger UI route on running server |
 
 ---
@@ -91,6 +91,7 @@ Canonical, non-marketing description of the **tutochka-backend** monorepo: **Spr
 - **Nearest search** returns **geospatial proximity** (meters) using PostGIS — **not** travel time, transit, or walking directions.
 - **Map provider imports** (2GIS/Yandex/etc.) are **integration targets**, not the architectural core; the core is the REST API + PostgreSQL.
 - **Telegram bot** does not own the dataset; **backend + DB** are the source of truth.
+- **Local backend startup requires** `ENCRYPTION_KEYSET_JSON`, `TELEGRAM_BOT_TOKEN`, `BOT_WEBHOOK_SECRET_TOKEN`, database envs, and `BOT_WEBHOOK_PUBLIC_URL` only when webhook registration should run against a public URL.
 
 ---
 
@@ -233,16 +234,14 @@ Response is a **JSON array** of slim items:
 ```mermaid
 flowchart LR
   tg[Telegram]
-  bot[Spring_Bot]
-  http[HTTP_JSON]
+  bot[Backend_Bot_Runtime]
   api[Spring_Backend]
   jooq[jOOQ]
   db[(PostgreSQL_PostGIS)]
   lb[Liquibase]
 
   tg --> bot
-  bot --> http
-  http --> api
+  bot --> api
   api --> jooq
   jooq --> db
   lb --> db
@@ -254,7 +253,7 @@ flowchart LR
 | **PostgreSQL + PostGIS** | Single source of truth; spatial indexes for coordinates. |
 | **Liquibase** | Schema migrations under `backend/src/main/resources/db/changelog/`. |
 | **jOOQ** | Type-safe SQL; generated tables in `backend/src/generated/kotlin`. |
-| **Spring Boot bot** | Telegram updates → services → `WebBackendClient` → backend REST. |
+| **Spring Boot bot runtime** | Telegram updates → backend bot handlers and services inside the same Spring application. |
 | **OpenAPI** | [`openapi.yaml`](../../backend/src/main/resources/openapi.yaml) describes API contract; may lag behind code — prefer routing + DTOs as source of truth when in doubt. |
 
 ---

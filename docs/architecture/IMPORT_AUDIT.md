@@ -2,7 +2,7 @@
 
 ## Current state
 
-The canonical runtime import flow is now:
+The canonical import subsystem design is:
 
 ```text
 ImportController
@@ -14,6 +14,7 @@ ImportController
 ```
 
 Legacy strategy-based orchestration under `yayauheny.by.service.import` has been removed from runtime.
+The active HTTP runtime executes this flow through `POST /api/v1/import/batch`.
 
 ## What is isolated correctly
 
@@ -37,7 +38,7 @@ Legacy strategy-based orchestration under `yayauheny.by.service.import` has been
 
 ## What the subsystem supports well
 
-- batch responses
+- batch responses in subsystem design and tests
 - partial batch success
 - exact provider-origin dedup
 - deterministic building match-key dedup

@@ -1,0 +1,24 @@
+{
+  "update_id": 100002,
+  "message": {
+    "message_id": 2,
+    "from": {
+      "id": 100,
+      "is_bot": false,
+      "first_name": "Test",
+      "username": "test-100",
+      "language_code": "ru"
+    },
+    "chat": {
+      "id": 123,
+      "type": "private",
+      "first_name": "Test",
+      "username": "test-100"
+    },
+    "date": 1764556810,
+    "location": {
+      "latitude": 53.9,
+      "longitude": 27.56
+    }
+  }
+}

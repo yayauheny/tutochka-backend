@@ -19,11 +19,12 @@ BACKEND_TAG=sha-0123456789ab docker compose -f docker/docker-compose.prod.yml up
 
 ## Full Local Stack
 ```bash
-docker compose --env-file docker/env.local -f docker/docker-compose-local.yml up -d
-docker compose --env-file docker/env.local -f docker/docker-compose-local.yml --profile ngrok up -d
+docker compose --env-file docker/env.local -f docker/docker-compose-local.yml up -d --wait
+docker compose --env-file docker/env.local -f docker/docker-compose-local.yml --profile ngrok up -d --wait
 ```
 
-Скопируй `docker/env.local.example` в `docker/env.local` и задай `BOT_WEBHOOK_SECRET_TOKEN` перед запуском webhook-режима.
+Скопируй `docker/env.local.example` в `docker/env.local` и задай `ENCRYPTION_KEYSET_JSON`, `TELEGRAM_BOT_TOKEN`, `BOT_WEBHOOK_SECRET_TOKEN`.
+Если нужен внешний Telegram-доступ, также задай `BOT_WEBHOOK_PUBLIC_URL` и `NGROK_AUTHTOKEN`.
 В этом режиме backend запускается в Docker и всегда ходит в Postgres по имени хоста `postgres`.
 Данные Postgres сохраняются в `docker/postgres-data`, поэтому они переживают `docker compose down` и удаляются только если убрать эту папку вручную.
 
@@ -46,6 +47,5 @@ set -a; source docker/env.local; set +a
 ## Проверка
 ```bash
 curl http://localhost:8080/health/live
-curl http://localhost:8081/actuator/health
 curl http://localhost:4040/api/tunnels
 ```

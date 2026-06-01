@@ -1,0 +1,28 @@
+{
+  "update_id": 100001,
+  "message": {
+    "message_id": 1,
+    "from": {
+      "id": 10,
+      "is_bot": false,
+      "first_name": "Test",
+      "username": "test-user-10",
+      "language_code": "ru"
+    },
+    "chat": {
+      "id": 123,
+      "type": "private",
+      "first_name": "Test",
+      "username": "test-user-10"
+    },
+    "date": 1764556800,
+    "text": "/start website",
+    "entities": [
+      {
+        "offset": 0,
+        "length": 6,
+        "type": "bot_command"
+      }
+    ]
+  }
+}

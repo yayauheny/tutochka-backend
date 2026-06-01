@@ -415,7 +415,7 @@ class RestroomApiTest : BaseIntegrationTest() {
                 val response =
                     client.testGet(
                         "/api/v1/restrooms/nearest",
-                        mapOf("lat" to "53.933332", "lon" to "27.651295", "limit" to "10")
+                        mapOf("lat" to "53.933332", "lon" to "27.651295", "limit" to "10", "distanceMeters" to "15000")
                     )
 
                 response.assertStatusAndJsonContent(HttpStatus.OK)

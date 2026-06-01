@@ -33,6 +33,7 @@ import yayauheny.by.bot.MessageSender
 import yayauheny.by.bot.handler.UpdateContext
 import yayauheny.by.bot.messages.Messages
 import yayauheny.by.helpers.DatabaseTestHelper
+import yayauheny.by.model.analytics.ProductAnalyticsEvent
 import yayauheny.by.model.enums.RestroomStatus
 import yayauheny.by.model.enums.FeeType
 import java.util.UUID
@@ -152,6 +153,22 @@ class TelegramWebhookFlowIntegrationTest : BaseIntegrationTest() {
         val user = userRepository.findByTgUserId(encryptionService.encrypt("10"))!!
         assertThat(user.acquisitionTag).isEqualTo("website")
         assertThat(user.source).isEqualTo("telegram_bot")
+        assertThat(analyticsEventRepository.findAll().map { it.event })
+            .containsExactly(ProductAnalyticsEvent.BOT_STARTED.value)
+    }
+
+    @Test
+    fun `start command accepts real telegram payload fixture`() {
+        performWebhook(loadWebhookFixture("telegram/start_website_update.json"))
+
+        val call = messageSender.sendTextCalls.single()
+        assertThat(call.chatId).isEqualTo(123L)
+        assertThat(call.text).isEqualTo(Messages.WELCOME_MESSAGE)
+
+        val user = userRepository.findByTgUserId(encryptionService.encrypt("10"))!!
+        assertThat(user.username).isEqualTo("test-user-10")
+        assertThat(analyticsEventRepository.findAll().map { it.event })
+            .containsExactly(ProductAnalyticsEvent.BOT_STARTED.value)
     }
 
     @Test
@@ -196,6 +213,19 @@ class TelegramWebhookFlowIntegrationTest : BaseIntegrationTest() {
         assertThat(userAnalytics.searchesCount).isEqualTo(1)
         assertThat(userAnalytics.successfulSearchesCount).isEqualTo(1)
         assertThat(userAnalytics.emptySearchesCount).isEqualTo(0)
+        assertThat(analyticsEventRepository.findAll().map { it.event })
+            .containsExactly(ProductAnalyticsEvent.NEAREST_RESTROOMS_RETURNED.value)
+    }
+
+    @Test
+    fun `location search accepts real telegram payload fixture`() {
+        seedStableSearchArea()
+
+        performWebhook(loadWebhookFixture("telegram/location_update.json"))
+
+        val call = messageSender.sendTextCalls.single()
+        assertThat(call.chatId).isEqualTo(123L)
+        assertThat(call.text).contains("Найдено 2 туалетов поблизости:")
     }
 
     @Test
@@ -258,6 +288,11 @@ class TelegramWebhookFlowIntegrationTest : BaseIntegrationTest() {
         val user = userRepository.findByTgUserId(encryptionService.encrypt("300"))!!
         val analytics = userAnalyticsRepository.findById(user.id!!).get()
         assertThat(analytics.detailsOpenedCount).isEqualTo(1)
+        assertThat(analyticsEventRepository.findAll().map { it.event })
+            .containsExactly(
+                ProductAnalyticsEvent.NEAREST_RESTROOMS_RETURNED.value,
+                ProductAnalyticsEvent.RESTROOM_DETAILS_OPENED.value
+            )
     }
 
     @Test
@@ -333,6 +368,23 @@ class TelegramWebhookFlowIntegrationTest : BaseIntegrationTest() {
         )
             .andExpect(status().isOk)
     }
+
+    private fun performWebhook(rawPayload: String) {
+        mockMvc.perform(
+            post("/telegram/webhook")
+                .header("X-Telegram-Bot-Api-Secret-Token", "secret-token")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(rawPayload)
+        )
+            .andExpect(status().isOk)
+    }
+
+    private fun loadWebhookFixture(resourcePath: String): String =
+        object {}.javaClass.classLoader
+            .getResourceAsStream(resourcePath)
+            ?.reader(Charsets.UTF_8)
+            ?.use { it.readText() }
+            ?: error("Resource not found: $resourcePath")
 
     private fun commandUpdate(text: String, userId: Long, chatId: Long, username: String?): Update {
         val update = Update()

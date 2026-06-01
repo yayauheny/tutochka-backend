@@ -217,7 +217,7 @@ class RestroomServiceTest {
         every { subwayStationRepository.findById(station.id!!) } returns Optional.of(station)
         
         val entitySlot = slot<RestroomEntity>()
-        every { restroomRepository.save(capture(entitySlot)) } answers { 
+        every { restroomRepository.saveAndFlush(capture(entitySlot)) } answers {
             firstArg<RestroomEntity>().apply { 
                 id = UUID.randomUUID()
                 createdAt = java.time.Instant.now()
@@ -269,7 +269,7 @@ class RestroomServiceTest {
 
         every { cityRepository.findById(city.id!!) } returns Optional.of(city)
         val entitySlot = slot<RestroomEntity>()
-        every { restroomRepository.save(capture(entitySlot)) } answers { 
+        every { restroomRepository.saveAndFlush(capture(entitySlot)) } answers {
             firstArg<RestroomEntity>().apply { id = UUID.randomUUID(); createdAt = java.time.Instant.now(); updatedAt = java.time.Instant.now() }
         }
 
@@ -298,7 +298,7 @@ class RestroomServiceTest {
             )
         every { cityRepository.findById(city.id!!) } returns Optional.of(city)
         val entitySlot = slot<RestroomEntity>()
-        every { restroomRepository.save(capture(entitySlot)) } answers {
+        every { restroomRepository.saveAndFlush(capture(entitySlot)) } answers {
             firstArg<RestroomEntity>().apply {
                 id = UUID.randomUUID()
                 createdAt = java.time.Instant.now()
@@ -358,7 +358,7 @@ class RestroomServiceTest {
 
         every { restroomRepository.findById(id) } returns Optional.of(entity)
         val entitySlot = slot<RestroomEntity>()
-        every { restroomRepository.save(capture(entitySlot)) } answers { firstArg() }
+        every { restroomRepository.saveAndFlush(capture(entitySlot)) } answers { firstArg() }
 
         restroomService.updateRestroom(id, updateDto)
 
@@ -403,7 +403,7 @@ class RestroomServiceTest {
         every { buildingRepository.findById(building.id!!) } returns Optional.of(building)
         every { subwayStationRepository.findById(station.id!!) } returns Optional.of(station)
         val entitySlot = slot<RestroomEntity>()
-        every { restroomRepository.save(capture(entitySlot)) } answers { firstArg() }
+        every { restroomRepository.saveAndFlush(capture(entitySlot)) } answers { firstArg() }
 
         restroomService.updateRestroom(id, updateDto)
 
@@ -448,7 +448,7 @@ class RestroomServiceTest {
 
         every { restroomRepository.findById(id) } returns Optional.of(entity)
         val entitySlot = slot<RestroomEntity>()
-        every { restroomRepository.save(capture(entitySlot)) } answers { firstArg() }
+        every { restroomRepository.saveAndFlush(capture(entitySlot)) } answers { firstArg() }
 
         restroomService.updateRestroom(id, updateDto)
 
@@ -500,7 +500,7 @@ class RestroomServiceTest {
 
         every { cityRepository.findById(city.id!!) } returns Optional.of(city)
         val entitySlot = slot<RestroomEntity>()
-        every { restroomRepository.save(capture(entitySlot)) } answers { 
+        every { restroomRepository.saveAndFlush(capture(entitySlot)) } answers {
             firstArg<RestroomEntity>().apply { id = UUID.randomUUID(); createdAt = java.time.Instant.now(); updatedAt = java.time.Instant.now() }
         }
 

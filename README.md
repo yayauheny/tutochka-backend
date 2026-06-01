@@ -1,7 +1,7 @@
 # ТуТочка Backend
 
-Монорепо с активным модулем `backend`:
-- `backend` - Spring Boot REST API, PostgreSQL/PostGIS, Liquibase и runtime Telegram bot backend.
+Монорепо с активным production runtime в модуле `backend`:
+- `backend` - Spring Boot REST API, PostgreSQL/PostGIS, Liquibase, Telegram webhook runtime и import runtime.
 
 Источник правды для контрактов и маршрутов - код и `backend/src/main/resources/openapi.yaml`.
 
@@ -13,9 +13,9 @@
 - `GET /api/v1/restrooms/{id}`
 - `GET /api/v1/restrooms/city/{cityId}`
 - `GET /api/v1/restrooms/nearest`
+- `POST /api/v1/import/batch`
 - `POST /api/v1/analytics/events`
 - `GET /api/v1/public/analytics`
-- `POST /api/v1/import/batch` is the only import endpoint and accepts either a raw JSON array or `{ "items": [...] }`
 
 ## Быстрый старт
 - Backend: `./gradlew :backend:run`
@@ -25,6 +25,7 @@
 - Backend config: `backend/src/main/resources/application.yml`
 - API contract: `backend/src/main/resources/openapi.yaml`
 - Backend secret for analytics encryption: set `ENCRYPTION_KEYSET_JSON`
+- Telegram runtime envs: `TELEGRAM_BOT_TOKEN`, `BOT_WEBHOOK_SECRET_TOKEN`, optional `BOT_WEBHOOK_PUBLIC_URL`
 
 ## Документация
 - [docs/architecture/TECHNICAL_OVERVIEW.md](docs/architecture/TECHNICAL_OVERVIEW.md)

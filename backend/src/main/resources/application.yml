@@ -61,7 +61,6 @@ encryption:
 telegram:
   bot:
     enabled: ${TELEGRAM_BOT_ENABLED:true}
-    username: ${TELEGRAM_BOT_USERNAME:your_bot_username}
     token: ${TELEGRAM_BOT_TOKEN:}
     webhook-path: ${BOT_WEBHOOK_PATH:/telegram/webhook}
     webhook-public-url: ${BOT_WEBHOOK_PUBLIC_URL:}

@@ -16,8 +16,6 @@ import yayauheny.by.controller.CityController
 import yayauheny.by.controller.CountryController
 import yayauheny.by.controller.HealthController
 import yayauheny.by.controller.RestroomController
-import yayauheny.by.importing.api.ImportController
-import yayauheny.by.importing.service.ImportService
 import yayauheny.by.metrics.BackendSearchMetrics
 import yayauheny.by.service.CityService
 import yayauheny.by.service.CountryService
@@ -38,9 +36,6 @@ abstract class RoutingTestBase {
 
     @MockBean
     protected lateinit var restroomService: RestroomService
-
-    @MockBean
-    protected lateinit var importService: ImportService
 
     @MockBean
     protected lateinit var publicAnalyticsService: PublicAnalyticsService

@@ -87,7 +87,7 @@ class RestroomController(
         @RequestParam @DecimalMin(value = "-90.0", message = "должно быть не менее -90 градусов") @DecimalMax(value = "90.0", message = "не более 90 градусов") lat: Double,
         @RequestParam @DecimalMin(value = "-180.0", message = "должно быть не менее -180 градусов") @DecimalMax(value = "180.0", message = "не более 180 градусов") lon: Double,
         @RequestParam(required = false) @Min(1) @Max(100) limit: Int?,
-        @RequestParam(required = false) @Min(1) @Max(10000) distanceMeters: Int?
+        @RequestParam(required = false) @Min(1) @Max(20000) distanceMeters: Int?
     ): ResponseEntity<Any> {
         val resolvedLimit = limit ?: apiProperties.defaults.maxNearestRestroomsSize
         val resolvedDistanceMeters = distanceMeters ?: apiProperties.defaults.maxDistanceMeters

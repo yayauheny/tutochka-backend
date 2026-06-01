@@ -11,7 +11,7 @@
 - вести inbox/audit историю в `restroom_imports`
 - не загрязнять обычные `RestroomRepository` и `BuildingRepository` import-методами
 
-Поддерживаемые HTTP routes не менялись:
+Активный public import route:
 - `POST /api/v1/import/batch`
 
 ## Слои
@@ -50,9 +50,9 @@ backend/src/main/kotlin/yayauheny/by/importing/
 ### API
 
 - `api/ImportController.kt`
-  - читает headers/body
-  - делегирует в `ImportService`
-  - не содержит import business logic
+  - принимает provider headers и batch payload
+  - нормализует raw array в contract `items`
+  - делегирует в active import application services
 
 ### Application
 
@@ -143,10 +143,10 @@ backend/src/main/kotlin/yayauheny/by/importing/
 
 ## Transaction model
 
-- one transaction per chunk
-- one savepoint per item inside a chunk
-- item failure rolls back only that item
-- whole batch does not roll back because of one bad payload
+- chunk orchestration остаётся в `ImportBatchProcessor`
+- каждый item обрабатывается в отдельной transaction boundary
+- item failure не откатывает весь batch
+- whole batch returns partial success when needed
 
 ## Current boundaries
 

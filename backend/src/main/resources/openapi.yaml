@@ -1,7 +1,7 @@
 openapi: 3.0.3
 info:
   title: Tutochka Backend API
-  description: REST API for countries, cities, restrooms, imports, and health checks
+  description: REST API for countries, cities, restrooms, imports, analytics, and health checks
   version: 0.1.0
 
 servers:
@@ -69,63 +69,6 @@ paths:
                     type: string
                     example: TuTochka API
 
-  /import/batch:
-    post:
-      summary: Import a batch
-      description: Import multiple provider payload items. The request body may be a raw array or an object with an `items` array.
-      parameters:
-        - name: Import-Provider
-          in: header
-          required: true
-          description: Import provider
-          schema:
-            type: string
-            enum: [TWO_GIS, YANDEX_MAPS, GOOGLE_MAPS, OSM, USER, MANUAL]
-        - name: Import-Payload-Type
-          in: header
-          required: true
-          description: Import payload type
-          schema:
-            type: string
-            enum: [TWO_GIS_SCRAPED_PLACE_JSON, YANDEX_MAPS_SCRAPED_PLACE_JSON, OSM_TOILET_JSON, MANUAL]
-        - name: Import-City-Id
-          in: header
-          required: false
-          description: Optional city ID override
-          schema:
-            type: string
-            format: uuid
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              oneOf:
-                - type: array
-                  items:
-                    type: object
-                    additionalProperties: true
-                - $ref: '#/components/schemas/ImportRequestDto'
-      responses:
-        '501':
-          description: Batch import is not implemented yet
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
-        '400':
-          description: Validation error
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
-        '500':
-          description: Internal server error
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
-
   /analytics/events:
     post:
       summary: Track analytics event
@@ -167,6 +110,63 @@ paths:
           description: Accepted
         '400':
           description: Validation error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /import/batch:
+    post:
+      summary: Import a batch
+      description: Import multiple provider payload items. The request body may be a raw array or an object with an `items` array.
+      parameters:
+        - name: Import-Provider
+          in: header
+          required: true
+          description: Import provider
+          schema:
+            type: string
+            enum: [TWO_GIS, YANDEX_MAPS, GOOGLE_MAPS, OSM, USER, MANUAL]
+        - name: Import-Payload-Type
+          in: header
+          required: true
+          description: Import payload type
+          schema:
+            type: string
+            enum: [TWO_GIS_SCRAPED_PLACE_JSON, YANDEX_MAPS_SCRAPED_PLACE_JSON, OSM_TOILET_JSON, MANUAL]
+        - name: Import-City-Id
+          in: header
+          required: false
+          description: Optional city ID override
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              oneOf:
+                - type: array
+                  items:
+                    type: object
+                    additionalProperties: true
+                - $ref: '#/components/schemas/ImportRequestDto'
+      responses:
+        '201':
+          description: Batch import completed
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ImportBatchResponseDto'
+        '400':
+          description: Validation or import error
           content:
             application/json:
               schema:
@@ -883,39 +883,6 @@ paths:
 
 components:
   schemas:
-    ImportRequestDto:
-      type: object
-      required:
-        - items
-      properties:
-        items:
-          type: array
-          description: Raw provider items
-          items:
-            type: object
-            additionalProperties: true
-
-    ImportBatchResponseDto:
-      type: object
-      properties:
-        importId:
-          type: string
-          format: uuid
-          description: Import job ID
-        totalProcessed:
-          type: integer
-          description: Total items processed
-        successful:
-          type: integer
-          description: Successful items
-        failed:
-          type: integer
-          description: Failed items
-        results:
-          type: array
-          items:
-            $ref: '#/components/schemas/ImportItemResultDto'
-
     ImportItemResultDto:
       type: object
       properties:

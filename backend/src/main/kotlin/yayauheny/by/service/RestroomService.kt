@@ -202,7 +202,7 @@ class RestroomService(
             originId = createDto.originId
             isHidden = createDto.isHidden
         }
-        return restroomRepository.save(entity).toDto()
+        return restroomRepository.saveAndFlush(entity).toDto()
     }
 
     fun updateRestroom(id: UUID, updateDto: RestroomUpdateDto): RestroomResponseDto {
@@ -230,7 +230,7 @@ class RestroomService(
         updateDto.originId?.let { entity.originId = it }
         updateDto.isHidden?.let { entity.isHidden = it }
         entity.coordinates = updateDto.coordinates.toPoint()
-        return restroomRepository.save(entity).toDto()
+        return restroomRepository.saveAndFlush(entity).toDto()
     }
 
     fun deleteRestroom(id: UUID): Boolean {
