@@ -5,15 +5,15 @@ import com.google.crypto.tink.InsecureSecretKeyAccess
 import com.google.crypto.tink.RegistryConfiguration
 import com.google.crypto.tink.TinkJsonProtoKeysetFormat
 import com.google.crypto.tink.daead.DeterministicAeadConfig
-import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
 import java.util.Base64
+import yayauheny.by.common.config.EncryptionProperties
 
 @Service
 class EncryptionService(
-    @Value("\${encryption.keyset.json:#{null}}") keysetJson: String?
+    encryptionProperties: EncryptionProperties
 ) {
-    private val deterministicAead: DeterministicAead = createPrimitive(keysetJson)
+    private val deterministicAead: DeterministicAead = createPrimitive(encryptionProperties.keyset.json)
 
     fun encrypt(value: String): String {
         val encrypted =

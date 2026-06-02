@@ -9,13 +9,14 @@ import org.junit.jupiter.api.Test
 import yayauheny.by.helpers.DatabaseTestHelper
 import yayauheny.by.helpers.testGet
 import yayauheny.by.helpers.testPost
+import yayauheny.by.common.config.EncryptionProperties
 import yayauheny.by.model.analytics.AnalyticsSource
 import yayauheny.by.testsupport.TEST_ENCRYPTION_KEYSET_JSON
 import yayauheny.by.util.EncryptionService
 
 @Tag("integration")
 class AnalyticsApiTest : integration.base.BaseIntegrationTest() {
-    private val encryptionService = EncryptionService(TEST_ENCRYPTION_KEYSET_JSON)
+    private val encryptionService = EncryptionService(EncryptionProperties(keyset = EncryptionProperties.Keyset(TEST_ENCRYPTION_KEYSET_JSON)))
 
     @Test
     @DisplayName("POST /api/v1/analytics/events stores encrypted user and event data")

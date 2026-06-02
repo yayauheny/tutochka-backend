@@ -10,6 +10,7 @@ import org.junit.jupiter.api.Tag
 import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
 import yayauheny.by.analytics.service.AnalyticsService
+import yayauheny.by.common.config.EncryptionProperties
 import yayauheny.by.model.analytics.AcquisitionTag
 import yayauheny.by.model.analytics.AnalyticsEventCommand
 import yayauheny.by.model.analytics.AnalyticsSource
@@ -23,7 +24,7 @@ class AnalyticsUserUpsertIntegrationTest : integration.base.BaseIntegrationTest(
     @Autowired
     private lateinit var analyticsService: AnalyticsService
 
-    private val encryptionService = EncryptionService(TEST_ENCRYPTION_KEYSET_JSON)
+    private val encryptionService = EncryptionService(EncryptionProperties(keyset = EncryptionProperties.Keyset(TEST_ENCRYPTION_KEYSET_JSON)))
 
     @Test
     @DisplayName("first event creates a user and stores acquisition tag")
