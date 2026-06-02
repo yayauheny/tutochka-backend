@@ -66,3 +66,6 @@ telegram:
     webhook-public-url: ${BOT_WEBHOOK_PUBLIC_URL:}
     webhook-secret-token: ${BOT_WEBHOOK_SECRET_TOKEN:}
     admin-ids: ${BOT_ADMIN_IDS:}
+    search:
+      default-radius-meters: ${BOT_SEARCH_DEFAULT_RADIUS_METERS:15000}
+      nearest-limit: ${BOT_SEARCH_NEAREST_LIMIT:5}

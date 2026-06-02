@@ -16,6 +16,7 @@ import yayauheny.by.bot.MessageSender
 import yayauheny.by.bot.cache.BackListSnapshotCache
 import yayauheny.by.bot.handler.UpdateContext
 import yayauheny.by.bot.keyboard.InlineKeyboardFactory
+import yayauheny.by.common.config.TelegramBotSearchProperties
 import yayauheny.by.bot.messages.Messages
 import yayauheny.by.bot.service.FormatterService
 import yayauheny.by.bot.service.UserService
@@ -33,6 +34,7 @@ class LocationMessageHandlerTest {
     private val backListSnapshotCache = mock(BackListSnapshotCache::class.java)
     private val formatterService = FormatterService()
     private val inlineKeyboard = InlineKeyboardFactory(formatterService)
+    private val botSearchProperties = TelegramBotSearchProperties(defaultRadiusMeters = 15000, nearestLimit = 5)
     private val handler =
         LocationMessageHandler(
             sender,
@@ -41,7 +43,8 @@ class LocationMessageHandlerTest {
             userService,
             backListSnapshotCache,
             formatterService,
-            inlineKeyboard
+            inlineKeyboard,
+            botSearchProperties
         )
 
     private val ctx =
@@ -61,7 +64,7 @@ class LocationMessageHandlerTest {
     @Test
     fun `handle saves location before searching and stores results`() {
         val results = listOf(sampleItem("Test restroom"))
-        `when`(searchService.findNearestRestrooms(53.9, 27.56, 5, UserService.DEFAULT_RADIUS))
+        `when`(searchService.findNearestRestrooms(53.9, 27.56, 5, 15000))
             .thenReturn(results)
         val expectedKeyboard = inlineKeyboard.toiletList(results)
 
@@ -69,7 +72,7 @@ class LocationMessageHandlerTest {
 
         val order = inOrder(userService, searchService, analyticsService, sender, backListSnapshotCache)
         order.verify(userService).saveLocation(456L, 53.9, 27.56)
-        order.verify(searchService).findNearestRestrooms(53.9, 27.56, 5, UserService.DEFAULT_RADIUS)
+        order.verify(searchService).findNearestRestrooms(53.9, 27.56, 5, 15000)
         order.verify(analyticsService).trackNearestRestroomsSearch(
             AnalyticsIdentityHeaders(456L, "123", "test-user-10", AnalyticsSource.TELEGRAM_BOT),
             1,
@@ -78,19 +81,19 @@ class LocationMessageHandlerTest {
         )
 
         order.verify(sender).sendText(123L, formatterService.toiletsFound(1), expectedKeyboard)
-        order.verify(backListSnapshotCache).store(123L, 456L, UserService.DEFAULT_RADIUS, results)
+        order.verify(backListSnapshotCache).store(123L, 456L, 15000, results)
         assertThat(expectedKeyboard.keyboard).isNotEmpty()
     }
 
     @Test
     fun `handle sends no results flow without storing cache`() {
-        `when`(searchService.findNearestRestrooms(53.9, 27.56, 5, UserService.DEFAULT_RADIUS))
+        `when`(searchService.findNearestRestrooms(53.9, 27.56, 5, 15000))
             .thenReturn(emptyList())
 
         handler.handle(Update(), ctx)
 
         verify(userService).saveLocation(456L, 53.9, 27.56)
-        verify(searchService).findNearestRestrooms(53.9, 27.56, 5, UserService.DEFAULT_RADIUS)
+        verify(searchService).findNearestRestrooms(53.9, 27.56, 5, 15000)
         verify(analyticsService).trackNearestRestroomsSearch(
             AnalyticsIdentityHeaders(456L, "123", "test-user-10", AnalyticsSource.TELEGRAM_BOT),
             0,
@@ -98,7 +101,7 @@ class LocationMessageHandlerTest {
             27.56
         )
         verify(sender).sendText(123L, Messages.NO_TOILETS_FOUND)
-        verify(backListSnapshotCache, never()).store(123L, 456L, UserService.DEFAULT_RADIUS, emptyList())
+        verify(backListSnapshotCache, never()).store(123L, 456L, 15000, emptyList())
     }
 
     @Test
@@ -109,13 +112,13 @@ class LocationMessageHandlerTest {
 
         verify(sender).sendText(123L, Messages.SOMETHING_WENT_WRONG)
         verify(userService, never()).saveLocation(456L, 53.9, 27.56)
-        verify(searchService, never()).findNearestRestrooms(53.9, 27.56, 5, UserService.DEFAULT_RADIUS)
-        verify(backListSnapshotCache, never()).store(123L, 456L, UserService.DEFAULT_RADIUS, emptyList())
+        verify(searchService, never()).findNearestRestrooms(53.9, 27.56, 5, 15000)
+        verify(backListSnapshotCache, never()).store(123L, 456L, 15000, emptyList())
     }
 
     @Test
     fun `handle propagates search exception without partial response`() {
-        `when`(searchService.findNearestRestrooms(53.9, 27.56, 5, UserService.DEFAULT_RADIUS))
+        `when`(searchService.findNearestRestrooms(53.9, 27.56, 5, 15000))
             .thenThrow(RuntimeException("boom"))
 
         org.junit.jupiter.api.Assertions.assertThrows(RuntimeException::class.java) {
@@ -123,9 +126,9 @@ class LocationMessageHandlerTest {
         }
 
         verify(userService).saveLocation(456L, 53.9, 27.56)
-        verify(searchService).findNearestRestrooms(53.9, 27.56, 5, UserService.DEFAULT_RADIUS)
+        verify(searchService).findNearestRestrooms(53.9, 27.56, 5, 15000)
         verifyNoInteractions(sender)
-        verify(backListSnapshotCache, never()).store(123L, 456L, UserService.DEFAULT_RADIUS, listOf(sampleItem("Test restroom")))
+        verify(backListSnapshotCache, never()).store(123L, 456L, 15000, listOf(sampleItem("Test restroom")))
     }
 
     private fun sampleItem(name: String): NearestRestroomSlimDto =

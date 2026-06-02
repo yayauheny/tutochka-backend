@@ -15,6 +15,7 @@ import yayauheny.by.bot.service.UserService
 import yayauheny.by.service.RestroomService
 import yayauheny.by.analytics.service.AnalyticsService
 import yayauheny.by.analytics.model.AnalyticsIdentityHeaders
+import yayauheny.by.common.config.TelegramBotSearchProperties
 import yayauheny.by.model.analytics.AnalyticsSource
 
 @Component
@@ -26,7 +27,8 @@ class LocationMessageHandler(
     private val userService: UserService,
     private val backListSnapshotCache: BackListSnapshotCache,
     private val formatterService: FormatterService,
-    private val inlineKeyboard: InlineKeyboardFactory
+    private val inlineKeyboard: InlineKeyboardFactory,
+    private val botSearchProperties: TelegramBotSearchProperties
 ) : MessageHandler {
     private val log = LoggerFactory.getLogger(LocationMessageHandler::class.java)
 
@@ -45,12 +47,13 @@ class LocationMessageHandler(
         }
 
         userService.saveLocation(ctx.userId, latitude, longitude)
-        val radius = UserService.DEFAULT_RADIUS
+        val radius = botSearchProperties.defaultRadiusMeters
+        val limit = botSearchProperties.nearestLimit
 
         val results = searchService.findNearestRestrooms(
             latitude = latitude,
             longitude = longitude,
-            limit = 5,
+            limit = limit,
             distanceMeters = radius
         )
 

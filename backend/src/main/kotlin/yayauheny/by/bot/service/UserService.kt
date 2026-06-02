@@ -9,14 +9,10 @@ import java.util.Optional
 class UserService(
     private val sessionStore: SessionStore
 ) {
-    companion object {
-        const val DEFAULT_RADIUS = 15_000
-    }
-
     fun saveLocation(userId: Long, latitude: Double, longitude: Double) {
         val location = UserSession.Location(latitude, longitude)
         val currentSession = sessionStore.get(userId)
-            .orElseGet { UserSession.withLocation(location, DEFAULT_RADIUS) }
+            .orElseGet { UserSession.withLocation(location) }
 
         val updatedSession = currentSession.updateLocation(location)
         sessionStore.put(userId, updatedSession)

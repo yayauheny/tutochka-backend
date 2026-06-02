@@ -11,7 +11,6 @@ import java.util.concurrent.TimeUnit
 
 data class UserSession(
     val location: Location?,
-    val radius: Int?,
     val updatedAt: Instant = Instant.now()
 ) {
     data class Location(
@@ -20,8 +19,8 @@ data class UserSession(
     )
 
     companion object {
-        fun withLocation(location: Location, radius: Int?): UserSession {
-            return UserSession(location, radius)
+        fun withLocation(location: Location): UserSession {
+            return UserSession(location)
         }
     }
 
