@@ -5,8 +5,6 @@ object CallbackData {
     
     fun backToList(): String = "back:list"
     
-    fun radius(meters: Int): String = "radius:$meters"
-    
     fun route(provider: String, restroomId: String): String = "route:$provider:$restroomId"
     
     fun isType(data: String, type: String): Boolean = data.startsWith("$type:")

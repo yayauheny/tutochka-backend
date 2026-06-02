@@ -19,12 +19,11 @@ class UserServiceTest {
         every { sessionStore.get(42L) } returns Optional.empty()
         val sessionSlot = slot<UserSession>()
 
-        val result = service.saveLocation(42L, 53.9, 27.56)
+        service.saveLocation(42L, 53.9, 27.56)
 
         verify { sessionStore.put(42L, capture(sessionSlot)) }
         assertThat(sessionSlot.captured.location).isEqualTo(UserSession.Location(53.9, 27.56))
         assertThat(sessionSlot.captured.radius).isEqualTo(UserService.DEFAULT_RADIUS)
-        assertThat(result).isEqualTo(sessionSlot.captured)
     }
 
     @Test
@@ -33,26 +32,11 @@ class UserServiceTest {
         every { sessionStore.get(42L) } returns Optional.of(existing)
         val sessionSlot = slot<UserSession>()
 
-        val result = service.saveLocation(42L, 53.9, 27.56)
+        service.saveLocation(42L, 53.9, 27.56)
 
         verify { sessionStore.put(42L, capture(sessionSlot)) }
         assertThat(sessionSlot.captured.location).isEqualTo(UserSession.Location(53.9, 27.56))
         assertThat(sessionSlot.captured.radius).isEqualTo(900)
-        assertThat(result).isEqualTo(sessionSlot.captured)
-    }
-
-    @Test
-    fun `updateRadius preserves location and stores selected radius`() {
-        val existing = UserSession.withLocation(UserSession.Location(53.9, 27.56), 500)
-        every { sessionStore.get(42L) } returns Optional.of(existing)
-        val sessionSlot = slot<UserSession>()
-
-        val result = service.updateRadius(42L, 2000)
-
-        verify { sessionStore.put(42L, capture(sessionSlot)) }
-        assertThat(sessionSlot.captured.location).isEqualTo(UserSession.Location(53.9, 27.56))
-        assertThat(sessionSlot.captured.radius).isEqualTo(2000)
-        assertThat(result).isEqualTo(sessionSlot.captured)
     }
 
     @Test

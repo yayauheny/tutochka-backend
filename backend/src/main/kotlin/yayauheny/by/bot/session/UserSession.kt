@@ -28,10 +28,6 @@ data class UserSession(
     fun updateLocation(newLocation: Location): UserSession {
         return copy(location = newLocation, updatedAt = Instant.now())
     }
-
-    fun updateRadius(newRadius: Int): UserSession {
-        return copy(radius = newRadius, updatedAt = Instant.now())
-    }
 }
 
 interface SessionStore {

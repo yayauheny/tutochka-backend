@@ -9,7 +9,6 @@ import yayauheny.by.bot.cache.BackListSnapshotCache
 import yayauheny.by.bot.handler.MessageHandler
 import yayauheny.by.bot.handler.UpdateContext
 import yayauheny.by.bot.keyboard.InlineKeyboardFactory
-import yayauheny.by.bot.keyboard.ReplyKeyboardFactory
 import yayauheny.by.bot.messages.Messages
 import yayauheny.by.bot.service.FormatterService
 import yayauheny.by.bot.service.UserService
@@ -27,8 +26,7 @@ class LocationMessageHandler(
     private val userService: UserService,
     private val backListSnapshotCache: BackListSnapshotCache,
     private val formatterService: FormatterService,
-    private val inlineKeyboard: InlineKeyboardFactory,
-    private val replyKeyboard: ReplyKeyboardFactory
+    private val inlineKeyboard: InlineKeyboardFactory
 ) : MessageHandler {
     private val log = LoggerFactory.getLogger(LocationMessageHandler::class.java)
 
@@ -46,8 +44,8 @@ class LocationMessageHandler(
             return
         }
 
-        val session = userService.saveLocation(ctx.userId, latitude, longitude)
-        val radius = session.radius ?: UserService.DEFAULT_RADIUS
+        userService.saveLocation(ctx.userId, latitude, longitude)
+        val radius = UserService.DEFAULT_RADIUS
 
         val results = searchService.findNearestRestrooms(
             latitude = latitude,
@@ -70,8 +68,7 @@ class LocationMessageHandler(
         )
 
         if (results.isEmpty()) {
-            sender.sendText(ctx.chatId, Messages.NO_TOILETS_FOUND, inlineKeyboard.radiusSelection())
-            sender.sendText(ctx.chatId, "Или попробуйте другую точку:", replyKeyboard.shareLocation())
+            sender.sendText(ctx.chatId, Messages.NO_TOILETS_FOUND)
             log.info(
                 "Handled location search: chatId={}, userId={}, radiusMeters={}, resultCount=0, outcome=no_results",
                 ctx.chatId,

@@ -2,7 +2,6 @@ package yayauheny.by.bot.handler.messages
 
 import java.util.UUID
 import org.assertj.core.api.Assertions.assertThat
-import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.mockito.Mockito.inOrder
 import org.mockito.Mockito.mock
@@ -11,19 +10,15 @@ import org.mockito.Mockito.verifyNoInteractions
 import org.mockito.Mockito.verify
 import org.mockito.Mockito.`when`
 import org.telegram.telegrambots.meta.api.objects.Update
-import org.telegram.telegrambots.meta.api.objects.replykeyboard.InlineKeyboardMarkup
-import org.telegram.telegrambots.meta.api.objects.replykeyboard.ReplyKeyboardMarkup
 import yayauheny.by.analytics.model.AnalyticsIdentityHeaders
 import yayauheny.by.analytics.service.AnalyticsService
 import yayauheny.by.bot.MessageSender
 import yayauheny.by.bot.cache.BackListSnapshotCache
 import yayauheny.by.bot.handler.UpdateContext
 import yayauheny.by.bot.keyboard.InlineKeyboardFactory
-import yayauheny.by.bot.keyboard.ReplyKeyboardFactory
 import yayauheny.by.bot.messages.Messages
 import yayauheny.by.bot.service.FormatterService
 import yayauheny.by.bot.service.UserService
-import yayauheny.by.bot.session.UserSession
 import yayauheny.by.model.analytics.AnalyticsSource
 import yayauheny.by.model.dto.Coordinates
 import yayauheny.by.model.enums.FeeType
@@ -38,7 +33,6 @@ class LocationMessageHandlerTest {
     private val backListSnapshotCache = mock(BackListSnapshotCache::class.java)
     private val formatterService = FormatterService()
     private val inlineKeyboard = InlineKeyboardFactory(formatterService)
-    private val replyKeyboard = ReplyKeyboardFactory()
     private val handler =
         LocationMessageHandler(
             sender,
@@ -47,8 +41,7 @@ class LocationMessageHandlerTest {
             userService,
             backListSnapshotCache,
             formatterService,
-            inlineKeyboard,
-            replyKeyboard
+            inlineKeyboard
         )
 
     private val ctx =
@@ -64,12 +57,6 @@ class LocationMessageHandlerTest {
             callbackData = null,
             messageId = 1
         )
-
-    @BeforeEach
-    fun setUp() {
-        `when`(userService.saveLocation(456L, 53.9, 27.56))
-            .thenReturn(UserSession.withLocation(UserSession.Location(53.9, 27.56), UserService.DEFAULT_RADIUS))
-    }
 
     @Test
     fun `handle saves location before searching and stores results`() {
@@ -99,8 +86,6 @@ class LocationMessageHandlerTest {
     fun `handle sends no results flow without storing cache`() {
         `when`(searchService.findNearestRestrooms(53.9, 27.56, 5, UserService.DEFAULT_RADIUS))
             .thenReturn(emptyList())
-        val expectedInlineKeyboard = inlineKeyboard.radiusSelection()
-        val expectedReplyKeyboard = replyKeyboard.shareLocation()
 
         handler.handle(Update(), ctx)
 
@@ -112,10 +97,7 @@ class LocationMessageHandlerTest {
             53.9,
             27.56
         )
-        verify(sender).sendText(123L, Messages.NO_TOILETS_FOUND, expectedInlineKeyboard)
-        verify(sender).sendText(123L, "Или попробуйте другую точку:", expectedReplyKeyboard)
-        assertThat(expectedInlineKeyboard.keyboard).isNotEmpty()
-        assertThat(expectedReplyKeyboard.keyboard).isNotEmpty()
+        verify(sender).sendText(123L, Messages.NO_TOILETS_FOUND)
         verify(backListSnapshotCache, never()).store(123L, 456L, UserService.DEFAULT_RADIUS, emptyList())
     }
 
@@ -129,24 +111,6 @@ class LocationMessageHandlerTest {
         verify(userService, never()).saveLocation(456L, 53.9, 27.56)
         verify(searchService, never()).findNearestRestrooms(53.9, 27.56, 5, UserService.DEFAULT_RADIUS)
         verify(backListSnapshotCache, never()).store(123L, 456L, UserService.DEFAULT_RADIUS, emptyList())
-    }
-
-    @Test
-    fun `handle uses stored session radius after user expanded search`() {
-        val expandedRadius = 2000
-        val expandedSession = UserSession.withLocation(UserSession.Location(53.9, 27.56), expandedRadius)
-        val results = listOf(sampleItem("Test restroom"))
-        `when`(userService.saveLocation(456L, 53.9, 27.56)).thenReturn(expandedSession)
-        `when`(searchService.findNearestRestrooms(53.9, 27.56, 5, expandedRadius))
-            .thenReturn(results)
-        val expectedKeyboard = inlineKeyboard.toiletList(results)
-
-        handler.handle(Update(), ctx)
-
-        verify(userService).saveLocation(456L, 53.9, 27.56)
-        verify(searchService).findNearestRestrooms(53.9, 27.56, 5, expandedRadius)
-        verify(sender).sendText(123L, formatterService.toiletsFound(1), expectedKeyboard)
-        verify(backListSnapshotCache).store(123L, 456L, expandedRadius, results)
     }
 
     @Test

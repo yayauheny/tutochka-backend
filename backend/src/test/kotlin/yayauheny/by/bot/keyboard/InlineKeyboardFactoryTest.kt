@@ -50,18 +50,6 @@ class InlineKeyboardFactoryTest {
         assertThat(button.callbackData).isNull()
     }
 
-    @Test
-    fun `radius selection uses descriptive callbacks`() {
-        val keyboard = factory.radiusSelection()
-
-        assertThat(keyboard.keyboard).hasSize(2)
-        assertThat(keyboard.keyboard[0][0].text).isEqualTo("500м")
-        assertThat(keyboard.keyboard[0][0].callbackData).isEqualTo("radius:500")
-        assertThat(keyboard.keyboard[0][1].text).isEqualTo("1км")
-        assertThat(keyboard.keyboard[1][0].callbackData).isEqualTo("radius:2000")
-        assertThat(keyboard.keyboard[1][1].callbackData).isEqualTo("radius:5000")
-    }
-
     private fun assertMapButton(button: org.telegram.telegrambots.meta.api.objects.replykeyboard.buttons.InlineKeyboardButton, expectedText: String) {
         assertThat(button.text).isEqualTo(expectedText)
         assertThat(button.url).isNotBlank()

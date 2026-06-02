@@ -54,37 +54,6 @@ class InlineKeyboardFactory(
             .build()
     }
 
-    fun radiusSelection(): InlineKeyboardMarkup {
-        val radius500 = InlineKeyboardButton.builder()
-            .text(Messages.RADIUS_500M)
-            .callbackData(CallbackData.radius(500))
-            .build()
-
-        val radius1km = InlineKeyboardButton.builder()
-            .text(Messages.RADIUS_1KM)
-            .callbackData(CallbackData.radius(1000))
-            .build()
-
-        val radius2km = InlineKeyboardButton.builder()
-            .text(Messages.RADIUS_2KM)
-            .callbackData(CallbackData.radius(2000))
-            .build()
-
-        val radius5km = InlineKeyboardButton.builder()
-            .text(Messages.RADIUS_5KM)
-            .callbackData(CallbackData.radius(5000))
-            .build()
-
-        return InlineKeyboardMarkup.builder()
-            .keyboard(
-                listOf(
-                    InlineKeyboardRow(listOf(radius500, radius1km)),
-                    InlineKeyboardRow(listOf(radius2km, radius5km))
-                )
-            )
-            .build()
-    }
-
     private fun createToiletButton(toilet: NearestRestroomSlimDto): InlineKeyboardButton {
         val buttonText = formatterService.toiletListItem(toilet)
 

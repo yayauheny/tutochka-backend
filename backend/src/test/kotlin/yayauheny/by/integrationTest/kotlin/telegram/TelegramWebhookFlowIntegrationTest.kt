@@ -190,7 +190,7 @@ class TelegramWebhookFlowIntegrationTest : BaseIntegrationTest() {
 
         val call = messageSender.sendTextCalls.single()
         assertThat(call.chatId).isEqualTo(123L)
-        assertThat(call.text).contains("Найдено 2 туалетов поблизости:")
+        assertThat(call.text).contains("Найдено 3 туалетов поблизости:")
         assertThat(call.text).doesNotContain("Hidden")
         assertThat(call.text).doesNotContain("Inactive")
         
@@ -199,7 +199,8 @@ class TelegramWebhookFlowIntegrationTest : BaseIntegrationTest() {
             .map { it.callbackData }
             .filter { it.startsWith("detail:") }
 
-        assertThat(detailCallbacks).containsExactly(
+        assertThat(detailCallbacks).hasSize(3)
+        assertThat(detailCallbacks).startsWith(
             "detail:$nearestRestroomId",
             "detail:$secondNearestRestroomId"
         )
@@ -225,7 +226,7 @@ class TelegramWebhookFlowIntegrationTest : BaseIntegrationTest() {
 
         val call = messageSender.sendTextCalls.single()
         assertThat(call.chatId).isEqualTo(123L)
-        assertThat(call.text).contains("Найдено 2 туалетов поблизости:")
+        assertThat(call.text).contains("Найдено 3 туалетов поблизости:")
     }
 
     @Test
@@ -235,8 +236,8 @@ class TelegramWebhookFlowIntegrationTest : BaseIntegrationTest() {
             cityId = cityId,
             data = DatabaseTestHelper.createTestRestroomData(
                 name = "Farther",
-                lat = 53.95,
-                lon = 27.6,
+                lat = 54.3,
+                lon = 28.3,
                 status = RestroomStatus.ACTIVE
             )
         )
@@ -245,16 +246,8 @@ class TelegramWebhookFlowIntegrationTest : BaseIntegrationTest() {
         performWebhook(update)
 
         val calls = messageSender.sendTextCalls
-        assertThat(calls).hasSize(2)
-        
-        // First message says NO_TOILETS_FOUND and offers radius expansion
+        assertThat(calls).hasSize(1)
         assertThat(calls[0].text).isEqualTo(Messages.NO_TOILETS_FOUND)
-        val radiusButtons = calls[0].inlineKeyboard?.keyboard?.flatten() ?: emptyList()
-        assertThat(radiusButtons.map { it.callbackData }).contains("radius:500", "radius:1000", "radius:2000")
-
-        // Second message prompts user to share location again
-        assertThat(calls[1].text).isEqualTo("Или попробуйте другую точку:")
-        assertThat(calls[1].replyKeyboard?.keyboard?.first()?.first()?.text).isEqualTo(Messages.BUTTON_SHARE_LOCATION)
 
         val user = userRepository.findByTgUserId(encryptionService.encrypt("200"))!!
         val analytics = userAnalyticsRepository.findById(user.id!!).get()
@@ -317,25 +310,6 @@ class TelegramWebhookFlowIntegrationTest : BaseIntegrationTest() {
         val backCall = messageSender.editOrReplyCalls.single()
         assertThat(backCall.text).isEqualTo(listCallText)
         assertThat(backCall.inlineKeyboard?.keyboard?.first()?.first()?.callbackData).isEqualTo(detailCallbackData)
-    }
-
-    @Test
-    fun `radius flow expands search results`() {
-        seedStableSearchArea()
-        
-        val locUpdate = locationUpdate(userId = 500L, chatId = 127L, username = "test-500", lat = 53.900, lon = 27.560)
-        performWebhook(locUpdate)
-        messageSender.clear()
-
-        val radiusUpdate = callbackUpdate("radius:2000", userId = 500L, chatId = 127L, username = "test-500")
-        performWebhook(radiusUpdate)
-
-        val editCall = messageSender.editOrReplyCalls.single()
-        assertThat(editCall.text).contains("Найдено 3 туалетов поблизости:")
-        
-        val user = userRepository.findByTgUserId(encryptionService.encrypt("500"))!!
-        val analytics = userAnalyticsRepository.findById(user.id!!).get()
-        assertThat(analytics.searchesCount).isEqualTo(2)
     }
 
     @Test

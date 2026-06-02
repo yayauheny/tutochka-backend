@@ -20,13 +20,6 @@ object Messages {
     const val CALLBACK_TOILET_DETAIL = "toilet_detail_"
     @Deprecated("Will be removed in later refactoring")
     const val CALLBACK_BACK_TO_LIST = "back_to_list"
-    @Deprecated("Will be removed in later refactoring")
-    const val CALLBACK_RADIUS_SELECT = "radius_select_"
-
-    const val RADIUS_500M = "500м"
-    const val RADIUS_1KM = "1км"
-    const val RADIUS_2KM = "2км"
-    const val RADIUS_5KM = "5км"
 
     const val WELCOME_MESSAGE = "Привет! Поделись геолокацией для поиска туалетов."
     val HELP_MESSAGE = """
@@ -46,9 +39,8 @@ object Messages {
         /help - показать эту справку
         """.trimIndent()
 
-    const val NO_TOILETS_FOUND = "К сожалению, поблизости туалетов не найдено. " +
-            "Попробуйте увеличить радиус поиска или отправьте точку на карте (скрепка → Локация → выбрать место) " +
-            "или место с адресом."
+    const val NO_TOILETS_FOUND = "Пока в твоём городе мы не нашли туалеты в базе. " +
+            "Мы уже работаем над этим и добавим ближайшие точки в самое ближайшее время."
     const val TOILETS_FOUND = "Найдено {count} туалетов поблизости:"
     const val LOCATION_NOT_FOUND = "Геолокация не найдена. Поделись геолокацией заново:"
 
