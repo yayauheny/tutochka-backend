@@ -83,4 +83,35 @@ class AnalyticsControllerTest : RoutingTestBase() {
             )
         }
     }
+
+    @Test
+    @DisplayName("GIVEN enum style uppercase source header WHEN POST /api/v1/analytics/events THEN preserve analytics source")
+    fun given_enum_style_uppercase_source_header_when_post_events_then_preserve_source() {
+        withRoutingApp {
+            val response =
+                testPost(
+                    "/api/v1/analytics/events",
+                    """{"event":"route_clicked"}""",
+                    mapOf("X-Analytics-Source" to "TELEGRAM_BOT")
+                )
+
+            assertThat(response.status).isEqualTo(HttpStatus.ACCEPTED)
+
+            verify(analyticsService).trackProductEvent(
+                AnalyticsEventCommand(
+                    event = ProductAnalyticsEvent.ROUTE_CLICKED,
+                    tgUserId = null,
+                    tgChatId = null,
+                    username = null,
+                    source = AnalyticsSource.TELEGRAM_BOT,
+                    lat = null,
+                    lon = null,
+                    resultsCount = null,
+                    durationMs = null,
+                    acquisitionTag = null,
+                    metadata = emptyMap()
+                )
+            )
+        }
+    }
 }

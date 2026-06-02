@@ -579,6 +579,7 @@ backend/src/test/kotlin/yayauheny/by/integrationTest/kotlin/api/analytics/Public
 ### Notes
 
 - Findings:
+  `common/src/main/kotlin/yayauheny/by/model/analytics/AnalyticsSource.kt` only matched lowercase wire values exactly. That meant valid enum-style headers like `X-Analytics-Source: TELEGRAM_BOT` or uppercase `API` were parsed as unknown and then silently downgraded to `API` by `AnalyticsController`. The concrete risk was analytics misattribution and accidental anonymous API classification for malformed but otherwise recognizable clients. Fixed by making source parsing trim and match both enum names and wire values case-insensitively.
 - Questions:
 
 ## 10. Shared Infrastructure, Configuration, Errors, Utilities, and Metrics

@@ -17,7 +17,13 @@ enum class AnalyticsSource(val value: String) {
     API("api");
 
     companion object {
-        fun fromValue(value: String?): AnalyticsSource? =
-            entries.firstOrNull { it.value == value }
+        fun fromValue(value: String?): AnalyticsSource? {
+            val normalized = value?.trim()?.takeIf { it.isNotEmpty() } ?: return null
+
+            return entries.firstOrNull { source ->
+                source.value.equals(normalized, ignoreCase = true) ||
+                    source.name.equals(normalized, ignoreCase = true)
+            }
+        }
     }
 }
