@@ -142,7 +142,14 @@ class ImportPipeline(
     ): RestroomEntity {
         val dto = RestroomImportMapper.toCreateDto(candidate, buildingId = building?.id, inheritBuildingSchedule = building != null)
         val entity = RestroomEntity().apply {
-            applyCreateDto(dto, candidate, building, providerKey)
+            applyImportedFields(dto, candidate, building, providerKey)
+            phones = dto.phones?.values?.map { it.toString() }
+            subwayStation = null
+            isHidden = false
+            hiddenReason = null
+            hiddenAt = null
+            accessNote = dto.accessNote
+            directionGuide = dto.directionGuide
             this.restroomMatchKey = restroomMatchKey
         }
         return restroomRepository.saveAndFlush(entity)
@@ -156,12 +163,12 @@ class ImportPipeline(
         restroomMatchKey: String?
     ): RestroomEntity {
         val dto = RestroomImportMapper.toCreateDto(candidate, buildingId = building?.id, inheritBuildingSchedule = building != null)
-        entity.applyCreateDto(dto, candidate, building, providerKey)
+        entity.applyImportedFields(dto, candidate, building, providerKey)
         entity.restroomMatchKey = restroomMatchKey
         return restroomRepository.saveAndFlush(entity)
     }
 
-    private fun RestroomEntity.applyCreateDto(
+    private fun RestroomEntity.applyImportedFields(
         dto: RestroomCreateDto,
         candidate: NormalizedRestroomCandidate,
         building: BuildingEntity?,
@@ -172,7 +179,6 @@ class ImportPipeline(
         name = dto.name
         placeType = dto.placeType
         address = dto.address
-        phones = dto.phones?.values?.map { it.toString() }
         workTime = dto.workTime
         feeType = dto.feeType ?: feeType
         genderType = dto.genderType ?: genderType
@@ -180,19 +186,12 @@ class ImportPipeline(
         status = dto.status
         amenities = dto.amenities
         inheritBuildingSchedule = dto.inheritBuildingSchedule
-        hasPhotos = dto.hasPhotos
         coordinates = geometryFactory.createPoint(Coordinate(dto.coordinates.lon, dto.coordinates.lat))
         dataSource = DataSourceType.IMPORT
         locationType = dto.locationType
         originProvider = dto.originProvider
         originId = dto.originId
-        isHidden = false
-        hiddenReason = null
-        hiddenAt = null
         externalMaps = mergeProviderMap(externalMaps, providerKey, candidate.providerObjectId)
-        subwayStation = null
-        accessNote = dto.accessNote
-        directionGuide = dto.directionGuide
     }
 
     private fun mergeExternalMaps(entity: RestroomEntity, providerKey: String, externalId: String) {

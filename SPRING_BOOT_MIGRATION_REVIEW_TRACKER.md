@@ -442,6 +442,7 @@ backend/src/test/kotlin/yayauheny/by/helpers/ImportTestResourceHelper.kt
 ### Notes
 
 - Findings:
+  `backend/src/main/kotlin/yayauheny/by/importing/service/ImportPipeline.kt` reused create-style field assignment when re-importing an existing restroom. That reset fields the import payload does not own, including moderation state (`isHidden`, `hiddenReason`, `hiddenAt`), manual notes, manual subway linkage, phones, and the `hasPhotos` flag. A normal provider refresh could therefore silently unhide or strip manual enrichment from an existing restroom. Fixed by splitting imported field application so update flows refresh import-owned data without wiping manual or moderation-managed fields.
 - Questions:
 
 ## 8. Telegram Bot Subsystem
