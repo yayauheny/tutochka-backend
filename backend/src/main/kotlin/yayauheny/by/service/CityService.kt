@@ -99,6 +99,14 @@ class CityService(
         val country = countryRepository.findById(updateDto.countryId).orElseThrow {
             IllegalArgumentException("Country not found")
         }
+        val duplicateNameRu = cityRepository.findByCountryIdAndNameRu(updateDto.countryId, updateDto.nameRu)
+        if (duplicateNameRu != null && duplicateNameRu.id != id) {
+            throw ConflictException("Город с названием '${updateDto.nameRu}' уже существует в этой стране")
+        }
+        val duplicateNameEn = cityRepository.findByCountryIdAndNameEn(updateDto.countryId, updateDto.nameEn)
+        if (duplicateNameEn != null && duplicateNameEn.id != id) {
+            throw ConflictException("Город с названием '${updateDto.nameEn}' уже существует в этой стране")
+        }
 
         entity.country = country
         updateDto.nameRu?.let { entity.nameRu = it }

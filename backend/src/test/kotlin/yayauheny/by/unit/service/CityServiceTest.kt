@@ -170,6 +170,8 @@ class CityServiceTest {
 
         every { cityRepository.findById(id) } returns Optional.of(city)
         every { countryRepository.findById(newCountry.id!!) } returns Optional.of(newCountry)
+        every { cityRepository.findByCountryIdAndNameRu(newCountry.id!!, "UpdatedRu") } returns null
+        every { cityRepository.findByCountryIdAndNameEn(newCountry.id!!, "UpdatedEn") } returns null
         
         val citySlot = slot<CityEntity>()
         every { cityRepository.save(capture(citySlot)) } answers { firstArg() }
@@ -202,6 +204,47 @@ class CityServiceTest {
         every { countryRepository.findById(updateDto.countryId!!) } returns Optional.empty()
 
         assertThrows<IllegalArgumentException> { cityService.updateCity(id, updateDto) }
+    }
+
+    @Test
+    fun `updateCity throws ConflictException when Russian name already exists in target country`() {
+        val id = UUID.randomUUID()
+        val targetCountry = countryEntity().apply { this.id = UUID.randomUUID() }
+        val city = cityEntity().apply { this.id = id }
+        val duplicate = cityEntity().apply { this.id = UUID.randomUUID(); this.country = targetCountry }
+        val updateDto = TestDataHelpers.createCityUpdateDto(
+            countryId = targetCountry.id!!,
+            nameRu = "Минск",
+            nameEn = "Minsk Updated"
+        )
+
+        every { cityRepository.findById(id) } returns Optional.of(city)
+        every { countryRepository.findById(targetCountry.id!!) } returns Optional.of(targetCountry)
+        every { cityRepository.findByCountryIdAndNameRu(targetCountry.id!!, updateDto.nameRu) } returns duplicate
+
+        assertThrows<ConflictException> { cityService.updateCity(id, updateDto) }
+        verify(exactly = 0) { cityRepository.save(any()) }
+    }
+
+    @Test
+    fun `updateCity throws ConflictException when English name already exists in target country`() {
+        val id = UUID.randomUUID()
+        val targetCountry = countryEntity().apply { this.id = UUID.randomUUID() }
+        val city = cityEntity().apply { this.id = id }
+        val duplicate = cityEntity().apply { this.id = UUID.randomUUID(); this.country = targetCountry }
+        val updateDto = TestDataHelpers.createCityUpdateDto(
+            countryId = targetCountry.id!!,
+            nameRu = "Минск Updated",
+            nameEn = "Minsk"
+        )
+
+        every { cityRepository.findById(id) } returns Optional.of(city)
+        every { countryRepository.findById(targetCountry.id!!) } returns Optional.of(targetCountry)
+        every { cityRepository.findByCountryIdAndNameRu(targetCountry.id!!, updateDto.nameRu) } returns null
+        every { cityRepository.findByCountryIdAndNameEn(targetCountry.id!!, updateDto.nameEn) } returns duplicate
+
+        assertThrows<ConflictException> { cityService.updateCity(id, updateDto) }
+        verify(exactly = 0) { cityRepository.save(any()) }
     }
 
     // Delete behavior tests

@@ -82,6 +82,10 @@ tasks.test {
     }
 }
 
+tasks.bootJar {
+    archiveFileName.set("app.jar")
+}
+
 tasks.register<Test>("integrationTest") {
     description = "Runs integration tests."
     group = "verification"

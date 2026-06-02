@@ -31,19 +31,14 @@ COPY common/src common/src
 RUN echo "=== FILES AFTER SOURCES COPY ===" \
     && find backend -maxdepth 5 -type f | sort | sed -n '1,300p'
 
-RUN echo "=== BUILD FAT JAR START ===" \
-    && ./gradlew :backend:buildFatJar \
+RUN echo "=== BUILD SPRING BOOT JAR START ===" \
+    && ./gradlew :backend:bootJar \
         --no-daemon \
         --stacktrace \
         --info \
         --warning-mode all \
         -x test \
-        -x integrationTest \
-        -x ktlintCheck \
-        -x ktlintFormat \
-        -x ktlintKotlinScriptCheck \
-        -x ktlintMainSourceSetCheck \
-        -x ktlintTestSourceSetCheck
+        -x integrationTest
 
 FROM eclipse-temurin:21-jre-jammy
 WORKDIR /app
@@ -51,7 +46,7 @@ WORKDIR /app
 RUN groupadd -g 1001 appgroup \
     && useradd -u 1001 -g appgroup -s /usr/sbin/nologin -m appuser
 
-COPY --from=builder /app/backend/build/libs/backend-all.jar /app/app.jar
+COPY --from=builder /app/backend/build/libs/app.jar /app/app.jar
 RUN mkdir -p /app/logs/archive \
     && chown -R appuser:appgroup /app
 

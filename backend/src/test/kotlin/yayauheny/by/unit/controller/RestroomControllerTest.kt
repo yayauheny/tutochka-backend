@@ -6,10 +6,13 @@ import org.junit.jupiter.api.DisplayName
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
 import org.mockito.BDDMockito.given
+import org.mockito.Mockito.doAnswer
 import org.mockito.Mockito.verify
 import org.mockito.Mockito.verifyNoInteractions
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest
 import org.springframework.http.HttpStatus
+import yayauheny.by.analytics.model.AnalyticsIdentityHeaders
+import yayauheny.by.model.analytics.AnalyticsSource
 import yayauheny.by.common.query.PageResponse
 import yayauheny.by.controller.RestroomController
 import yayauheny.by.helpers.TestDataHelpers
@@ -196,6 +199,59 @@ class RestroomControllerTest : RoutingTestBase() {
             }
 
             verify(restroomService).findNearestRestrooms(eq(55.7558), eq(37.6176), eq(50), anyInt())
+        }
+
+        @Test
+        @DisplayName("GIVEN no analytics source header and no Telegram identity WHEN GET nearest THEN track analytics as API traffic")
+        fun get_nearest_restrooms_without_source_or_telegram_identity_tracks_api_source() {
+            given(restroomService.findNearestRestrooms(anyDouble(), anyDouble(), anyInt(), anyInt())).willReturn(emptyList())
+            var capturedIdentity: AnalyticsIdentityHeaders? = null
+            doAnswer {
+                capturedIdentity = it.getArgument(0)
+                null
+            }.`when`(analyticsService).trackNearestRestroomsSearch(any(), anyInt(), anyDouble(), anyDouble())
+
+            withRoutingApp {
+                val response =
+                    testGet(
+                        "/api/v1/restrooms/nearest",
+                        mapOf("lat" to "55.7558", "lon" to "37.6176")
+                    )
+
+                assertEquals(HttpStatus.OK, response.status)
+            }
+
+            verify(analyticsService).trackNearestRestroomsSearch(any(), eq(0), eq(55.7558), eq(37.6176))
+            assertEquals(AnalyticsSource.API, capturedIdentity?.source)
+        }
+
+        @Test
+        @DisplayName("GIVEN no analytics source header and Telegram identity WHEN GET nearest THEN track analytics as Telegram bot traffic")
+        fun get_nearest_restrooms_with_telegram_identity_tracks_telegram_bot_source() {
+            given(restroomService.findNearestRestrooms(anyDouble(), anyDouble(), anyInt(), anyInt())).willReturn(emptyList())
+            var capturedIdentity: AnalyticsIdentityHeaders? = null
+            doAnswer {
+                capturedIdentity = it.getArgument(0)
+                null
+            }.`when`(analyticsService).trackNearestRestroomsSearch(any(), anyInt(), anyDouble(), anyDouble())
+
+            withRoutingApp {
+                val response =
+                    testGet(
+                        "/api/v1/restrooms/nearest",
+                        mapOf("lat" to "55.7558", "lon" to "37.6176"),
+                        mapOf(
+                            "X-Tg-User-Id" to "42",
+                            "X-Tg-Chat-Id" to "99",
+                            "X-Tg-Username" to "user42"
+                        )
+                    )
+
+                assertEquals(HttpStatus.OK, response.status)
+            }
+
+            verify(analyticsService).trackNearestRestroomsSearch(any(), eq(0), eq(55.7558), eq(37.6176))
+            assertEquals(AnalyticsSource.TELEGRAM_BOT, capturedIdentity?.source)
         }
 
         @Test
