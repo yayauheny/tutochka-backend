@@ -305,6 +305,7 @@ backend/src/test/kotlin/yayauheny/by/integrationTest/kotlin/api/importing/Import
 
 - Findings:
   `backend/src/main/kotlin/yayauheny/by/repository/RestroomFilterRepositoryImpl.kt` did not support filtering by `originId`, even though `restrooms.origin_id` is indexed, `RestroomEntity` exposes it, import flows populate it, and the repository already allowed sorting by it. That made imported-record lookups incomplete through the normal filtered listing API. Fixed by adding `originId` to `RestroomFilter` and applying an exact-match predicate in the repository filter query.
+  `backend/src/main/kotlin/yayauheny/by/analytics/repository/AnalyticsEventJpaRepository.kt` still exposed unused custom count methods with stale semantics (`SEARCH_COMPLETED` event name and `UserEntity.createdAt` as “active users”). They were not called anywhere, but leaving them in the repository API made it easy for future service code to depend on incorrect analytics queries. Fixed by removing the dead custom query methods and keeping the repository focused on the entity operations that are actually used.
 - Questions:
 
 ## 6. Entity and Database Mapping Layer
