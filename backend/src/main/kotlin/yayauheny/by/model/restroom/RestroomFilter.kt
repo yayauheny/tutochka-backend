@@ -21,6 +21,8 @@ data class RestroomFilter(
     var placeType: PlaceType? = null,
     var locationType: LocationType? = null,
     var originProvider: ImportProvider? = null,
+    @field:Size(max = 100)
+    var originId: String? = null,
     var isHidden: Boolean? = null,
     @field:Size(max = 100)
     var name: String? = null,

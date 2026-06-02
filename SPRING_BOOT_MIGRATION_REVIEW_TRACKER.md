@@ -24,7 +24,7 @@ Use this file as the working checklist.
 - [x] 2. API and web layer
 - [x] 3. Core service layer
 - [x] 4. DTOs, request models, response models, and contracts
-- [ ] 5. Repository and query layer
+- [x] 5. Repository and query layer
 - [ ] 6. Entity and database mapping layer
 - [ ] 7. Importing subsystem
 - [ ] 8. Telegram bot subsystem
@@ -304,6 +304,7 @@ backend/src/test/kotlin/yayauheny/by/integrationTest/kotlin/api/importing/Import
 ### Notes
 
 - Findings:
+  `backend/src/main/kotlin/yayauheny/by/repository/RestroomFilterRepositoryImpl.kt` did not support filtering by `originId`, even though `restrooms.origin_id` is indexed, `RestroomEntity` exposes it, import flows populate it, and the repository already allowed sorting by it. That made imported-record lookups incomplete through the normal filtered listing API. Fixed by adding `originId` to `RestroomFilter` and applying an exact-match predicate in the repository filter query.
 - Questions:
 
 ## 6. Entity and Database Mapping Layer

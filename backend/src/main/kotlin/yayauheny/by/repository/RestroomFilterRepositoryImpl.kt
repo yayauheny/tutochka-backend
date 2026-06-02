@@ -55,6 +55,7 @@ class RestroomFilterRepositoryImpl(
             .add(filter.placeType) { root.placeType.eq(it) }
             .add(filter.locationType) { root.locationType.eq(it) }
             .add(filter.originProvider) { root.originProvider.eq(it) }
+            .add(filter.originId?.trim()?.takeIf { it.isNotEmpty() }) { root.originId.eq(it) }
             .add(filter.isHidden) { root.isHidden.eq(it) }
             .add(filter.name?.trim()?.takeIf { it.isNotEmpty() }) { root.name.containsIgnoreCase(it) }
             .add(filter.address?.trim()?.takeIf { it.isNotEmpty() }) { root.address.containsIgnoreCase(it) }

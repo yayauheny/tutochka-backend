@@ -32,6 +32,7 @@ import yayauheny.by.importing.provider.ImportSourceAdapter
 import yayauheny.by.importing.provider.twogis.TwoGisImportAdapter
 import yayauheny.by.importing.provider.yandex.YandexImportAdapter
 import yayauheny.by.model.enums.ImportPayloadType
+import yayauheny.by.model.enums.ImportProvider
 import yayauheny.by.service.RestroomService
 import java.util.UUID
 
@@ -39,6 +40,48 @@ import java.util.UUID
 class RestroomApiTest : BaseIntegrationTest() {
     @Autowired
     private lateinit var restroomService: RestroomService
+
+    @Test
+    @DisplayName("GIVEN restrooms with different origin ids WHEN GET restrooms with origin filter THEN return only matching restroom")
+    fun given_restrooms_with_different_origin_ids_when_get_restrooms_with_origin_filter_then_return_only_matching_restroom() =
+        runTest {
+            val testEnv = DatabaseTestHelper.createTestEnvironment(dslContext)
+            DatabaseTestHelper.insertTestRestroom(
+                dslContext,
+                testEnv.cityId,
+                DatabaseTestHelper.createTestRestroomData(
+                    name = "Matched restroom",
+                    originProvider = ImportProvider.TWO_GIS,
+                    originId = "origin-match-1"
+                )
+            )
+            DatabaseTestHelper.insertTestRestroom(
+                dslContext,
+                testEnv.cityId,
+                DatabaseTestHelper.createTestRestroomData(
+                    name = "Different restroom",
+                    originProvider = ImportProvider.TWO_GIS,
+                    originId = "origin-other-2"
+                )
+            )
+
+            KtorTestApplication.withApp(dslContext) { client ->
+                val response =
+                    client.testGet(
+                        "/api/v1/restrooms",
+                        mapOf(
+                            "originProvider" to ImportProvider.TWO_GIS.name,
+                            "originId" to "origin-match-1"
+                        )
+                    )
+
+                response.assertStatusAndJsonContent(HttpStatus.OK)
+                val json = Json.parseToJsonElement(response.bodyAsText()).jsonObject
+                val content = json["content"]?.jsonArray ?: error("Missing content array")
+                assertEquals(1, content.size, "Should return only one restroom for exact origin filter")
+                assertEquals("Matched restroom", content.single().jsonObject["name"]?.jsonPrimitive?.content)
+            }
+        }
 
     @Test
     @DisplayName("GIVEN existing restrooms WHEN GET nearest with valid coordinates THEN return nearest restrooms with distance")

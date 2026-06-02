@@ -18,6 +18,7 @@ import yayauheny.by.model.enums.AccessibilityType
 import yayauheny.by.model.enums.DataSourceType
 import yayauheny.by.model.enums.FeeType
 import yayauheny.by.model.enums.GenderType
+import yayauheny.by.model.enums.ImportProvider
 import yayauheny.by.model.enums.LocationType
 import yayauheny.by.model.enums.PlaceType
 import yayauheny.by.model.enums.RestroomStatus
@@ -96,6 +97,8 @@ data class TestRestroomData(
             put("yandex", JsonPrimitive("https://yandex.ru/maps/-/CCUqM0VhXD"))
             put("google", JsonPrimitive("https://maps.google.com/?q=53.9006,27.5590"))
         },
+    val originProvider: ImportProvider = ImportProvider.MANUAL,
+    val originId: String? = null,
     val accessNote: String? = "Доступен для людей с ограниченными возможностями",
     val directionGuide: String? = "Находится на первом этаже, рядом с главным входом",
     val inheritBuildingSchedule: Boolean = false,
@@ -168,6 +171,8 @@ object DatabaseTestHelper {
                 put("yandex", JsonPrimitive("https://yandex.ru/maps/-/CCUqM0VhXD"))
                 put("google", JsonPrimitive("https://maps.google.com/?q=53.9006,27.5590"))
             },
+        originProvider: ImportProvider = ImportProvider.MANUAL,
+        originId: String? = null,
         accessNote: String? = "Доступен для людей с ограниченными возможностями",
         directionGuide: String? = "Находится на первом этаже, рядом с главным входом",
         inheritBuildingSchedule: Boolean = false,
@@ -189,6 +194,8 @@ object DatabaseTestHelper {
         buildingId,
         subwayStationId,
         externalMaps,
+        originProvider,
+        originId,
         accessNote,
         directionGuide,
         inheritBuildingSchedule,
@@ -270,8 +277,8 @@ object DatabaseTestHelper {
                 this.inheritBuildingSchedule = data.inheritBuildingSchedule
                 this.hasPhotos = data.hasPhotos
                 this.locationType = if (data.buildingId != null) LocationType.INSIDE_BUILDING else LocationType.STANDALONE
-                this.originProvider = yayauheny.by.model.enums.ImportProvider.MANUAL
-                this.originId = null
+                this.originProvider = data.originProvider
+                this.originId = data.originId
                 this.isHidden = false
             }
         return restroomRepository.saveAndFlush(entity).id ?: error("Failed to insert test restroom")
