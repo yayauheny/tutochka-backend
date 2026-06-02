@@ -218,18 +218,18 @@ class RestroomService(
         updateDto.feeType?.let { entity.feeType = it }
         updateDto.genderType?.let { entity.genderType = it }
         updateDto.accessibilityType?.let { entity.accessibilityType = it }
-        updateDto.status.let { entity.status = it }
+        updateDto.status?.let { entity.status = it }
         updateDto.amenities?.let { entity.amenities = it.toBooleanMap() }
         updateDto.externalMaps?.let { entity.externalMaps = it.toStringMap() }
         updateDto.accessNote?.let { entity.accessNote = it }
         updateDto.directionGuide?.let { entity.directionGuide = it }
-        entity.inheritBuildingSchedule = updateDto.inheritBuildingSchedule
-        entity.hasPhotos = updateDto.hasPhotos
+        updateDto.inheritBuildingSchedule?.let { entity.inheritBuildingSchedule = it }
+        updateDto.hasPhotos?.let { entity.hasPhotos = it }
         updateDto.locationType?.let { entity.locationType = it }
         updateDto.originProvider?.let { entity.originProvider = it }
         updateDto.originId?.let { entity.originId = it }
         updateDto.isHidden?.let { entity.isHidden = it }
-        entity.coordinates = updateDto.coordinates.toPoint()
+        updateDto.coordinates?.let { entity.coordinates = it.toPoint() }
         return restroomRepository.saveAndFlush(entity).toDto()
     }
 

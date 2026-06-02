@@ -23,7 +23,7 @@ Use this file as the working checklist.
 - [x] 1. Build, bootstrap, and runtime entrypoints
 - [x] 2. API and web layer
 - [x] 3. Core service layer
-- [ ] 4. DTOs, request models, response models, and contracts
+- [x] 4. DTOs, request models, response models, and contracts
 - [ ] 5. Repository and query layer
 - [ ] 6. Entity and database mapping layer
 - [ ] 7. Importing subsystem
@@ -249,6 +249,8 @@ backend/src/test/kotlin/yayauheny/by/model/schedule/ScheduleUtilsTest.kt
 ### Notes
 
 - Findings:
+  `common/src/main/kotlin/yayauheny/by/model/restroom/RestroomUpdateDto.kt` encoded update requests inconsistently: several fields behaved like patch fields (`name`, `address`, relations), but `status` and `coordinates` were mandatory and `inheritBuildingSchedule` / `hasPhotos` defaulted to `false`. That let omitted JSON silently overwrite existing restroom state during updates. Fixed by making those update fields nullable and letting the service update them only when explicitly provided.
+  `common/src/main/kotlin/yayauheny/by/model/country/CountryUpdateDto.kt` had no validation annotations, so blank country names could pass update requests even though create requests reject them. Fixed by adding the same `NotBlank`/`Size` constraints on update DTO fields.
 - Questions:
 
 ## 5. Repository and Query Layer

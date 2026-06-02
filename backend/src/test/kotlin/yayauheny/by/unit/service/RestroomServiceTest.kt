@@ -433,11 +433,19 @@ class RestroomServiceTest {
                 directionGuide = "keep-guide"
                 externalMaps = mapOf("google" to "keep-map")
                 originId = "keep-origin"
+                status = RestroomStatus.ACTIVE
+                inheritBuildingSchedule = true
+                hasPhotos = true
+                coordinates = geometryFactory.createPoint(Coordinate(27.56, 53.9))
             }
         val updateDto =
             TestDataHelpers.createRestroomUpdateDto(
                 accessNote = null,
-                directionGuide = null
+                directionGuide = null,
+                status = null,
+                inheritBuildingSchedule = null,
+                hasPhotos = null,
+                coordinates = null
             ).copy(
                 cityId = null,
                 buildingId = null,
@@ -457,6 +465,11 @@ class RestroomServiceTest {
         assertThat(saved.directionGuide).isEqualTo("keep-guide")
         assertThat(saved.externalMaps).containsEntry("google", "keep-map")
         assertThat(saved.originId).isEqualTo("keep-origin")
+        assertThat(saved.status).isEqualTo(RestroomStatus.ACTIVE)
+        assertThat(saved.inheritBuildingSchedule).isTrue()
+        assertThat(saved.hasPhotos).isTrue()
+        assertThat(saved.coordinates?.x).isEqualTo(27.56)
+        assertThat(saved.coordinates?.y).isEqualTo(53.9)
     }
 
     @Test

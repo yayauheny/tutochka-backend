@@ -58,11 +58,11 @@ data class RestroomUpdateDto(
     val accessibilityType: AccessibilityType?,
     @field:Schema(description = "Place type", example = "public_toilet")
     val placeType: PlaceType?,
-    @field:Schema(description = "Coordinates", example = "55.7558, 37.6176", required = true)
+    @field:Schema(description = "Coordinates", example = "55.7558, 37.6176")
     @field:Valid
-    val coordinates: Coordinates,
+    val coordinates: Coordinates?,
     @field:Schema(description = "Current status of the restroom", example = "ACTIVE")
-    val status: RestroomStatus,
+    val status: RestroomStatus?,
     @field:Schema(
         description = "Available amenities in JSON format",
         example = """{"wifi": true, "babyChanging": false, "wheelchair": true}"""
@@ -77,9 +77,9 @@ data class RestroomUpdateDto(
     @field:Size(max = 500)
     val directionGuide: String?,
     @field:Schema(description = "Inherit schedule from building", example = "false")
-    val inheritBuildingSchedule: Boolean = false,
+    val inheritBuildingSchedule: Boolean? = null,
     @field:Schema(description = "Has photos", example = "false")
-    val hasPhotos: Boolean = false,
+    val hasPhotos: Boolean? = null,
     @field:Schema(description = "Toilet context", example = "STANDALONE")
     val locationType: LocationType? = null,
     @field:Schema(description = "Origin provider", example = "MANUAL")

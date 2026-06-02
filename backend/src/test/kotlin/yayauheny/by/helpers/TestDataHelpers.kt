@@ -191,13 +191,13 @@ object TestDataHelpers {
         address: String? = "Updated Address",
         phones: Map<String, Any>? = createBasicPhones(),
         workTime: Map<String, Any>? = createBasicWorkTime(),
-        feeType: FeeType = FeeType.FREE,
+        feeType: FeeType? = FeeType.FREE,
         genderType: GenderType? = GenderType.UNISEX,
         accessibilityType: AccessibilityType? = AccessibilityType.WHEELCHAIR,
         placeType: PlaceType? = PlaceType.OTHER,
-        coordinates: Coordinates =
+        coordinates: Coordinates? =
             Coordinates(lat = 40.7829, lon = -73.9654),
-        status: RestroomStatus = RestroomStatus.ACTIVE,
+        status: RestroomStatus? = RestroomStatus.ACTIVE,
         amenities: Map<String, Any>? = createBasicAmenities(),
         externalMaps: Map<String, Any>? =
             mapOf(
@@ -206,8 +206,8 @@ object TestDataHelpers {
             ),
         accessNote: String? = "Доступен для людей с ограниченными возможностями",
         directionGuide: String? = "Находится на первом этаже, рядом с главным входом",
-        inheritBuildingSchedule: Boolean = false,
-        hasPhotos: Boolean = true
+        inheritBuildingSchedule: Boolean? = false,
+        hasPhotos: Boolean? = true
     ) = RestroomUpdateDto(
         cityId = cityId,
         buildingId = buildingId,

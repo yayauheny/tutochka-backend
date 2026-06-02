@@ -1,5 +1,6 @@
 package yayauheny.by.unit.controller
 
+import java.util.UUID
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.DisplayName
 import org.junit.jupiter.api.Nested
@@ -15,6 +16,7 @@ import yayauheny.by.controller.CountryController
 import yayauheny.by.helpers.any
 import yayauheny.by.helpers.assertJsonContentType
 import yayauheny.by.helpers.testGet
+import yayauheny.by.helpers.testPut
 import yayauheny.by.model.country.CountryResponseDto
 
 @WebMvcTest(CountryController::class)
@@ -47,6 +49,33 @@ class CountryControllerTest : RoutingTestBase() {
                     testGet(
                         "/api/v1/countries",
                         mapOf("nameRu" to "a".repeat(101))
+                    )
+
+                assertEquals(HttpStatus.BAD_REQUEST, response.status)
+            }
+
+            verifyNoInteractions(countryService)
+        }
+    }
+
+    @Nested
+    @DisplayName("PUT /api/v1/countries/{id}")
+    inner class UpdateCountry {
+        @Test
+        @DisplayName("GIVEN blank names WHEN PUT country THEN return 400 and skip service")
+        fun update_country_with_blank_names_returns_400_and_skips_service() {
+            val id = UUID.randomUUID()
+
+            withRoutingApp {
+                val response =
+                    testPut(
+                        "/api/v1/countries/$id",
+                        """
+                        {
+                          "nameRu": "",
+                          "nameEn": " "
+                        }
+                        """.trimIndent()
                     )
 
                 assertEquals(HttpStatus.BAD_REQUEST, response.status)
