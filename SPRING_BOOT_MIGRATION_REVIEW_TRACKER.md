@@ -25,13 +25,13 @@ Use this file as the working checklist.
 - [x] 3. Core service layer
 - [x] 4. DTOs, request models, response models, and contracts
 - [x] 5. Repository and query layer
-- [ ] 6. Entity and database mapping layer
-- [ ] 7. Importing subsystem
-- [ ] 8. Telegram bot subsystem
-- [ ] 9. Analytics subsystem
-- [ ] 10. Shared infrastructure, configuration, errors, utilities, and metrics
-- [ ] 11. Database migrations and runtime resources
-- [ ] 12. Test infrastructure and migration leftovers
+- [x] 6. Entity and database mapping layer
+- [x] 7. Importing subsystem
+- [x] 8. Telegram bot subsystem
+- [x] 9. Analytics subsystem
+- [x] 10. Shared infrastructure, configuration, errors, utilities, and metrics
+- [x] 11. Database migrations and runtime resources
+- [x] 12. Test infrastructure and migration leftovers
 
 ## 1. Build, Bootstrap, and Runtime Entrypoints
 
@@ -684,6 +684,7 @@ backend/src/test/resources/telegram/start_website_update.json
 ### Notes
 
 - Findings:
+- No confirmed defects in this layer. The Liquibase changelog includes the effective runtime migrations in order, while the extra SQL files that were inspected are either documented manual-only resources (`PREDEFINED_IDS.md`, `20251205_upsert_minsk_metro.sql`, `20260515_validate_observed_countries_and_cities_coordinates.sql`) or superseded by an included fix (`20260515_fix_building_2gis_index.sql` replaced by `20260515_fix_building_external_id_indexes.sql`).
 - Questions:
 
 ## 12. Test Infrastructure and Migration Leftovers
@@ -705,7 +706,7 @@ backend/src/test/kotlin/yayauheny/by/helpers/JsonTestHelpers.kt
 backend/src/test/kotlin/yayauheny/by/helpers/MockitoHelpers.kt
 backend/src/test/kotlin/yayauheny/by/helpers/TestDataHelpers.kt
 backend/src/test/kotlin/yayauheny/by/integrationTest/kotlin/base/BaseIntegrationTest.kt
-backend/src/test/kotlin/yayauheny/by/integrationTest/kotlin/base/KtorTestApplication.kt
+backend/src/test/kotlin/yayauheny/by/integrationTest/kotlin/base/SpringTestApplication.kt
 backend/src/test/kotlin/yayauheny/by/integrationTest/kotlin/base/TestModules.kt
 backend/src/test/kotlin/yayauheny/by/integrationTest/kotlin/base/TestPostgresContainer.kt
 backend/src/test/kotlin/yayauheny/by/unit/di/ImportingModuleTest.kt
@@ -719,6 +720,7 @@ backend/src/test/kotlin/kotlinx/serialization/modules/SerializersModuleCompat.kt
 ### Notes
 
 - Findings:
+  `backend/src/test/kotlin/yayauheny/by/integrationTest/kotlin/base/KtorTestApplication.kt`, `backend/src/test/kotlin/yayauheny/by/integrationTest/kotlin/base/BaseIntegrationTest.kt`, and `backend/src/test/kotlin/yayauheny/by/helpers/DatabaseTestHelper.kt` still carried Ktor-era compatibility scaffolding after the Spring migration. Integration tests depended on a Ktor-named wrapper and threaded an unused fake `dslContext` through helper APIs, which made the active Spring test path harder to reason about and preserved dead migration abstractions. Fixed by renaming the wrapper to `SpringTestApplication`, removing the unused `dslContext` from the base test and helpers, and updating integration tests to call the Spring test harness directly.
 - Questions:
 
 ## Suggested Review Order After Setup

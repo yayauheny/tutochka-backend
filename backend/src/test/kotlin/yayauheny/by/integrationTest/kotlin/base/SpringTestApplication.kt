@@ -6,11 +6,8 @@ import yayauheny.by.helpers.testGet
 import yayauheny.by.helpers.testPost
 import yayauheny.by.helpers.testPut
 
-object KtorTestApplication {
-    fun withApp(
-        testDslContext: Any?,
-        block: (SpringTestClient) -> Unit
-    ) {
+object SpringTestApplication {
+    fun withApp(block: (SpringTestClient) -> Unit) {
         block(SpringTestClient(IntegrationTestContext.mockMvc))
     }
 }

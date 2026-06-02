@@ -1,7 +1,7 @@
 package integration.api.error
 
 import integration.base.BaseIntegrationTest
-import integration.base.KtorTestApplication
+import integration.base.SpringTestApplication
 import java.util.UUID
 import kotlin.test.assertEquals
 import kotlin.test.assertNotNull
@@ -23,7 +23,7 @@ class PSQLExceptionHandlingTest : BaseIntegrationTest() {
     @DisplayName("GIVEN duplicate city name WHEN POST city THEN return 409 Conflict (23505)")
     fun duplicate_city_returns_409_unique_violation() =
         runTest {
-            val testEnv = DatabaseTestHelper.createTestEnvironment(dslContext)
+            val testEnv = DatabaseTestHelper.createTestEnvironment()
 
             val cityJson =
                 """
@@ -36,7 +36,7 @@ class PSQLExceptionHandlingTest : BaseIntegrationTest() {
                 }
                 """.trimIndent()
 
-            KtorTestApplication.withApp(dslContext) { client ->
+            SpringTestApplication.withApp { client ->
                 val firstResponse =
                     client.post("/api/v1/cities") {
                         contentType("application/json")
@@ -77,7 +77,7 @@ class PSQLExceptionHandlingTest : BaseIntegrationTest() {
                 }
                 """.trimIndent()
 
-            KtorTestApplication.withApp(dslContext) { client ->
+            SpringTestApplication.withApp { client ->
                 val response =
                     client.post("/api/v1/cities") {
                         contentType("application/json")
@@ -101,7 +101,7 @@ class PSQLExceptionHandlingTest : BaseIntegrationTest() {
     @DisplayName("GIVEN restroom with non-existent city WHEN POST restroom THEN return 400 Bad Request (23503)")
     fun restroom_with_non_existent_city_returns_400_foreign_key_violation() =
         runTest {
-            val testEnv = DatabaseTestHelper.createTestEnvironment(dslContext)
+            val testEnv = DatabaseTestHelper.createTestEnvironment()
             val nonExistentCityId = UUID.randomUUID()
 
             val restroomJson =
@@ -122,7 +122,7 @@ class PSQLExceptionHandlingTest : BaseIntegrationTest() {
                 }
                 """.trimIndent()
 
-            KtorTestApplication.withApp(dslContext) { client ->
+            SpringTestApplication.withApp { client ->
                 val response =
                     client.post("/api/v1/restrooms") {
                         contentType("application/json")
@@ -146,7 +146,7 @@ class PSQLExceptionHandlingTest : BaseIntegrationTest() {
     @DisplayName("GIVEN city with null required field WHEN POST city THEN return 400 Bad Request (23502)")
     fun city_with_null_required_field_returns_400_not_null_violation() =
         runTest {
-            val testEnv = DatabaseTestHelper.createTestEnvironment(dslContext)
+            val testEnv = DatabaseTestHelper.createTestEnvironment()
 
             val cityJson =
                 """
@@ -159,7 +159,7 @@ class PSQLExceptionHandlingTest : BaseIntegrationTest() {
                 }
                 """.trimIndent()
 
-            KtorTestApplication.withApp(dslContext) { client ->
+            SpringTestApplication.withApp { client ->
                 val response =
                     client.post("/api/v1/cities") {
                         contentType("application/json")

@@ -2,7 +2,7 @@ package integration.api.restrooms
 
 import yayauheny.by.model.enums.RestroomStatus
 import integration.base.BaseIntegrationTest
-import integration.base.KtorTestApplication
+import integration.base.SpringTestApplication
 import org.springframework.http.HttpStatus
 import kotlin.test.assertEquals
 import kotlin.test.assertNotNull
@@ -45,9 +45,8 @@ class RestroomApiTest : BaseIntegrationTest() {
     @DisplayName("GIVEN restrooms with different origin ids WHEN GET restrooms with origin filter THEN return only matching restroom")
     fun given_restrooms_with_different_origin_ids_when_get_restrooms_with_origin_filter_then_return_only_matching_restroom() =
         runTest {
-            val testEnv = DatabaseTestHelper.createTestEnvironment(dslContext)
+            val testEnv = DatabaseTestHelper.createTestEnvironment()
             DatabaseTestHelper.insertTestRestroom(
-                dslContext,
                 testEnv.cityId,
                 DatabaseTestHelper.createTestRestroomData(
                     name = "Matched restroom",
@@ -56,7 +55,6 @@ class RestroomApiTest : BaseIntegrationTest() {
                 )
             )
             DatabaseTestHelper.insertTestRestroom(
-                dslContext,
                 testEnv.cityId,
                 DatabaseTestHelper.createTestRestroomData(
                     name = "Different restroom",
@@ -65,7 +63,7 @@ class RestroomApiTest : BaseIntegrationTest() {
                 )
             )
 
-            KtorTestApplication.withApp(dslContext) { client ->
+            SpringTestApplication.withApp { client ->
                 val response =
                     client.testGet(
                         "/api/v1/restrooms",
@@ -87,9 +85,8 @@ class RestroomApiTest : BaseIntegrationTest() {
     @DisplayName("GIVEN existing restrooms WHEN GET nearest with valid coordinates THEN return nearest restrooms with distance")
     fun given_existing_restrooms_when_get_nearest_with_valid_coordinates_then_return_nearest_restrooms() =
         runTest {
-            val testEnv = DatabaseTestHelper.createTestEnvironment(dslContext)
+            val testEnv = DatabaseTestHelper.createTestEnvironment()
             DatabaseTestHelper.insertTestRestroom(
-                dslContext,
                 testEnv.cityId,
                 DatabaseTestHelper.createTestRestroomData(
                     name = "Restroom 1",
@@ -98,7 +95,6 @@ class RestroomApiTest : BaseIntegrationTest() {
                 )
             )
             DatabaseTestHelper.insertTestRestroom(
-                dslContext,
                 testEnv.cityId,
                 DatabaseTestHelper.createTestRestroomData(
                     name = "Restroom 2",
@@ -107,7 +103,7 @@ class RestroomApiTest : BaseIntegrationTest() {
                 )
             )
 
-            KtorTestApplication.withApp(dslContext) { client ->
+            SpringTestApplication.withApp { client ->
                 val response =
                     client.testGet(
                         "/api/v1/restrooms/nearest",
@@ -133,7 +129,7 @@ class RestroomApiTest : BaseIntegrationTest() {
     @DisplayName("GIVEN no restrooms WHEN GET nearest with valid coordinates THEN return empty array")
     fun given_no_restrooms_when_get_nearest_with_valid_coordinates_then_return_empty_array() =
         runTest {
-            KtorTestApplication.withApp(dslContext) { client ->
+            SpringTestApplication.withApp { client ->
                 val response =
                     client.testGet(
                         "/api/v1/restrooms/nearest",
@@ -151,9 +147,8 @@ class RestroomApiTest : BaseIntegrationTest() {
     @DisplayName("GIVEN multiple restrooms WHEN GET nearest THEN return sorted by distance with correct distance values")
     fun given_multiple_restrooms_when_get_nearest_then_return_sorted_by_distance() =
         runTest {
-            val testEnv = DatabaseTestHelper.createTestEnvironment(dslContext)
+            val testEnv = DatabaseTestHelper.createTestEnvironment()
             DatabaseTestHelper.insertTestRestroom(
-                dslContext,
                 testEnv.cityId,
                 DatabaseTestHelper.createTestRestroomData(
                     name = "Far Restroom",
@@ -162,7 +157,6 @@ class RestroomApiTest : BaseIntegrationTest() {
                 )
             )
             DatabaseTestHelper.insertTestRestroom(
-                dslContext,
                 testEnv.cityId,
                 DatabaseTestHelper.createTestRestroomData(
                     name = "Close Restroom",
@@ -171,7 +165,6 @@ class RestroomApiTest : BaseIntegrationTest() {
                 )
             )
             DatabaseTestHelper.insertTestRestroom(
-                dslContext,
                 testEnv.cityId,
                 DatabaseTestHelper.createTestRestroomData(
                     name = "Medium Restroom",
@@ -180,7 +173,7 @@ class RestroomApiTest : BaseIntegrationTest() {
                 )
             )
 
-            KtorTestApplication.withApp(dslContext) { client ->
+            SpringTestApplication.withApp { client ->
                 val response =
                     client.testGet(
                         "/api/v1/restrooms/nearest",
@@ -259,10 +252,9 @@ class RestroomApiTest : BaseIntegrationTest() {
     @DisplayName("GIVEN many restrooms WHEN GET nearest with small limit THEN return only limited results")
     fun given_many_restrooms_when_get_nearest_with_small_limit_then_return_only_limited_results() =
         runTest {
-            val testEnv = DatabaseTestHelper.createTestEnvironment(dslContext)
+            val testEnv = DatabaseTestHelper.createTestEnvironment()
             repeat(10) { i ->
                 DatabaseTestHelper.insertTestRestroom(
-                    dslContext,
                     testEnv.cityId,
                     DatabaseTestHelper.createTestRestroomData(
                         name = "Restroom $i",
@@ -272,7 +264,7 @@ class RestroomApiTest : BaseIntegrationTest() {
                 )
             }
 
-            KtorTestApplication.withApp(dslContext) { client ->
+            SpringTestApplication.withApp { client ->
                 val response =
                     client.testGet(
                         "/api/v1/restrooms/nearest",
@@ -303,9 +295,8 @@ class RestroomApiTest : BaseIntegrationTest() {
     @DisplayName("GIVEN near and far restrooms WHEN GET nearest without distance parameter THEN use default 5km radius")
     fun given_near_and_far_restrooms_when_get_nearest_without_distance_parameter_then_use_default_radius() =
         runTest {
-            val testEnv = DatabaseTestHelper.createTestEnvironment(dslContext)
+            val testEnv = DatabaseTestHelper.createTestEnvironment()
             DatabaseTestHelper.insertTestRestroom(
-                dslContext,
                 testEnv.cityId,
                 DatabaseTestHelper.createTestRestroomData(
                     name = "Near Restroom",
@@ -314,7 +305,6 @@ class RestroomApiTest : BaseIntegrationTest() {
                 )
             )
             DatabaseTestHelper.insertTestRestroom(
-                dslContext,
                 testEnv.cityId,
                 DatabaseTestHelper.createTestRestroomData(
                     name = "Far Restroom",
@@ -323,7 +313,7 @@ class RestroomApiTest : BaseIntegrationTest() {
                 )
             )
 
-            KtorTestApplication.withApp(dslContext) { client ->
+            SpringTestApplication.withApp { client ->
                 val response =
                     client.testGet(
                         "/api/v1/restrooms/nearest",
@@ -342,9 +332,8 @@ class RestroomApiTest : BaseIntegrationTest() {
     @DisplayName("GIVEN near and far restrooms WHEN GET nearest with explicit larger radius THEN include both")
     fun given_near_and_far_restrooms_when_get_nearest_with_explicit_larger_radius_then_include_both() =
         runTest {
-            val testEnv = DatabaseTestHelper.createTestEnvironment(dslContext)
+            val testEnv = DatabaseTestHelper.createTestEnvironment()
             DatabaseTestHelper.insertTestRestroom(
-                dslContext,
                 testEnv.cityId,
                 DatabaseTestHelper.createTestRestroomData(
                     name = "Near Restroom",
@@ -353,7 +342,6 @@ class RestroomApiTest : BaseIntegrationTest() {
                 )
             )
             DatabaseTestHelper.insertTestRestroom(
-                dslContext,
                 testEnv.cityId,
                 DatabaseTestHelper.createTestRestroomData(
                     name = "Far Restroom",
@@ -362,7 +350,7 @@ class RestroomApiTest : BaseIntegrationTest() {
                 )
             )
 
-            KtorTestApplication.withApp(dslContext) { client ->
+            SpringTestApplication.withApp { client ->
                 val response =
                     client.testGet(
                         "/api/v1/restrooms/nearest",
@@ -382,10 +370,9 @@ class RestroomApiTest : BaseIntegrationTest() {
     @DisplayName("GIVEN active and inactive restrooms WHEN GET nearest THEN return only active restrooms")
     fun given_active_and_inactive_restrooms_when_get_nearest_then_return_only_active_restrooms() =
         runTest {
-            val testEnv = DatabaseTestHelper.createTestEnvironment(dslContext)
+            val testEnv = DatabaseTestHelper.createTestEnvironment()
 
             DatabaseTestHelper.insertTestRestroom(
-                dslContext,
                 testEnv.cityId,
                 DatabaseTestHelper.createTestRestroomData(
                     name = "Active Restroom",
@@ -395,7 +382,6 @@ class RestroomApiTest : BaseIntegrationTest() {
             )
 
             DatabaseTestHelper.insertTestRestroom(
-                dslContext,
                 testEnv.cityId,
                 DatabaseTestHelper.createTestRestroomData(
                     name = "Inactive Restroom",
@@ -405,7 +391,7 @@ class RestroomApiTest : BaseIntegrationTest() {
                 )
             )
 
-            KtorTestApplication.withApp(dslContext) { client ->
+            SpringTestApplication.withApp { client ->
                 val response =
                     client.testGet(
                         "/api/v1/restrooms/nearest",
@@ -436,7 +422,7 @@ class RestroomApiTest : BaseIntegrationTest() {
     @DisplayName("GIVEN real 2GIS import fixtures WHEN GET nearest THEN return imported toilets ordered by actual distance")
     fun given_real_twogis_import_fixtures_when_get_nearest_then_return_imported_toilets_ordered_by_distance() =
         runTest {
-            val testEnv = DatabaseTestHelper.createTestEnvironment(dslContext)
+            val testEnv = DatabaseTestHelper.createTestEnvironment()
             importFixtureRestroom(
                 adapter = TwoGisImportAdapter(),
                 resourcePath = "import/2gis/2gis_scraped_places.json",
@@ -454,7 +440,7 @@ class RestroomApiTest : BaseIntegrationTest() {
                 cityId = testEnv.cityId
             )
 
-            KtorTestApplication.withApp(dslContext) { client ->
+            SpringTestApplication.withApp { client ->
                 val response =
                     client.testGet(
                         "/api/v1/restrooms/nearest",
@@ -491,7 +477,7 @@ class RestroomApiTest : BaseIntegrationTest() {
     @DisplayName("GIVEN real Yandex import fixtures WHEN GET nearest THEN exclude inactive imported toilet and return active match")
     fun given_real_yandex_import_fixtures_when_get_nearest_then_exclude_inactive_imported_toilet_and_return_active_match() =
         runTest {
-            val testEnv = DatabaseTestHelper.createTestEnvironment(dslContext)
+            val testEnv = DatabaseTestHelper.createTestEnvironment()
             importFixtureRestroom(
                 adapter = YandexImportAdapter(),
                 resourcePath = "import/yandex/yandex_scraped_places.json",
@@ -509,7 +495,7 @@ class RestroomApiTest : BaseIntegrationTest() {
                 cityId = testEnv.cityId
             )
 
-            KtorTestApplication.withApp(dslContext) { client ->
+            SpringTestApplication.withApp { client ->
                 val response =
                     client.testGet(
                         "/api/v1/restrooms/nearest",
@@ -536,7 +522,7 @@ class RestroomApiTest : BaseIntegrationTest() {
     @DisplayName("GIVEN mixed imported provider fixtures WHEN GET nearest THEN return all providers in actual distance order")
     fun given_mixed_imported_provider_fixtures_when_get_nearest_then_return_all_providers_in_actual_distance_order() =
         runTest {
-            val testEnv = DatabaseTestHelper.createTestEnvironment(dslContext)
+            val testEnv = DatabaseTestHelper.createTestEnvironment()
             importFixtureRestroom(
                 adapter = TwoGisImportAdapter(),
                 resourcePath = "import/2gis/2gis_scraped_places.json",
@@ -554,7 +540,7 @@ class RestroomApiTest : BaseIntegrationTest() {
                 cityId = testEnv.cityId
             )
 
-            KtorTestApplication.withApp(dslContext) { client ->
+            SpringTestApplication.withApp { client ->
                 val response =
                     client.testGet(
                         "/api/v1/restrooms/nearest",
@@ -590,7 +576,7 @@ class RestroomApiTest : BaseIntegrationTest() {
         @DisplayName("GET /api/v1/restrooms/nearest with invalid lat type returns 400")
         fun nearest_invalid_lat_type() =
             runTest {
-                KtorTestApplication.withApp(dslContext) { client ->
+                SpringTestApplication.withApp { client ->
                     val response = client.testGet("/api/v1/restrooms/nearest", mapOf("lat" to "abc", "lon" to "37.6"))
                     response.assertStatusAndJsonContent(HttpStatus.BAD_REQUEST)
                 }
@@ -600,7 +586,7 @@ class RestroomApiTest : BaseIntegrationTest() {
         @DisplayName("GET /api/v1/restrooms/nearest with out-of-range coordinates returns 400 with validation errors")
         fun nearest_out_of_range_coordinates() =
             runTest {
-                KtorTestApplication.withApp(dslContext) { client ->
+                SpringTestApplication.withApp { client ->
                     val response = client.testGet("/api/v1/restrooms/nearest", mapOf("lat" to "91.0", "lon" to "37.6"))
                     response.assertStatusAndJsonContent(HttpStatus.BAD_REQUEST)
 

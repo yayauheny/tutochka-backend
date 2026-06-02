@@ -38,8 +38,6 @@ abstract class BaseIntegrationTest {
     @Autowired
     protected lateinit var mockMvc: MockMvc
 
-    protected val dslContext: Any = Any()
-
     @Autowired
     protected lateinit var jdbcTemplate: JdbcTemplate
 

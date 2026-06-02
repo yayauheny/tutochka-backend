@@ -1,7 +1,7 @@
 package integration.api.countries
 
 import integration.base.BaseIntegrationTest
-import integration.base.KtorTestApplication
+import integration.base.SpringTestApplication
 import org.springframework.http.HttpStatus
 import kotlin.test.assertEquals
 import kotlin.test.assertTrue
@@ -34,7 +34,7 @@ class CountryApiTest : BaseIntegrationTest() {
                     }
                     """.trimIndent()
 
-                KtorTestApplication.withApp(dslContext) { client ->
+                SpringTestApplication.withApp { client ->
                     val firstResponse = client.testPost("/api/v1/countries", firstCountryJson)
                     assertEquals(HttpStatus.CREATED, firstResponse.status)
 

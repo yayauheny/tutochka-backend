@@ -1,7 +1,7 @@
 package integration.api.analytics
 
 import integration.base.BaseIntegrationTest
-import integration.base.KtorTestApplication
+import integration.base.SpringTestApplication
 import java.time.Instant
 import java.time.ZoneId
 import java.time.YearMonth
@@ -34,35 +34,30 @@ class PublicAnalyticsApiTest : BaseIntegrationTest() {
 
             val userToday =
                 DatabaseTestHelper.insertAnalyticsUser(
-                    dslContext,
                     DatabaseTestHelper.createTestAnalyticsUserData(
                         createdAt = atNoon(today)
                     )
                 )
             val userRecent =
                 DatabaseTestHelper.insertAnalyticsUser(
-                    dslContext,
                     DatabaseTestHelper.createTestAnalyticsUserData(
                         createdAt = atNoon(today.minusDays(2))
                     )
                 )
             val userMonth =
                 DatabaseTestHelper.insertAnalyticsUser(
-                    dslContext,
                     DatabaseTestHelper.createTestAnalyticsUserData(
                         createdAt = atNoon(today.minusDays(10))
                     )
                 )
             val userOld =
                 DatabaseTestHelper.insertAnalyticsUser(
-                    dslContext,
                     DatabaseTestHelper.createTestAnalyticsUserData(
                         createdAt = atNoon(today.minusDays(40))
                     )
                 )
 
             DatabaseTestHelper.insertAnalyticsEvent(
-                dslContext,
                 DatabaseTestHelper.createTestAnalyticsEventData(
                     event = ProductAnalyticsEvent.NEAREST_RESTROOMS_RETURNED.value,
                     userId = userToday,
@@ -71,7 +66,6 @@ class PublicAnalyticsApiTest : BaseIntegrationTest() {
                 )
             )
             DatabaseTestHelper.insertAnalyticsEvent(
-                dslContext,
                 DatabaseTestHelper.createTestAnalyticsEventData(
                     event = ProductAnalyticsEvent.NEAREST_RESTROOMS_NO_RESULTS.value,
                     userId = userRecent,
@@ -80,7 +74,6 @@ class PublicAnalyticsApiTest : BaseIntegrationTest() {
                 )
             )
             DatabaseTestHelper.insertAnalyticsEvent(
-                dslContext,
                 DatabaseTestHelper.createTestAnalyticsEventData(
                     event = ProductAnalyticsEvent.ROUTE_CLICKED.value,
                     userId = userToday,
@@ -88,7 +81,6 @@ class PublicAnalyticsApiTest : BaseIntegrationTest() {
                 )
             )
             DatabaseTestHelper.insertAnalyticsEvent(
-                dslContext,
                 DatabaseTestHelper.createTestAnalyticsEventData(
                     event = ProductAnalyticsEvent.RESTROOM_DETAILS_OPENED.value,
                     userId = userToday,
@@ -96,7 +88,6 @@ class PublicAnalyticsApiTest : BaseIntegrationTest() {
                 )
             )
             DatabaseTestHelper.insertAnalyticsEvent(
-                dslContext,
                 DatabaseTestHelper.createTestAnalyticsEventData(
                     event = ProductAnalyticsEvent.NEAREST_RESTROOMS_RETURNED.value,
                     userId = userRecent,
@@ -105,7 +96,6 @@ class PublicAnalyticsApiTest : BaseIntegrationTest() {
                 )
             )
             DatabaseTestHelper.insertAnalyticsEvent(
-                dslContext,
                 DatabaseTestHelper.createTestAnalyticsEventData(
                     event = ProductAnalyticsEvent.RESTROOM_DETAILS_OPENED.value,
                     userId = userMonth,
@@ -113,7 +103,6 @@ class PublicAnalyticsApiTest : BaseIntegrationTest() {
                 )
             )
             DatabaseTestHelper.insertAnalyticsEvent(
-                dslContext,
                 DatabaseTestHelper.createTestAnalyticsEventData(
                     event = ProductAnalyticsEvent.NEAREST_RESTROOMS_RETURNED.value,
                     userId = userOld,
@@ -123,7 +112,6 @@ class PublicAnalyticsApiTest : BaseIntegrationTest() {
             )
             repeat(10) { index ->
                 DatabaseTestHelper.insertAnalyticsEvent(
-                    dslContext,
                     DatabaseTestHelper.createTestAnalyticsEventData(
                         event = ProductAnalyticsEvent.ROUTE_CLICKED.value,
                         userId = userToday,
@@ -132,7 +120,7 @@ class PublicAnalyticsApiTest : BaseIntegrationTest() {
                 )
             }
 
-            KtorTestApplication.withApp(dslContext) { client ->
+            SpringTestApplication.withApp { client ->
                 val response = client.get("/api/v1/public/analytics")
 
                 assertEquals(HttpStatus.OK, response.status)

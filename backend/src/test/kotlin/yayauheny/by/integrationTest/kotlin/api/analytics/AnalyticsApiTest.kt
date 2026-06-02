@@ -81,9 +81,8 @@ class AnalyticsApiTest : integration.base.BaseIntegrationTest() {
     @Test
     @DisplayName("GET /api/v1/restrooms/nearest stores successful nearest-restroom analytics")
     fun nearest_restrooms_success_stores_analytics() {
-        val env = DatabaseTestHelper.createTestEnvironment(dslContext)
+        val env = DatabaseTestHelper.createTestEnvironment()
         DatabaseTestHelper.insertTestRestroom(
-            dslContext,
             env.cityId,
             DatabaseTestHelper.createTestRestroomData(
                 name = "Analytics restroom",

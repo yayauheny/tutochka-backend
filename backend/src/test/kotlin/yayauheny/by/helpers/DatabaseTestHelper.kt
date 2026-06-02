@@ -220,10 +220,7 @@ object DatabaseTestHelper {
         createdAt: Instant = Instant.now()
     ) = TestAnalyticsEventData(event, userId, source, resultsCount, createdAt)
 
-    fun insertTestCountry(
-        dslContext: Any? = null,
-        data: TestCountryData = createTestCountryData()
-    ): UUID {
+    fun insertTestCountry(data: TestCountryData = createTestCountryData()): UUID {
         val entity =
             CountryEntity().apply {
                 code = data.code
@@ -234,7 +231,6 @@ object DatabaseTestHelper {
     }
 
     fun insertTestCity(
-        dslContext: Any? = null,
         countryId: UUID,
         data: TestCityData = createTestCityData()
     ): UUID {
@@ -250,7 +246,6 @@ object DatabaseTestHelper {
     }
 
     fun insertTestRestroom(
-        dslContext: Any? = null,
         cityId: UUID? = null,
         data: TestRestroomData = createTestRestroomData()
     ): UUID {
@@ -285,7 +280,6 @@ object DatabaseTestHelper {
     }
 
     fun insertTestBuilding(
-        dslContext: Any? = null,
         cityId: UUID,
         address: String,
         name: String? = null,
@@ -305,7 +299,6 @@ object DatabaseTestHelper {
     }
 
     fun insertStandaloneRestroom(
-        dslContext: Any? = null,
         cityId: UUID,
         name: String,
         address: String,
@@ -340,10 +333,7 @@ object DatabaseTestHelper {
         return restroomRepository.saveAndFlush(entity).id ?: error("Failed to insert standalone restroom")
     }
 
-    fun insertAnalyticsUser(
-        dslContext: Any? = null,
-        data: TestAnalyticsUserData = createTestAnalyticsUserData()
-    ): UUID {
+    fun insertAnalyticsUser(data: TestAnalyticsUserData = createTestAnalyticsUserData()): UUID {
         val userId =
             jdbcTemplate.queryForObject(
                 """
@@ -378,10 +368,7 @@ object DatabaseTestHelper {
         return userId
     }
 
-    fun insertAnalyticsEvent(
-        dslContext: Any? = null,
-        data: TestAnalyticsEventData
-    ): UUID {
+    fun insertAnalyticsEvent(data: TestAnalyticsEventData): UUID {
         return jdbcTemplate.queryForObject(
             """
             INSERT INTO analytics_events (event, created_at, user_id, source, results_count)
@@ -397,13 +384,13 @@ object DatabaseTestHelper {
         ) ?: error("Failed to insert analytics event")
     }
 
-    fun createTestEnvironment(dslContext: Any? = null): TestEnvironment {
-        val countryId = insertTestCountry(dslContext)
-        val cityId = insertTestCity(dslContext, countryId)
+    fun createTestEnvironment(): TestEnvironment {
+        val countryId = insertTestCountry()
+        val cityId = insertTestCity(countryId)
         return TestEnvironment(countryId, cityId)
     }
 
-    fun truncateAllTables(dslContext: Any? = null) {
+    fun truncateAllTables() {
         jdbcTemplate.execute(
             """
             TRUNCATE TABLE
