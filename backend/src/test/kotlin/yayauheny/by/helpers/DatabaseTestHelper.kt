@@ -124,6 +124,7 @@ data class TestAnalyticsEventData(
 )
 
 object DatabaseTestHelper {
+    private val excludedTableNames = setOf("databasechangelog", "databasechangeloglock", "spatial_ref_sys")
     private val geometryFactory = GeometryFactory()
 
     lateinit var jdbcTemplate: JdbcTemplate
@@ -391,22 +392,23 @@ object DatabaseTestHelper {
     }
 
     fun truncateAllTables() {
-        jdbcTemplate.execute(
-            """
-            TRUNCATE TABLE
-                analytics_events,
-                user_analytics,
-                users,
-                restroom_imports,
-                restrooms,
-                buildings,
-                subway_stations,
-                subway_lines,
-                cities,
-                countries
-            RESTART IDENTITY CASCADE
-            """
-        )
+        val tableNames =
+            jdbcTemplate.queryForList(
+                """
+                SELECT table_name
+                FROM information_schema.tables
+                WHERE table_schema = current_schema()
+                  AND table_type = 'BASE TABLE'
+                """.trimIndent(),
+                String::class.java
+            ).filterNot { excludedTableNames.contains(it) }
+
+        if (tableNames.isEmpty()) {
+            return
+        }
+
+        val joinedTableNames = tableNames.joinToString(", ") { "\"$it\"" }
+        jdbcTemplate.execute("TRUNCATE TABLE $joinedTableNames RESTART IDENTITY CASCADE")
     }
 
     data class TestEnvironment(

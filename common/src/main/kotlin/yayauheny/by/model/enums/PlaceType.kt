@@ -10,7 +10,7 @@ import kotlin.jvm.JvmStatic
 
 
 enum class PlaceType(
-    @get:JsonValue val code: String,
+    val code: String,
     val ruName: String,
     val enName: String
 ) {
@@ -64,6 +64,9 @@ enum class PlaceType(
         @JsonCreator(mode = JsonCreator.Mode.DELEGATING)
         fun fromCode(value: String?): PlaceType = entries.find { it.code == value } ?: OTHER
     }
+
+    @JsonValue
+    fun toJsonValue(): String = code
 
     fun getLocalizedName(locale: String): String = if (locale.equals("ru", ignoreCase = true)) ruName else enName
 }

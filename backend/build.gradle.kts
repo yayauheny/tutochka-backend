@@ -64,12 +64,14 @@ kapt {
 
 val testsParallel = providers.gradleProperty("tests.parallel").map(String::toBoolean).orElse(false)
 val testsTagIntegration = providers.gradleProperty("tests.tags.integration").get()
+val testProfile = providers.gradleProperty("tests.spring.profile").get()
 
 tasks.test {
     useJUnitPlatform {
         excludeTags(testsTagIntegration)
     }
     systemProperty("junit.jupiter.execution.parallel.enabled", testsParallel)
+    systemProperty("spring.profiles.active", testProfile)
 
     testLogging {
         events("failed", "skipped")
@@ -95,6 +97,7 @@ tasks.register<Test>("integrationTest") {
     testClassesDirs = sourceSets.test.get().output.classesDirs
     classpath = sourceSets.test.get().runtimeClasspath
     systemProperty("junit.jupiter.execution.parallel.enabled", "false")
+    systemProperty("spring.profiles.active", testProfile)
     shouldRunAfter("test")
 
     testLogging {
@@ -109,7 +112,7 @@ tasks.register<Test>("integrationTest") {
 }
 
 tasks.check {
-    dependsOn("integrationTest", "jacocoTestReport")
+    dependsOn("integrationTest", "jacocoTestCoverageVerification")
 }
 
 

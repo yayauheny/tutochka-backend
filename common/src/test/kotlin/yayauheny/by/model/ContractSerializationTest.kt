@@ -24,7 +24,7 @@ import yayauheny.by.model.subway.SubwayLineResponseDto
 import yayauheny.by.model.subway.SubwayStationResponseDto
 
 class ContractSerializationTest {
-    private val objectMapper = jacksonObjectMapper()
+    private val objectMapper = jacksonObjectMapper().findAndRegisterModules()
 
     @Test
     fun restroomResponseDto_roundTrips_with_json_fields() {
@@ -124,7 +124,7 @@ class ContractSerializationTest {
         val encoded = objectMapper.writeValueAsString(PlaceType.PUBLIC)
 
         assertEquals("\"public_toilet\"", encoded)
-        assertEquals(PlaceType.PUBLIC, objectMapper.readValue(encoded))
+        assertEquals(PlaceType.PUBLIC, objectMapper.readValue<PlaceType>(encoded))
         assertEquals(PlaceType.OTHER, PlaceType.fromCode("missing"))
     }
 
@@ -133,7 +133,7 @@ class ContractSerializationTest {
         val encoded = objectMapper.writeValueAsString(AcquisitionTag.WEBSITE)
 
         assertEquals("\"website\"", encoded)
-        assertEquals(AcquisitionTag.WEBSITE, objectMapper.readValue(encoded))
+        assertEquals(AcquisitionTag.WEBSITE, objectMapper.readValue<AcquisitionTag>(encoded))
         assertEquals(AcquisitionTag.OTHER, AcquisitionTag.fromValue("other"))
     }
 
