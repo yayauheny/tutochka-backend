@@ -23,6 +23,7 @@ import yayauheny.by.bot.keyboard.ReplyKeyboardFactory
 import yayauheny.by.bot.messages.Messages
 import yayauheny.by.bot.service.FormatterService
 import yayauheny.by.bot.service.UserService
+import yayauheny.by.bot.session.UserSession
 import yayauheny.by.model.analytics.AnalyticsSource
 import yayauheny.by.model.dto.Coordinates
 import yayauheny.by.model.enums.FeeType
@@ -66,7 +67,8 @@ class LocationMessageHandlerTest {
 
     @BeforeEach
     fun setUp() {
-        `when`(userService.getSession(456L)).thenReturn(java.util.Optional.empty())
+        `when`(userService.saveLocation(456L, 53.9, 27.56))
+            .thenReturn(UserSession.withLocation(UserSession.Location(53.9, 27.56), UserService.DEFAULT_RADIUS))
     }
 
     @Test
@@ -127,6 +129,24 @@ class LocationMessageHandlerTest {
         verify(userService, never()).saveLocation(456L, 53.9, 27.56)
         verify(searchService, never()).findNearestRestrooms(53.9, 27.56, 5, UserService.DEFAULT_RADIUS)
         verify(backListSnapshotCache, never()).store(123L, 456L, UserService.DEFAULT_RADIUS, emptyList())
+    }
+
+    @Test
+    fun `handle uses stored session radius after user expanded search`() {
+        val expandedRadius = 2000
+        val expandedSession = UserSession.withLocation(UserSession.Location(53.9, 27.56), expandedRadius)
+        val results = listOf(sampleItem("Test restroom"))
+        `when`(userService.saveLocation(456L, 53.9, 27.56)).thenReturn(expandedSession)
+        `when`(searchService.findNearestRestrooms(53.9, 27.56, 5, expandedRadius))
+            .thenReturn(results)
+        val expectedKeyboard = inlineKeyboard.toiletList(results)
+
+        handler.handle(Update(), ctx)
+
+        verify(userService).saveLocation(456L, 53.9, 27.56)
+        verify(searchService).findNearestRestrooms(53.9, 27.56, 5, expandedRadius)
+        verify(sender).sendText(123L, formatterService.toiletsFound(1), expectedKeyboard)
+        verify(backListSnapshotCache).store(123L, 456L, expandedRadius, results)
     }
 
     @Test

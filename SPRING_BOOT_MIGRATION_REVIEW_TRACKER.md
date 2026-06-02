@@ -528,6 +528,7 @@ backend/src/test/kotlin/yayauheny/by/integrationTest/kotlin/telegram/TelegramWeb
 ### Notes
 
 - Findings:
+  `backend/src/main/kotlin/yayauheny/by/bot/handler/messages/LocationMessageHandler.kt`, `backend/src/main/kotlin/yayauheny/by/bot/handler/callbacks/RadiusCallback.kt`, and `backend/src/main/kotlin/yayauheny/by/bot/service/UserService.kt` carried a broken session contract: the bot stored a per-user search radius in `UserSession`, but never updated it on radius callbacks and never used it for later location searches. After a user expanded to `2000m`, the next shared location silently fell back to `500m`. Fixed by persisting radius changes in `UserService`, updating the session in `RadiusCallback`, and reading the saved radius in `LocationMessageHandler`.
 - Questions:
 
 ## 9. Analytics Subsystem

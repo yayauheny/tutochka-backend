@@ -71,6 +71,7 @@ class RadiusCallbackTest {
         val ctx = UpdateContext.from(update)
         val session = UserSession.withLocation(UserSession.Location(lat, lon), UserService.DEFAULT_RADIUS)
         `when`(userService.getSession(userId)).thenReturn(Optional.of(session))
+        `when`(userService.updateRadius(userId, radius)).thenReturn(session.updateRadius(radius))
         val results = listOf(sampleItem("Test restroom"))
         val keyboard = mock(org.telegram.telegrambots.meta.api.objects.replykeyboard.InlineKeyboardMarkup::class.java)
         `when`(searchService.findNearestRestrooms(lat, lon, 5, radius)).thenReturn(results)
@@ -80,6 +81,7 @@ class RadiusCallbackTest {
         handler.handle(update, ctx)
 
         verify(userService).getSession(userId)
+        verify(userService).updateRadius(userId, radius)
         verify(searchService).findNearestRestrooms(lat, lon, 5, radius)
         verify(sender).editOrReply(ctx, "Найдено 1 туалетов поблизости:", keyboard)
         verify(backListSnapshotCache).store(chatId, userId, radius, results)

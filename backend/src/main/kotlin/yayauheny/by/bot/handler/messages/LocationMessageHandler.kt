@@ -46,13 +46,14 @@ class LocationMessageHandler(
             return
         }
 
-        userService.saveLocation(ctx.userId, latitude, longitude)
+        val session = userService.saveLocation(ctx.userId, latitude, longitude)
+        val radius = session.radius ?: UserService.DEFAULT_RADIUS
 
         val results = searchService.findNearestRestrooms(
             latitude = latitude,
             longitude = longitude,
             limit = 5,
-            distanceMeters = UserService.DEFAULT_RADIUS
+            distanceMeters = radius
         )
 
         // Track search analytics
@@ -75,19 +76,19 @@ class LocationMessageHandler(
                 "Handled location search: chatId={}, userId={}, radiusMeters={}, resultCount=0, outcome=no_results",
                 ctx.chatId,
                 ctx.userId,
-                UserService.DEFAULT_RADIUS
+                radius
             )
             return
         }
 
         val message = formatterService.toiletsFound(results.size)
         sender.sendText(ctx.chatId, message, inlineKeyboard.toiletList(results))
-        backListSnapshotCache.store(ctx.chatId, ctx.userId, UserService.DEFAULT_RADIUS, results)
+        backListSnapshotCache.store(ctx.chatId, ctx.userId, radius, results)
         log.info(
             "Handled location search: chatId={}, userId={}, radiusMeters={}, resultCount={}, outcome=results_sent",
             ctx.chatId,
             ctx.userId,
-            UserService.DEFAULT_RADIUS,
+            radius,
             results.size
         )
     }

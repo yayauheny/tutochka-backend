@@ -80,6 +80,7 @@ class RadiusCallback(
             }
 
             val location = sessionOpt.get().location!!
+            userService.updateRadius(ctx.userId, radius)
             val results = searchService.findNearestRestrooms(
                 latitude = location.latitude,
                 longitude = location.longitude,
