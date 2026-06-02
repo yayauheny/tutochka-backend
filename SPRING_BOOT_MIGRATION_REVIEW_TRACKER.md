@@ -347,6 +347,7 @@ backend/src/test/kotlin/yayauheny/by/integrationTest/kotlin/api/restrooms/Restro
 ### Notes
 
 - Findings:
+  `backend/src/main/kotlin/yayauheny/by/entity/AccessibilityTypeJpaConverter.kt` normalized incoming database values for matching, but still called `AccessibilityType.valueOf(...)` on the original raw string. That meant lowercase or padded values such as `"wheelchair"` and `" wheelchair "` deserialized to `UNKNOWN` instead of the correct enum, even though the converter was clearly intended to tolerate normalization. Fixed by looking up the enum from the normalized value and covering both normalized and legacy `"disabled"` inputs with a unit test.
 - Questions:
 
 ## 7. Importing Subsystem
