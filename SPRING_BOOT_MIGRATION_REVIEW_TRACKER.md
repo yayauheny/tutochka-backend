@@ -640,6 +640,7 @@ backend/src/test/kotlin/yayauheny/by/testsupport/TestEncryptionKeyset.kt
 ### Notes
 
 - Findings:
+  `backend/src/main/kotlin/yayauheny/by/common/config/RequestLoggingConfig.kt` enabled global query-string logging through `CommonsRequestLoggingFilter`. In this backend that would routinely write user location coordinates and analytics-related request parameters into application logs, which is a privacy regression rather than just noisy logging. Fixed by disabling query-string logging while keeping basic client-info request tracing.
 - Questions:
 
 ## 11. Database Migrations and Runtime Resources

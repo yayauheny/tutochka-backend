@@ -10,7 +10,7 @@ class RequestLoggingConfig {
     fun requestLoggingFilter(): CommonsRequestLoggingFilter =
         CommonsRequestLoggingFilter().apply {
             setIncludeClientInfo(true)
-            setIncludeQueryString(true)
+            setIncludeQueryString(false)
             setIncludeHeaders(false)
             setIncludePayload(false)
             setAfterMessagePrefix("HTTP request: ")
