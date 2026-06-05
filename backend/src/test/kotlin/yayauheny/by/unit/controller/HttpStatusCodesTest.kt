@@ -203,6 +203,7 @@ class HttpStatusCodesTest : RoutingTestBase() {
                 val response = testGet("/api/v1/cities")
 
                 assertEquals(HttpStatus.SERVICE_UNAVAILABLE, response.status)
+                assertEquals("60", response.header("Retry-After"))
             }
         }
     }

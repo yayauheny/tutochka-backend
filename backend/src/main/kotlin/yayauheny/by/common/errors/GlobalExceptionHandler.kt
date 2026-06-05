@@ -1,6 +1,7 @@
 package yayauheny.by.common.errors
 
 import org.slf4j.LoggerFactory
+import org.springframework.http.HttpHeaders
 import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
 import org.springframework.web.HttpMediaTypeNotSupportedException
@@ -49,7 +50,11 @@ class GlobalExceptionHandler(
             path = request.requestURI,
             errors = fieldErrors
         )
-        return ResponseEntity.status(status).body(response)
+        val builder = ResponseEntity.status(status)
+        if (e is ServiceUnavailableException && e.retryAfter != null) {
+            builder.header(HttpHeaders.RETRY_AFTER, e.retryAfter.toString())
+        }
+        return builder.body(response)
     }
 
     @ExceptionHandler(EntityNotFoundException::class)

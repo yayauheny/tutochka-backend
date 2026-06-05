@@ -203,6 +203,18 @@ class CityControllerTest : RoutingTestBase() {
 
             verifyNoInteractions(cityService)
         }
+
+        @Test
+        @DisplayName("GIVEN blank name parameter WHEN GET cities search THEN return 400 and skip service")
+        fun search_cities_with_blank_name_returns_400_and_skips_service() {
+            withRoutingApp {
+                val response = testGet("/api/v1/cities/search", mapOf("name" to "   "))
+
+                assertEquals(HttpStatus.BAD_REQUEST, response.status)
+            }
+
+            verifyNoInteractions(cityService)
+        }
     }
 
     @Nested

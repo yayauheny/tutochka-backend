@@ -2,7 +2,6 @@ tutochka.by, www.tutochka.by {
     @backend_routes {
         path /api /api/*
         path /health /health/*
-        path /metrics
         path /actuator/prometheus
     }
 

@@ -9,6 +9,7 @@ import org.springframework.http.ResponseEntity
 import org.springframework.web.bind.annotation.*
 import org.springframework.validation.annotation.Validated
 import yayauheny.by.common.config.ApiProperties
+import yayauheny.by.common.errors.BadRequestException
 import yayauheny.by.common.errors.NotFoundException
 import yayauheny.by.common.query.PageResponse
 import yayauheny.by.model.city.CityFilter
@@ -67,6 +68,9 @@ class CityController(
         request: HttpServletRequest
     ): ResponseEntity<PageResponse<CityResponseDto>> {
         val validName = name.trim()
+        if (validName.isEmpty()) {
+            throw BadRequestException("Query parameter 'name' must not be blank")
+        }
         val pagination = request.toPaginationRequest(
             defaultPage = apiProperties.defaults.page,
             defaultSize = apiProperties.defaults.pageSize,

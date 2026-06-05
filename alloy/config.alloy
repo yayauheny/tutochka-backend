@@ -16,7 +16,7 @@ prometheus.scrape "backend" {
 
   targets = [{
     __address__      = coalesce(sys.env("BACKEND_METRICS_TARGET"), "backend:" + coalesce(sys.env("BACKEND_PORT"), "8080")),
-    __metrics_path__ = "/metrics",
+    __metrics_path__ = "/actuator/prometheus",
   }]
 
   forward_to = [prometheus.remote_write.cloud.receiver]
