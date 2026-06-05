@@ -5,6 +5,7 @@ import org.mockito.Mockito.doThrow
 import org.mockito.Mockito.mock
 import org.mockito.Mockito.never
 import org.mockito.Mockito.verify
+import org.mockito.Mockito.verifyNoInteractions
 import org.telegram.telegrambots.meta.api.objects.CallbackQuery
 import org.telegram.telegrambots.meta.api.objects.MessageEntity
 import org.telegram.telegrambots.meta.api.objects.Update
@@ -97,6 +98,15 @@ class UpdateRouterTest {
         verify(sender).safeReply(UpdateContext.from(update), Messages.UNKNOWN_MESSAGE)
         verify(commandHandler, never()).handle(update, UpdateContext.from(update))
         verify(messageHandler, never()).handle(update, UpdateContext.from(update))
+    }
+
+    @Test
+    fun `ignores unsupported update without message or callback`() {
+        val update = Update()
+
+        router.route(update)
+
+        verifyNoInteractions(sender, commandHandler, firstCallbackHandler, secondCallbackHandler, messageHandler)
     }
 
     @Test

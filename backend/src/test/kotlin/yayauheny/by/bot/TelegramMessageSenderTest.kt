@@ -118,4 +118,33 @@ class TelegramMessageSenderTest {
             .isInstanceOf(IllegalStateException::class.java)
             .hasMessageContaining("Failed to send message to chat 42")
     }
+
+    @Test
+    fun `safe reply skips invalid chat id`() {
+        val ctx = UpdateContext(
+            chatId = 0L,
+            userId = 7L,
+            username = "tester",
+            text = null,
+            hasLocation = false,
+            latitude = null,
+            longitude = null,
+            isCallback = false,
+            callbackData = null,
+            messageId = null
+        )
+
+        sender.safeReply(ctx, "Hello")
+
+        verify(exactly = 0) { telegramClient.execute(any<SendMessage>()) }
+    }
+
+    @Test
+    fun `rejects invalid chat id on send`() {
+        assertThatThrownBy {
+            sender.sendText(0L, "Hello")
+        }
+            .isInstanceOf(IllegalArgumentException::class.java)
+            .hasMessageContaining("Chat id must be positive")
+    }
 }

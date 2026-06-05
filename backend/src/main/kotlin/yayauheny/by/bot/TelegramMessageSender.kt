@@ -1,5 +1,6 @@
 package yayauheny.by.bot
 
+import org.slf4j.LoggerFactory
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty
 import org.springframework.stereotype.Component
 import org.telegram.telegrambots.meta.api.methods.AnswerCallbackQuery
@@ -16,6 +17,7 @@ import yayauheny.by.bot.handler.UpdateContext
 class TelegramMessageSender(
     private val telegramClient: TelegramClient
 ) : MessageSender {
+    private val log = LoggerFactory.getLogger(TelegramMessageSender::class.java)
 
     override fun sendMessage(message: SendMessage) {
         try {
@@ -55,6 +57,8 @@ class TelegramMessageSender(
         replyKeyboard: ReplyKeyboardMarkup?,
         inlineKeyboard: InlineKeyboardMarkup?
     ) {
+        require(chatId > 0) { "Chat id must be positive" }
+
         val message = SendMessage.builder()
             .chatId(chatId.toString())
             .text(text)
@@ -114,6 +118,10 @@ class TelegramMessageSender(
     }
 
     override fun safeReply(ctx: UpdateContext, errorMessage: String) {
+        if (ctx.chatId <= 0) {
+            log.warn("Skipping safe reply for update without chat context: userId={}", ctx.userId)
+            return
+        }
         sendText(ctx.chatId, errorMessage)
     }
 

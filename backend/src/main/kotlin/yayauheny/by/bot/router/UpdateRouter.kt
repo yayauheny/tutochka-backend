@@ -37,6 +37,10 @@ class UpdateRouter(
             return
         }
 
+        if (!update.hasMessage()) {
+            return
+        }
+
         handleMessage(update, ctx)
     }
 
