@@ -1,6 +1,6 @@
 package yayauheny.by.bot
 
-import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty
 import org.springframework.stereotype.Component
 import org.telegram.telegrambots.meta.api.methods.send.SendMessage
 import org.telegram.telegrambots.meta.api.methods.updatingmessages.EditMessageText
@@ -9,7 +9,7 @@ import org.telegram.telegrambots.meta.api.objects.replykeyboard.ReplyKeyboardMar
 import yayauheny.by.bot.handler.UpdateContext
 
 @Component
-@ConditionalOnMissingBean(MessageSender::class)
+@ConditionalOnProperty(prefix = "telegram.bot", name = ["enabled"], havingValue = "false")
 class NoOpMessageSender : MessageSender {
     override fun sendMessage(message: SendMessage) = Unit
 
