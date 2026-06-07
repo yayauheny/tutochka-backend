@@ -1,6 +1,8 @@
 package yayauheny.by.bot.handler.callbacks
 
+import java.time.Clock
 import java.time.Instant
+import java.time.ZoneOffset
 import java.util.UUID
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.BeforeEach
@@ -22,6 +24,7 @@ import yayauheny.by.bot.handler.UpdateContext
 import yayauheny.by.bot.keyboard.InlineKeyboardFactory
 import yayauheny.by.bot.messages.Messages
 import yayauheny.by.bot.service.FormatterService
+import yayauheny.by.bot.service.RestroomAvailabilityResolver
 import yayauheny.by.model.analytics.AnalyticsEventCommand
 import yayauheny.by.model.analytics.AnalyticsSource
 import yayauheny.by.model.analytics.ProductAnalyticsEvent
@@ -39,12 +42,16 @@ import yayauheny.by.model.enums.RestroomStatus
 import yayauheny.by.model.subway.SubwayLineResponseDto
 import yayauheny.by.model.subway.SubwayStationResponseDto
 import yayauheny.by.service.RestroomService
+import yayauheny.by.service.import.schedule.OsmScheduleAdapter
+import yayauheny.by.service.import.schedule.ScheduleMappingService
+import yayauheny.by.service.import.schedule.TwoGisScheduleAdapter
+import yayauheny.by.service.import.schedule.YandexScheduleAdapter
 
 class ToiletDetailCallbackTest {
     private val sender = mock(MessageSender::class.java)
     private val searchService = mock(RestroomService::class.java)
     private val analyticsService = mock(AnalyticsService::class.java)
-    private val formatterService = FormatterService()
+    private val formatterService = createFormatterService()
     private val inlineKeyboard = InlineKeyboardFactory(formatterService)
     private val handler = ToiletDetailCallback(sender, searchService, analyticsService, formatterService, inlineKeyboard)
 
@@ -182,5 +189,13 @@ class ToiletDetailCallbackTest {
                         )
                 )
         )
+    }
+
+    private fun createFormatterService(): FormatterService {
+        val resolver = RestroomAvailabilityResolver(
+            ScheduleMappingService(listOf(TwoGisScheduleAdapter(), YandexScheduleAdapter(), OsmScheduleAdapter())),
+            Clock.fixed(Instant.parse("2025-01-01T00:00:00Z"), ZoneOffset.UTC)
+        )
+        return FormatterService(resolver)
     }
 }

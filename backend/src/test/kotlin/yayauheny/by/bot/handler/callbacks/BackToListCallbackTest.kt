@@ -4,6 +4,7 @@ import io.micrometer.core.instrument.simple.SimpleMeterRegistry
 import java.time.Clock
 import java.time.Duration
 import java.time.Instant
+import java.time.ZoneOffset
 import java.util.UUID
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.BeforeEach
@@ -26,14 +27,19 @@ import yayauheny.by.bot.keyboard.ReplyKeyboardFactory
 import yayauheny.by.bot.messages.Messages
 import yayauheny.by.bot.metrics.BotMetrics
 import yayauheny.by.bot.service.FormatterService
+import yayauheny.by.bot.service.RestroomAvailabilityResolver
 import yayauheny.by.model.dto.Coordinates
 import yayauheny.by.model.enums.FeeType
 import yayauheny.by.model.restroom.NearestRestroomSlimDto
+import yayauheny.by.service.import.schedule.OsmScheduleAdapter
+import yayauheny.by.service.import.schedule.ScheduleMappingService
+import yayauheny.by.service.import.schedule.TwoGisScheduleAdapter
+import yayauheny.by.service.import.schedule.YandexScheduleAdapter
 
 class BackToListCallbackTest {
     private val sender = mock(MessageSender::class.java)
     private val replyKeyboard = mock(ReplyKeyboardFactory::class.java)
-    private val formatterService = FormatterService()
+    private val formatterService = createFormatterService()
     private val inlineKeyboardFactory = InlineKeyboardFactory(formatterService)
     private lateinit var cache: BackListSnapshotCache
     private lateinit var handler: BackToListCallback
@@ -109,4 +115,12 @@ class BackToListCallbackTest {
             Coordinates(53.9, 27.56),
             Coordinates(53.9001, 27.5601)
         )
+
+    private fun createFormatterService(): FormatterService {
+        val resolver = RestroomAvailabilityResolver(
+            ScheduleMappingService(listOf(TwoGisScheduleAdapter(), YandexScheduleAdapter(), OsmScheduleAdapter())),
+            Clock.fixed(Instant.parse("2025-01-01T00:00:00Z"), ZoneOffset.UTC)
+        )
+        return FormatterService(resolver)
+    }
 }

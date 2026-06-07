@@ -1,10 +1,13 @@
 package yayauheny.by.bot.keyboard
 
+import java.time.Clock
 import java.time.Instant
+import java.time.ZoneOffset
 import java.util.UUID
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
 import yayauheny.by.bot.service.FormatterService
+import yayauheny.by.bot.service.RestroomAvailabilityResolver
 import yayauheny.by.bot.util.Links
 import yayauheny.by.model.building.BuildingResponseDto
 import yayauheny.by.model.dto.Coordinates
@@ -19,9 +22,13 @@ import yayauheny.by.model.restroom.RestroomResponseDto
 import yayauheny.by.model.enums.RestroomStatus
 import yayauheny.by.model.subway.SubwayLineResponseDto
 import yayauheny.by.model.subway.SubwayStationResponseDto
+import yayauheny.by.service.import.schedule.OsmScheduleAdapter
+import yayauheny.by.service.import.schedule.ScheduleMappingService
+import yayauheny.by.service.import.schedule.TwoGisScheduleAdapter
+import yayauheny.by.service.import.schedule.YandexScheduleAdapter
 
 class InlineKeyboardFactoryTest {
-    private val factory = InlineKeyboardFactory(FormatterService())
+    private val factory = InlineKeyboardFactory(createFormatterService())
 
     @Test
     fun `toiletDetail renders url buttons with same layout`() {
@@ -125,5 +132,13 @@ class InlineKeyboardFactoryTest {
                         )
                 )
         )
+    }
+
+    private fun createFormatterService(): FormatterService {
+        val resolver = RestroomAvailabilityResolver(
+            ScheduleMappingService(listOf(TwoGisScheduleAdapter(), YandexScheduleAdapter(), OsmScheduleAdapter())),
+            Clock.fixed(Instant.parse("2025-01-01T00:00:00Z"), ZoneOffset.UTC)
+        )
+        return FormatterService(resolver)
     }
 }

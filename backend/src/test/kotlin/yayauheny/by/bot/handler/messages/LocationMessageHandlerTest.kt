@@ -1,5 +1,8 @@
 package yayauheny.by.bot.handler.messages
 
+import java.time.Clock
+import java.time.Instant
+import java.time.ZoneOffset
 import java.util.UUID
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
@@ -19,12 +22,17 @@ import yayauheny.by.bot.keyboard.InlineKeyboardFactory
 import yayauheny.by.common.config.TelegramBotSearchProperties
 import yayauheny.by.bot.messages.Messages
 import yayauheny.by.bot.service.FormatterService
+import yayauheny.by.bot.service.RestroomAvailabilityResolver
 import yayauheny.by.bot.service.UserService
 import yayauheny.by.model.analytics.AnalyticsSource
 import yayauheny.by.model.dto.Coordinates
 import yayauheny.by.model.enums.FeeType
 import yayauheny.by.model.restroom.NearestRestroomSlimDto
 import yayauheny.by.service.RestroomService
+import yayauheny.by.service.import.schedule.OsmScheduleAdapter
+import yayauheny.by.service.import.schedule.ScheduleMappingService
+import yayauheny.by.service.import.schedule.TwoGisScheduleAdapter
+import yayauheny.by.service.import.schedule.YandexScheduleAdapter
 
 class LocationMessageHandlerTest {
     private val sender = mock(MessageSender::class.java)
@@ -32,7 +40,7 @@ class LocationMessageHandlerTest {
     private val analyticsService = mock(AnalyticsService::class.java)
     private val userService = mock(UserService::class.java)
     private val backListSnapshotCache = mock(BackListSnapshotCache::class.java)
-    private val formatterService = FormatterService()
+    private val formatterService = createFormatterService()
     private val inlineKeyboard = InlineKeyboardFactory(formatterService)
     private val botSearchProperties = TelegramBotSearchProperties(defaultRadiusMeters = 15000, nearestLimit = 5)
     private val handler =
@@ -140,4 +148,12 @@ class LocationMessageHandlerTest {
             Coordinates(53.9, 27.56),
             Coordinates(53.9001, 27.5601)
         )
+
+    private fun createFormatterService(): FormatterService {
+        val resolver = RestroomAvailabilityResolver(
+            ScheduleMappingService(listOf(TwoGisScheduleAdapter(), YandexScheduleAdapter(), OsmScheduleAdapter())),
+            Clock.fixed(Instant.parse("2025-01-01T00:00:00Z"), ZoneOffset.UTC)
+        )
+        return FormatterService(resolver)
+    }
 }

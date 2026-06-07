@@ -3,6 +3,7 @@ package yayauheny.by.service.import.schedule
 import com.fasterxml.jackson.databind.JsonNode
 import java.time.LocalTime
 import java.util.EnumMap
+import org.springframework.stereotype.Component
 import yayauheny.by.model.enums.ImportProvider
 import yayauheny.by.model.schedule.DaySchedule
 import yayauheny.by.model.schedule.Schedule
@@ -12,6 +13,7 @@ import yayauheny.by.model.schedule.WorkingInterval
 /**
  * Adapter for converting 2ГИС schedule format to our canonical Schedule format
  */
+@Component
 class TwoGisScheduleAdapter : ScheduleAdapter {
     override fun supports(provider: ImportProvider): Boolean {
         return provider == ImportProvider.TWO_GIS

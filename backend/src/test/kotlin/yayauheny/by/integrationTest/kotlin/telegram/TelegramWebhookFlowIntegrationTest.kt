@@ -34,8 +34,9 @@ import yayauheny.by.bot.handler.UpdateContext
 import yayauheny.by.bot.messages.Messages
 import yayauheny.by.helpers.DatabaseTestHelper
 import yayauheny.by.model.analytics.ProductAnalyticsEvent
-import yayauheny.by.model.enums.RestroomStatus
 import yayauheny.by.model.enums.FeeType
+import yayauheny.by.model.enums.ImportProvider
+import yayauheny.by.model.enums.RestroomStatus
 import java.util.UUID
 
 @Tag("integration")
@@ -93,8 +94,22 @@ class TelegramWebhookFlowIntegrationTest : BaseIntegrationTest() {
                 status = RestroomStatus.ACTIVE,
                 buildingId = buildingId,
                 lat = 53.9001,
-                lon = 27.5601
+                lon = 27.5601,
+                originProvider = ImportProvider.TWO_GIS
             )
+        )
+        DatabaseTestHelper.jdbcTemplate.update(
+            """
+            UPDATE restrooms
+            SET work_time = ?::jsonb
+            WHERE id = ?
+            """.trimIndent(),
+            """
+            {
+              "is_24x7": true
+            }
+            """.trimIndent(),
+            nearestRestroomId
         )
 
         secondNearestRestroomId = DatabaseTestHelper.insertTestRestroom(
@@ -277,6 +292,9 @@ class TelegramWebhookFlowIntegrationTest : BaseIntegrationTest() {
         val editCall = messageSender.editOrReplyCalls.single()
         assertThat(editCall.text).contains("Test Mall")
         assertThat(editCall.text).contains("Lenina 1")
+        assertThat(editCall.text).contains("🟢 Туалет открыт сейчас")
+        assertThat(editCall.text).contains("<b>Время работы:</b>")
+        assertThat(editCall.text).contains("Круглосуточно")
 
         val user = userRepository.findByTgUserId(encryptionService.encrypt("300"))!!
         val analytics = userAnalyticsRepository.findById(user.id!!).get()
@@ -326,9 +344,9 @@ class TelegramWebhookFlowIntegrationTest : BaseIntegrationTest() {
         val update = Update()
         performWebhook(update)
 
-        val call = messageSender.safeReplyCalls.single()
-        assertThat(call.errorMessage).isEqualTo(Messages.UNKNOWN_MESSAGE)
-
+        assertThat(messageSender.safeReplyCalls).isEmpty()
+        assertThat(messageSender.sendTextCalls).isEmpty()
+        assertThat(messageSender.editOrReplyCalls).isEmpty()
         val count = userRepository.count()
         assertThat(count).isEqualTo(0)
     }

@@ -1,12 +1,14 @@
 package yayauheny.by.service.import.schedule
 
 import com.fasterxml.jackson.databind.JsonNode
+import org.springframework.stereotype.Service
 import yayauheny.by.model.enums.ImportProvider
 import yayauheny.by.model.schedule.Schedule
 
 /**
  * Service for mapping provider-specific schedules to our canonical Schedule format
  */
+@Service
 class ScheduleMappingService(
     private val adapters: List<ScheduleAdapter>
 ) {

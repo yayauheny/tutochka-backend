@@ -1,6 +1,8 @@
 package yayauheny.by.bot.service
 
+import java.time.Clock
 import java.time.Instant
+import java.time.ZoneOffset
 import java.util.UUID
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
@@ -9,18 +11,22 @@ import yayauheny.by.model.dto.Coordinates
 import yayauheny.by.model.enums.AccessibilityType
 import yayauheny.by.model.enums.DataSourceType
 import yayauheny.by.model.enums.FeeType
-import yayauheny.by.model.enums.GenderType
 import yayauheny.by.model.enums.ImportProvider
 import yayauheny.by.model.enums.LocationType
 import yayauheny.by.model.enums.PlaceType
-import yayauheny.by.model.restroom.RestroomResponseDto
 import yayauheny.by.model.enums.RestroomStatus
+import yayauheny.by.model.restroom.NearestRestroomSlimDto
+import yayauheny.by.model.restroom.RestroomResponseDto
 import yayauheny.by.model.subway.SubwayLineResponseDto
 import yayauheny.by.model.subway.SubwayStationResponseDto
+import yayauheny.by.service.import.schedule.OsmScheduleAdapter
+import yayauheny.by.service.import.schedule.ScheduleMappingService
+import yayauheny.by.service.import.schedule.TwoGisScheduleAdapter
+import yayauheny.by.service.import.schedule.YandexScheduleAdapter
 
 class FormatterServiceTest {
-    private val formatterService = FormatterService()
-    private val now = Instant.parse("2025-01-01T00:00:00Z")
+    private val now = Instant.parse("2024-12-30T09:00:00Z")
+    private val formatterService = formatterServiceAt(now)
 
     @Test
     fun `toiletDetail escapes html in dynamic content`() {
@@ -73,16 +79,17 @@ class FormatterServiceTest {
         val restroom = sampleRestroom().copy(
             workTime = null,
             inheritBuildingSchedule = true,
-            building = sampleBuilding(workTime = mapOf("is_24x7" to true))
+            building = sampleBuilding(workTime = sampleTwoGisSchedule())
         )
 
         val formatted = formatterService.toiletDetail(restroom, null)
 
-        assertThat(formatted).contains("Круглосуточно")
+        assertThat(formatted).contains("🟢 Туалет открыт сейчас")
+        assertThat(formatted).contains("Пн: 09:00-18:00")
     }
 
     @Test
-    fun `toiletDetail shows neutral tags when no work schedule is available`() {
+    fun `toiletDetail shows yellow unknown text when no work schedule is available`() {
         val restroom = sampleRestroom().copy(
             workTime = null,
             inheritBuildingSchedule = false,
@@ -92,6 +99,8 @@ class FormatterServiceTest {
         val formatted = formatterService.toiletDetail(restroom, null)
 
         assertThat(formatted).contains("<b>—</b>")
+        assertThat(formatted).contains("🟡 Время работы неизвестно")
+        assertThat(formatted).contains("Время работы не указано")
         assertThat(formatted).doesNotContain("Круглосуточно")
     }
 
@@ -109,28 +118,37 @@ class FormatterServiceTest {
     }
 
     @Test
-    fun `toiletDetail renders exact compact template for representative restroom`() {
-        val restroom = sampleRestroom().copy(
-            feeType = FeeType.PAID,
-            accessibilityType = AccessibilityType.WHEELCHAIR
+    fun `toiletDetail shows green status for open schedule`() {
+        val restroom = sampleRestroom().copy(workTime = sampleTwoGisSchedule())
+
+        val formatted = formatterService.toiletDetail(restroom, null)
+
+        assertThat(formatted).contains("🟢 Туалет открыт сейчас")
+        assertThat(formatted).contains("<b>Время работы:</b>")
+        assertThat(formatted).contains("Пн: 09:00-18:00")
+    }
+
+    @Test
+    fun `toiletDetail shows red status for closed schedule`() {
+        val closedFormatter = formatterServiceAt(Instant.parse("2024-12-30T20:00:00Z"))
+        val restroom = sampleRestroom().copy(workTime = sampleTwoGisSchedule())
+
+        val formatted = closedFormatter.toiletDetail(restroom, null)
+
+        assertThat(formatted).contains("🔴 Туалет закрыт")
+    }
+
+    @Test
+    fun `toiletDetail shows yellow unknown text for unsupported osm schedule`() {
+        val restroom = sampleRestroom(
+            originProvider = ImportProvider.OSM,
+            workTime = mapOf("opening_hours" to "Mo-Fr 09:00-18:00")
         )
 
         val formatted = formatterService.toiletDetail(restroom, null)
 
-        assertThat(formatted).isEqualTo(
-            """
-            <b>&lt;b&gt;Bad&lt;/b&gt;</b>
-                    
-                    📍 Main &lt;script&gt;alert(1)&lt;/script&gt; Street
-                    
-                    <b>Платно • МГН</b>
-                    
-                    <b>Тип:</b> Прочее
-                    
-                    <b>Как найти:</b> Find it near &lt;b&gt;exit&lt;/b&gt;
-            <b>Ориентир:</b> HQ &lt;script&gt;, метро Victory &lt;b&gt;Square&lt;/b&gt;
-            """.trimIndent()
-        )
+        assertThat(formatted).contains("🟡 Время работы неизвестно")
+        assertThat(formatted).contains("Mo-Fr 09:00-18:00")
     }
 
     @Test
@@ -171,42 +189,40 @@ class FormatterServiceTest {
 
     @Test
     fun `toiletListItem formats fallback name and distance without fee separator for unknown fee`() {
-        val item =
-            formatterService.toiletListItem(
-                sampleNearestRestroom(feeType = FeeType.UNKNOWN).copy(
-                    displayName = "   ",
-                    distanceMeters = 120.0
-                )
+        val item = formatterService.toiletListItem(
+            sampleNearestRestroom(feeType = FeeType.UNKNOWN).copy(
+                displayName = "   ",
+                distanceMeters = 120.0
             )
+        )
 
         assertThat(item).isEqualTo("🚶 120 м  Туалет")
     }
 
     @Test
     fun `toiletListItem formats kilometers and free icon`() {
-        val item =
-            formatterService.toiletListItem(
-                sampleNearestRestroom(feeType = FeeType.FREE).copy(
-                    displayName = "Nearest",
-                    distanceMeters = 1500.0
-                )
+        val item = formatterService.toiletListItem(
+            sampleNearestRestroom(feeType = FeeType.FREE).copy(
+                displayName = "Nearest",
+                distanceMeters = 1500.0
             )
+        )
 
         assertThat(item).isEqualTo("🚶 1,5 км  🆓  Nearest")
     }
 
     @Test
-    fun `toiletDetail ignores building 24x7 when schedule inheritance is disabled`() {
-        val restroom =
-            sampleRestroom().copy(
-                workTime = null,
-                inheritBuildingSchedule = false,
-                building = sampleBuilding(workTime = mapOf("is_24x7" to true))
-            )
+    fun `toiletDetail ignores building schedule when schedule inheritance is disabled`() {
+        val restroom = sampleRestroom().copy(
+            workTime = null,
+            inheritBuildingSchedule = false,
+            building = sampleBuilding(workTime = sampleTwoGisSchedule())
+        )
 
         val formatted = formatterService.toiletDetail(restroom, null)
 
-        assertThat(formatted).doesNotContain("Круглосуточно")
+        assertThat(formatted).contains("🟡 Время работы неизвестно")
+        assertThat(formatted).doesNotContain("Пн: 09:00-18:00")
     }
 
     @Test
@@ -216,7 +232,18 @@ class FormatterServiceTest {
         assertThat(text).contains("3")
     }
 
-    private fun sampleRestroom(): RestroomResponseDto {
+    private fun formatterServiceAt(now: Instant): FormatterService {
+        val resolver = RestroomAvailabilityResolver(
+            ScheduleMappingService(listOf(TwoGisScheduleAdapter(), YandexScheduleAdapter(), OsmScheduleAdapter())),
+            Clock.fixed(now, ZoneOffset.UTC)
+        )
+        return FormatterService(resolver)
+    }
+
+    private fun sampleRestroom(
+        originProvider: ImportProvider = ImportProvider.TWO_GIS,
+        workTime: Map<String, Any>? = emptyMap()
+    ): RestroomResponseDto {
         return RestroomResponseDto(
             id = UUID.randomUUID(),
             cityId = UUID.randomUUID(),
@@ -226,7 +253,7 @@ class FormatterServiceTest {
             name = "<b>Bad</b>",
             address = "Main <script>alert(1)</script> Street",
             phones = emptyMap(),
-            workTime = emptyMap(),
+            workTime = workTime,
             feeType = FeeType.UNKNOWN,
             genderType = null,
             accessibilityType = AccessibilityType.UNKNOWN,
@@ -241,28 +268,14 @@ class FormatterServiceTest {
             inheritBuildingSchedule = false,
             hasPhotos = false,
             locationType = LocationType.UNKNOWN,
-            originProvider = ImportProvider.USER,
+            originProvider = originProvider,
             originId = null,
             isHidden = false,
             createdAt = now,
             updatedAt = now,
             distanceMeters = 120,
-            building =
-                BuildingResponseDto(
-                    id = UUID.randomUUID(),
-                    cityId = UUID.randomUUID(),
-                    name = "HQ <script>",
-                    address = "Some <i>address</i>",
-                    buildingType = PlaceType.OTHER,
-                    workTime = emptyMap(),
-                    coordinates = Coordinates(53.91, 27.57),
-                    externalIds = emptyMap(),
-                    isDeleted = false,
-                    createdAt = now,
-                    updatedAt = now
-                ),
-            subwayStation =
-                sampleSubwayStation()
+            building = sampleBuilding(),
+            subwayStation = sampleSubwayStation()
         )
     }
 
@@ -294,21 +307,20 @@ class FormatterServiceTest {
             coordinates = Coordinates(53.92, 27.58),
             isDeleted = false,
             createdAt = now,
-            line =
-                SubwayLineResponseDto(
-                    id = UUID.randomUUID(),
-                    cityId = UUID.randomUUID(),
-                    nameRu = "Red",
-                    nameEn = "Red",
-                    shortCode = "1",
-                    hexColor = "#FF0000",
-                    isDeleted = false,
-                    createdAt = now
-                )
+            line = SubwayLineResponseDto(
+                id = UUID.randomUUID(),
+                cityId = UUID.randomUUID(),
+                nameRu = "Red",
+                nameEn = "Red",
+                shortCode = "1",
+                hexColor = "#FF0000",
+                isDeleted = false,
+                createdAt = now
+            )
         )
 
     private fun sampleNearestRestroom(feeType: FeeType) =
-        yayauheny.by.model.restroom.NearestRestroomSlimDto(
+        NearestRestroomSlimDto(
             id = UUID.randomUUID(),
             displayName = "Nearest",
             distanceMeters = 120.0,
@@ -316,4 +328,17 @@ class FormatterServiceTest {
             queryCoordinates = Coordinates(53.9, 27.56),
             restroomCoordinates = Coordinates(53.91, 27.57)
         )
+
+    private fun sampleTwoGisSchedule(): Map<String, Any> {
+        return mapOf(
+            "Mon" to mapOf(
+                "working_hours" to listOf(
+                    mapOf(
+                        "from" to "09:00",
+                        "to" to "18:00"
+                    )
+                )
+            )
+        )
+    }
 }

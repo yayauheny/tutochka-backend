@@ -15,7 +15,9 @@ import yayauheny.by.model.restroom.RestroomResponseDto
 import yayauheny.by.model.subway.SubwayStationResponseDto
 
 @Service
-class FormatterService {
+class FormatterService(
+    private val restroomAvailabilityResolver: RestroomAvailabilityResolver
+) {
 
     private fun selectDisplayNameForDetails(toilet: RestroomResponseDto): String {
         val name = TextUtil.normalizeNullableText(toilet.name)
@@ -31,22 +33,6 @@ class FormatterService {
             address = TextUtil.normalizeNullableText(toilet.building!!.address)
         }
         return if (address.isNullOrBlank()) null else address
-    }
-
-    private fun selectWorkTime(toilet: RestroomResponseDto): String {
-        if (toilet.inheritBuildingSchedule == true && toilet.building != null) {
-            val buildingWorkTime = toilet.building!!.workTime
-            if (buildingWorkTime != null && buildingWorkTime.isNotEmpty()) {
-                return WorkTimeFormatter.formatWorkTime(buildingWorkTime)
-            }
-        }
-
-        val workTime = toilet.workTime
-        if (workTime != null && workTime.isNotEmpty()) {
-            return WorkTimeFormatter.formatWorkTime(workTime)
-        }
-
-        return "Время работы не указано"
     }
 
     fun toiletListItem(toilet: NearestRestroomSlimDto): String {
@@ -106,11 +92,14 @@ class FormatterService {
 
         val howToFindLine = formatHowToFindLine(toilet.directionGuide)
         val landmarkLine = formatLandmarkLine(toilet.building, toilet.subwayStation)
+        val availability = restroomAvailabilityResolver.resolve(toilet)
 
         val params = mapOf(
             "name" to name,
             "addressLine" to addressLine,
             "tags" to tags,
+            "availabilityLine" to availability.statusText,
+            "workTimeLine" to Text.escapeHtml(availability.workTimeText)!!,
             "placeType" to Text.escapeHtml(placeType)!!,
             "howToFindLine" to howToFindLine,
             "landmarkLine" to landmarkLine

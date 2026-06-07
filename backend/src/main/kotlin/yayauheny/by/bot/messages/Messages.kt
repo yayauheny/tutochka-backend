@@ -79,6 +79,10 @@ object Messages {
         
         <b>{tags}</b>
         
+        {availabilityLine}
+        <b>Время работы:</b>
+        {workTimeLine}
+        
         <b>Тип:</b> {placeType}
         
         {howToFindLine}{landmarkLine}

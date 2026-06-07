@@ -97,18 +97,11 @@ class InlineKeyboardFactory(
             return Links.twoGisById(branchId)
         }
 
-        if (toilet.coordinates == null) {
-            return null
-        }
-
-        return Links.twoGis(toilet.coordinates!!.lat, toilet.coordinates!!.lon)
+        return Links.twoGis(toilet.coordinates.lat, toilet.coordinates.lon)
     }
 
-    private fun mapUrl(toilet: RestroomResponseDto, builder: (Double, Double) -> String): String? {
-        if (toilet.coordinates == null) {
-            return null
-        }
-        return builder(toilet.coordinates!!.lat, toilet.coordinates!!.lon)
+    private fun mapUrl(toilet: RestroomResponseDto, builder: (Double, Double) -> String): String {
+        return builder(toilet.coordinates.lat, toilet.coordinates.lon)
     }
 
     private fun extractTwoGisBranchId(externalMaps: Map<String, Any>?): String? {
