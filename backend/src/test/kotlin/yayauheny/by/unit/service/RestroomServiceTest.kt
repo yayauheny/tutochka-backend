@@ -8,8 +8,6 @@ import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.DisplayName
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertThrows
-import org.locationtech.jts.geom.Coordinate
-import org.locationtech.jts.geom.GeometryFactory
 import org.springframework.data.domain.PageImpl
 import yayauheny.by.common.query.PaginationRequest
 import yayauheny.by.entity.BuildingEntity
@@ -29,6 +27,7 @@ import yayauheny.by.model.enums.RestroomStatus
 import yayauheny.by.model.dto.Coordinates
 import java.util.Optional
 import java.util.UUID
+import yayauheny.by.util.point
 
 @DisplayName("RestroomService Tests")
 class RestroomServiceTest {
@@ -43,8 +42,6 @@ class RestroomServiceTest {
             buildingRepository = buildingRepository,
             subwayStationRepository = subwayStationRepository
         )
-
-    private val geometryFactory = GeometryFactory()
 
     // Read behavior tests
 
@@ -162,6 +159,23 @@ class RestroomServiceTest {
         assertThat(result[0].displayName).isEqualTo("Name")
         assertThat(result[1].displayName).isEqualTo("Address Only")
         assertThat(result[2].displayName).isEqualTo("Unknown")
+    }
+
+    @Test
+    fun `findNearestRestrooms sorts results by computed distance`() {
+        val lat = 53.9
+        val lon = 27.56
+        val far = restroomEntity(lat = 53.919, lon = 27.56)
+        val near = restroomEntity(lat = 53.901, lon = 27.56)
+        val middle = restroomEntity(lat = 53.908, lon = 27.56)
+
+        every { restroomRepository.findNearest(lon, lat, 5000, 3) } returns listOf(far, near, middle)
+
+        val result = restroomService.findNearestRestrooms(lat, lon, 3)
+
+        assertThat(result.map { it.id }).containsExactly(near.id, middle.id, far.id)
+        assertThat(result[0].distanceMeters).isLessThan(result[1].distanceMeters)
+        assertThat(result[1].distanceMeters).isLessThan(result[2].distanceMeters)
     }
 
     @Test
@@ -436,7 +450,7 @@ class RestroomServiceTest {
                 status = RestroomStatus.ACTIVE
                 inheritBuildingSchedule = true
                 hasPhotos = true
-                coordinates = geometryFactory.createPoint(Coordinate(27.56, 53.9))
+                coordinates = point(27.56, 53.9)
             }
         val updateDto =
             TestDataHelpers.createRestroomUpdateDto(
@@ -534,7 +548,7 @@ class RestroomServiceTest {
             country = CountryEntity().apply { id = UUID.randomUUID(); code = "US"; nameRu = "США"; nameEn = "USA" }
             nameRu = "Минск"
             nameEn = "Minsk"
-            coordinates = geometryFactory.createPoint(Coordinate(27.56, 53.9))
+            coordinates = point(27.56, 53.9)
         }
 
     private fun buildingEntity(): BuildingEntity =
@@ -542,7 +556,7 @@ class RestroomServiceTest {
             id = UUID.randomUUID()
             city = cityEntity()
             name = "Building"
-            coordinates = geometryFactory.createPoint(Coordinate(27.56, 53.9))
+            coordinates = point(27.56, 53.9)
             createdAt = java.time.Instant.now()
             updatedAt = java.time.Instant.now()
         }
@@ -552,7 +566,7 @@ class RestroomServiceTest {
             id = UUID.randomUUID()
             nameRu = "Station"
             nameEn = "Station"
-            coordinates = geometryFactory.createPoint(Coordinate(27.56, 53.9))
+            coordinates = point(27.56, 53.9)
             createdAt = java.time.Instant.now()
         }
 
@@ -568,7 +582,7 @@ class RestroomServiceTest {
             city = cityEntity().apply { id = cityId }
             this.name = name
             this.address = address
-            coordinates = geometryFactory.createPoint(Coordinate(lon, lat))
+            coordinates = point(lon, lat)
             createdAt = java.time.Instant.now()
             updatedAt = java.time.Instant.now()
         }

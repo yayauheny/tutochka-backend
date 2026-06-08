@@ -1,8 +1,5 @@
 package yayauheny.by.service
 
-import org.locationtech.jts.geom.Coordinate
-import org.locationtech.jts.geom.GeometryFactory
-import org.locationtech.jts.geom.Point
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
 import yayauheny.by.common.query.PageResponse
@@ -25,18 +22,14 @@ import yayauheny.by.repository.BuildingJpaRepository
 import yayauheny.by.repository.CityJpaRepository
 import yayauheny.by.repository.RestroomJpaRepository
 import yayauheny.by.repository.SubwayStationJpaRepository
+import yayauheny.by.util.toCoordinates
+import yayauheny.by.util.toPoint
 import yayauheny.by.util.toPageResponse
 import java.util.UUID
 import kotlin.math.atan2
 import kotlin.math.cos
 import kotlin.math.sin
 import kotlin.math.sqrt
-
-private val geometryFactory = GeometryFactory()
-
-private fun Coordinates.toPoint(): Point = geometryFactory.createPoint(Coordinate(lon, lat))
-
-private fun Point?.toCoordinates(): Coordinates = Coordinates(lat = this?.y ?: 0.0, lon = this?.x ?: 0.0)
 
 private fun Map<String, Any>?.toBooleanMap(): Map<String, Boolean>? =
     this?.entries?.associate { (key, value) ->
@@ -172,7 +165,7 @@ class RestroomService(
                 queryCoordinates = Coordinates(lat = latitude, lon = longitude),
                 restroomCoordinates = restroomCoordinates
             )
-        }
+        }.sortedBy { it.distanceMeters }
     }
 
     fun createRestroom(createDto: RestroomCreateDto): RestroomResponseDto {

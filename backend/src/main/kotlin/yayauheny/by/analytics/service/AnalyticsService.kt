@@ -1,11 +1,9 @@
 package yayauheny.by.analytics.service
 
-import org.springframework.stereotype.Service
-import org.springframework.transaction.annotation.Transactional
 import jakarta.persistence.EntityManager
 import jakarta.persistence.PersistenceContext
-import org.locationtech.jts.geom.Coordinate
-import org.locationtech.jts.geom.GeometryFactory
+import org.springframework.stereotype.Service
+import org.springframework.transaction.annotation.Transactional
 import yayauheny.by.analytics.entity.AnalyticsEventEntity
 import yayauheny.by.analytics.entity.UserEntity
 import yayauheny.by.analytics.model.EncryptedAnalyticsEventCommand
@@ -16,6 +14,7 @@ import yayauheny.by.model.analytics.AnalyticsEventCommand
 import yayauheny.by.model.analytics.AnalyticsSource
 import yayauheny.by.model.analytics.ProductAnalyticsEvent
 import yayauheny.by.util.EncryptionService
+import yayauheny.by.util.point
 import java.time.Instant
 import java.util.UUID
 
@@ -26,8 +25,6 @@ class AnalyticsService(
     private val analyticsEventJpaRepository: AnalyticsEventJpaRepository,
     private val encryptionService: EncryptionService
 ) {
-    private val geometryFactory = GeometryFactory()
-
     @PersistenceContext
     private lateinit var entityManager: EntityManager
 
@@ -172,7 +169,7 @@ class AnalyticsService(
 
     private fun EncryptedAnalyticsEventCommand.toPoint() =
         if (lat != null && lon != null) {
-            geometryFactory.createPoint(Coordinate(lon, lat)).also {
+            point(lon, lat).also {
                 it.srid = 4326
             }
         } else {

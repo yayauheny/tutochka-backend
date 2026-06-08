@@ -6,14 +6,13 @@ import jakarta.persistence.EntityManager
 import jakarta.persistence.Query
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
-import org.locationtech.jts.geom.Coordinate
-import org.locationtech.jts.geom.GeometryFactory
 import yayauheny.by.entity.CityEntity
 import yayauheny.by.entity.CountryEntity
 import yayauheny.by.importing.service.ImportCityResolver
 import yayauheny.by.repository.CityJpaRepository
 import yayauheny.by.repository.CountryJpaRepository
 import java.util.UUID
+import yayauheny.by.util.point
 
 class ImportCityResolverTest {
     private val countryRepository = mockk<CountryJpaRepository>()
@@ -77,6 +76,6 @@ class ImportCityResolverTest {
             this.country = country(countryId, "BY", "Беларусь", "Belarus")
             this.nameRu = nameRu
             this.nameEn = nameEn
-            this.coordinates = GeometryFactory().createPoint(Coordinate(27.56, 53.9))
+            this.coordinates = point(27.56, 53.9)
         }
 }

@@ -3,8 +3,6 @@ package yayauheny.by.importing.service
 import com.fasterxml.jackson.databind.JsonNode
 import com.fasterxml.jackson.databind.ObjectMapper
 import jakarta.persistence.EntityManager
-import org.locationtech.jts.geom.Coordinate
-import org.locationtech.jts.geom.GeometryFactory
 import org.springframework.jdbc.core.JdbcTemplate
 import org.springframework.stereotype.Service
 import yayauheny.by.entity.BuildingEntity
@@ -23,6 +21,7 @@ import yayauheny.by.model.restroom.RestroomCreateDto
 import yayauheny.by.repository.BuildingJpaRepository
 import yayauheny.by.repository.CityJpaRepository
 import yayauheny.by.repository.RestroomJpaRepository
+import yayauheny.by.util.point
 import java.util.UUID
 
 @Service
@@ -126,7 +125,7 @@ class ImportPipeline(
             address = context.address
             buildingType = candidate.placeType.name.lowercase()
             workTime = context.workTime.toMapOrNull()
-            coordinates = geometryFactory.createPoint(Coordinate(candidate.lng, candidate.lat))
+            coordinates = point(candidate.lng, candidate.lat)
             externalIds = providerKey?.let { mapOf(it to context.externalId) } ?: emptyMap()
             importStatus = BuildingImportStatus.COMPLETED
             buildingMatchKey = matchKey
@@ -186,7 +185,7 @@ class ImportPipeline(
         status = dto.status
         amenities = dto.amenities
         inheritBuildingSchedule = dto.inheritBuildingSchedule
-        coordinates = geometryFactory.createPoint(Coordinate(dto.coordinates.lon, dto.coordinates.lat))
+        coordinates = point(dto.coordinates.lon, dto.coordinates.lat)
         dataSource = DataSourceType.IMPORT
         locationType = dto.locationType
         originProvider = dto.originProvider
@@ -277,7 +276,4 @@ class ImportPipeline(
     private fun JsonNode?.toMapOrNull(): Map<String, Any>? =
         this?.takeIf { !it.isNull }?.let { objectMapper.convertValue(it, Map::class.java) as Map<String, Any> }
 
-    private companion object {
-        val geometryFactory = GeometryFactory()
-    }
 }

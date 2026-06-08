@@ -10,8 +10,6 @@ import java.util.UUID
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.DisplayName
 import org.junit.jupiter.api.Test
-import org.locationtech.jts.geom.Coordinate
-import org.locationtech.jts.geom.GeometryFactory
 import org.springframework.jdbc.core.JdbcTemplate
 import yayauheny.by.entity.CityEntity
 import yayauheny.by.entity.RestroomEntity
@@ -31,6 +29,7 @@ import yayauheny.by.model.imports.NormalizedRestroomCandidate
 import yayauheny.by.repository.BuildingJpaRepository
 import yayauheny.by.repository.CityJpaRepository
 import yayauheny.by.repository.RestroomJpaRepository
+import yayauheny.by.util.point
 
 @DisplayName("ImportPipeline Tests")
 class ImportPipelineTest {
@@ -49,8 +48,6 @@ class ImportPipelineTest {
             jdbcTemplate = jdbcTemplate,
             objectMapper = objectMapper
         )
-
-    private val geometryFactory = GeometryFactory()
 
     @Test
     fun `importEnvelope preserves manual fields when updating existing imported restroom`() {
@@ -127,7 +124,7 @@ class ImportPipelineTest {
     private fun restroomEntity(cityId: UUID): RestroomEntity =
         RestroomEntity().apply {
             city = CityEntity().apply { id = cityId }
-            coordinates = geometryFactory.createPoint(Coordinate(27.56, 53.9))
+            coordinates = point(27.56, 53.9)
             placeType = PlaceType.OTHER
             feeType = FeeType.UNKNOWN
             accessibilityType = AccessibilityType.UNKNOWN

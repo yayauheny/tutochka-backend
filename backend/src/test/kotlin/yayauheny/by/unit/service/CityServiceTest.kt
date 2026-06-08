@@ -10,8 +10,6 @@ import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.DisplayName
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertThrows
-import org.locationtech.jts.geom.Coordinate
-import org.locationtech.jts.geom.GeometryFactory
 import org.springframework.data.domain.PageImpl
 import yayauheny.by.common.errors.ConflictException
 import yayauheny.by.common.query.PaginationRequest
@@ -22,13 +20,13 @@ import yayauheny.by.model.city.CityFilter
 import yayauheny.by.repository.CityJpaRepository
 import yayauheny.by.repository.CountryJpaRepository
 import yayauheny.by.service.CityService
+import yayauheny.by.util.point
 
 @DisplayName("CityService Tests")
 class CityServiceTest {
     private val cityRepository = mockk<CityJpaRepository>()
     private val countryRepository = mockk<CountryJpaRepository>()
     private val cityService = CityService(cityRepository, countryRepository)
-    private val geometryFactory = GeometryFactory()
 
     // Read behavior tests
 
@@ -287,6 +285,6 @@ class CityServiceTest {
             nameRu = "Минск"
             nameEn = "Minsk"
             region = "Минская область"
-            coordinates = geometryFactory.createPoint(Coordinate(27.56, 53.9))
+            coordinates = point(27.56, 53.9)
         }
 }

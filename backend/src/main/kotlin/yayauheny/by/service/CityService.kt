@@ -1,8 +1,5 @@
 package yayauheny.by.service
 
-import org.locationtech.jts.geom.Coordinate
-import org.locationtech.jts.geom.GeometryFactory
-import org.locationtech.jts.geom.Point
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
 import yayauheny.by.common.errors.ConflictException
@@ -16,13 +13,10 @@ import yayauheny.by.model.city.CityResponseDto
 import yayauheny.by.model.city.CityUpdateDto
 import yayauheny.by.repository.CityJpaRepository
 import yayauheny.by.repository.CountryJpaRepository
+import yayauheny.by.util.toCoordinates
 import yayauheny.by.util.toPageResponse
+import yayauheny.by.util.toPoint
 import java.util.UUID
-
-private val geometryFactory = GeometryFactory()
-
-private fun Coordinates.toPoint(): Point =
-    geometryFactory.createPoint(Coordinate(lon, lat))
 
 fun CityEntity.toDto() = CityResponseDto(
     id = this.id!!,
@@ -30,10 +24,7 @@ fun CityEntity.toDto() = CityResponseDto(
     nameRu = this.nameRu,
     nameEn = this.nameEn,
     region = this.region,
-    coordinates = yayauheny.by.model.dto.Coordinates(
-        lat = this.coordinates?.y ?: 0.0,
-        lon = this.coordinates?.x ?: 0.0
-    )
+    coordinates = this.coordinates.toCoordinates()
 )
 
 @Service

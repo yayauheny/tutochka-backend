@@ -3,9 +3,6 @@ package yayauheny.by.helpers
 import java.time.Instant
 import java.sql.Timestamp
 import java.util.UUID
-import org.locationtech.jts.geom.Coordinate
-import org.locationtech.jts.geom.GeometryFactory
-import org.locationtech.jts.geom.Point
 import org.springframework.jdbc.core.JdbcTemplate
 import yayauheny.by.analytics.entity.AnalyticsEventEntity
 import yayauheny.by.analytics.entity.UserAnalyticsEntity
@@ -40,13 +37,7 @@ import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.JsonPrimitive
 import kotlinx.serialization.json.buildJsonObject
 import kotlinx.serialization.json.jsonPrimitive
-
-private val geometryFactory = GeometryFactory()
-
-private fun point(
-    lon: Double,
-    lat: Double
-): Point = geometryFactory.createPoint(Coordinate(lon, lat))
+import yayauheny.by.util.point
 
 private fun JsonObject?.toBooleanMap(): Map<String, Any>? =
     this?.values?.entries?.associate { (key, value) ->
@@ -124,8 +115,6 @@ data class TestAnalyticsEventData(
 
 object DatabaseTestHelper {
     private val excludedTableNames = setOf("databasechangelog", "databasechangeloglock", "spatial_ref_sys")
-    private val geometryFactory = GeometryFactory()
-
     lateinit var jdbcTemplate: JdbcTemplate
     lateinit var countryRepository: CountryJpaRepository
     lateinit var cityRepository: CityJpaRepository
@@ -240,7 +229,7 @@ object DatabaseTestHelper {
                 this.country = country
                 this.nameRu = data.nameRu
                 this.nameEn = data.nameEn
-                this.coordinates = geometryFactory.createPoint(Coordinate(data.lon, data.lat))
+                this.coordinates = point(data.lon, data.lat)
             }
         return cityRepository.saveAndFlush(entity).id ?: error("Failed to insert test city")
     }
