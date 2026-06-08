@@ -53,9 +53,8 @@ We introduced a dedicated analytics slice in the backend and wired the bot to se
 
 ### Bot behavior
 
-- The bot sends analytics headers with Telegram user id, chat id, and username.
-- Analytics POST requests do not use retry logic, to avoid duplicate write-side events.
-- Read-side requests such as nearest-search and detail fetches keep retry behavior.
+- The bot passes Telegram user id, chat id, and username into the shared analytics service inside the same Spring application.
+- Bot analytics remains best-effort so search and callback UX still succeeds if analytics storage fails.
 
 ## Consequences
 
@@ -78,7 +77,9 @@ The following focused tests cover the new behavior:
 
 - `AnalyticsApiTest`
 - `RestroomMetricsIntegrationTest`
-- `WebBackendClientHttpTest`
+- `TelegramWebhookFlowIntegrationTest`
+- `LocationMessageHandlerTest`
+- `ToiletDetailCallbackTest`
 
 They verify:
 
@@ -88,4 +89,4 @@ They verify:
 - same-chat multi-user writes
 - invalid analytics payloads returning `400`
 - non-blocking restroom search when analytics fails
-- no-retry bot analytics POSTs
+- non-blocking bot search and detail flows when analytics fails

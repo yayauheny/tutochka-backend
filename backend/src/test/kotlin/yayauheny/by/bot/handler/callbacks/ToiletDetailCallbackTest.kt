@@ -106,6 +106,20 @@ class ToiletDetailCallbackTest {
         verify(sender).editOrReply(ctx, Messages.SOMETHING_WENT_WRONG, null)
     }
 
+    @Test
+    fun `should show not found for stale detail callback`() {
+        val restroomId = UUID.randomUUID()
+        val update = detailUpdate("detail:$restroomId")
+        val ctx = UpdateContext.from(update)
+        `when`(searchService.getRestroomById(restroomId)).thenReturn(null)
+
+        handler.handle(update, ctx)
+
+        verify(searchService).getRestroomById(restroomId)
+        verify(sender).editOrReply(ctx, Messages.TOILET_NOT_FOUND, null)
+        verifyNoInteractions(analyticsService)
+    }
+
     private fun detailUpdate(callbackData: String): Update {
         val update = Update()
         val callbackQuery = CallbackQuery()

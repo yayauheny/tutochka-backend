@@ -52,7 +52,7 @@ Canonical, non-marketing description of the **tutochka-backend** monorepo: **Spr
 
 **Backend ↔ Telegram bot:**
 
-- Bot is a **consumer** of the REST API. All authoritative data lives in **PostgreSQL** behind the Spring Boot backend.
+- Bot webhook handlers and REST controllers share the same Spring application services. All authoritative data lives in **PostgreSQL** behind the Spring Boot backend.
 
 **Implementation status (high level):**
 
@@ -71,7 +71,7 @@ Canonical, non-marketing description of the **tutochka-backend** monorepo: **Spr
 | Nearest restroom search | Implemented | PostGIS `ST_DWithin` + KNN `<->`; default max distance in code |
 | Building linkage on restroom | Implemented | `buildingId` + nested `building` on detail |
 | Subway linkage on restroom | Implemented | `subwayStationId` + nested `subwayStation` (with `line`) |
-| Telegram bot — location-based search | Implemented | Calls backend HTTP API |
+| Telegram bot — location-based search | Implemented | Uses shared Spring services inside the same application |
 | Indoor directions | Partial | `directionGuide` text only; no indoor routing engine |
 | Accessibility metadata | Implemented | `accessibilityType` enum on restroom |
 | Real photos | Planned | `hasPhotos` only |
@@ -234,25 +234,23 @@ Response is a **JSON array** of slim items:
 ```mermaid
 flowchart LR
   tg[Telegram]
-  bot[Backend_Bot_Runtime]
-  api[Spring_Backend]
-  jooq[jOOQ]
+  app[Spring_Backend_REST_and_Bot_Runtime]
+  repo[Spring_Data_JPA_Querydsl_and_Native_SQL]
   db[(PostgreSQL_PostGIS)]
   lb[Liquibase]
 
-  tg --> bot
-  bot --> api
-  api --> jooq
-  jooq --> db
+  tg --> app
+  app --> repo
+  repo --> db
   lb --> db
 ```
 
 | Layer | Role |
 |-------|------|
-| **Spring backend** | REST API, validation, serialization (Jackson), DI (Spring). |
+| **Spring backend** | REST API, Telegram webhook handlers, validation, serialization (Jackson), DI (Spring). |
 | **PostgreSQL + PostGIS** | Single source of truth; spatial indexes for coordinates. |
 | **Liquibase** | Schema migrations under `backend/src/main/resources/db/changelog/`. |
-| **jOOQ** | Type-safe SQL; generated tables in `backend/src/generated/kotlin`. |
+| **Spring Data JPA + Querydsl** | Entity persistence, filtered listings, and selected native SQL for spatial query paths. |
 | **Spring Boot bot runtime** | Telegram updates → backend bot handlers and services inside the same Spring application. |
 | **OpenAPI** | [`openapi.yaml`](../../backend/src/main/resources/openapi.yaml) describes API contract; may lag behind code — prefer routing + DTOs as source of truth when in doubt. |
 
@@ -322,7 +320,7 @@ Nearest endpoint combines a **distance cap**, **KNN ordering**, and filters for 
 
 ## Stack versions (reference)
 
-See [`libs.versions.toml`](../../libs.versions.toml) and Gradle modules for authoritative versions. Indicative: Kotlin (JVM 21), Spring Boot, jOOQ 3.20.x, PostgreSQL driver 42.x, Liquibase 2.x, PostGIS in database.
+See [`libs.versions.toml`](../../libs.versions.toml) and Gradle modules for authoritative versions. Indicative: Kotlin (JVM 21), Spring Boot, Querydsl 5.1.x, PostgreSQL driver 42.x, Liquibase 4.24.x, PostGIS in database.
 
 ---
 

@@ -125,7 +125,8 @@ internal object TwoGisNormalizationProfile : ProviderNormalizationProfile<TwoGis
                 attrs.any { it.contains("подъёмник") } ||
                 attrs.any { it.contains("широкий лифт") } ||
                 attrs.any { it.contains("автоматическая дверь") } ||
-                attrs.any { it.contains("нет двери") }
+                attrs.any { it.contains("нет двери") } ||
+                attrs.any { it.contains("доступно") }
 
         node.put("accessible_entrance", accessibleEntrance)
         node.put("accessible_toilet", attrs.any { it.contains("туалет для маломобильных людей") })

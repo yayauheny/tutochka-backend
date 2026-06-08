@@ -340,6 +340,15 @@ class TelegramWebhookFlowIntegrationTest : BaseIntegrationTest() {
     }
 
     @Test
+    fun `stale detail callback stays user facing`() {
+        val update = callbackUpdate("detail:${UUID.randomUUID()}", userId = 601L, chatId = 129L, username = "test-601")
+        performWebhook(update)
+
+        val editCall = messageSender.editOrReplyCalls.single()
+        assertThat(editCall.text).isEqualTo(Messages.TOILET_NOT_FOUND)
+    }
+
+    @Test
     fun `unsupported update does not create analytics`() {
         val update = Update()
         performWebhook(update)

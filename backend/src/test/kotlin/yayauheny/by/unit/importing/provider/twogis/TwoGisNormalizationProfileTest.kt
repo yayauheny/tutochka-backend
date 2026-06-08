@@ -1,15 +1,20 @@
 package yayauheny.by.unit.importing.provider.twogis
 
 import kotlin.test.assertEquals
+import kotlin.test.assertFalse
 import kotlin.test.assertNotNull
 import kotlin.test.assertNull
+import kotlin.test.assertTrue
 import kotlinx.serialization.json.buildJsonObject
 import kotlinx.serialization.json.toJacksonNode
 import org.junit.jupiter.api.DisplayName
 import org.junit.jupiter.api.Test
+import org.junit.jupiter.params.ParameterizedTest
+import org.junit.jupiter.params.provider.CsvSource
 import yayauheny.by.importing.provider.twogis.TwoGisNormalizationProfile
 import yayauheny.by.importing.provider.twogis.TwoGisScrapedLocation
 import yayauheny.by.importing.provider.twogis.TwoGisScrapedPlace
+import yayauheny.by.model.enums.AccessibilityType
 import yayauheny.by.model.enums.FeeType
 import yayauheny.by.model.enums.GenderType
 import yayauheny.by.model.enums.LocationType
@@ -97,8 +102,15 @@ class TwoGisNormalizationProfileTest {
         assertEquals(PlaceType.RESTAURANT, resolved.placeType)
     }
 
-    @Test
-    fun `attributes preserve fee status and amenities behavior`() {
+    @ParameterizedTest
+    @CsvSource(
+        "Бесплатный туалет, FREE",
+        "Платный туалет, PAID"
+    )
+    fun `historical fee attributes still map to current fee type`(
+        attribute: String,
+        expectedFeeType: FeeType
+    ) {
         val resolved =
             TwoGisNormalizationProfile.resolve(
                 TwoGisScrapedPlace(
@@ -106,14 +118,89 @@ class TwoGisNormalizationProfileTest {
                     title = "Toilet",
                     category = "toilet",
                     location = TwoGisScrapedLocation(53.9, 27.5),
-                    attributeGroups = listOf("платный туалет", "доступ ограничен", "оплата картой", "пандус")
+                    attributeGroups = listOf(attribute)
                 )
             )
 
-        assertEquals(FeeType.PAID, resolved.feeType)
+        assertEquals(expectedFeeType, resolved.feeType)
+    }
+
+    @Test
+    fun `historical payment attributes still map to payment methods`() {
+        val resolved =
+            TwoGisNormalizationProfile.resolve(
+                TwoGisScrapedPlace(
+                    id = "1",
+                    title = "Toilet",
+                    category = "toilet",
+                    location = TwoGisScrapedLocation(53.9, 27.5),
+                    attributeGroups = listOf(
+                        "Оплата картой",
+                        "Наличный расчёт",
+                        "Оплата по QR-коду",
+                        "Оплата через банк",
+                        "Оплата через приложение",
+                        "Перевод с карты"
+                    )
+                )
+            )
+
+        assertEquals(
+            setOf("card", "cash", "qr", "bank", "app", "card_transfer"),
+            resolved.amenities["payment_methods"].map { it.asText() }.toSet()
+        )
+    }
+
+    @Test
+    fun `historical accessibility attributes still map to current accessibility fields`() {
+        val resolved =
+            TwoGisNormalizationProfile.resolve(
+                TwoGisScrapedPlace(
+                    id = "1",
+                    title = "Toilet",
+                    category = "toilet",
+                    location = TwoGisScrapedLocation(53.9, 27.5),
+                    attributeGroups = listOf(
+                        "Туалет для маломобильных людей",
+                        "Доступный вход для людей с инвалидностью",
+                        "Пандус",
+                        "Подъёмник",
+                        "Широкий лифт",
+                        "Нет двери / есть автоматическая дверь",
+                        "Доступно",
+                        "Доступ ограничен"
+                    )
+                )
+            )
+
+        assertEquals(AccessibilityType.WHEELCHAIR, resolved.accessibilityType)
         assertEquals(RestroomStatus.INACTIVE, resolved.status)
-        assertNotNull(resolved.amenities["payment_methods"])
-        assertNotNull(resolved.amenities["ramp"])
+        assertTrue(resolved.amenities["accessible_entrance"].asBoolean())
+        assertTrue(resolved.amenities["accessible_toilet"].asBoolean())
+        assertTrue(resolved.amenities["ramp"].asBoolean())
+        assertTrue(resolved.amenities["lift"].asBoolean())
+        assertTrue(resolved.amenities["automatic_door"].asBoolean())
+        assertTrue(resolved.amenities["access_limited"].asBoolean())
+    }
+
+    @Test
+    fun `plain toilet attribute stays a no-op marker`() {
+        val resolved =
+            TwoGisNormalizationProfile.resolve(
+                TwoGisScrapedPlace(
+                    id = "1",
+                    title = "Toilet",
+                    category = "toilet",
+                    location = TwoGisScrapedLocation(53.9, 27.5),
+                    attributeGroups = listOf("Туалет")
+                )
+            )
+
+        assertEquals(FeeType.UNKNOWN, resolved.feeType)
+        assertEquals(AccessibilityType.UNKNOWN, resolved.accessibilityType)
+        assertEquals(RestroomStatus.ACTIVE, resolved.status)
+        assertFalse(resolved.amenities["accessible_entrance"].asBoolean())
+        assertFalse(resolved.amenities["accessible_toilet"].asBoolean())
     }
 
     @Test

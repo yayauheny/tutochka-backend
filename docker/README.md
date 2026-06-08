@@ -4,7 +4,7 @@ Webhook - единственный поддерживаемый режим по�
 
 ## Production
 ```bash
-docker compose -f docker/docker-compose.prod.yml up -d --wait
+docker compose -f docker/docker-compose.yml up -d --wait
 ```
 
 По умолчанию production stack использует:
@@ -14,7 +14,7 @@ docker compose -f docker/docker-compose.prod.yml up -d --wait
 
 Rollback или точечный deploy на immutable tag:
 ```bash
-BACKEND_TAG=sha-0123456789ab docker compose -f docker/docker-compose.prod.yml up -d --wait
+BACKEND_TAG=sha-0123456789ab docker compose -f docker/docker-compose.yml up -d --wait
 ```
 
 ## Full Local Stack
@@ -34,15 +34,6 @@ docker compose --env-file docker/env.local -f docker/docker-compose-local.yml --
 3. `ngrok` только если нужен внешний Telegram-доступ
 
 Для webhook-режима обязательно задать `BOT_WEBHOOK_SECRET_TOKEN`, иначе регистрация webhook не выполнится.
-
-## Hybrid Debug Stack
-```bash
-docker compose --env-file docker/env.local -f docker/docker-compose-debug.yml up -d
-set -a; source docker/env.local; set +a
-./gradlew :backend:run
-```
-
-В hybrid-режиме backend работает на хосте, поэтому для него `DB_HOST` должен быть `localhost`.
 
 ## Проверка
 ```bash

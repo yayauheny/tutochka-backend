@@ -157,7 +157,15 @@ paths:
                   items:
                     type: object
                     additionalProperties: true
-                - $ref: '#/components/schemas/ImportRequestDto'
+                - type: object
+                  required:
+                    - items
+                  properties:
+                    items:
+                      type: array
+                      items:
+                        type: object
+                        additionalProperties: true
       responses:
         '201':
           description: Batch import completed
@@ -883,6 +891,29 @@ paths:
 
 components:
   schemas:
+    ImportBatchResponseDto:
+      type: object
+      required:
+        - importId
+        - totalProcessed
+        - successful
+        - failed
+        - results
+      properties:
+        importId:
+          type: string
+          format: uuid
+        totalProcessed:
+          type: integer
+        successful:
+          type: integer
+        failed:
+          type: integer
+        results:
+          type: array
+          items:
+            $ref: '#/components/schemas/ImportItemResultDto'
+
     ImportItemResultDto:
       type: object
       properties:

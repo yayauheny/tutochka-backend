@@ -6,6 +6,7 @@ import java.time.ZoneOffset
 import java.util.UUID
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
+import org.mockito.Mockito.doThrow
 import org.mockito.Mockito.inOrder
 import org.mockito.Mockito.mock
 import org.mockito.Mockito.never
@@ -110,6 +111,26 @@ class LocationMessageHandlerTest {
         )
         verify(sender).sendText(123L, Messages.NO_TOILETS_FOUND)
         verify(backListSnapshotCache, never()).store(123L, 456L, 15000, emptyList())
+    }
+
+    @Test
+    fun `handle sends results even when analytics tracking fails`() {
+        val results = listOf(sampleItem("Test restroom"))
+        `when`(searchService.findNearestRestrooms(53.9, 27.56, 5, 15000))
+            .thenReturn(results)
+        doThrow(RuntimeException("boom")).`when`(analyticsService).trackNearestRestroomsSearch(
+            AnalyticsIdentityHeaders(456L, "123", "test-user-10", AnalyticsSource.TELEGRAM_BOT),
+            1,
+            53.9,
+            27.56
+        )
+
+        handler.handle(Update(), ctx)
+
+        verify(userService).saveLocation(456L, 53.9, 27.56)
+        verify(searchService).findNearestRestrooms(53.9, 27.56, 5, 15000)
+        verify(sender).sendText(123L, formatterService.toiletsFound(1), inlineKeyboard.toiletList(results))
+        verify(backListSnapshotCache).store(123L, 456L, 15000, results)
     }
 
     @Test

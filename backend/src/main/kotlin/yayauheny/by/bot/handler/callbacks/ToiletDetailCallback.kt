@@ -58,7 +58,16 @@ class ToiletDetailCallback(
         }
 
         val toilet = searchService.getRestroomById(toiletId)
-            ?: throw java.lang.IllegalArgumentException("Toilet not found: $toiletId")
+        if (toilet == null) {
+            sender.editOrReply(ctx, Messages.TOILET_NOT_FOUND, null)
+            log.warn(
+                "Handled detail callback: chatId={}, userId={}, restroomId={}, outcome=not_found",
+                ctx.chatId,
+                ctx.userId,
+                toiletIdStr
+            )
+            return
+        }
 
         val distanceMeters = toilet.distanceMeters?.toDouble()
         val text = formatterService.toiletDetail(toilet, distanceMeters)

@@ -57,18 +57,21 @@ class LocationMessageHandler(
             distanceMeters = radius
         )
 
-        // Track search analytics
-        analyticsService.trackNearestRestroomsSearch(
-            identity = AnalyticsIdentityHeaders(
-                tgUserId = ctx.userId,
-                tgChatId = ctx.chatId.toString(),
-                username = ctx.username,
-                source = AnalyticsSource.TELEGRAM_BOT
-            ),
-            resultsCount = results.size,
-            lat = latitude,
-            lon = longitude
-        )
+        try {
+            analyticsService.trackNearestRestroomsSearch(
+                identity = AnalyticsIdentityHeaders(
+                    tgUserId = ctx.userId,
+                    tgChatId = ctx.chatId.toString(),
+                    username = ctx.username,
+                    source = AnalyticsSource.TELEGRAM_BOT
+                ),
+                resultsCount = results.size,
+                lat = latitude,
+                lon = longitude
+            )
+        } catch (exception: Exception) {
+            log.warn("Failed to track nearest restroom analytics", exception)
+        }
 
         if (results.isEmpty()) {
             sender.sendText(ctx.chatId, Messages.NO_TOILETS_FOUND)
