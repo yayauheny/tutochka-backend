@@ -75,13 +75,6 @@ class PublicAnalyticsApiTest : BaseIntegrationTest() {
             )
             DatabaseTestHelper.insertAnalyticsEvent(
                 DatabaseTestHelper.createTestAnalyticsEventData(
-                    event = ProductAnalyticsEvent.ROUTE_CLICKED.value,
-                    userId = userToday,
-                    createdAt = atNoon(today)
-                )
-            )
-            DatabaseTestHelper.insertAnalyticsEvent(
-                DatabaseTestHelper.createTestAnalyticsEventData(
                     event = ProductAnalyticsEvent.RESTROOM_DETAILS_OPENED.value,
                     userId = userToday,
                     createdAt = atNoon(today)
@@ -110,15 +103,6 @@ class PublicAnalyticsApiTest : BaseIntegrationTest() {
                     createdAt = atNoon(today.minusDays(40))
                 )
             )
-            repeat(10) { index ->
-                DatabaseTestHelper.insertAnalyticsEvent(
-                    DatabaseTestHelper.createTestAnalyticsEventData(
-                        event = ProductAnalyticsEvent.ROUTE_CLICKED.value,
-                        userId = userToday,
-                        createdAt = atNoon(today.minusDays(2)).plusSeconds(index.toLong())
-                    )
-                )
-            }
 
             SpringTestApplication.withApp { client ->
                 val response = client.get("/api/v1/public/analytics")
@@ -224,13 +208,6 @@ class PublicAnalyticsApiTest : BaseIntegrationTest() {
                 assertEquals("75.0", summary.getValue("successRate").jsonPrimitive.content)
                 assertEquals("1.5", summary.getValue("averageResultsPerSearch").jsonPrimitive.content)
                 assertEquals(
-                    11,
-                    summary
-                        .getValue("routeClicks")
-                        .jsonPrimitive.content
-                        .toLong()
-                )
-                assertEquals(
                     2,
                     summary
                         .getValue("detailsOpened")
@@ -252,16 +229,13 @@ class PublicAnalyticsApiTest : BaseIntegrationTest() {
                 )
 
                 val eventTotals = json.getValue("eventTotals").jsonArray
-                assertEquals(1, eventTotals.size)
-                val routeRow = eventTotals.first().jsonObject
-                assertEquals(ProductAnalyticsEvent.ROUTE_CLICKED.value, routeRow.getValue("eventKey").jsonPrimitive.content)
-                assertEquals("Route opened", routeRow.getValue("label").jsonPrimitive.content)
-                assertEquals(
-                    11,
-                    routeRow
-                        .getValue("count")
-                        .jsonPrimitive.content
-                        .toLong()
+                assertEquals(3, eventTotals.size)
+                assertTrue(
+                    eventTotals.any { row ->
+                        val obj = row.jsonObject
+                        obj.getValue("eventKey").jsonPrimitive.content == ProductAnalyticsEvent.RESTROOM_DETAILS_OPENED.value &&
+                            obj.getValue("count").jsonPrimitive.content.toLong() == 2L
+                    }
                 )
 
                 val monthlySeries = json.getValue("monthlySeries").jsonArray

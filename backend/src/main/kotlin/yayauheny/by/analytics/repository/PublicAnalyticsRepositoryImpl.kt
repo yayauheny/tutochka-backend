@@ -61,7 +61,6 @@ class PublicAnalyticsRepositoryImpl(
                 SUM(CASE WHEN event = 'nearest_restrooms_returned' THEN 1 ELSE 0 END) as successful_searches,
                 SUM(CASE WHEN event = 'nearest_restrooms_no_results' THEN 1 ELSE 0 END) as empty_searches,
                 SUM(CASE WHEN event IN ('nearest_restrooms_returned', 'nearest_restrooms_no_results') THEN COALESCE(results_count, 0) ELSE 0 END) as total_results,
-                SUM(CASE WHEN event = 'route_clicked' THEN 1 ELSE 0 END) as route_clicks,
                 SUM(CASE WHEN event = 'restroom_details_opened' THEN 1 ELSE 0 END) as details_opened
             FROM analytics_events
             $condition
@@ -73,10 +72,9 @@ class PublicAnalyticsRepositoryImpl(
                 successfulSearches = rs.getLong("successful_searches"),
                 emptySearches = rs.getLong("empty_searches"),
                 totalResultsAcrossSearches = rs.getLong("total_results"),
-                routeClicks = rs.getLong("route_clicks"),
                 detailsOpened = rs.getLong("details_opened")
             )
-        } ?: PublicAnalyticsEventMetrics(0, 0, 0, 0, 0, 0)
+        } ?: PublicAnalyticsEventMetrics(0, 0, 0, 0, 0)
     }
 
     override fun fetchDailySeries(
@@ -90,7 +88,6 @@ class PublicAnalyticsRepositoryImpl(
                 SUM(CASE WHEN event IN ('nearest_restrooms_returned', 'nearest_restrooms_no_results') THEN 1 ELSE 0 END) as searches,
                 SUM(CASE WHEN event = 'nearest_restrooms_returned' THEN 1 ELSE 0 END) as successful_searches,
                 SUM(CASE WHEN event = 'nearest_restrooms_no_results' THEN 1 ELSE 0 END) as empty_searches,
-                SUM(CASE WHEN event = 'route_clicked' THEN 1 ELSE 0 END) as route_clicks,
                 SUM(CASE WHEN event = 'restroom_details_opened' THEN 1 ELSE 0 END) as details_opened
             FROM analytics_events
             WHERE created_at >= :start AND created_at < :end
@@ -110,7 +107,6 @@ class PublicAnalyticsRepositoryImpl(
                 searches = rs.getLong("searches"),
                 successfulSearches = rs.getLong("successful_searches"),
                 emptySearches = rs.getLong("empty_searches"),
-                routeClicks = rs.getLong("route_clicks"),
                 detailsOpened = rs.getLong("details_opened")
             )
         }
@@ -145,16 +141,15 @@ class PublicAnalyticsRepositoryImpl(
         return months.values.toList()
     }
 
-    override fun fetchEventTotals(minimumCount: Long): List<PublicAnalyticsEventCount> {
+    override fun fetchEventTotals(): List<PublicAnalyticsEventCount> {
         val sql = """
             SELECT event, COUNT(*) as event_count
             FROM analytics_events
             GROUP BY event
-            HAVING COUNT(*) >= :minCount
             ORDER BY event_count DESC
         """.trimIndent()
 
-        return jdbcTemplate.query(sql, MapSqlParameterSource("minCount", minimumCount)) { rs, _ ->
+        return jdbcTemplate.query(sql, MapSqlParameterSource()) { rs, _ ->
             PublicAnalyticsEventCount(
                 eventKey = rs.getString("event"),
                 count = rs.getLong("event_count")

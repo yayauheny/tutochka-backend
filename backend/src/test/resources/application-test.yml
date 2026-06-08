@@ -22,6 +22,10 @@ spring:
     converters:
       preferred-json-mapper: jackson
 
+analytics:
+  async:
+    enabled: false
+
 telegram:
   bot:
     enabled: true

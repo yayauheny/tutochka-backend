@@ -4,6 +4,8 @@ import org.slf4j.LoggerFactory
 import org.springframework.core.annotation.Order
 import org.springframework.stereotype.Component
 import org.telegram.telegrambots.meta.api.objects.Update
+import yayauheny.by.analytics.model.AnalyticsIdentityHeaders
+import yayauheny.by.analytics.service.BusinessAnalyticsPublisher
 import yayauheny.by.bot.MessageSender
 import yayauheny.by.bot.cache.BackListSnapshotCache
 import yayauheny.by.bot.handler.MessageHandler
@@ -13,8 +15,6 @@ import yayauheny.by.bot.messages.Messages
 import yayauheny.by.bot.service.FormatterService
 import yayauheny.by.bot.service.UserService
 import yayauheny.by.service.RestroomService
-import yayauheny.by.analytics.service.AnalyticsService
-import yayauheny.by.analytics.model.AnalyticsIdentityHeaders
 import yayauheny.by.common.config.TelegramBotSearchProperties
 import yayauheny.by.model.analytics.AnalyticsSource
 
@@ -23,7 +23,7 @@ import yayauheny.by.model.analytics.AnalyticsSource
 class LocationMessageHandler(
     private val sender: MessageSender,
     private val searchService: RestroomService,
-    private val analyticsService: AnalyticsService,
+    private val businessAnalyticsPublisher: BusinessAnalyticsPublisher,
     private val userService: UserService,
     private val backListSnapshotCache: BackListSnapshotCache,
     private val formatterService: FormatterService,
@@ -57,21 +57,17 @@ class LocationMessageHandler(
             distanceMeters = radius
         )
 
-        try {
-            analyticsService.trackNearestRestroomsSearch(
-                identity = AnalyticsIdentityHeaders(
-                    tgUserId = ctx.userId,
-                    tgChatId = ctx.chatId.toString(),
-                    username = ctx.username,
-                    source = AnalyticsSource.TELEGRAM_BOT
-                ),
-                resultsCount = results.size,
-                lat = latitude,
-                lon = longitude
-            )
-        } catch (exception: Exception) {
-            log.warn("Failed to track nearest restroom analytics", exception)
-        }
+        businessAnalyticsPublisher.trackNearestRestroomsSearch(
+            identity = AnalyticsIdentityHeaders(
+                tgUserId = ctx.userId,
+                tgChatId = ctx.chatId.toString(),
+                username = ctx.username,
+                source = AnalyticsSource.TELEGRAM_BOT
+            ),
+            resultsCount = results.size,
+            lat = latitude,
+            lon = longitude
+        )
 
         if (results.isEmpty()) {
             sender.sendText(ctx.chatId, Messages.NO_TOILETS_FOUND)

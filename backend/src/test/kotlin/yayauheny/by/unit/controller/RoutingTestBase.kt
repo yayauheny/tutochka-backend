@@ -9,6 +9,7 @@ import org.springframework.test.web.servlet.MockMvc
 import javax.sql.DataSource
 import yayauheny.by.analytics.api.AnalyticsController
 import yayauheny.by.analytics.api.PublicAnalyticsController
+import yayauheny.by.analytics.service.BusinessAnalyticsPublisher
 import yayauheny.by.analytics.service.AnalyticsService
 import yayauheny.by.analytics.service.PublicAnalyticsService
 import yayauheny.by.common.config.ApiProperties
@@ -16,7 +17,6 @@ import yayauheny.by.controller.CityController
 import yayauheny.by.controller.CountryController
 import yayauheny.by.controller.HealthController
 import yayauheny.by.controller.RestroomController
-import yayauheny.by.metrics.BackendSearchMetrics
 import yayauheny.by.service.CityService
 import yayauheny.by.service.CountryService
 import yayauheny.by.service.RestroomService
@@ -44,7 +44,7 @@ abstract class RoutingTestBase {
     protected lateinit var analyticsService: AnalyticsService
 
     @MockBean
-    protected lateinit var backendSearchMetrics: BackendSearchMetrics
+    protected lateinit var businessAnalyticsPublisher: BusinessAnalyticsPublisher
 
     @MockBean
     protected lateinit var dataSource: DataSource

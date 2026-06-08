@@ -35,9 +35,6 @@ class UserAnalyticsEntity {
     @Column(name = "details_opened_count", nullable = false)
     var detailsOpenedCount: Int = 0
 
-    @Column(name = "routes_clicked_count", nullable = false)
-    var routesClickedCount: Int = 0
-
     @Column(name = "last_event")
     var lastEvent: String? = null
 

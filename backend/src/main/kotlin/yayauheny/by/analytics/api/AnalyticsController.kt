@@ -1,22 +1,18 @@
 package yayauheny.by.analytics.api
 
-import org.slf4j.LoggerFactory
 import org.springframework.http.ResponseEntity
 import org.springframework.web.bind.annotation.*
 
-import yayauheny.by.analytics.service.AnalyticsService
+import yayauheny.by.analytics.service.BusinessAnalyticsPublisher
 import yayauheny.by.model.analytics.AnalyticsEventCommand
 import yayauheny.by.model.analytics.AnalyticsEventRequest
 import yayauheny.by.model.analytics.AnalyticsSource
-import yayauheny.by.common.util.toBigDecimalRounded
 
 @RestController
 @RequestMapping("/api/v1/analytics")
 class AnalyticsController(
-    private val analyticsService: AnalyticsService
+    private val businessAnalyticsPublisher: BusinessAnalyticsPublisher
 ) {
-    private val log = LoggerFactory.getLogger(AnalyticsController::class.java)
-
     @PostMapping("/events")
     fun trackEvent(
         @RequestBody request: AnalyticsEventRequest,
@@ -34,20 +30,15 @@ class AnalyticsController(
             tgChatId = tgChatId,
             username = normalizedUsername,
             source = source,
-            lat = request.lat?.toBigDecimalRounded(),
-            lon = request.lon?.toBigDecimalRounded(),
+            lat = request.lat,
+            lon = request.lon,
             resultsCount = request.resultsCount,
-            durationMs = request.durationMs,
             acquisitionTag = request.acquisitionTag,
             metadata = request.metadata
         )
 
-        runCatching {
-            analyticsService.trackProductEvent(command)
-        }.onFailure { exception ->
-            log.warn("Failed to track analytics event", exception)
-        }
-        
+        businessAnalyticsPublisher.trackProductEvent(command)
+
         return ResponseEntity.accepted().build()
     }
 }

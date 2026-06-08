@@ -105,3 +105,10 @@ databaseChangeLog:
         - sqlFile:
             path: migration/20260530_fix_restroom_imports_payload_hash.sql
             relativeToChangelogFile: true
+  - changeSet:
+      id: refine-analytics-storage
+      author: yayauheny
+      changes:
+        - sqlFile:
+            path: migration/20260608_refine_analytics_storage.sql
+            relativeToChangelogFile: true

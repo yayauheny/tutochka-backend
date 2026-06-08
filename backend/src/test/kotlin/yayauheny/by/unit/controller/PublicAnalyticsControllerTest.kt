@@ -88,13 +88,12 @@ class PublicAnalyticsControllerTest : RoutingTestBase() {
                     emptySearches = 30,
                     successRate = 85.71,
                     averageResultsPerSearch = 2.35,
-                    routeClicks = 33,
                     detailsOpened = 28
                 ),
             dailySeries =
                 listOf(
-                    PublicAnalyticsDailySeriesPoint("2026-05-14", 12, 20, 18, 2, 4, 6),
-                    PublicAnalyticsDailySeriesPoint("2026-05-15", 18, 22, 19, 3, 5, 7)
+                    PublicAnalyticsDailySeriesPoint("2026-05-14", 12, 20, 18, 2, 6),
+                    PublicAnalyticsDailySeriesPoint("2026-05-15", 18, 22, 19, 3, 7)
                 ),
             monthlySeries =
                 listOf(
@@ -103,7 +102,7 @@ class PublicAnalyticsControllerTest : RoutingTestBase() {
                 ),
             eventTotals =
                 listOf(
-                    PublicAnalyticsEventTotal("route_clicked", "Route opened", 33)
+                    PublicAnalyticsEventTotal("restroom_details_opened", "Details opened", 28)
                 )
         )
 }

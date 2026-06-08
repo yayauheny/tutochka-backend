@@ -13,7 +13,6 @@ data class PublicAnalyticsEventMetrics(
     val successfulSearches: Long = 0,
     val emptySearches: Long = 0,
     val totalResultsAcrossSearches: Long = 0,
-    val routeClicks: Long = 0,
     val detailsOpened: Long = 0
 )
 
@@ -23,7 +22,6 @@ data class PublicAnalyticsDailyAggregate(
     val searches: Long,
     val successfulSearches: Long,
     val emptySearches: Long,
-    val routeClicks: Long,
     val detailsOpened: Long
 )
 
@@ -74,7 +72,6 @@ data class PublicAnalyticsSummary(
     val emptySearches: Long,
     val successRate: Double,
     val averageResultsPerSearch: Double,
-    val routeClicks: Long,
     val detailsOpened: Long
 )
 
@@ -84,7 +81,6 @@ data class PublicAnalyticsDailySeriesPoint(
     val searches: Long,
     val successfulSearches: Long,
     val emptySearches: Long,
-    val routeClicks: Long,
     val detailsOpened: Long
 )
 

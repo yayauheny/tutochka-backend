@@ -12,12 +12,10 @@ import org.junit.jupiter.api.DisplayName
 import org.junit.jupiter.api.Test
 import yayauheny.by.analytics.entity.AnalyticsEventEntity
 import yayauheny.by.analytics.entity.UserEntity
-import yayauheny.by.analytics.model.AnalyticsIdentityHeaders
 import yayauheny.by.analytics.repository.AnalyticsEventJpaRepository
 import yayauheny.by.analytics.repository.UserAnalyticsJpaRepository
 import yayauheny.by.analytics.repository.UserJpaRepository
 import yayauheny.by.analytics.service.AnalyticsService
-import yayauheny.by.common.util.toBigDecimalRounded
 import yayauheny.by.model.analytics.AcquisitionTag
 import yayauheny.by.model.analytics.AnalyticsEventCommand
 import yayauheny.by.model.analytics.AnalyticsSource
@@ -64,10 +62,9 @@ class AnalyticsServiceTest {
             tgChatId = "chat-123",
             username = "test_user",
             source = AnalyticsSource.TELEGRAM_BOT,
-            lat = 53.9006.toBigDecimalRounded(),
-            lon = 27.5590.toBigDecimalRounded(),
-            resultsCount = 5,
-            durationMs = 150
+            lat = 53.9006,
+            lon = 27.5590,
+            resultsCount = 5
         )
 
         every { encryptionService.encrypt("12345") } returns "encrypted_user"
@@ -75,7 +72,7 @@ class AnalyticsServiceTest {
         every { query.singleResult } returns userId
         every { userJpaRepository.getReferenceById(userId) } returns userEntity
         every { userAnalyticsJpaRepository.ensureUserAnalyticsRow(userId) } returns Unit
-        every { userAnalyticsJpaRepository.incrementMetrics(any(), any(), any(), any(), any(), any(), any(), any()) } returns Unit
+        every { userAnalyticsJpaRepository.incrementMetrics(any(), any(), any(), any(), any(), any(), any()) } returns Unit
         
         val eventSlot = slot<AnalyticsEventEntity>()
         every { analyticsEventJpaRepository.save(capture(eventSlot)) } answers { firstArg() }
@@ -87,15 +84,15 @@ class AnalyticsServiceTest {
         verify { query.setParameter("tgUserId", "encrypted_user") }
         verify { query.setParameter("tgChatId", "encrypted_chat") }
         verify { userAnalyticsJpaRepository.ensureUserAnalyticsRow(userId) }
-        verify { userAnalyticsJpaRepository.incrementMetrics(userId, 1, 1, 0, 0, 0, ProductAnalyticsEvent.NEAREST_RESTROOMS_RETURNED.value, any()) }
+        verify { userAnalyticsJpaRepository.incrementMetrics(userId, 1, 1, 0, 0, ProductAnalyticsEvent.NEAREST_RESTROOMS_RETURNED.value, any()) }
         
         val saved = eventSlot.captured
         assertThat(saved.event).isEqualTo(ProductAnalyticsEvent.NEAREST_RESTROOMS_RETURNED.value)
         assertThat(saved.user).isEqualTo(userEntity)
-        assertThat(saved.lat).isEqualTo(command.lat)
-        assertThat(saved.lon).isEqualTo(command.lon)
+        assertThat(saved.location?.y).isEqualTo(command.lat)
+        assertThat(saved.location?.x).isEqualTo(command.lon)
         assertThat(saved.resultsCount).isEqualTo(5)
-        assertThat(saved.durationMs).isEqualTo(150)
+        assertThat(saved.location?.srid).isEqualTo(4326)
     }
 
     @Test
@@ -103,7 +100,7 @@ class AnalyticsServiceTest {
         val userId = UUID.randomUUID()
         val userEntity = UserEntity().apply { this.id = userId }
         val command = AnalyticsEventCommand(
-            event = ProductAnalyticsEvent.ROUTE_CLICKED,
+            event = ProductAnalyticsEvent.RESTROOM_DETAILS_OPENED,
             tgUserId = 12345L,
             tgChatId = "chat-123",
             username = "test_user",
@@ -115,13 +112,13 @@ class AnalyticsServiceTest {
         every { query.singleResult } returns userId.toString()
         every { userJpaRepository.getReferenceById(userId) } returns userEntity
         every { userAnalyticsJpaRepository.ensureUserAnalyticsRow(userId) } returns Unit
-        every { userAnalyticsJpaRepository.incrementMetrics(any(), any(), any(), any(), any(), any(), any(), any()) } returns Unit
+        every { userAnalyticsJpaRepository.incrementMetrics(any(), any(), any(), any(), any(), any(), any()) } returns Unit
         every { analyticsEventJpaRepository.save(any()) } answers { firstArg() }
 
         analyticsService.trackProductEvent(command)
 
         verify { userJpaRepository.getReferenceById(userId) }
-        verify { userAnalyticsJpaRepository.incrementMetrics(userId, 0, 0, 0, 0, 1, ProductAnalyticsEvent.ROUTE_CLICKED.value, any()) }
+        verify { userAnalyticsJpaRepository.incrementMetrics(userId, 0, 0, 0, 1, ProductAnalyticsEvent.RESTROOM_DETAILS_OPENED.value, any()) }
     }
 
     @Test
@@ -141,7 +138,7 @@ class AnalyticsServiceTest {
 
         verify(exactly = 0) { encryptionService.encrypt(any()) }
         verify(exactly = 0) { entityManager.createNativeQuery(any<String>()) }
-        verify(exactly = 0) { userAnalyticsJpaRepository.incrementMetrics(any(), any(), any(), any(), any(), any(), any(), any()) }
+        verify(exactly = 0) { userAnalyticsJpaRepository.incrementMetrics(any(), any(), any(), any(), any(), any(), any()) }
 
         val saved = eventSlot.captured
         assertThat(saved.event).isEqualTo(ProductAnalyticsEvent.RESTROOM_DETAILS_OPENED.value)
@@ -175,88 +172,49 @@ class AnalyticsServiceTest {
 
     @Test
     fun `Non-trackable event does not save anything`() {
-        // Missing identity and not API
         val command = AnalyticsEventCommand(
-            event = ProductAnalyticsEvent.ROUTE_CLICKED,
+            event = ProductAnalyticsEvent.RESTROOM_DETAILS_OPENED,
             tgUserId = null,
             tgChatId = null,
             username = null,
             source = AnalyticsSource.TELEGRAM_BOT
         )
 
-        analyticsService.trackProductEvent(command)
+        val tracked = analyticsService.trackProductEvent(command)
 
+        assertThat(tracked).isFalse()
         verify(exactly = 0) { encryptionService.encrypt(any()) }
         verify(exactly = 0) { entityManager.createNativeQuery(any<String>()) }
         verify(exactly = 0) { analyticsEventJpaRepository.save(any()) }
     }
 
     @Test
-    fun `trackNearestRestroomsSearch chooses RETURNED when resultsCount greater than 0`() {
-        val identity = AnalyticsIdentityHeaders(tgUserId = 1L, tgChatId = "chat", username = "user", source = AnalyticsSource.TELEGRAM_BOT)
-        every { encryptionService.encrypt(any()) } returns "encrypted"
-        val userId = UUID.randomUUID()
-        every { query.singleResult } returns userId
-        every { userJpaRepository.getReferenceById(any()) } returns UserEntity().apply { this.id = userId }
-        every { userAnalyticsJpaRepository.ensureUserAnalyticsRow(any()) } returns Unit
-        every { userAnalyticsJpaRepository.incrementMetrics(any(), any(), any(), any(), any(), any(), any(), any()) } returns Unit
-        val eventSlot = slot<AnalyticsEventEntity>()
-        every { analyticsEventJpaRepository.save(capture(eventSlot)) } answers { firstArg() }
-
-        analyticsService.trackNearestRestroomsSearch(identity, resultsCount = 5, lat = 53.9, lon = 27.5)
-
-        assertThat(eventSlot.captured.event).isEqualTo(ProductAnalyticsEvent.NEAREST_RESTROOMS_RETURNED.value)
-    }
-
-    @Test
-    fun `trackNearestRestroomsSearch chooses NO_RESULTS when resultsCount is 0`() {
-        val identity = AnalyticsIdentityHeaders(tgUserId = 1L, tgChatId = "chat", username = "user", source = AnalyticsSource.TELEGRAM_BOT)
-        every { encryptionService.encrypt(any()) } returns "encrypted"
-        val userId = UUID.randomUUID()
-        every { query.singleResult } returns userId
-        every { userJpaRepository.getReferenceById(any()) } returns UserEntity().apply { this.id = userId }
-        every { userAnalyticsJpaRepository.ensureUserAnalyticsRow(any()) } returns Unit
-        every { userAnalyticsJpaRepository.incrementMetrics(any(), any(), any(), any(), any(), any(), any(), any()) } returns Unit
-        val eventSlot = slot<AnalyticsEventEntity>()
-        every { analyticsEventJpaRepository.save(capture(eventSlot)) } answers { firstArg() }
-
-        analyticsService.trackNearestRestroomsSearch(identity, resultsCount = 0, lat = 53.9, lon = 27.5)
-
-        assertThat(eventSlot.captured.event).isEqualTo(ProductAnalyticsEvent.NEAREST_RESTROOMS_NO_RESULTS.value)
-    }
-
-    @Test
     fun `Event-specific increment matrix for search success`() {
-        testIncrementMatrix(ProductAnalyticsEvent.NEAREST_RESTROOMS_RETURNED, searches = 1, success = 1, empty = 0, details = 0, routes = 0)
+        testIncrementMatrix(ProductAnalyticsEvent.NEAREST_RESTROOMS_RETURNED, searches = 1, success = 1, empty = 0, details = 0)
     }
 
     @Test
     fun `Event-specific increment matrix for search empty`() {
-        testIncrementMatrix(ProductAnalyticsEvent.NEAREST_RESTROOMS_NO_RESULTS, searches = 1, success = 0, empty = 1, details = 0, routes = 0)
+        testIncrementMatrix(ProductAnalyticsEvent.NEAREST_RESTROOMS_NO_RESULTS, searches = 1, success = 0, empty = 1, details = 0)
     }
 
     @Test
     fun `Event-specific increment matrix for details opened`() {
-        testIncrementMatrix(ProductAnalyticsEvent.RESTROOM_DETAILS_OPENED, searches = 0, success = 0, empty = 0, details = 1, routes = 0)
+        testIncrementMatrix(ProductAnalyticsEvent.RESTROOM_DETAILS_OPENED, searches = 0, success = 0, empty = 0, details = 1)
     }
 
-    @Test
-    fun `Event-specific increment matrix for route clicked`() {
-        testIncrementMatrix(ProductAnalyticsEvent.ROUTE_CLICKED, searches = 0, success = 0, empty = 0, details = 0, routes = 1)
-    }
-
-    private fun testIncrementMatrix(event: ProductAnalyticsEvent, searches: Int, success: Int, empty: Int, details: Int, routes: Int) {
+    private fun testIncrementMatrix(event: ProductAnalyticsEvent, searches: Int, success: Int, empty: Int, details: Int) {
         val userId = UUID.randomUUID()
         val command = AnalyticsEventCommand(event = event, tgUserId = 1L, tgChatId = "chat", username = "test", source = AnalyticsSource.TELEGRAM_BOT)
         every { encryptionService.encrypt(any()) } returns "encrypted"
         every { query.singleResult } returns userId
         every { userJpaRepository.getReferenceById(userId) } returns UserEntity().apply { this.id = userId }
         every { userAnalyticsJpaRepository.ensureUserAnalyticsRow(userId) } returns Unit
-        every { userAnalyticsJpaRepository.incrementMetrics(any(), any(), any(), any(), any(), any(), any(), any()) } returns Unit
+        every { userAnalyticsJpaRepository.incrementMetrics(any(), any(), any(), any(), any(), any(), any()) } returns Unit
         every { analyticsEventJpaRepository.save(any()) } answers { firstArg() }
 
         analyticsService.trackProductEvent(command)
 
-        verify { userAnalyticsJpaRepository.incrementMetrics(userId, searches, success, empty, details, routes, event.value, any()) }
+        verify { userAnalyticsJpaRepository.incrementMetrics(userId, searches, success, empty, details, event.value, any()) }
     }
 }

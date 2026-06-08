@@ -6,7 +6,6 @@ import java.time.ZoneOffset
 import java.util.UUID
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
-import org.mockito.Mockito.doThrow
 import org.mockito.Mockito.inOrder
 import org.mockito.Mockito.mock
 import org.mockito.Mockito.never
@@ -15,7 +14,7 @@ import org.mockito.Mockito.verify
 import org.mockito.Mockito.`when`
 import org.telegram.telegrambots.meta.api.objects.Update
 import yayauheny.by.analytics.model.AnalyticsIdentityHeaders
-import yayauheny.by.analytics.service.AnalyticsService
+import yayauheny.by.analytics.service.BusinessAnalyticsPublisher
 import yayauheny.by.bot.MessageSender
 import yayauheny.by.bot.cache.BackListSnapshotCache
 import yayauheny.by.bot.handler.UpdateContext
@@ -38,7 +37,7 @@ import yayauheny.by.service.import.schedule.YandexScheduleAdapter
 class LocationMessageHandlerTest {
     private val sender = mock(MessageSender::class.java)
     private val searchService = mock(RestroomService::class.java)
-    private val analyticsService = mock(AnalyticsService::class.java)
+    private val businessAnalyticsPublisher = mock(BusinessAnalyticsPublisher::class.java)
     private val userService = mock(UserService::class.java)
     private val backListSnapshotCache = mock(BackListSnapshotCache::class.java)
     private val formatterService = createFormatterService()
@@ -48,7 +47,7 @@ class LocationMessageHandlerTest {
         LocationMessageHandler(
             sender,
             searchService,
-            analyticsService,
+            businessAnalyticsPublisher,
             userService,
             backListSnapshotCache,
             formatterService,
@@ -79,10 +78,10 @@ class LocationMessageHandlerTest {
 
         handler.handle(Update(), ctx)
 
-        val order = inOrder(userService, searchService, analyticsService, sender, backListSnapshotCache)
+        val order = inOrder(userService, searchService, businessAnalyticsPublisher, sender, backListSnapshotCache)
         order.verify(userService).saveLocation(456L, 53.9, 27.56)
         order.verify(searchService).findNearestRestrooms(53.9, 27.56, 5, 15000)
-        order.verify(analyticsService).trackNearestRestroomsSearch(
+        order.verify(businessAnalyticsPublisher).trackNearestRestroomsSearch(
             AnalyticsIdentityHeaders(456L, "123", "test-user-10", AnalyticsSource.TELEGRAM_BOT),
             1,
             53.9,
@@ -103,7 +102,7 @@ class LocationMessageHandlerTest {
 
         verify(userService).saveLocation(456L, 53.9, 27.56)
         verify(searchService).findNearestRestrooms(53.9, 27.56, 5, 15000)
-        verify(analyticsService).trackNearestRestroomsSearch(
+        verify(businessAnalyticsPublisher).trackNearestRestroomsSearch(
             AnalyticsIdentityHeaders(456L, "123", "test-user-10", AnalyticsSource.TELEGRAM_BOT),
             0,
             53.9,
@@ -111,26 +110,6 @@ class LocationMessageHandlerTest {
         )
         verify(sender).sendText(123L, Messages.NO_TOILETS_FOUND)
         verify(backListSnapshotCache, never()).store(123L, 456L, 15000, emptyList())
-    }
-
-    @Test
-    fun `handle sends results even when analytics tracking fails`() {
-        val results = listOf(sampleItem("Test restroom"))
-        `when`(searchService.findNearestRestrooms(53.9, 27.56, 5, 15000))
-            .thenReturn(results)
-        doThrow(RuntimeException("boom")).`when`(analyticsService).trackNearestRestroomsSearch(
-            AnalyticsIdentityHeaders(456L, "123", "test-user-10", AnalyticsSource.TELEGRAM_BOT),
-            1,
-            53.9,
-            27.56
-        )
-
-        handler.handle(Update(), ctx)
-
-        verify(userService).saveLocation(456L, 53.9, 27.56)
-        verify(searchService).findNearestRestrooms(53.9, 27.56, 5, 15000)
-        verify(sender).sendText(123L, formatterService.toiletsFound(1), inlineKeyboard.toiletList(results))
-        verify(backListSnapshotCache).store(123L, 456L, 15000, results)
     }
 
     @Test

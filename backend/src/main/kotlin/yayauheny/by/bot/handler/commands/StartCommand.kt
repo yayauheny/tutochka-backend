@@ -1,11 +1,10 @@
 package yayauheny.by.bot.handler.commands
 
-import org.slf4j.LoggerFactory
 import org.springframework.core.annotation.Order
 import org.springframework.stereotype.Component
 import org.telegram.telegrambots.meta.api.objects.Update
 import org.telegram.telegrambots.meta.api.objects.message.Message
-import yayauheny.by.analytics.service.AnalyticsService
+import yayauheny.by.analytics.service.BusinessAnalyticsPublisher
 import yayauheny.by.bot.MessageSender
 import yayauheny.by.bot.handler.CommandHandler
 import yayauheny.by.bot.handler.UpdateContext
@@ -22,10 +21,8 @@ import yayauheny.by.model.analytics.ProductAnalyticsEvent
 class StartCommand(
     private val sender: MessageSender,
     private val replyKeyboard: ReplyKeyboardFactory,
-    private val analyticsService: AnalyticsService
+    private val businessAnalyticsPublisher: BusinessAnalyticsPublisher
 ) : CommandHandler {
-    private val log = LoggerFactory.getLogger(StartCommand::class.java)
-
     override fun command(): String {
         return "/start"
     }
@@ -44,9 +41,9 @@ class StartCommand(
     }
 
     private fun trackBotStarted(update: Update, ctx: UpdateContext) {
-        try {
-            val acquisitionTag = resolveAcquisitionTag(update.message)
-            val command = AnalyticsEventCommand(
+        val acquisitionTag = resolveAcquisitionTag(update.message)
+        businessAnalyticsPublisher.trackProductEvent(
+            AnalyticsEventCommand(
                 event = ProductAnalyticsEvent.BOT_STARTED,
                 tgUserId = ctx.userId,
                 tgChatId = ctx.chatId.toString(),
@@ -54,10 +51,7 @@ class StartCommand(
                 source = AnalyticsSource.TELEGRAM_BOT,
                 acquisitionTag = acquisitionTag
             )
-            analyticsService.trackProductEvent(command)
-        } catch (exception: Exception) {
-            log.warn("Failed to track bot start analytics", exception)
-        }
+        )
     }
 
     private fun resolveAcquisitionTag(message: Message?): AcquisitionTag {

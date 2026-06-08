@@ -17,7 +17,6 @@ import org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post
 import org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath
 import org.springframework.test.web.servlet.result.MockMvcResultMatchers.status
 import yayauheny.by.importing.service.ImportService
-import yayauheny.by.metrics.BackendSearchMetrics
 import yayauheny.by.model.enums.ImportPayloadType
 import yayauheny.by.model.enums.ImportProvider
 import yayauheny.by.model.imports.ImportBatchResult
@@ -32,9 +31,6 @@ class ImportControllerTest {
     class TestConfig {
         @Bean
         fun importService(): ImportService = mockk()
-
-        @Bean
-        fun backendSearchMetrics(): BackendSearchMetrics = mockk(relaxed = true)
     }
 
     @Autowired
@@ -45,9 +41,6 @@ class ImportControllerTest {
 
     @Autowired
     private lateinit var importService: ImportService
-
-    @Autowired
-    private lateinit var backendSearchMetrics: BackendSearchMetrics
 
     @Test
     fun `given raw array body when batch import then normalize items array and return created`() {

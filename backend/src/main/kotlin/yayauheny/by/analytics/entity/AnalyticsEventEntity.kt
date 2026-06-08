@@ -12,7 +12,7 @@ import jakarta.persistence.Table
 import org.hibernate.annotations.CreationTimestamp
 import org.hibernate.annotations.JdbcTypeCode
 import org.hibernate.type.SqlTypes
-import java.math.BigDecimal
+import org.locationtech.jts.geom.Point
 import java.time.Instant
 import java.util.UUID
 
@@ -37,17 +37,11 @@ class AnalyticsEventEntity {
     @Column(name = "source", nullable = false)
     var source: String = "telegram_bot"
 
-    @Column(name = "lat", precision = 5, scale = 2)
-    var lat: BigDecimal? = null
-
-    @Column(name = "lon", precision = 5, scale = 2)
-    var lon: BigDecimal? = null
+    @Column(name = "location", columnDefinition = "geometry(Point,4326)")
+    var location: Point? = null
 
     @Column(name = "results_count")
     var resultsCount: Int? = null
-
-    @Column(name = "duration_ms")
-    var durationMs: Int? = null
 
     @JdbcTypeCode(SqlTypes.JSON)
     @Column(name = "metadata", nullable = false, columnDefinition = "jsonb")

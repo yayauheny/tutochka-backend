@@ -4,10 +4,10 @@ import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
 import jakarta.persistence.EntityManager
 import jakarta.persistence.PersistenceContext
+import org.locationtech.jts.geom.Coordinate
+import org.locationtech.jts.geom.GeometryFactory
 import yayauheny.by.analytics.entity.AnalyticsEventEntity
-import yayauheny.by.analytics.entity.UserAnalyticsEntity
 import yayauheny.by.analytics.entity.UserEntity
-import yayauheny.by.analytics.model.AnalyticsIdentityHeaders
 import yayauheny.by.analytics.model.EncryptedAnalyticsEventCommand
 import yayauheny.by.analytics.repository.AnalyticsEventJpaRepository
 import yayauheny.by.analytics.repository.UserAnalyticsJpaRepository
@@ -16,7 +16,6 @@ import yayauheny.by.model.analytics.AnalyticsEventCommand
 import yayauheny.by.model.analytics.AnalyticsSource
 import yayauheny.by.model.analytics.ProductAnalyticsEvent
 import yayauheny.by.util.EncryptionService
-import yayauheny.by.common.util.toBigDecimalRounded
 import java.time.Instant
 import java.util.UUID
 
@@ -27,43 +26,24 @@ class AnalyticsService(
     private val analyticsEventJpaRepository: AnalyticsEventJpaRepository,
     private val encryptionService: EncryptionService
 ) {
+    private val geometryFactory = GeometryFactory()
+
     @PersistenceContext
     private lateinit var entityManager: EntityManager
 
     @Transactional
-    fun trackProductEvent(command: AnalyticsEventCommand) {
-        when {
-            command.hasTelegramIdentity() -> trackEncryptedProductEvent(command.toEncryptedCommand())
-            command.canBeTrackedAnonymously() -> trackEncryptedProductEvent(command.toAnonymousCommand())
-        }
-    }
-
-    @Transactional
-    fun trackNearestRestroomsSearch(
-        identity: AnalyticsIdentityHeaders,
-        resultsCount: Int,
-        lat: Double,
-        lon: Double
-    ) {
-        val event =
-            if (resultsCount > 0) {
-                ProductAnalyticsEvent.NEAREST_RESTROOMS_RETURNED
-            } else {
-                ProductAnalyticsEvent.NEAREST_RESTROOMS_NO_RESULTS
+    fun trackProductEvent(command: AnalyticsEventCommand): Boolean {
+        return when {
+            command.hasTelegramIdentity() -> {
+                trackEncryptedProductEvent(command.toEncryptedCommand())
+                true
             }
-
-        val command =
-            AnalyticsEventCommand(
-                event = event,
-                tgUserId = identity.tgUserId,
-                tgChatId = identity.tgChatId,
-                username = identity.username,
-                source = identity.source,
-                lat = lat?.toBigDecimalRounded(),
-                lon = lon?.toBigDecimalRounded(),
-                resultsCount = resultsCount
-            )
-        trackProductEvent(command)
+            command.canBeTrackedAnonymously() -> {
+                trackEncryptedProductEvent(command.toAnonymousCommand())
+                true
+            }
+            else -> false
+        }
     }
 
     private fun trackEncryptedProductEvent(command: EncryptedAnalyticsEventCommand) {
@@ -82,11 +62,10 @@ class AnalyticsService(
             userAnalyticsJpaRepository.ensureUserAnalyticsRow(userId)
 
             val isSearch = command.event == ProductAnalyticsEvent.NEAREST_RESTROOMS_RETURNED ||
-                    command.event == ProductAnalyticsEvent.NEAREST_RESTROOMS_NO_RESULTS
+                command.event == ProductAnalyticsEvent.NEAREST_RESTROOMS_NO_RESULTS
             val isSuccessSearch = command.event == ProductAnalyticsEvent.NEAREST_RESTROOMS_RETURNED
             val isEmptySearch = command.event == ProductAnalyticsEvent.NEAREST_RESTROOMS_NO_RESULTS
             val isDetailsOpened = command.event == ProductAnalyticsEvent.RESTROOM_DETAILS_OPENED
-            val isRouteClicked = command.event == ProductAnalyticsEvent.ROUTE_CLICKED
 
             userAnalyticsJpaRepository.incrementMetrics(
                 userId = user.id!!,
@@ -94,7 +73,6 @@ class AnalyticsService(
                 successfulSearchesInc = if (isSuccessSearch) 1 else 0,
                 emptySearchesInc = if (isEmptySearch) 1 else 0,
                 detailsOpenedInc = if (isDetailsOpened) 1 else 0,
-                routesClickedInc = if (isRouteClicked) 1 else 0,
                 lastEvent = command.event.value,
                 lastEventAt = Instant.now()
             )
@@ -104,10 +82,8 @@ class AnalyticsService(
             this.event = command.event.value
             this.user = user
             this.source = command.source.value
-            this.lat = command.lat
-            this.lon = command.lon
+            this.location = command.toPoint()
             this.resultsCount = command.resultsCount
-            this.durationMs = command.durationMs
             this.metadata = command.metadata ?: emptyMap()
         }
         analyticsEventJpaRepository.save(eventEntity)
@@ -128,7 +104,6 @@ class AnalyticsService(
             lat = lat,
             lon = lon,
             resultsCount = resultsCount,
-            durationMs = durationMs,
             acquisitionTag = acquisitionTag,
             metadata = metadata
         )
@@ -144,7 +119,6 @@ class AnalyticsService(
             lat = lat,
             lon = lon,
             resultsCount = resultsCount,
-            durationMs = durationMs,
             acquisitionTag = null,
             metadata = metadata
         )
@@ -175,7 +149,6 @@ class AnalyticsService(
                 )
                 ON CONFLICT (tg_user_id) DO UPDATE
                 SET tg_chat_id = EXCLUDED.tg_chat_id,
-                    source = EXCLUDED.source,
                     username = COALESCE(EXCLUDED.username, users.username),
                     acquisition_tag = COALESCE(CAST(:acquisitionTag AS text), users.acquisition_tag),
                     updated_at = now()
@@ -196,4 +169,13 @@ class AnalyticsService(
             else -> UUID.fromString(result.toString())
         }
     }
+
+    private fun EncryptedAnalyticsEventCommand.toPoint() =
+        if (lat != null && lon != null) {
+            geometryFactory.createPoint(Coordinate(lon, lat)).also {
+                it.srid = 4326
+            }
+        } else {
+            null
+        }
 }

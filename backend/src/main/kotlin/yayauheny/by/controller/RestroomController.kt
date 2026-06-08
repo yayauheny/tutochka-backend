@@ -6,26 +6,23 @@ import jakarta.validation.constraints.DecimalMax
 import jakarta.validation.constraints.DecimalMin
 import jakarta.validation.constraints.Max
 import jakarta.validation.constraints.Min
-import org.slf4j.LoggerFactory
 import org.springframework.http.HttpStatus
 import org.springframework.http.MediaType
 import org.springframework.http.ResponseEntity
 import org.springframework.web.bind.annotation.*
 import org.springframework.validation.annotation.Validated
 import yayauheny.by.common.config.ApiProperties
-import yayauheny.by.analytics.service.AnalyticsService
+import yayauheny.by.analytics.service.BusinessAnalyticsPublisher
 import yayauheny.by.analytics.model.AnalyticsIdentityHeaders
 import yayauheny.by.common.errors.EntityNotFoundException
 import yayauheny.by.common.errors.ValidationException
-import yayauheny.by.metrics.BackendSearchMetrics
-import yayauheny.by.metrics.MetricLabelWhitelist
-import yayauheny.by.metrics.SearchMetricBuckets
+import yayauheny.by.common.query.PaginationRequest
+import yayauheny.by.common.query.SortDirection
 import yayauheny.by.model.analytics.AnalyticsSource
 import yayauheny.by.model.restroom.RestroomFilter
 import yayauheny.by.model.restroom.RestroomCreateDto
 import yayauheny.by.model.restroom.RestroomUpdateDto
 import yayauheny.by.service.RestroomService
-import yayauheny.by.util.toPaginationRequest
 import java.util.UUID
 
 @RestController
@@ -33,12 +30,9 @@ import java.util.UUID
 @Validated
 class RestroomController(
     private val restroomService: RestroomService,
-    private val backendSearchMetrics: BackendSearchMetrics,
-    private val analyticsService: AnalyticsService,
+    private val businessAnalyticsPublisher: BusinessAnalyticsPublisher,
     private val apiProperties: ApiProperties
 ) {
-    private val log = LoggerFactory.getLogger(RestroomController::class.java)
-
     @GetMapping
     fun getAllRestrooms(
         @Valid @ModelAttribute filter: RestroomFilter,
@@ -76,7 +70,6 @@ class RestroomController(
 
     @GetMapping("/nearest")
     fun getNearestRestrooms(
-        @RequestHeader(name = "X-Client-Type", required = false) clientTypeHeader: String?,
         @RequestHeader(name = "X-Tg-User-Id", required = false) tgUserId: Long?,
         @RequestHeader(name = "X-Tg-Chat-Id", required = false) tgChatId: String?,
         @RequestHeader(name = "X-Tg-Username", required = false) username: String?,
@@ -88,9 +81,6 @@ class RestroomController(
     ): ResponseEntity<Any> {
         val resolvedLimit = limit ?: apiProperties.defaults.maxNearestRestroomsSize
         val resolvedDistanceMeters = distanceMeters ?: apiProperties.defaults.maxDistanceMeters
-        val clientType = MetricLabelWhitelist.clientTypeOrDefault(clientTypeHeader)
-        val radiusBucket = SearchMetricBuckets.radiusBucketOrFallback(resolvedDistanceMeters.toString())
-        backendSearchMetrics.incrementSearchRequest(clientType, radiusBucket)
         val normalizedUsername = username?.trim()?.takeIf { it.isNotEmpty() }
 
         try {
@@ -102,42 +92,27 @@ class RestroomController(
             )
 
             val resultsCount = restrooms.size
-            val firstDistanceMeters = restrooms.firstOrNull()?.distanceMeters?.toInt()
-
-            backendSearchMetrics.incrementSearchResults(
-                clientType = clientType,
-                resultBucket = SearchMetricBuckets.resultBucket(resultsCount)
-            )
-            backendSearchMetrics.incrementSearchQuality(
-                clientType = clientType,
-                qualityBucket = SearchMetricBuckets.qualityBucket(resultsCount, firstDistanceMeters)
-            )
-
             val source = resolveAnalyticsSource(sourceHeader, tgUserId, tgChatId)
-            val identity = AnalyticsIdentityHeaders(
-                tgUserId = tgUserId,
-                tgChatId = tgChatId,
-                username = normalizedUsername,
-                source = source
+            businessAnalyticsPublisher.trackNearestRestroomsSearch(
+                identity = AnalyticsIdentityHeaders(
+                    tgUserId = tgUserId,
+                    tgChatId = tgChatId,
+                    username = normalizedUsername,
+                    source = source
+                ),
+                resultsCount = resultsCount,
+                lat = lat,
+                lon = lon
             )
-            runCatching {
-                analyticsService.trackNearestRestroomsSearch(identity, resultsCount, lat, lon)
-            }.onFailure { exception ->
-                log.warn("Failed to track nearest restroom analytics", exception)
-            }
 
             return ResponseEntity.ok(restrooms)
         } catch (e: ValidationException) {
-            backendSearchMetrics.incrementSearchFailure("validation")
             throw e
         } catch (e: IllegalArgumentException) {
-            backendSearchMetrics.incrementSearchFailure("validation")
             throw e
         } catch (e: EntityNotFoundException) {
-            backendSearchMetrics.incrementSearchFailure("not_found")
             throw e
         } catch (e: Exception) {
-            backendSearchMetrics.incrementSearchFailure("internal")
             throw e
         }
     }
@@ -175,5 +150,29 @@ class RestroomController(
             } else {
                 AnalyticsSource.API
             }
+    }
+
+    private fun HttpServletRequest.toPaginationRequest(
+        defaultPage: Int,
+        defaultSize: Int,
+        maxSize: Int
+    ): PaginationRequest {
+        val page = getParameter("page")?.toIntOrNull()?.coerceAtLeast(0) ?: defaultPage.coerceAtLeast(0)
+        val parsedSize = getParameter("size")?.toIntOrNull() ?: defaultSize
+        val size = parsedSize.coerceAtLeast(1).coerceAtMost(maxSize.coerceAtLeast(1))
+        val sort = getParameter("sort")?.trim()?.takeIf { it.isNotEmpty() }
+        val direction =
+            if (getParameter("direction")?.trim()?.uppercase() == SortDirection.DESC.name) {
+                SortDirection.DESC
+            } else {
+                SortDirection.ASC
+            }
+
+        return PaginationRequest(
+            sort = sort,
+            direction = direction,
+            page = page,
+            size = size
+        )
     }
 }

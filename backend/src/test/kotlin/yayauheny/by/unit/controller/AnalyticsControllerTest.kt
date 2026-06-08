@@ -9,6 +9,7 @@ import org.mockito.Mockito.verify
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest
 import org.springframework.http.HttpStatus
 import yayauheny.by.analytics.api.AnalyticsController
+import yayauheny.by.analytics.service.BusinessAnalyticsPublisher
 import yayauheny.by.model.analytics.AnalyticsEventCommand
 import yayauheny.by.model.analytics.AnalyticsSource
 import yayauheny.by.model.analytics.ProductAnalyticsEvent
@@ -24,7 +25,7 @@ class AnalyticsControllerTest : RoutingTestBase() {
             val response =
                 testPost(
                     "/api/v1/analytics/events",
-                    """{"event":"restroom_details_opened","lat":53.9,"lon":27.5,"resultsCount":2,"durationMs":150,"metadata":{"source":"test"}}""",
+                    """{"event":"restroom_details_opened","lat":53.9,"lon":27.5,"resultsCount":2,"metadata":{"source":"test"}}""",
                     mapOf(
                         "X-Tg-User-Id" to "12345",
                         "X-Tg-Chat-Id" to "chat-1",
@@ -35,17 +36,16 @@ class AnalyticsControllerTest : RoutingTestBase() {
 
             assertThat(response.status).isEqualTo(HttpStatus.ACCEPTED)
 
-            verify(analyticsService).trackProductEvent(
+            verify(businessAnalyticsPublisher).trackProductEvent(
                 AnalyticsEventCommand(
                     event = ProductAnalyticsEvent.RESTROOM_DETAILS_OPENED,
                     tgUserId = 12345L,
                     tgChatId = "chat-1",
                     username = "user",
                     source = AnalyticsSource.TELEGRAM_BOT,
-                    lat = BigDecimal("53.90"),
-                    lon = BigDecimal("27.50"),
+                    lat = 53.9,
+                    lon = 27.5,
                     resultsCount = 2,
-                    durationMs = 150,
                     acquisitionTag = null,
                     metadata = mapOf("source" to "test")
                 )
@@ -60,15 +60,15 @@ class AnalyticsControllerTest : RoutingTestBase() {
             val response =
                 testPost(
                     "/api/v1/analytics/events",
-                    """{"event":"route_clicked"}""",
+                    """{"event":"restroom_details_opened"}""",
                     mapOf("X-Analytics-Source" to "unknown")
                 )
 
             assertThat(response.status).isEqualTo(HttpStatus.ACCEPTED)
 
-            verify(analyticsService).trackProductEvent(
+            verify(businessAnalyticsPublisher).trackProductEvent(
                 AnalyticsEventCommand(
-                    event = ProductAnalyticsEvent.ROUTE_CLICKED,
+                    event = ProductAnalyticsEvent.RESTROOM_DETAILS_OPENED,
                     tgUserId = null,
                     tgChatId = null,
                     username = null,
@@ -76,7 +76,6 @@ class AnalyticsControllerTest : RoutingTestBase() {
                     lat = null,
                     lon = null,
                     resultsCount = null,
-                    durationMs = null,
                     acquisitionTag = null,
                     metadata = emptyMap()
                 )
@@ -91,15 +90,15 @@ class AnalyticsControllerTest : RoutingTestBase() {
             val response =
                 testPost(
                     "/api/v1/analytics/events",
-                    """{"event":"route_clicked"}""",
+                    """{"event":"restroom_details_opened"}""",
                     mapOf("X-Analytics-Source" to "TELEGRAM_BOT")
                 )
 
             assertThat(response.status).isEqualTo(HttpStatus.ACCEPTED)
 
-            verify(analyticsService).trackProductEvent(
+            verify(businessAnalyticsPublisher).trackProductEvent(
                 AnalyticsEventCommand(
-                    event = ProductAnalyticsEvent.ROUTE_CLICKED,
+                    event = ProductAnalyticsEvent.RESTROOM_DETAILS_OPENED,
                     tgUserId = null,
                     tgChatId = null,
                     username = null,
@@ -107,7 +106,6 @@ class AnalyticsControllerTest : RoutingTestBase() {
                     lat = null,
                     lon = null,
                     resultsCount = null,
-                    durationMs = null,
                     acquisitionTag = null,
                     metadata = emptyMap()
                 )

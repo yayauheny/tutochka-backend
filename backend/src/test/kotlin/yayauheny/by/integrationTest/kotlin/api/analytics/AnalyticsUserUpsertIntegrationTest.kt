@@ -52,8 +52,8 @@ class AnalyticsUserUpsertIntegrationTest : integration.base.BaseIntegrationTest(
     }
 
     @Test
-    @DisplayName("repeated event updates the same user and refreshes mutable fields")
-    fun repeated_event_updates_the_same_user_and_refreshes_mutable_fields() {
+    @DisplayName("repeated event updates the same user without overwriting original source")
+    fun repeated_event_updates_the_same_user_without_overwriting_original_source() {
         analyticsService.trackProductEvent(
             analyticsCommand(
                 userId = 10L,
@@ -82,7 +82,7 @@ class AnalyticsUserUpsertIntegrationTest : integration.base.BaseIntegrationTest(
         assertThat(encryptionService.decrypt(user.tgUserId)).isEqualTo("10")
         assertThat(encryptionService.decrypt(user.tgChatId)).isEqualTo("chat-2")
         assertThat(user.username).isEqualTo("second-user")
-        assertThat(user.source).isEqualTo(AnalyticsSource.API.value)
+        assertThat(user.source).isEqualTo(AnalyticsSource.TELEGRAM_BOT.value)
         assertThat(user.acquisitionTag).isEqualTo(AcquisitionTag.WEBSITE.value)
 
         val userAnalytics = userAnalyticsRepository.findAll().single()

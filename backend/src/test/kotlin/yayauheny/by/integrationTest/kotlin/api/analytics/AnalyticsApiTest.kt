@@ -1,6 +1,5 @@
 package integration.api.analytics
 
-import java.math.BigDecimal
 import java.util.UUID
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.DisplayName
@@ -112,8 +111,8 @@ class AnalyticsApiTest : integration.base.BaseIntegrationTest() {
 
         val event = analyticsEventRepository.findAll().single()
         assertThat(event.event).isEqualTo("nearest_restrooms_returned")
-        assertThat(event.lat).isEqualByComparingTo(BigDecimal("53.90"))
-        assertThat(event.lon).isEqualByComparingTo(BigDecimal("27.56"))
+        assertThat(event.location?.y).isEqualTo(53.904321)
+        assertThat(event.location?.x).isEqualTo(27.561234)
         assertThat(event.resultsCount).isEqualTo(1)
 
         val userAnalytics = userAnalyticsRepository.findAll().single()
@@ -146,8 +145,8 @@ class AnalyticsApiTest : integration.base.BaseIntegrationTest() {
 
         val event = analyticsEventRepository.findAll().single()
         assertThat(event.event).isEqualTo("nearest_restrooms_no_results")
-        assertThat(event.lat).isEqualByComparingTo(BigDecimal("53.90"))
-        assertThat(event.lon).isEqualByComparingTo(BigDecimal("27.56"))
+        assertThat(event.location?.y).isEqualTo(53.904321)
+        assertThat(event.location?.x).isEqualTo(27.561234)
         assertThat(event.resultsCount).isEqualTo(0)
 
         val userAnalytics = userAnalyticsRepository.findAll().single()

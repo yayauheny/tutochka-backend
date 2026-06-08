@@ -209,7 +209,7 @@ class RestroomControllerTest : RoutingTestBase() {
             doAnswer {
                 capturedIdentity = it.getArgument(0)
                 null
-            }.`when`(analyticsService).trackNearestRestroomsSearch(any(), anyInt(), anyDouble(), anyDouble())
+            }.`when`(businessAnalyticsPublisher).trackNearestRestroomsSearch(any(), anyInt(), anyDouble(), anyDouble())
 
             withRoutingApp {
                 val response =
@@ -221,7 +221,7 @@ class RestroomControllerTest : RoutingTestBase() {
                 assertEquals(HttpStatus.OK, response.status)
             }
 
-            verify(analyticsService).trackNearestRestroomsSearch(any(), eq(0), eq(55.7558), eq(37.6176))
+            verify(businessAnalyticsPublisher).trackNearestRestroomsSearch(any(), eq(0), eq(55.7558), eq(37.6176))
             assertEquals(AnalyticsSource.API, capturedIdentity?.source)
         }
 
@@ -233,7 +233,7 @@ class RestroomControllerTest : RoutingTestBase() {
             doAnswer {
                 capturedIdentity = it.getArgument(0)
                 null
-            }.`when`(analyticsService).trackNearestRestroomsSearch(any(), anyInt(), anyDouble(), anyDouble())
+            }.`when`(businessAnalyticsPublisher).trackNearestRestroomsSearch(any(), anyInt(), anyDouble(), anyDouble())
 
             withRoutingApp {
                 val response =
@@ -250,7 +250,7 @@ class RestroomControllerTest : RoutingTestBase() {
                 assertEquals(HttpStatus.OK, response.status)
             }
 
-            verify(analyticsService).trackNearestRestroomsSearch(any(), eq(0), eq(55.7558), eq(37.6176))
+            verify(businessAnalyticsPublisher).trackNearestRestroomsSearch(any(), eq(0), eq(55.7558), eq(37.6176))
             assertEquals(AnalyticsSource.TELEGRAM_BOT, capturedIdentity?.source)
         }
 

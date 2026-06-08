@@ -17,14 +17,9 @@ import jakarta.validation.ConstraintViolationException
 import org.springframework.http.converter.HttpMessageNotReadableException
 import java.lang.reflect.UndeclaredThrowableException
 import yayauheny.by.importing.exception.ImportException
-import yayauheny.by.metrics.BackendSearchMetrics
-import yayauheny.by.metrics.MetricLabelWhitelist
 
 @RestControllerAdvice
-class GlobalExceptionHandler(
-    private val backendSearchMetrics: BackendSearchMetrics
-) {
-
+class GlobalExceptionHandler {
     private val log = LoggerFactory.getLogger(GlobalExceptionHandler::class.java)
 
     @ExceptionHandler(
@@ -104,11 +99,6 @@ class GlobalExceptionHandler(
         ImportException::class
     )
     fun handleBadRequestExceptions(e: Exception, request: HttpServletRequest): ResponseEntity<ErrorResponse> {
-        if (request.requestURI == "/api/v1/restrooms/nearest") {
-            val clientType = MetricLabelWhitelist.clientTypeOrDefault(request.getHeader("X-Client-Type"))
-            backendSearchMetrics.incrementSearchRequest(clientType, "unknown")
-            backendSearchMetrics.incrementSearchFailure("validation")
-        }
         val fieldErrors =
             if (e is ConstraintViolationException) {
                 e.constraintViolations.map { violation ->

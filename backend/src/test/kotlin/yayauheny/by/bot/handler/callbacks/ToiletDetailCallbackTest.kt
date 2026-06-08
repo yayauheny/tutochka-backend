@@ -18,7 +18,7 @@ import org.telegram.telegrambots.meta.api.objects.User
 import org.telegram.telegrambots.meta.api.objects.chat.Chat
 import org.telegram.telegrambots.meta.api.objects.message.Message
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.InlineKeyboardMarkup
-import yayauheny.by.analytics.service.AnalyticsService
+import yayauheny.by.analytics.service.BusinessAnalyticsPublisher
 import yayauheny.by.bot.MessageSender
 import yayauheny.by.bot.handler.UpdateContext
 import yayauheny.by.bot.keyboard.InlineKeyboardFactory
@@ -50,10 +50,10 @@ import yayauheny.by.service.import.schedule.YandexScheduleAdapter
 class ToiletDetailCallbackTest {
     private val sender = mock(MessageSender::class.java)
     private val searchService = mock(RestroomService::class.java)
-    private val analyticsService = mock(AnalyticsService::class.java)
+    private val businessAnalyticsPublisher = mock(BusinessAnalyticsPublisher::class.java)
     private val formatterService = createFormatterService()
     private val inlineKeyboard = InlineKeyboardFactory(formatterService)
-    private val handler = ToiletDetailCallback(sender, searchService, analyticsService, formatterService, inlineKeyboard)
+    private val handler = ToiletDetailCallback(sender, searchService, businessAnalyticsPublisher, formatterService, inlineKeyboard)
 
     @Test
     fun `should render detail with keyboard for valid id`() {
@@ -70,7 +70,7 @@ class ToiletDetailCallbackTest {
 
         verify(searchService).getRestroomById(restroomId)
         verify(sender).editOrReply(ctx, expectedText, expectedKeyboard)
-        verify(analyticsService).trackProductEvent(
+        verify(businessAnalyticsPublisher).trackProductEvent(
             AnalyticsEventCommand(
                 event = ProductAnalyticsEvent.RESTROOM_DETAILS_OPENED,
                 tgUserId = 10L,
@@ -117,7 +117,7 @@ class ToiletDetailCallbackTest {
 
         verify(searchService).getRestroomById(restroomId)
         verify(sender).editOrReply(ctx, Messages.TOILET_NOT_FOUND, null)
-        verifyNoInteractions(analyticsService)
+        verifyNoInteractions(businessAnalyticsPublisher)
     }
 
     private fun detailUpdate(callbackData: String): Update {

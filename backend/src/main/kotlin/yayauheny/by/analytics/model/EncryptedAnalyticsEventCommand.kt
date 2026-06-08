@@ -1,7 +1,5 @@
 package yayauheny.by.analytics.model
 
-import java.math.BigDecimal
-
 import yayauheny.by.model.analytics.AcquisitionTag
 import yayauheny.by.model.analytics.AnalyticsSource
 import yayauheny.by.model.analytics.ProductAnalyticsEvent
@@ -12,10 +10,9 @@ data class EncryptedAnalyticsEventCommand(
     val tgChatId: String?,
     val username: String?,
     val source: AnalyticsSource = AnalyticsSource.TELEGRAM_BOT,
-    val lat: BigDecimal? = null,
-    val lon: BigDecimal? = null,
+    val lat: Double? = null,
+    val lon: Double? = null,
     val resultsCount: Int? = null,
-    val durationMs: Int? = null,
     val acquisitionTag: AcquisitionTag? = null,
     val metadata: Map<String, Any> = emptyMap()
 )

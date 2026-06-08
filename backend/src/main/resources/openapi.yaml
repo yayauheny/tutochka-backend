@@ -972,9 +972,6 @@ components:
         resultsCount:
           type: integer
           nullable: true
-        durationMs:
-          type: integer
-          nullable: true
         acquisitionTag:
           type: object
           nullable: true

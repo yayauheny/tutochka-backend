@@ -358,10 +358,9 @@ object DatabaseTestHelper {
                 successful_searches_count,
                 empty_searches_count,
                 details_opened_count,
-                routes_clicked_count,
                 last_event,
                 last_event_at
-            ) VALUES (?, 0, 0, 0, 0, 0, NULL, NULL)
+            ) VALUES (?, 0, 0, 0, 0, NULL, NULL)
             """.trimIndent(),
             userId
         )

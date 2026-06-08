@@ -22,7 +22,6 @@ import org.telegram.telegrambots.meta.api.objects.Update
 import yayauheny.by.common.config.TelegramBotProperties
 import yayauheny.by.common.config.TelegramWebhookSecretTokenFilter
 import yayauheny.by.service.BotUpdateService
-import yayauheny.by.metrics.BackendSearchMetrics
 import org.springframework.boot.test.context.TestConfiguration
 import org.springframework.context.annotation.Bean
 
@@ -40,9 +39,6 @@ class TelegramWebhookControllerTest {
     class TestConfig {
         @Bean
         fun botUpdateService(): BotUpdateService = mockk()
-
-        @Bean
-        fun backendSearchMetrics(): BackendSearchMetrics = mockk(relaxed = true)
     }
 
     @Autowired

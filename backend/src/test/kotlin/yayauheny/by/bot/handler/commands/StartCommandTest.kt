@@ -10,7 +10,7 @@ import org.telegram.telegrambots.meta.api.objects.User
 import org.telegram.telegrambots.meta.api.objects.chat.Chat
 import org.telegram.telegrambots.meta.api.objects.message.Message
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.ReplyKeyboardMarkup
-import yayauheny.by.analytics.service.AnalyticsService
+import yayauheny.by.analytics.service.BusinessAnalyticsPublisher
 import yayauheny.by.bot.MessageSender
 import yayauheny.by.bot.handler.UpdateContext
 import yayauheny.by.bot.keyboard.ReplyKeyboardFactory
@@ -23,8 +23,8 @@ import yayauheny.by.model.analytics.ProductAnalyticsEvent
 class StartCommandTest {
     private val sender = mock(MessageSender::class.java)
     private val replyKeyboard = mock(ReplyKeyboardFactory::class.java)
-    private val analyticsService = mock(AnalyticsService::class.java)
-    private val handler = StartCommand(sender, replyKeyboard, analyticsService)
+    private val businessAnalyticsPublisher = mock(BusinessAnalyticsPublisher::class.java)
+    private val handler = StartCommand(sender, replyKeyboard, businessAnalyticsPublisher)
 
     @Test
     fun `canHandle matches start command`() {
@@ -40,7 +40,7 @@ class StartCommandTest {
 
         handler.handle(update, ctx)
 
-        verify(analyticsService).trackProductEvent(
+        verify(businessAnalyticsPublisher).trackProductEvent(
             AnalyticsEventCommand(
                 event = ProductAnalyticsEvent.BOT_STARTED,
                 tgUserId = 10L,

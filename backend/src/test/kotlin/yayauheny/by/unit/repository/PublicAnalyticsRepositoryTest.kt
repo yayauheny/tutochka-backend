@@ -47,7 +47,7 @@ class PublicAnalyticsRepositoryTest : RepositorySliceTestBase() {
         )
         DatabaseTestHelper.insertAnalyticsEvent(
             DatabaseTestHelper.createTestAnalyticsEventData(
-                event = "route_clicked",
+                event = "restroom_details_opened",
                 userId = outOfWindowUserId,
                 createdAt = Instant.parse("2026-05-06T11:00:00Z")
             )
@@ -68,8 +68,7 @@ class PublicAnalyticsRepositoryTest : RepositorySliceTestBase() {
         assertThat(metrics.successfulSearches).isEqualTo(1)
         assertThat(metrics.emptySearches).isEqualTo(1)
         assertThat(metrics.totalResultsAcrossSearches).isEqualTo(3)
-        assertThat(metrics.routeClicks).isEqualTo(1)
-        assertThat(metrics.detailsOpened).isZero()
+        assertThat(metrics.detailsOpened).isEqualTo(1)
     }
 
     @Test
@@ -136,7 +135,7 @@ class PublicAnalyticsRepositoryTest : RepositorySliceTestBase() {
                 tuple("2026-06", 0L, 1L, 1L)
             )
 
-        val eventTotals = repository.fetchEventTotals(1)
+        val eventTotals = repository.fetchEventTotals()
         assertThat(eventTotals.map { it.eventKey to it.count }).contains(
             "nearest_restrooms_returned" to 1L,
             "nearest_restrooms_no_results" to 1L,

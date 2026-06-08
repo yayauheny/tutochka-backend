@@ -4,7 +4,7 @@ import org.slf4j.LoggerFactory
 import org.springframework.core.annotation.Order
 import org.springframework.stereotype.Component
 import org.telegram.telegrambots.meta.api.objects.Update
-import yayauheny.by.analytics.service.AnalyticsService
+import yayauheny.by.analytics.service.BusinessAnalyticsPublisher
 import yayauheny.by.bot.MessageSender
 import yayauheny.by.bot.callback.CallbackData
 import yayauheny.by.bot.handler.CallbackHandler
@@ -23,7 +23,7 @@ import java.util.UUID
 class ToiletDetailCallback(
     private val sender: MessageSender,
     private val searchService: RestroomService,
-    private val analyticsService: AnalyticsService,
+    private val businessAnalyticsPublisher: BusinessAnalyticsPublisher,
     private val formatterService: FormatterService,
     private val inlineKeyboard: InlineKeyboardFactory
 ) : CallbackHandler {
@@ -82,8 +82,8 @@ class ToiletDetailCallback(
     }
 
     private fun trackDetailsOpened(ctx: UpdateContext, restroomId: String) {
-        try {
-            val command = AnalyticsEventCommand(
+        businessAnalyticsPublisher.trackProductEvent(
+            AnalyticsEventCommand(
                 event = ProductAnalyticsEvent.RESTROOM_DETAILS_OPENED,
                 tgUserId = ctx.userId,
                 tgChatId = ctx.chatId.toString(),
@@ -91,9 +91,6 @@ class ToiletDetailCallback(
                 source = AnalyticsSource.TELEGRAM_BOT,
                 metadata = mapOf("restroom_id" to restroomId)
             )
-            analyticsService.trackProductEvent(command)
-        } catch (e: Exception) {
-            log.warn("Failed to track restroom details analytics", e)
-        }
+        )
     }
 }

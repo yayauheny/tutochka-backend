@@ -53,16 +53,16 @@ class PublicAnalyticsServiceTest {
                     ),
                 metricsByWindow =
                     mapOf(
-                        null to PublicAnalyticsEventMetrics(40, 30, 10, 120, 15, 12),
-                        todayWindow to PublicAnalyticsEventMetrics(8, 6, 2, 22, 2, 3),
-                        last7DaysWindow to PublicAnalyticsEventMetrics(21, 16, 5, 61, 5, 6),
-                        last30DaysWindow to PublicAnalyticsEventMetrics(28, 21, 7, 84, 9, 8),
-                        previous30DaysWindow to PublicAnalyticsEventMetrics(20, 10, 10, 40, 3, 4)
+                        null to PublicAnalyticsEventMetrics(40, 30, 10, 120, 12),
+                        todayWindow to PublicAnalyticsEventMetrics(8, 6, 2, 22, 3),
+                        last7DaysWindow to PublicAnalyticsEventMetrics(21, 16, 5, 61, 6),
+                        last30DaysWindow to PublicAnalyticsEventMetrics(28, 21, 7, 84, 8),
+                        previous30DaysWindow to PublicAnalyticsEventMetrics(20, 10, 10, 40, 4)
                     ),
                 dailySeries =
                     listOf(
-                        PublicAnalyticsDailyAggregate(today.minusDays(2).toString(), 7, 9, 7, 2, 1, 2),
-                        PublicAnalyticsDailyAggregate(today.toString(), 18, 8, 6, 2, 2, 3)
+                        PublicAnalyticsDailyAggregate(today.minusDays(2).toString(), 7, 9, 7, 2, 2),
+                        PublicAnalyticsDailyAggregate(today.toString(), 18, 8, 6, 2, 3)
                     ),
                 monthlySeries =
                     listOf(
@@ -75,7 +75,6 @@ class PublicAnalyticsServiceTest {
                     ),
                 eventTotals =
                     listOf(
-                        PublicAnalyticsEventCount(ProductAnalyticsEvent.ROUTE_CLICKED.value, 15),
                         PublicAnalyticsEventCount(ProductAnalyticsEvent.RESTROOM_DETAILS_OPENED.value, 12)
                     )
             )
@@ -99,7 +98,6 @@ class PublicAnalyticsServiceTest {
             assertEquals(10, response.summary.emptySearches)
             assertEquals(75.0, response.summary.successRate)
             assertEquals(3.0, response.summary.averageResultsPerSearch)
-            assertEquals(15, response.summary.routeClicks)
             assertEquals(12, response.summary.detailsOpened)
 
             val newUsersKpi = response.headlineKpis.first { it.key == "new_users_30d" }
@@ -114,7 +112,7 @@ class PublicAnalyticsServiceTest {
             assertEquals(0, response.dailySeries.first().searches)
             assertEquals(8, response.dailySeries.last().searches)
             assertEquals(6, response.monthlySeries.size)
-            assertEquals("Route opened", response.eventTotals.first().label)
+            assertEquals("Details opened", response.eventTotals.first().label)
     }
 
     @Test
@@ -145,7 +143,7 @@ class PublicAnalyticsServiceTest {
                 totalUsers = 1,
                 newUsersByWindow = mapOf(last30DaysWindow to 5),
                 activeUsersByWindow = emptyMap(),
-                metricsByWindow = mapOf(last30DaysWindow to PublicAnalyticsEventMetrics(3, 3, 0, 6, 0, 0)),
+                metricsByWindow = mapOf(last30DaysWindow to PublicAnalyticsEventMetrics(3, 3, 0, 6, 0)),
                 dailySeries = emptyList(),
                 monthlySeries = emptyList(),
                 eventTotals = emptyList()
@@ -171,14 +169,14 @@ class PublicAnalyticsServiceTest {
                 eventTotals =
                     listOf(
                         PublicAnalyticsEventCount("unknown_event", 20),
-                        PublicAnalyticsEventCount(ProductAnalyticsEvent.ROUTE_CLICKED.value, 15)
+                        PublicAnalyticsEventCount(ProductAnalyticsEvent.RESTROOM_DETAILS_OPENED.value, 15)
                     )
             )
 
         val response = PublicAnalyticsService(repository, fixedClock).getPublicAnalytics()
 
         assertEquals(1, response.eventTotals.size)
-        assertEquals(ProductAnalyticsEvent.ROUTE_CLICKED.value, response.eventTotals.single().eventKey)
+        assertEquals(ProductAnalyticsEvent.RESTROOM_DETAILS_OPENED.value, response.eventTotals.single().eventKey)
     }
 
     private fun rollingWindow(
@@ -231,6 +229,6 @@ class PublicAnalyticsServiceTest {
             zoneId: ZoneId
         ): List<PublicAnalyticsMonthlyAggregate> = monthlySeries
 
-        override fun fetchEventTotals(minimumCount: Long): List<PublicAnalyticsEventCount> = eventTotals
+        override fun fetchEventTotals(): List<PublicAnalyticsEventCount> = eventTotals
     }
 }

@@ -29,7 +29,6 @@ interface UserAnalyticsJpaRepository : JpaRepository<UserAnalyticsEntity, UUID> 
             ua.successfulSearchesCount = ua.successfulSearchesCount + :successfulSearchesInc,
             ua.emptySearchesCount = ua.emptySearchesCount + :emptySearchesInc,
             ua.detailsOpenedCount = ua.detailsOpenedCount + :detailsOpenedInc,
-            ua.routesClickedCount = ua.routesClickedCount + :routesClickedInc,
             ua.lastEvent = :lastEvent,
             ua.lastEventAt = :lastEventAt
         WHERE ua.userId = :userId
@@ -41,7 +40,6 @@ interface UserAnalyticsJpaRepository : JpaRepository<UserAnalyticsEntity, UUID> 
         successfulSearchesInc: Int,
         emptySearchesInc: Int,
         detailsOpenedInc: Int,
-        routesClickedInc: Int,
         lastEvent: String?,
         lastEventAt: Instant?
     )

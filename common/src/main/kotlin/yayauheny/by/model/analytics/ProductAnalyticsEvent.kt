@@ -17,8 +17,5 @@ enum class ProductAnalyticsEvent(val value: String) {
     NEAREST_RESTROOMS_NO_RESULTS("nearest_restrooms_no_results"),
 
     @JsonProperty("restroom_details_opened")
-    RESTROOM_DETAILS_OPENED("restroom_details_opened"),
-
-    @JsonProperty("route_clicked")
-    ROUTE_CLICKED("route_clicked")
+    RESTROOM_DETAILS_OPENED("restroom_details_opened")
 }

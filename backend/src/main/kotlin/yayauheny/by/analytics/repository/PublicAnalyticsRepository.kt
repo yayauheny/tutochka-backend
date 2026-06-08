@@ -28,5 +28,5 @@ interface PublicAnalyticsRepository {
         zoneId: ZoneId
     ): List<PublicAnalyticsMonthlyAggregate>
 
-    fun fetchEventTotals(minimumCount: Long): List<PublicAnalyticsEventCount>
+    fun fetchEventTotals(): List<PublicAnalyticsEventCount>
 }

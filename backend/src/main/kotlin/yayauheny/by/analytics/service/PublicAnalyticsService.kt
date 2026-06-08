@@ -69,7 +69,6 @@ class PublicAnalyticsService(
                     searches = point.searches,
                     successfulSearches = point.successfulSearches,
                     emptySearches = point.emptySearches,
-                    routeClicks = point.routeClicks,
                     detailsOpened = point.detailsOpened
                 )
             }
@@ -88,7 +87,7 @@ class PublicAnalyticsService(
 
         val eventTotals =
             publicAnalyticsRepository
-                .fetchEventTotals(minimumCount = 10)
+                .fetchEventTotals()
                 .mapNotNull { eventCount ->
                     eventLabel(eventCount.eventKey)?.let { label ->
                         PublicAnalyticsEventTotal(
@@ -159,14 +158,6 @@ class PublicAnalyticsService(
                         "Last 30 days",
                         last30DaysMetrics.detailsOpened.toDouble(),
                         previous30DaysMetrics.detailsOpened.toDouble()
-                    ),
-                    buildHeadlineKpi(
-                        "route_clicks_30d",
-                        "Route clicks",
-                        last30DaysMetrics.routeClicks.toDouble(),
-                        "Last 30 days",
-                        last30DaysMetrics.routeClicks.toDouble(),
-                        previous30DaysMetrics.routeClicks.toDouble()
                     )
                 ),
             summary =
@@ -185,7 +176,6 @@ class PublicAnalyticsService(
                     emptySearches = lifetimeMetrics.emptySearches,
                     successRate = successRate(lifetimeMetrics),
                     averageResultsPerSearch = averageResults(lifetimeMetrics),
-                    routeClicks = lifetimeMetrics.routeClicks,
                     detailsOpened = lifetimeMetrics.detailsOpened
                 ),
             dailySeries = dailySeries,
@@ -279,7 +269,6 @@ class PublicAnalyticsService(
                     searches = 0,
                     successfulSearches = 0,
                     emptySearches = 0,
-                    routeClicks = 0,
                     detailsOpened = 0
                 )
         }
@@ -299,7 +288,6 @@ class PublicAnalyticsService(
             ProductAnalyticsEvent.NEAREST_RESTROOMS_RETURNED.value -> "Searches with results"
             ProductAnalyticsEvent.NEAREST_RESTROOMS_NO_RESULTS.value -> "No results searches"
             ProductAnalyticsEvent.RESTROOM_DETAILS_OPENED.value -> "Details opened"
-            ProductAnalyticsEvent.ROUTE_CLICKED.value -> "Route opened"
             else -> null
         }
 }
