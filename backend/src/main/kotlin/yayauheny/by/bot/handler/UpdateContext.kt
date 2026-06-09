@@ -6,6 +6,7 @@ import yayauheny.by.bot.callback.CallbackData
 
 data class UpdateContext(
     val chatId: Long,
+    val chatType: String?,
     val userId: Long,
     val username: String?,
     val text: String?,
@@ -21,12 +22,13 @@ data class UpdateContext(
             return when {
                 update.hasMessage() -> fromMessage(update.message)
                 update.hasCallbackQuery() -> fromCallbackQuery(update.callbackQuery)
-                else -> UpdateContext(0, 0, null, null, false, null, null, false, null, null)
+                else -> UpdateContext(0, null, 0, null, null, false, null, null, false, null, null)
             }
         }
 
         private fun fromMessage(message: Message): UpdateContext {
             val chatId = message.chatId
+            val chatType = message.chat?.type
             val userId = extractUserId(message.from)
             val username = extractUsername(message.from)
             val text = message.text
@@ -36,6 +38,7 @@ data class UpdateContext(
 
             return UpdateContext(
                 chatId = chatId,
+                chatType = chatType,
                 userId = userId,
                 username = username,
                 text = text,
@@ -50,6 +53,7 @@ data class UpdateContext(
 
         private fun fromCallbackQuery(callbackQuery: org.telegram.telegrambots.meta.api.objects.CallbackQuery): UpdateContext {
             val chatId = callbackQuery.message.chatId
+            val chatType = callbackQuery.message.chat?.type
             val userId = extractUserId(callbackQuery.from)
             val username = extractUsername(callbackQuery.from)
             val callbackData = callbackQuery.data
@@ -57,6 +61,7 @@ data class UpdateContext(
 
             return UpdateContext(
                 chatId = chatId,
+                chatType = chatType,
                 userId = userId,
                 username = username,
                 text = null,
@@ -100,6 +105,9 @@ data class UpdateContext(
     fun isCallbackOfType(type: String): Boolean {
         return isCallback && callbackData != null && CallbackData.isType(callbackData, type)
     }
+
+    val isPrivateChat: Boolean
+        get() = chatType == "private"
 
     fun callbackArg(): String {
         return if (callbackData != null) CallbackData.arg(callbackData) else ""

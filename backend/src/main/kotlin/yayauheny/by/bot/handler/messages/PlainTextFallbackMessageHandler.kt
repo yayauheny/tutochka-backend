@@ -10,7 +10,7 @@ import yayauheny.by.bot.keyboard.ReplyKeyboardFactory
 import yayauheny.by.bot.util.CommandUtils
 
 @Component
-@Order(2)
+@Order(3)
 class PlainTextFallbackMessageHandler(
     private val sender: MessageSender,
     private val replyKeyboard: ReplyKeyboardFactory
@@ -24,6 +24,6 @@ class PlainTextFallbackMessageHandler(
 
     override fun handle(update: Update, ctx: UpdateContext) {
         val message = "Не понял запрос. Поделись геолокацией или набери /help"
-        sender.sendText(ctx.chatId, message, replyKeyboard.shareLocation())
+        sender.sendText(ctx.chatId, message, replyKeyboard.shareLocation(ctx.userId, ctx.isPrivateChat))
     }
 }

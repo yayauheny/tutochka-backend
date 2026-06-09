@@ -37,7 +37,7 @@ class StartCommand(
 
     override fun handle(update: Update, ctx: UpdateContext) {
         trackBotStarted(update, ctx)
-        sender.sendText(ctx.chatId, Messages.WELCOME_MESSAGE, replyKeyboard.shareLocation())
+        sender.sendText(ctx.chatId, Messages.WELCOME_MESSAGE, replyKeyboard.shareLocation(ctx.userId, ctx.isPrivateChat))
     }
 
     private fun trackBotStarted(update: Update, ctx: UpdateContext) {

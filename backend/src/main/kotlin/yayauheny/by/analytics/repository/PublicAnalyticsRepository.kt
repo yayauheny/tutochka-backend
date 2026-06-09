@@ -15,6 +15,8 @@ interface PublicAnalyticsRepository {
 
     fun countActiveUsers(window: AnalyticsWindow): Long
 
+    fun countReturningActiveUsers(window: AnalyticsWindow): Long
+
     fun aggregateEventMetrics(window: AnalyticsWindow? = null): PublicAnalyticsEventMetrics
 
     fun fetchDailySeries(

@@ -30,7 +30,7 @@ class PlainTextFallbackMessageHandlerTest {
         val update = textUpdate("hello")
         val ctx = UpdateContext.from(update)
         val keyboard = mock(ReplyKeyboardMarkup::class.java)
-        org.mockito.Mockito.`when`(replyKeyboard.shareLocation()).thenReturn(keyboard)
+        org.mockito.Mockito.`when`(replyKeyboard.shareLocation(10L, true)).thenReturn(keyboard)
 
         handler.handle(update, ctx)
 

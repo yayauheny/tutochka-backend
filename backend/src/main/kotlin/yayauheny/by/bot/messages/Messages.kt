@@ -5,6 +5,11 @@ import yayauheny.by.bot.util.EmojiConstants
 object Messages {
 
     const val BUTTON_SHARE_LOCATION = "${EmojiConstants.PIN} Поделиться геолокацией"
+    const val BUTTON_ANALYTICS = "📊 Аналитика"
+    const val BUTTON_STATS_TODAY = "📊 Сегодня"
+    const val BUTTON_STATS_LAST_7_DAYS = "📊 7 дней"
+    const val BUTTON_STATS_CURRENT_MONTH = "📊 Текущий месяц"
+    const val BUTTON_STATS_REFRESH = "🔄 Обновить"
     const val BUTTON_BACK_TO_LIST = "⬅️ Назад к списку"
     @Deprecated("Will be removed in later refactoring")
     const val BUTTON_OPEN_MAPS = "${EmojiConstants.MAP} Открыть в картах"
@@ -91,4 +96,6 @@ object Messages {
     const val LOCATION_REQUEST = "Поделись геолокацией для поиска туалетов:"
 
     const val BACK_TO_LIST_MESSAGE = "Для поиска туалетов поделись геолокацией:"
+    const val STATS_ACCESS_DENIED = "Статистика доступна только администраторам."
+    const val STATS_PRIVATE_CHAT_ONLY = "Статистика доступна только в личном чате с ботом."
 }

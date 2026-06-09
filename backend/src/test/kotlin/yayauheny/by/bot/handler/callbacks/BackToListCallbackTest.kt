@@ -74,7 +74,7 @@ class BackToListCallbackTest {
         handler.handle(update, ctx)
 
         verify(sender).editOrReply(ctx, formatterService.toiletsFound(1), expectedKeyboard)
-        verify(replyKeyboard, never()).shareLocation()
+        verify(replyKeyboard, never()).shareLocation(userId, true)
         assertThat(expectedKeyboard.keyboard).isNotEmpty()
     }
 
@@ -85,7 +85,7 @@ class BackToListCallbackTest {
         val update = backUpdate(chatId, userId)
         val ctx = UpdateContext.from(update)
         val keyboard = mock(ReplyKeyboardMarkup::class.java)
-        `when`(replyKeyboard.shareLocation()).thenReturn(keyboard)
+        `when`(replyKeyboard.shareLocation(userId, true)).thenReturn(keyboard)
 
         handler.handle(update, ctx)
 

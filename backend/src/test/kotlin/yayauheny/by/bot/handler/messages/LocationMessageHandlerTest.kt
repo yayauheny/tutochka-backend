@@ -58,6 +58,7 @@ class LocationMessageHandlerTest {
     private val ctx =
         UpdateContext(
             chatId = 123L,
+            chatType = "private",
             userId = 456L,
             username = "test-user-10",
             text = null,

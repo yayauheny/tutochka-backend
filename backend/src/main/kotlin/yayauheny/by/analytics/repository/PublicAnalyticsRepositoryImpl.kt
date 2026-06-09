@@ -45,6 +45,25 @@ class PublicAnalyticsRepositoryImpl(
         ) ?: 0L
     }
 
+    override fun countReturningActiveUsers(window: AnalyticsWindow): Long {
+        val params = MapSqlParameterSource()
+            .addValue("start", java.sql.Timestamp.from(window.start))
+            .addValue("end", java.sql.Timestamp.from(window.end))
+        return jdbcTemplate.queryForObject(
+            """
+            SELECT COUNT(DISTINCT ae.user_id)
+            FROM analytics_events ae
+            JOIN users u ON u.id = ae.user_id
+            WHERE ae.user_id IS NOT NULL
+              AND ae.created_at >= :start
+              AND ae.created_at < :end
+              AND u.created_at < :start
+            """.trimIndent(),
+            params,
+            Long::class.java
+        ) ?: 0L
+    }
+
     override fun aggregateEventMetrics(window: AnalyticsWindow?): PublicAnalyticsEventMetrics {
         val params = MapSqlParameterSource()
         val condition = if (window != null) {

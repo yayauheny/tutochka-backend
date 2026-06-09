@@ -215,6 +215,8 @@ class PublicAnalyticsServiceTest {
 
         override fun countActiveUsers(window: AnalyticsWindow): Long = activeUsersByWindow[window] ?: 0
 
+        override fun countReturningActiveUsers(window: AnalyticsWindow): Long = 0
+
         override fun aggregateEventMetrics(window: AnalyticsWindow?): PublicAnalyticsEventMetrics =
             metricsByWindow[window] ?: PublicAnalyticsEventMetrics()
 

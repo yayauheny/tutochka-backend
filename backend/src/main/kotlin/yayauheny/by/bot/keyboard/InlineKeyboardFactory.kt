@@ -7,6 +7,7 @@ import org.telegram.telegrambots.meta.api.objects.replykeyboard.buttons.InlineKe
 import yayauheny.by.bot.callback.CallbackData
 import yayauheny.by.bot.messages.Messages
 import yayauheny.by.bot.service.FormatterService
+import yayauheny.by.bot.service.BotStatsPeriod
 import yayauheny.by.bot.util.Links
 import yayauheny.by.model.restroom.NearestRestroomSlimDto
 import yayauheny.by.model.restroom.RestroomResponseDto
@@ -54,6 +55,28 @@ class InlineKeyboardFactory(
             .build()
     }
 
+    fun analytics(): InlineKeyboardMarkup {
+        val rows = mutableListOf<InlineKeyboardRow>()
+
+        addRow(
+            rows,
+            createCallbackButton(Messages.BUTTON_STATS_TODAY, CallbackData.analytics(BotStatsPeriod.TODAY.key)),
+            createCallbackButton(Messages.BUTTON_STATS_LAST_7_DAYS, CallbackData.analytics(BotStatsPeriod.LAST_7_DAYS.key))
+        )
+        addRow(
+            rows,
+            createCallbackButton(Messages.BUTTON_STATS_CURRENT_MONTH, CallbackData.analytics(BotStatsPeriod.CURRENT_MONTH.key))
+        )
+        addRow(
+            rows,
+            createCallbackButton(Messages.BUTTON_BACK, CallbackData.analytics("back"))
+        )
+
+        return InlineKeyboardMarkup.builder()
+            .keyboard(rows)
+            .build()
+    }
+
     private fun createToiletButton(toilet: NearestRestroomSlimDto): InlineKeyboardButton {
         val buttonText = formatterService.toiletListItem(toilet)
 
@@ -68,6 +91,13 @@ class InlineKeyboardFactory(
         if (rowButtons.isNotEmpty()) {
             rows.add(InlineKeyboardRow(rowButtons))
         }
+    }
+
+    private fun createCallbackButton(text: String, callbackData: String): InlineKeyboardButton {
+        return InlineKeyboardButton.builder()
+            .text(text)
+            .callbackData(callbackData)
+            .build()
     }
 
     private fun createMapButton(text: String, url: String?): InlineKeyboardButton? {

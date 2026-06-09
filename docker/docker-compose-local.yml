@@ -1,5 +1,6 @@
 services:
   postgres:
+    env_file: ../env.local
     platform: linux/amd64
     image: postgis/postgis:17-3.5
     container_name: tutochka_postgres
@@ -49,6 +50,7 @@ services:
         max-size: "10m"
         max-file: "3"
   backend:
+    env_file: ../env.local
     build:
       context: ..
       dockerfile: backend/Dockerfile
@@ -94,6 +96,7 @@ services:
           memory: 200M
 
   ngrok:
+    env_file: ../env.local
     image: ngrok/ngrok:latest
     container_name: tutochka_ngrok
     command: ["http", "backend:8080", "--log=stdout"]
@@ -103,6 +106,23 @@ services:
       - "4040:4040"
     depends_on:
       - backend
+    networks:
+      - tutochka_network
+    profiles:
+      - ngrok
+
+  webhook-registrar:
+    image: curlimages/curl:latest
+    container_name: tutochka_webhook_registrar
+    volumes:
+      - ./scripts/register-webhook.sh:/scripts/register-webhook.sh
+    entrypoint: ["/bin/sh", "/scripts/register-webhook.sh"]
+    environment:
+      TELEGRAM_BOT_TOKEN: ${TELEGRAM_BOT_TOKEN:-}
+      BOT_WEBHOOK_PATH: ${BOT_WEBHOOK_PATH:-/telegram/webhook}
+      BOT_WEBHOOK_SECRET_TOKEN: ${BOT_WEBHOOK_SECRET_TOKEN:-}
+    depends_on:
+      - ngrok
     networks:
       - tutochka_network
     profiles:

@@ -36,7 +36,7 @@ class BackToListCallback(
     override fun handle(update: Update, ctx: UpdateContext) {
         val snapshotOpt = backListSnapshotCache.get(ctx.chatId, ctx.userId)
         if (snapshotOpt.isEmpty) {
-            sender.sendText(ctx.chatId, Messages.LOCATION_REQUEST, replyKeyboard.shareLocation())
+            sender.sendText(ctx.chatId, Messages.LOCATION_REQUEST, replyKeyboard.shareLocation(ctx.userId, ctx.isPrivateChat))
             log.warn(
                 "Handled back-to-list callback: chatId={}, userId={}, outcome=location_requested",
                 ctx.chatId,

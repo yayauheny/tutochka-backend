@@ -11,6 +11,7 @@ import java.util.concurrent.TimeUnit
 
 data class UserSession(
     val location: Location?,
+    val lastStatsPeriod: String? = null,
     val updatedAt: Instant = Instant.now()
 ) {
     data class Location(
@@ -19,6 +20,10 @@ data class UserSession(
     )
 
     companion object {
+        fun empty(): UserSession {
+            return UserSession(location = null)
+        }
+
         fun withLocation(location: Location): UserSession {
             return UserSession(location)
         }
@@ -26,6 +31,10 @@ data class UserSession(
 
     fun updateLocation(newLocation: Location): UserSession {
         return copy(location = newLocation, updatedAt = Instant.now())
+    }
+
+    fun updateLastStatsPeriod(period: String): UserSession {
+        return copy(lastStatsPeriod = period, updatedAt = Instant.now())
     }
 }
 

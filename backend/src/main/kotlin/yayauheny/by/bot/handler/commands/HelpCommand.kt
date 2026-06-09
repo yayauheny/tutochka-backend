@@ -30,6 +30,6 @@ class HelpCommand(
     }
 
     override fun handle(update: Update, ctx: UpdateContext) {
-        sender.sendText(ctx.chatId, Messages.HELP_MESSAGE, replyKeyboard.helpAndLocation())
+        sender.sendText(ctx.chatId, Messages.HELP_MESSAGE, replyKeyboard.helpAndLocation(ctx.userId, ctx.isPrivateChat))
     }
 }

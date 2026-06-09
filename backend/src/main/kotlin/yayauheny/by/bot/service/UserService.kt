@@ -18,6 +18,19 @@ class UserService(
         sessionStore.put(userId, updatedSession)
     }
 
+    fun saveLastStatsPeriod(userId: Long, period: String) {
+        val currentSession = sessionStore.get(userId)
+            .orElseGet { UserSession.empty() }
+
+        sessionStore.put(userId, currentSession.updateLastStatsPeriod(period))
+    }
+
+    fun getLastStatsPeriod(userId: Long): String? {
+        return sessionStore.get(userId)
+            .map(UserSession::lastStatsPeriod)
+            .orElse(null)
+    }
+
     fun getSession(userId: Long): Optional<UserSession> {
         return sessionStore.get(userId)
     }

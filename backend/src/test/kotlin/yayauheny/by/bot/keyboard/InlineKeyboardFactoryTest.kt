@@ -6,6 +6,7 @@ import java.time.ZoneOffset
 import java.util.UUID
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
+import yayauheny.by.bot.messages.Messages
 import yayauheny.by.bot.service.FormatterService
 import yayauheny.by.bot.service.RestroomAvailabilityResolver
 import yayauheny.by.bot.util.Links
@@ -29,6 +30,25 @@ import yayauheny.by.service.import.schedule.YandexScheduleAdapter
 
 class InlineKeyboardFactoryTest {
     private val factory = InlineKeyboardFactory(createFormatterService())
+
+    @Test
+    fun `analytics keyboard renders period buttons and back`() {
+        val keyboard = factory.analytics()
+
+        assertThat(keyboard.keyboard).hasSize(3)
+        assertThat(keyboard.keyboard[0]).hasSize(2)
+        assertThat(keyboard.keyboard[1]).hasSize(1)
+        assertThat(keyboard.keyboard[2]).hasSize(1)
+
+        assertThat(keyboard.keyboard[0][0].text).isEqualTo(Messages.BUTTON_STATS_TODAY)
+        assertThat(keyboard.keyboard[0][0].callbackData).isEqualTo("analytics:today")
+        assertThat(keyboard.keyboard[0][1].text).isEqualTo(Messages.BUTTON_STATS_LAST_7_DAYS)
+        assertThat(keyboard.keyboard[0][1].callbackData).isEqualTo("analytics:last_7_days")
+        assertThat(keyboard.keyboard[1][0].text).isEqualTo(Messages.BUTTON_STATS_CURRENT_MONTH)
+        assertThat(keyboard.keyboard[1][0].callbackData).isEqualTo("analytics:current_month")
+        assertThat(keyboard.keyboard[2][0].text).isEqualTo(Messages.BUTTON_BACK)
+        assertThat(keyboard.keyboard[2][0].callbackData).isEqualTo("analytics:back")
+    }
 
     @Test
     fun `toiletDetail renders url buttons with same layout`() {

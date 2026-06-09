@@ -30,7 +30,7 @@ class HelpCommandTest {
         val update = commandUpdate("/help")
         val ctx = UpdateContext.from(update)
         val keyboard = mock(ReplyKeyboardMarkup::class.java)
-        org.mockito.Mockito.`when`(replyKeyboard.helpAndLocation()).thenReturn(keyboard)
+        org.mockito.Mockito.`when`(replyKeyboard.helpAndLocation(10L, true)).thenReturn(keyboard)
 
         handler.handle(update, ctx)
 

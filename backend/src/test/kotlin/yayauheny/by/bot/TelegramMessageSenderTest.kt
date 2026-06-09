@@ -53,6 +53,7 @@ class TelegramMessageSenderTest {
         }
         val ctx = UpdateContext(
             chatId = 42L,
+            chatType = "private",
             userId = 7L,
             username = "tester",
             text = null,
@@ -74,6 +75,7 @@ class TelegramMessageSenderTest {
         every { telegramClient.execute(any<SendMessage>()) } returns mockk()
         val ctx = UpdateContext(
             chatId = 42L,
+            chatType = "private",
             userId = 7L,
             username = "tester",
             text = null,
@@ -123,6 +125,7 @@ class TelegramMessageSenderTest {
     fun `safe reply skips invalid chat id`() {
         val ctx = UpdateContext(
             chatId = 0L,
+            chatType = null,
             userId = 7L,
             username = "tester",
             text = null,

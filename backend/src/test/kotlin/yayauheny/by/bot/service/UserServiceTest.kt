@@ -53,4 +53,24 @@ class UserServiceTest {
 
         verify { sessionStore.remove(42L) }
     }
+
+    @Test
+    fun `saveLastStatsPeriod creates session when absent`() {
+        every { sessionStore.get(42L) } returns Optional.empty()
+        val sessionSlot = slot<UserSession>()
+
+        service.saveLastStatsPeriod(42L, "today")
+
+        verify { sessionStore.put(42L, capture(sessionSlot)) }
+        assertThat(sessionSlot.captured.lastStatsPeriod).isEqualTo("today")
+    }
+
+    @Test
+    fun `getLastStatsPeriod returns stored value`() {
+        every { sessionStore.get(42L) } returns Optional.of(UserSession(location = null, lastStatsPeriod = "current_month"))
+
+        val result = service.getLastStatsPeriod(42L)
+
+        assertThat(result).isEqualTo("current_month")
+    }
 }

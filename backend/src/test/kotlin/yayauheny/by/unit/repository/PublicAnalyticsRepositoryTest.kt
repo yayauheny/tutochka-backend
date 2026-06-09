@@ -61,6 +61,7 @@ class PublicAnalyticsRepositoryTest : RepositorySliceTestBase() {
         assertThat(repository.countTotalUsers()).isEqualTo(2)
         assertThat(repository.countNewUsers(window)).isEqualTo(1)
         assertThat(repository.countActiveUsers(window)).isEqualTo(2)
+        assertThat(repository.countReturningActiveUsers(window)).isEqualTo(1)
 
         val metrics = repository.aggregateEventMetrics(window)
 
@@ -141,5 +142,58 @@ class PublicAnalyticsRepositoryTest : RepositorySliceTestBase() {
             "nearest_restrooms_no_results" to 1L,
             "restroom_details_opened" to 1L
         )
+    }
+
+    @Test
+    fun given_new_old_and_inactive_users_when_counting_returning_active_users_then_only_preexisting_active_users_are_counted() {
+        val newTodayUserId = DatabaseTestHelper.insertAnalyticsUser(
+            DatabaseTestHelper.createTestAnalyticsUserData(
+                createdAt = Instant.parse("2026-06-09T08:00:00Z"),
+                updatedAt = Instant.parse("2026-06-09T08:00:00Z")
+            )
+        )
+        val returningUserId = DatabaseTestHelper.insertAnalyticsUser(
+            DatabaseTestHelper.createTestAnalyticsUserData(
+                createdAt = Instant.parse("2026-05-31T08:00:00Z"),
+                updatedAt = Instant.parse("2026-05-31T08:00:00Z")
+            )
+        )
+        DatabaseTestHelper.insertAnalyticsUser(
+            DatabaseTestHelper.createTestAnalyticsUserData(
+                createdAt = Instant.parse("2026-05-20T08:00:00Z"),
+                updatedAt = Instant.parse("2026-05-20T08:00:00Z")
+            )
+        )
+
+        DatabaseTestHelper.insertAnalyticsEvent(
+            DatabaseTestHelper.createTestAnalyticsEventData(
+                event = "nearest_restrooms_returned",
+                userId = newTodayUserId,
+                resultsCount = 1,
+                createdAt = Instant.parse("2026-06-09T10:00:00Z")
+            )
+        )
+        DatabaseTestHelper.insertAnalyticsEvent(
+            DatabaseTestHelper.createTestAnalyticsEventData(
+                event = "nearest_restrooms_returned",
+                userId = returningUserId,
+                resultsCount = 2,
+                createdAt = Instant.parse("2026-06-09T11:00:00Z")
+            )
+        )
+
+        val todayWindow = AnalyticsWindow(
+            start = Instant.parse("2026-06-09T00:00:00Z"),
+            end = Instant.parse("2026-06-10T00:00:00Z")
+        )
+        val currentMonthWindow = AnalyticsWindow(
+            start = Instant.parse("2026-06-01T00:00:00Z"),
+            end = Instant.parse("2026-06-10T00:00:00Z")
+        )
+
+        assertThat(repository.countNewUsers(todayWindow)).isEqualTo(1)
+        assertThat(repository.countActiveUsers(todayWindow)).isEqualTo(2)
+        assertThat(repository.countReturningActiveUsers(todayWindow)).isEqualTo(1)
+        assertThat(repository.countReturningActiveUsers(currentMonthWindow)).isEqualTo(1)
     }
 }
