@@ -1,6 +1,6 @@
  Predefined UUIDs for reference data
 
-Reference data for Minsk metro and seed data uses fixed UUIDs so migrations and manual scripts (e.g. after 2GIS import) can rely on stable IDs. All migrations and the standalone script `../manual/20251205_upsert_minsk_metro.sql` must use these same values.
+Reference data for Minsk metro and seed data uses fixed UUIDs so migrations and manual scripts (e.g. after 2GIS import) can rely on stable IDs. All migrations and the standalone script `../legacy/manual/20251205_upsert_minsk_metro.sql` must use these same values.
 
 ## Countries
 
@@ -80,5 +80,5 @@ Reference data for Minsk metro and seed data uses fixed UUIDs so migrations and 
 
 ## Notes
 
-- The standalone script `../manual/20251205_upsert_minsk_metro.sql` is not in the Liquibase changelog; it is for manual refresh of station data (e.g. coordinates, external_ids from Yandex) and must use the same line and station IDs as `../migration/20251205_import_minsk_metro.sql`.
-- When adding new stations or lines, add the same predefined UUIDs to this file, `../migration/20251205_import_minsk_metro.sql`, and `../manual/20251205_upsert_minsk_metro.sql`.
+- The standalone script `../legacy/manual/20251205_upsert_minsk_metro.sql` is not in the Liquibase changelog; it is for manual refresh of station data (e.g. coordinates, external_ids from Yandex) and must use the same line and station IDs as `../legacy/migration/20251205_import_minsk_metro.sql`.
+- When adding new stations or lines, add the same predefined UUIDs to this file, `../legacy/migration/20251205_import_minsk_metro.sql`, and `../legacy/manual/20251205_upsert_minsk_metro.sql`.

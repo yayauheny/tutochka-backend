@@ -1,0 +1,2 @@
+-- clean bootstrap placeholder
+-- keep validation queries and post-bootstrap checks here

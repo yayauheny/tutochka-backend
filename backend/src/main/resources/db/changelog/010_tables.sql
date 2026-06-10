@@ -1,0 +1,2 @@
+-- clean bootstrap placeholder
+-- keep final CREATE TABLE statements here

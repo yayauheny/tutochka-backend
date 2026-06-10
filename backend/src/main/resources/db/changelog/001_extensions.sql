@@ -1,0 +1,2 @@
+-- clean bootstrap placeholder
+-- keep extensions for the new canonical schema here
