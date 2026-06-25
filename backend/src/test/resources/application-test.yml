@@ -17,13 +17,17 @@ encryption:
 
 spring:
   liquibase:
-    change-log: classpath:db/changelog/db.changelog-master.yml
+    change-log: classpath:db/changelog/db.changelog.yml
   mvc:
     converters:
       preferred-json-mapper: jackson
 
 analytics:
   async:
+    enabled: false
+
+app:
+  restroom-cache:
     enabled: false
 
 telegram:

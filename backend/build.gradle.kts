@@ -26,6 +26,7 @@ dependencies {
     implementation(libs.tink)
 
     implementation(libs.bundles.springBootBundle)
+    implementation(libs.springBootStarterDataRedis)
     implementation(libs.micrometerPrometheus)
     implementation(libs.bundles.swaggerBundle)
     implementation("org.springframework.boot:spring-boot-starter-validation")

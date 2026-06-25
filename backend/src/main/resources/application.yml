@@ -5,6 +5,13 @@ server:
 spring:
   application:
     name: tutochka-backend
+  data:
+    redis:
+      host: ${REDIS_HOST:localhost}
+      port: ${REDIS_PORT:6379}
+      password: ${REDIS_PASSWORD:}
+      database: ${REDIS_DATABASE:0}
+      timeout: 2s
   datasource:
     url: jdbc:postgresql://${DB_HOST:localhost}:${DB_PORT:5432}/${DB_NAME:postgres}?currentSchema=${DB_SCHEMA:public}&sslmode=${DB_SSL_MODE:disable}
     username: ${DB_USER:admin}
@@ -25,7 +32,7 @@ spring:
         dialect: org.hibernate.spatial.dialect.postgis.PostgisPG10Dialect
   liquibase:
     enabled: true
-    change-log: classpath:db/changelog/db.changelog-master.yml
+    change-log: classpath:db/changelog/db.changelog.yml
 
 management:
   endpoints:
@@ -53,6 +60,36 @@ app:
       max-description-length: 1000
       max-address-length: 255
       max-json-string-length: 5000
+  restroom-cache:
+    enabled: true
+    nearest:
+      enabled: true
+      key-prefix: restrooms:nearest
+      startup-load-mode: full
+      refresh-mode: incremental
+      fallback-to-database: true
+      max-search-radius-meters: 20000
+      max-result-limit: 100
+      candidate-limit-multiplier: 10
+      max-candidate-limit: 500
+      load-page-size: 1000
+      redis-pipeline-batch-size: 500
+      max-incremental-change-ids: 1000
+      old-version-ttl: 30m
+      rebuild-lock-ttl: 2m
+      min-ready-items: 1
+    popular-details:
+      enabled: true
+      key-prefix: restrooms:popular
+      algorithm: lfu
+      max-items: 100
+      detail-ttl: 24h
+      score-ttl: 30d
+      refresh-interval: 5m
+      lfu-decay-interval: 1d
+      lfu-decay-factor: 0.9
+      load-page-size: 100
+      redis-pipeline-batch-size: 100
 
 encryption:
   keyset:

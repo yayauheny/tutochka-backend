@@ -2,6 +2,10 @@ package yayauheny.by.service
 
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
+import yayauheny.by.cache.NoopRestroomCacheEventPublisher
+import yayauheny.by.cache.NoopRestroomCacheService
+import yayauheny.by.cache.RestroomCacheEventPublisher
+import yayauheny.by.cache.RestroomCacheService
 import yayauheny.by.common.query.PageResponse
 import yayauheny.by.common.query.PaginationRequest
 import yayauheny.by.entity.BuildingEntity
@@ -45,6 +49,36 @@ private fun List<String>?.toPhoneMap(): Map<String, Any>? =
 private fun Map<String, Any>?.toPhoneList(): List<String>? =
     this?.values?.map { it.toString() }?.filter { it.isNotBlank() }
 
+private fun BuildingEntity.mapOfNotNullExternalIds(): Map<String, Any>? {
+    val values =
+        linkedMapOf<String, Any>().apply {
+            twoGisId?.let { put("2gis", it) }
+            yandexId?.let { put("yandex", it) }
+            googleId?.let { put("google", it) }
+            appleId?.let { put("apple", it) }
+        }
+    return values.takeIf { it.isNotEmpty() }
+}
+
+private fun RestroomEntity.mapOfNotNullExternalMaps(): Map<String, Any>? {
+    val values =
+        linkedMapOf<String, Any>().apply {
+            twoGisId?.let { put("2gis", it) }
+            yandexId?.let { put("yandex", it) }
+            googleId?.let { put("google", it) }
+            appleId?.let { put("apple", it) }
+        }
+    return values.takeIf { it.isNotEmpty() }
+}
+
+private fun RestroomEntity.applyExternalIds(externalMaps: Map<String, Any>?) {
+    val providerIdMap = externalMaps.orEmpty().mapValues { it.value.toString() }
+    twoGisId = providerIdMap["2gis"]
+    yandexId = providerIdMap["yandex"]
+    googleId = providerIdMap["google"]
+    appleId = providerIdMap["apple"]
+}
+
 private fun BuildingEntity.toDto() = BuildingResponseDto(
     id = requireNotNull(id),
     cityId = requireNotNull(city?.id),
@@ -55,8 +89,7 @@ private fun BuildingEntity.toDto() = BuildingResponseDto(
     }.getOrNull(),
     workTime = workTime,
     coordinates = coordinates.toCoordinates(),
-    externalIds = externalIds?.mapValues { it.value },
-    isDeleted = isDeleted,
+    externalIds = this.mapOfNotNullExternalIds(),
     createdAt = requireNotNull(createdAt),
     updatedAt = requireNotNull(updatedAt)
 )
@@ -64,22 +97,22 @@ private fun BuildingEntity.toDto() = BuildingResponseDto(
 private fun SubwayLineEntity.toDto() = SubwayLineResponseDto(
     id = requireNotNull(id),
     cityId = requireNotNull(city?.id),
+    code = code,
     nameRu = nameRu,
     nameEn = nameEn,
-    shortCode = shortCode,
     hexColor = hexColor,
-    isDeleted = isDeleted,
     createdAt = requireNotNull(createdAt)
 )
 
 private fun SubwayStationEntity.toDto() = SubwayStationResponseDto(
     id = requireNotNull(id),
     subwayLineId = subwayLine?.id,
+    lineOrder = lineOrder,
+    slug = slug,
     nameRu = nameRu,
     nameEn = nameEn,
     isTransfer = isTransfer,
     coordinates = coordinates.toCoordinates(),
-    isDeleted = isDeleted,
     createdAt = requireNotNull(createdAt),
     line = subwayLine?.toDto()
 )
@@ -101,8 +134,8 @@ private fun RestroomEntity.toDto(distanceMeters: Int? = null) = RestroomResponse
     coordinates = coordinates.toCoordinates(),
     dataSource = dataSource,
     status = status,
-    amenities = amenities.toBooleanMap(),
-    externalMaps = externalMaps?.mapValues { it.value },
+    amenities = amenities,
+    externalMaps = this.mapOfNotNullExternalMaps(),
     accessNote = accessNote,
     directionGuide = directionGuide,
     inheritBuildingSchedule = inheritBuildingSchedule,
@@ -111,6 +144,7 @@ private fun RestroomEntity.toDto(distanceMeters: Int? = null) = RestroomResponse
     originProvider = originProvider,
     originId = originId,
     isHidden = isHidden,
+    moderationStatus = moderationStatus,
     createdAt = requireNotNull(createdAt),
     updatedAt = requireNotNull(updatedAt),
     distanceMeters = distanceMeters,
@@ -124,7 +158,9 @@ class RestroomService(
     private val restroomRepository: RestroomJpaRepository,
     private val cityRepository: CityJpaRepository,
     private val buildingRepository: BuildingJpaRepository,
-    private val subwayStationRepository: SubwayStationJpaRepository
+    private val subwayStationRepository: SubwayStationJpaRepository,
+    private val restroomCacheService: RestroomCacheService = NoopRestroomCacheService,
+    private val restroomCacheEventPublisher: RestroomCacheEventPublisher = NoopRestroomCacheEventPublisher
 ) {
     @Transactional(readOnly = true)
     fun getAllRestrooms(pagination: PaginationRequest): PageResponse<RestroomResponseDto> {
@@ -139,7 +175,9 @@ class RestroomService(
 
     @Transactional(readOnly = true)
     fun getRestroomById(id: UUID): RestroomResponseDto? {
-        return restroomRepository.findById(id).orElse(null)?.toDto()
+        return restroomCacheService.getRestroomById(id) {
+            restroomRepository.findById(id).orElse(null)?.toDto()
+        }
     }
 
     @Transactional(readOnly = true)
@@ -154,17 +192,23 @@ class RestroomService(
         limit: Int,
         distanceMeters: Int = 5000
     ): List<NearestRestroomSlimDto> {
-        val entities = restroomRepository.findNearest(longitude, latitude, distanceMeters, limit)
-        return entities.map {
-            val restroomCoordinates = it.coordinates.toCoordinates()
-            NearestRestroomSlimDto(
-                id = requireNotNull(it.id),
-                displayName = it.name?.takeIf { name -> name.isNotBlank() } ?: it.address?.takeIf { address -> address.isNotBlank() } ?: "Unknown",
-                distanceMeters = haversineMeters(latitude, longitude, restroomCoordinates.lat, restroomCoordinates.lon),
-                feeType = it.feeType,
-                queryCoordinates = Coordinates(lat = latitude, lon = longitude),
-                restroomCoordinates = restroomCoordinates
-            )
+        return restroomCacheService.findNearestRestrooms(
+            latitude = latitude,
+            longitude = longitude,
+            limit = limit,
+            distanceMeters = distanceMeters
+        ) {
+            restroomRepository.findNearest(longitude, latitude, distanceMeters, limit).map {
+                val restroomCoordinates = it.coordinates.toCoordinates()
+                NearestRestroomSlimDto(
+                    id = requireNotNull(it.id),
+                    displayName = it.name?.takeIf { name -> name.isNotBlank() } ?: it.address?.takeIf { address -> address.isNotBlank() } ?: "Unknown",
+                    distanceMeters = haversineMeters(latitude, longitude, restroomCoordinates.lat, restroomCoordinates.lon),
+                    feeType = it.feeType,
+                    queryCoordinates = Coordinates(lat = latitude, lon = longitude),
+                    restroomCoordinates = restroomCoordinates
+                )
+            }.sortedBy { it.distanceMeters }
         }.sortedBy { it.distanceMeters }
     }
 
@@ -183,7 +227,6 @@ class RestroomService(
             accessibilityType = createDto.accessibilityType
             status = createDto.status
             amenities = createDto.amenities.toBooleanMap()
-            externalMaps = createDto.externalMaps.toStringMap()
             accessNote = createDto.accessNote
             directionGuide = createDto.directionGuide
             inheritBuildingSchedule = createDto.inheritBuildingSchedule
@@ -194,8 +237,11 @@ class RestroomService(
             originProvider = createDto.originProvider
             originId = createDto.originId
             isHidden = createDto.isHidden
+            applyExternalIds(createDto.externalMaps)
         }
-        return restroomRepository.saveAndFlush(entity).toDto()
+        val restroom = restroomRepository.saveAndFlush(entity).toDto()
+        restroomCacheEventPublisher.restroomUpserted(restroom)
+        return restroom
     }
 
     fun updateRestroom(id: UUID, updateDto: RestroomUpdateDto): RestroomResponseDto {
@@ -213,7 +259,6 @@ class RestroomService(
         updateDto.accessibilityType?.let { entity.accessibilityType = it }
         updateDto.status?.let { entity.status = it }
         updateDto.amenities?.let { entity.amenities = it.toBooleanMap() }
-        updateDto.externalMaps?.let { entity.externalMaps = it.toStringMap() }
         updateDto.accessNote?.let { entity.accessNote = it }
         updateDto.directionGuide?.let { entity.directionGuide = it }
         updateDto.inheritBuildingSchedule?.let { entity.inheritBuildingSchedule = it }
@@ -223,12 +268,16 @@ class RestroomService(
         updateDto.originId?.let { entity.originId = it }
         updateDto.isHidden?.let { entity.isHidden = it }
         updateDto.coordinates?.let { entity.coordinates = it.toPoint() }
-        return restroomRepository.saveAndFlush(entity).toDto()
+        updateDto.externalMaps?.let { entity.applyExternalIds(it) }
+        val restroom = restroomRepository.saveAndFlush(entity).toDto()
+        restroomCacheEventPublisher.restroomUpserted(restroom)
+        return restroom
     }
 
     fun deleteRestroom(id: UUID): Boolean {
         if (restroomRepository.existsById(id)) {
             restroomRepository.deleteById(id)
+            restroomCacheEventPublisher.restroomDeleted(id)
             return true
         }
         return false

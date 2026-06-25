@@ -37,6 +37,7 @@ ktlintPlugin = { id = "org.jlleitschuh.gradle.ktlint", version.ref = "ktlint" }
 # Spring Boot
 springBootStarterWeb = { module = "org.springframework.boot:spring-boot-starter-web" }
 springBootStarterDataJpa = { module = "org.springframework.boot:spring-boot-starter-data-jpa" }
+springBootStarterDataRedis = { module = "org.springframework.boot:spring-boot-starter-data-redis" }
 springBootStarterValidation = { module = "org.springframework.boot:spring-boot-starter-validation" }
 springBootStarterActuator = { module = "org.springframework.boot:spring-boot-starter-actuator" }
 springBootStarterTest = { module = "org.springframework.boot:spring-boot-starter-test" }
