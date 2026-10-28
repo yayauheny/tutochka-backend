@@ -1,1 +1,25 @@
-databaseChangeLog: []
+databaseChangeLog:
+  - changeSet:
+      id: load-reference-countries
+      author: yayauheny
+      changes:
+        - loadData:
+            file: ../reference_data/countries.csv
+            relativeToChangelogFile: true
+            tableName: countries
+            separator: ','
+            quotchar: '"'
+            encoding: UTF-8
+            columns:
+              - column:
+                  header: id
+                  type: STRING
+              - column:
+                  header: code
+                  type: STRING
+              - column:
+                  header: name_ru
+                  type: STRING
+              - column:
+                  header: name_en
+                  type: STRING

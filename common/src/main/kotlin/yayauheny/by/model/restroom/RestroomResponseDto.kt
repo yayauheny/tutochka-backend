@@ -47,6 +47,7 @@ data class RestroomResponseDto(
     val originProvider: ImportProvider,
     val originId: String?,
     val isHidden: Boolean,
+    val moderationStatus: String,
      val createdAt: Instant,
      val updatedAt: Instant,
     val distanceMeters: Int? = null,

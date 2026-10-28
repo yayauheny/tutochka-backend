@@ -6,6 +6,7 @@ import com.fasterxml.jackson.databind.JsonNode
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.databind.node.ObjectNode
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
+import yayauheny.by.importing.provider.normalizedProviderText
 import yayauheny.by.importing.provider.ProviderNormalizationProfile
 import yayauheny.by.importing.provider.ProviderResolvedFields
 import yayauheny.by.model.enums.AccessibilityType
@@ -44,7 +45,9 @@ internal object OsmNormalizationProfile : ProviderNormalizationProfile<OsmScrape
             amenities = resolveAmenities(tags, locationType),
             rawSchedule = rawSchedule,
             buildingContext = buildingContext?.copy(workTime = rawSchedule),
-            genderType = resolveGenderType(tags)
+            genderType = resolveGenderType(tags),
+            phones = resolvePhones(tags),
+            accessNote = resolveAccessNote(tags)
         )
     }
 
@@ -134,8 +137,20 @@ internal object OsmNormalizationProfile : ProviderNormalizationProfile<OsmScrape
         node.put("accessible_toilet", tags.isTruthyOrLimited("wheelchair"))
         node.put("access_limited", isAccessLimited(tags.cleanedValue("access")))
         node.put("toilet_context", locationType.name)
+        node.set<JsonNode>("osm_tags", mapper.valueToTree(tags))
         return node
     }
+
+    private fun resolvePhones(tags: Map<String, String>): Map<String, Any>? {
+        val phones = linkedMapOf<String, Any>()
+        tags.cleanedValue("phone")?.let { phones["phone"] = it }
+        tags.cleanedValue("contact:phone")?.let { phones["contact:phone"] = it }
+        return phones.takeIf { it.isNotEmpty() }
+    }
+
+    private fun resolveAccessNote(tags: Map<String, String>): String? =
+        listOf("description", "description:ru", "designation")
+            .firstNotNullOfOrNull { key -> tags.cleanedValue(key) }
 
     private fun resolveRawSchedule(tags: Map<String, String>): JsonNode? =
         tags.cleanedValue("opening_hours")?.let { openingHours ->
@@ -270,7 +285,7 @@ internal object OsmNormalizationProfile : ProviderNormalizationProfile<OsmScrape
         tags.cleanedValue(sourceKey)?.let { put(targetKey, it) }
     }
 
-    private fun Map<String, String>.cleanedValue(key: String): String? = this[key].cleanedValue()
+    private fun Map<String, String>.cleanedValue(key: String): String? = this[key].normalizedProviderText()
 
     private fun Map<String, String>.isTruthy(key: String): Boolean = this[key].cleanedValue()?.equals("yes", ignoreCase = true) == true
 
@@ -279,10 +294,7 @@ internal object OsmNormalizationProfile : ProviderNormalizationProfile<OsmScrape
         return value == "yes" || value == "limited"
     }
 
-    private fun String?.cleanedValue(): String? =
-        this
-            ?.trim()
-            ?.takeIf { it.isNotEmpty() && !it.equals("null", ignoreCase = true) }
+    private fun String?.cleanedValue(): String? = this.normalizedProviderText()
 
     private val standaloneDisposalTypes = setOf("pitlatrine", "bucket", "chemical", "septic_tank")
     private val genericRestroomNames = setOf("туалет", "wc", "ж", "м", "общественный туалет", "грамадскі туалет")

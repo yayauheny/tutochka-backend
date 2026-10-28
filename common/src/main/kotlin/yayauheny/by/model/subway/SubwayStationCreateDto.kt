@@ -18,9 +18,12 @@ data class SubwayStationCreateDto(
     val nameRu: String,
     @field:Schema(description = "English name", required = true)
     val nameEn: String,
+    @field:Schema(description = "Line order within the subway line", required = true)
+    val lineOrder: Int,
+    @field:Schema(description = "Stable station slug", required = true)
+    val slug: String,
     @field:Schema(description = "Is transfer station", required = false)
     val isTransfer: Boolean = false,
-    val externalIds: Map<String, Any>? = null,
     @field:Schema(description = "Coordinates", required = true)
     val coordinates: Coordinates
 )

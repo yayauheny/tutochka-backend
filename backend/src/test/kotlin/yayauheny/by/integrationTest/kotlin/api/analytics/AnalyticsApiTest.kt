@@ -36,12 +36,8 @@ class AnalyticsApiTest : integration.base.BaseIntegrationTest() {
 
         val user = userRepository.findAll().single()
         assertThat(encryptionService.decrypt(user.tgUserId)).isEqualTo("10")
-        assertThat(encryptionService.decrypt(user.tgChatId)).isEqualTo("123")
         assertThat(user.username).isEqualTo("test-user-10")
-
-        val userAnalytics = userAnalyticsRepository.findAll().single()
-        assertThat(userAnalytics.detailsOpenedCount).isEqualTo(1)
-        assertThat(userAnalytics.lastEvent).isEqualTo("restroom_details_opened")
+        assertThat(user.source).isEqualTo(AnalyticsSource.TELEGRAM_BOT.value)
 
         val event = analyticsEventRepository.findAll().single()
         assertThat(event.event).isEqualTo("restroom_details_opened")
@@ -73,7 +69,6 @@ class AnalyticsApiTest : integration.base.BaseIntegrationTest() {
         )
 
         assertThat(userRepository.count()).isEqualTo(2)
-        assertThat(userAnalyticsRepository.count()).isEqualTo(2)
         assertThat(analyticsEventRepository.count()).isEqualTo(2)
     }
 
@@ -114,11 +109,7 @@ class AnalyticsApiTest : integration.base.BaseIntegrationTest() {
         assertThat(event.location?.y).isEqualTo(53.904321)
         assertThat(event.location?.x).isEqualTo(27.561234)
         assertThat(event.resultsCount).isEqualTo(1)
-
-        val userAnalytics = userAnalyticsRepository.findAll().single()
-        assertThat(userAnalytics.searchesCount).isEqualTo(1)
-        assertThat(userAnalytics.successfulSearchesCount).isEqualTo(1)
-        assertThat(userAnalytics.emptySearchesCount).isEqualTo(0)
+        assertThat(userRepository.count()).isEqualTo(1)
     }
 
     @Test
@@ -148,10 +139,6 @@ class AnalyticsApiTest : integration.base.BaseIntegrationTest() {
         assertThat(event.location?.y).isEqualTo(53.904321)
         assertThat(event.location?.x).isEqualTo(27.561234)
         assertThat(event.resultsCount).isEqualTo(0)
-
-        val userAnalytics = userAnalyticsRepository.findAll().single()
-        assertThat(userAnalytics.searchesCount).isEqualTo(1)
-        assertThat(userAnalytics.successfulSearchesCount).isEqualTo(0)
-        assertThat(userAnalytics.emptySearchesCount).isEqualTo(1)
+        assertThat(userRepository.count()).isEqualTo(1)
     }
 }

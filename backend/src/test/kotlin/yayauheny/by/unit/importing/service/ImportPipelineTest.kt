@@ -62,10 +62,9 @@ class ImportPipelineTest {
             directionGuide = "keep-guide"
             hasPhotos = true
             isHidden = true
-            hiddenReason = "moderated"
-            hiddenAt = Instant.parse("2026-01-01T00:00:00Z")
+            moderationStatus = "PENDING"
             subwayStation = SubwayStationEntity().apply { id = UUID.randomUUID() }
-            externalMaps = mapOf("2gis" to "old-id")
+            twoGisId = "old-id"
         }
         val candidate =
             NormalizedRestroomCandidate(
@@ -114,10 +113,57 @@ class ImportPipelineTest {
         assertThat(existing.directionGuide).isEqualTo("keep-guide")
         assertThat(existing.hasPhotos).isTrue()
         assertThat(existing.isHidden).isTrue()
-        assertThat(existing.hiddenReason).isEqualTo("moderated")
-        assertThat(existing.hiddenAt).isEqualTo(Instant.parse("2026-01-01T00:00:00Z"))
+        assertThat(existing.moderationStatus).isEqualTo("PENDING")
         assertThat(existing.subwayStation?.id).isNotNull()
-        assertThat(existing.externalMaps).containsEntry("2gis", "new-id")
+        assertThat(existing.twoGisId).isEqualTo("old-id")
+        assertThat(existing.originId).isEqualTo("new-id")
+        verify(exactly = 1) { restroomRepository.saveAndFlush(existing) }
+    }
+
+    @Test
+    fun `importEnvelope skips duplicate when external map already exists for same provider object id`() {
+        val cityId = UUID.randomUUID()
+        val existing = restroomEntity(cityId).apply {
+            id = UUID.randomUUID()
+            yandexId = "shared-id"
+        }
+        val candidate = candidate(provider = ImportProvider.YANDEX_MAPS, providerObjectId = "shared-id", cityId = cityId)
+        val envelope = envelope(candidate)
+
+        every { restroomRepository.findByOriginProviderAndOriginId(ImportProvider.YANDEX_MAPS, "shared-id") } returns null
+        every { restroomRepository.findByExternalMap("yandex", "shared-id") } returns existing
+
+        val result = importPipeline.importEnvelope(envelope)
+
+        assertThat(result.outcome).isEqualTo(ImportStatus.SKIPPED_DUPLICATE)
+        assertThat(result.duplicateReason).isEqualTo("EXACT_EXTERNAL_MAP")
+        assertThat(result.duplicateOfRestroomId).isEqualTo(existing.id)
+    }
+
+    @Test
+    fun `importEnvelope links duplicate when restroom match key already exists`() {
+        val cityId = UUID.randomUUID()
+        val existing = restroomEntity(cityId).apply {
+            id = UUID.randomUUID()
+            twoGisId = null
+            yandexId = null
+            googleId = null
+            appleId = null
+        }
+        val candidate = candidate(provider = ImportProvider.TWO_GIS, providerObjectId = "new-id", cityId = cityId)
+        val envelope = envelope(candidate)
+
+        every { restroomRepository.findByOriginProviderAndOriginId(ImportProvider.TWO_GIS, "new-id") } returns null
+        every { restroomRepository.findByExternalMap("2gis", "new-id") } returns null
+        every { restroomRepository.findByRestroomMatchKey(any()) } returns existing
+        every { restroomRepository.saveAndFlush(existing) } returns existing
+
+        val result = importPipeline.importEnvelope(envelope)
+
+        assertThat(result.outcome).isEqualTo(ImportStatus.LINKED_DUPLICATE)
+        assertThat(result.duplicateReason).isEqualTo("EXACT_RESTROOM_MATCH_KEY")
+        assertThat(result.duplicateOfRestroomId).isEqualTo(existing.id)
+        assertThat(existing.twoGisId).isEqualTo("new-id")
         verify(exactly = 1) { restroomRepository.saveAndFlush(existing) }
     }
 
@@ -132,5 +178,42 @@ class ImportPipelineTest {
             locationType = LocationType.UNKNOWN
             originProvider = ImportProvider.TWO_GIS
             originId = "old-id"
+            twoGisId = "old-id"
         }
+
+    private fun candidate(
+        provider: ImportProvider,
+        providerObjectId: String,
+        cityId: UUID
+    ): NormalizedRestroomCandidate =
+        NormalizedRestroomCandidate(
+            provider = provider,
+            providerObjectId = providerObjectId,
+            cityId = cityId,
+            name = "Туалет",
+            address = "Минск, ул. Киселёва, 3",
+            lat = 53.909435,
+            lng = 27.573736,
+            placeType = PlaceType.PUBLIC,
+            locationType = LocationType.STANDALONE,
+            feeType = FeeType.FREE,
+            accessibilityType = AccessibilityType.UNKNOWN,
+            status = RestroomStatus.ACTIVE,
+            amenities = objectMapper.createObjectNode()
+        )
+
+    private fun envelope(candidate: NormalizedRestroomCandidate): ProviderImportEnvelope =
+        ProviderImportEnvelope(
+            inboxMetadata =
+                InboxMetadata(
+                    provider = candidate.provider,
+                    entityType = ImportEntityType.PLACE,
+                    externalId = candidate.providerObjectId,
+                    sourceUrl = null,
+                    scrapedAt = null,
+                    payloadHash = "hash"
+                ),
+            command = candidate,
+            rawPayload = objectMapper.createObjectNode()
+        )
 }

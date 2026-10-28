@@ -29,8 +29,7 @@ class CityFilterRepositoryImpl(
             "countryId" to { direction -> if (direction == SortDirection.DESC) country.id.desc() else country.id.asc() },
             "nameRu" to { direction -> if (direction == SortDirection.DESC) nameRu.desc() else nameRu.asc() },
             "nameEn" to { direction -> if (direction == SortDirection.DESC) nameEn.desc() else nameEn.asc() },
-            "region" to { direction -> if (direction == SortDirection.DESC) region.desc() else region.asc() },
-            "isDeleted" to { direction -> if (direction == SortDirection.DESC) isDeleted.desc() else isDeleted.asc() }
+            "region" to { direction -> if (direction == SortDirection.DESC) region.desc() else region.asc() }
         )
     )
 

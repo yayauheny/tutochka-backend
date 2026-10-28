@@ -271,6 +271,7 @@ class FormatterServiceTest {
             originProvider = originProvider,
             originId = null,
             isHidden = false,
+            moderationStatus = "PENDING",
             createdAt = now,
             updatedAt = now,
             distanceMeters = 120,
@@ -287,34 +288,33 @@ class FormatterServiceTest {
         id = UUID.randomUUID(),
         cityId = UUID.randomUUID(),
         name = name,
-        address = address,
-        buildingType = PlaceType.OTHER,
-        workTime = workTime,
-        coordinates = Coordinates(53.91, 27.57),
-        externalIds = emptyMap(),
-        isDeleted = false,
-        createdAt = now,
-        updatedAt = now
-    )
+            address = address,
+            buildingType = PlaceType.OTHER,
+            workTime = workTime,
+            coordinates = Coordinates(53.91, 27.57),
+            externalIds = emptyMap(),
+            createdAt = now,
+            updatedAt = now
+        )
 
     private fun sampleSubwayStation() =
         SubwayStationResponseDto(
             id = UUID.randomUUID(),
             subwayLineId = UUID.randomUUID(),
+            lineOrder = 1,
+            slug = "victory-square",
             nameRu = "Victory <b>Square</b>",
             nameEn = "Victory Square",
             isTransfer = false,
             coordinates = Coordinates(53.92, 27.58),
-            isDeleted = false,
             createdAt = now,
             line = SubwayLineResponseDto(
                 id = UUID.randomUUID(),
                 cityId = UUID.randomUUID(),
+                code = "1",
                 nameRu = "Red",
                 nameEn = "Red",
-                shortCode = "1",
                 hexColor = "#FF0000",
-                isDeleted = false,
                 createdAt = now
             )
         )

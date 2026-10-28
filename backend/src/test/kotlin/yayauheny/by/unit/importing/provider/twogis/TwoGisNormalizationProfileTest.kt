@@ -225,4 +225,23 @@ class TwoGisNormalizationProfileTest {
         assertEquals(workingHours, resolved.buildingContext!!.workTime)
         assertEquals(GenderType.WOMEN, resolved.genderType)
     }
+
+    @Test
+    fun `blank address and empty working hours are normalized consistently`() {
+        val resolved =
+            TwoGisNormalizationProfile.resolve(
+                TwoGisScrapedPlace(
+                    id = "1",
+                    title = "Toilet",
+                    address = " null ",
+                    street = " ",
+                    houseNumber = " ",
+                    location = TwoGisScrapedLocation(53.9, 27.5),
+                    workingHours = buildJsonObject {}.toJacksonNode()
+                )
+            )
+
+        assertNull(resolved.address)
+        assertNull(resolved.rawSchedule)
+    }
 }

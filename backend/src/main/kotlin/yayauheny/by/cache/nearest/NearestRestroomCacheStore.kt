@@ -12,6 +12,14 @@ interface NearestRestroomCacheStore {
 
     fun save(items: Collection<NearestRestroomCacheItem>)
 
+    fun beginRebuild(): String?
+
+    fun appendRebuild(version: String, items: Collection<NearestRestroomCacheItem>)
+
+    fun finishRebuild(version: String, itemCount: Long)
+
+    fun abortRebuild(version: String)
+
     fun rebuild(items: Collection<NearestRestroomCacheItem>)
 
     fun remove(restroomId: UUID)

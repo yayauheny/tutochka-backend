@@ -1,6 +1,6 @@
  Predefined UUIDs for reference data
 
-Reference data for Minsk metro and seed data uses fixed UUIDs so migrations and manual scripts (e.g. after 2GIS import) can rely on stable IDs. All migrations and the standalone script `../legacy/manual/20251205_upsert_minsk_metro.sql` must use these same values.
+Reference data for Minsk metro and seed data uses fixed UUIDs so CSV loads and manual refreshes can rely on stable IDs. The same UUIDs must be kept in the reference CSV files and their Liquibase load definitions.
 
 ## Countries
 
@@ -40,17 +40,17 @@ Reference data for Minsk metro and seed data uses fixed UUIDs so migrations and 
 | Парк Челюскинцев | `f3806018-1e41-470d-97af-4e0ae1145bb1` |
 | Московская | `00fddd00-11fc-4723-b284-077bc3d339b7` |
 | Восток | `8ee907e3-1e87-4390-a365-a67c5b31103c` |
-| Борисовский тракт | `8f8bd6cc-7c29-45da-a171-d83babb03473` |
+| Борисовский Тракт | `8f8bd6cc-7c29-45da-a171-d83babb03473` |
 | Уручье | `ce27977b-964d-4996-a0e8-298c1776691b` |
 
 ### Line 2 (Автозаводская)
 | name_ru | ID |
 |---------|-----|
-| Каменная горка | `05cd10b6-3179-4924-99db-3931f2fb82d4` |
+| Каменная Горка | `05cd10b6-3179-4924-99db-3931f2fb82d4` |
 | Кунцевщина | `f932094b-15ae-419e-9e03-4d3dbaca3ad8` |
 | Спортивная | `ae3cdf73-48ff-4b5c-b5b5-d8706a02b081` |
 | Пушкинская | `ab4f8dcd-bf45-4e4a-bea2-bc1ec2c17015` |
-| Молодежная | `c81fcae4-0248-4a9c-897e-470ce2ed163d` |
+| Молодёжная | `c81fcae4-0248-4a9c-897e-470ce2ed163d` |
 | Фрунзенская | `ec2f32b2-26b9-470d-ba02-d1ca314d9639` |
 | Немига | `06ea7137-eb28-4060-ad60-8eb03f1d4a0d` |
 | Купаловская | `5d402db6-a05f-411d-9888-137162dd6847` |
@@ -59,12 +59,12 @@ Reference data for Minsk metro and seed data uses fixed UUIDs so migrations and 
 | Тракторный завод | `c52d621c-77c4-4f23-aa2a-2cf045e39481` |
 | Партизанская | `a69804ad-867f-4783-b753-9e00c96651d4` |
 | Автозаводская | `1d33b1ce-f25d-4e7b-bad7-0eb146bef1da` |
-| Могилевская | `b42aaa6a-cb5d-4542-b3dc-3d5641efa851` |
+| Могилёвская | `b42aaa6a-cb5d-4542-b3dc-3d5641efa851` |
 
 ### Line 3 (Зеленолужская)
 | name_ru | ID |
 |---------|-----|
-| Ковальская слобода | `87bb0369-a4b5-4d97-9e54-441952919642` |
+| Ковальская Слобода | `87bb0369-a4b5-4d97-9e54-441952919642` |
 | Вокзальная | `f3f404f3-1dfe-451e-8193-727e60685b80` |
 | Площадь Франтишка Богушевича | `dd997017-c1a1-496e-addd-8c3bfabd86e1` |
 | Юбилейная площадь | `f35b29e1-2303-42cf-a88e-380b33eadfc7` |
@@ -80,5 +80,4 @@ Reference data for Minsk metro and seed data uses fixed UUIDs so migrations and 
 
 ## Notes
 
-- The standalone script `../legacy/manual/20251205_upsert_minsk_metro.sql` is not in the Liquibase changelog; it is for manual refresh of station data (e.g. coordinates, external_ids from Yandex) and must use the same line and station IDs as `../legacy/migration/20251205_import_minsk_metro.sql`.
-- When adding new stations or lines, add the same predefined UUIDs to this file, `../legacy/migration/20251205_import_minsk_metro.sql`, and `../legacy/manual/20251205_upsert_minsk_metro.sql`.
+- When adding new stations or lines, add the same predefined UUIDs to the CSV files and their corresponding `reference_load/*.yml` loaders.

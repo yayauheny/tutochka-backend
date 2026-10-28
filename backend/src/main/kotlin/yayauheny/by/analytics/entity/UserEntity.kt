@@ -21,9 +21,6 @@ class UserEntity {
     @Column(name = "tg_user_id", nullable = false, unique = true)
     var tgUserId: String = ""
 
-    @Column(name = "tg_chat_id", nullable = false)
-    var tgChatId: String = ""
-
     @Column(name = "source", nullable = false)
     var source: String = "telegram_bot"
 
@@ -44,6 +41,9 @@ class UserEntity {
     @Column(name = "is_blocked", nullable = false)
     var isBlocked: Boolean = false
 
-    @Column(name = "blocked_at")
-    var blockedAt: Instant? = null
+    @Column(name = "account_status", nullable = false)
+    var accountStatus: String = "ACTIVE"
+
+    @Column(name = "last_seen_at")
+    var lastSeenAt: Instant? = null
 }

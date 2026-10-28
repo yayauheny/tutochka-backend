@@ -9,7 +9,6 @@ import jakarta.persistence.Table
 import org.hibernate.annotations.JdbcTypeCode
 import org.hibernate.type.SqlTypes
 import org.locationtech.jts.geom.Point
-import yayauheny.by.model.enums.BuildingImportStatus
 
 @Entity
 @Table(name = "buildings")
@@ -34,13 +33,17 @@ class BuildingEntity : BaseEntity() {
     @Column(name = "coordinates", nullable = false, columnDefinition = "geometry(Point,4326)")
     var coordinates: Point? = null
 
-    @JdbcTypeCode(SqlTypes.JSON)
-    @Column(name = "external_ids", columnDefinition = "jsonb")
-    var externalIds: Map<String, String>? = null
+    @Column(name = "two_gis_id")
+    var twoGisId: String? = null
 
-    @jakarta.persistence.Enumerated(jakarta.persistence.EnumType.STRING)
-    @Column(name = "import_status", nullable = false, length = 20)
-    var importStatus: BuildingImportStatus = BuildingImportStatus.COMPLETED
+    @Column(name = "yandex_id")
+    var yandexId: String? = null
+
+    @Column(name = "google_id")
+    var googleId: String? = null
+
+    @Column(name = "apple_id")
+    var appleId: String? = null
 
     @Column(name = "building_match_key", length = 64)
     var buildingMatchKey: String? = null

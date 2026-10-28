@@ -27,8 +27,7 @@ class CountryFilterRepositoryImpl(
             "id" to { direction -> if (direction == SortDirection.DESC) id.desc() else id.asc() },
             "code" to { direction -> if (direction == SortDirection.DESC) code.desc() else code.asc() },
             "nameRu" to { direction -> if (direction == SortDirection.DESC) nameRu.desc() else nameRu.asc() },
-            "nameEn" to { direction -> if (direction == SortDirection.DESC) nameEn.desc() else nameEn.asc() },
-            "isDeleted" to { direction -> if (direction == SortDirection.DESC) isDeleted.desc() else isDeleted.asc() }
+            "nameEn" to { direction -> if (direction == SortDirection.DESC) nameEn.desc() else nameEn.asc() }
         )
     )
 

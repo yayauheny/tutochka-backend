@@ -20,7 +20,6 @@ data class BuildingResponseDto(
     val workTime: Map<String, Any>?,
     val coordinates: Coordinates,
     val externalIds: Map<String, Any>?,
-    val isDeleted: Boolean,
      val createdAt: Instant,
      val updatedAt: Instant
 ) {

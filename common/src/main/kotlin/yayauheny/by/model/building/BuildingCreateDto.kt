@@ -6,10 +6,8 @@ import io.swagger.v3.oas.annotations.media.Schema
 import java.util.UUID
 
 
-
 import yayauheny.by.model.dto.Coordinates
 import yayauheny.by.model.enums.PlaceType
-import yayauheny.by.model.enums.BuildingImportStatus
 
 
 @Schema(description = "Data for creating a new building")
@@ -27,8 +25,12 @@ data class BuildingCreateDto(
     val workTime: Map<String, Any>? = null,
     @field:Schema(description = "Coordinates", required = true)
     val coordinates: Coordinates,
-    @field:Schema(description = "External IDs JSONB map")
-    val externalIds: Map<String, Any>? = null,
-    @field:Schema(description = "Import status", example = "COMPLETED")
-    val importStatus: BuildingImportStatus = BuildingImportStatus.COMPLETED
+    @field:Schema(description = "2GIS provider id")
+    val twoGisId: String? = null,
+    @field:Schema(description = "Yandex provider id")
+    val yandexId: String? = null,
+    @field:Schema(description = "Google provider id")
+    val googleId: String? = null,
+    @field:Schema(description = "Apple provider id")
+    val appleId: String? = null
 )

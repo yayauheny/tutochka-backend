@@ -5,6 +5,7 @@ import kotlinx.serialization.json.toJacksonNode
 import java.util.UUID
 import kotlin.test.assertEquals
 import kotlin.test.assertNotNull
+import kotlin.test.assertTrue
 import org.junit.jupiter.api.DisplayName
 import org.junit.jupiter.api.Test
 import yayauheny.by.importing.mapper.RestroomImportMapper
@@ -36,12 +37,26 @@ class RestroomImportMapperTest {
                 feeType = FeeType.FREE,
                 accessibilityType = AccessibilityType.WHEELCHAIR,
                 status = RestroomStatus.ACTIVE,
+                phones =
+                    mapOf(
+                        "phone" to "+375291112233",
+                        "contact:phone" to "+375441112233"
+                    ),
                 amenities =
                     buildJsonObject {
                         put("wifi", true)
                         put("accessible_entrance", true)
+                        put(
+                            "osm_tags",
+                            buildJsonObject {
+                                put("phone", "+375291112233")
+                                put("contact:phone", "+375441112233")
+                                put("description", "Use side entrance")
+                            }
+                        )
                     }.toJacksonNode(),
-                rawSchedule = null
+                rawSchedule = null,
+                accessNote = "Use side entrance"
             )
 
         val dto = RestroomImportMapper.toCreateDto(candidate)
@@ -59,6 +74,10 @@ class RestroomImportMapperTest {
         assertEquals(ImportProvider.TWO_GIS, dto.originProvider)
         assertEquals("12345", dto.originId)
         assertEquals(false, dto.isHidden)
+        assertEquals("+375291112233", dto.phones?.get("phone"))
+        assertEquals("+375441112233", dto.phones?.get("contact:phone"))
+        assertEquals("Use side entrance", dto.accessNote)
+        assertTrue(dto.amenities["osm_tags"].toString().contains("description"))
         assertNotNull(dto.externalMaps)
         assertEquals(
             "12345",

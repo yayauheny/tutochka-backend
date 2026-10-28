@@ -5,6 +5,9 @@ import org.slf4j.LoggerFactory
 import yayauheny.by.importing.exception.InvalidImportPayload
 import yayauheny.by.importing.model.ImportAdapterContext
 import yayauheny.by.importing.provider.Parser
+import yayauheny.by.importing.provider.optionalObject
+import yayauheny.by.importing.provider.optionalString
+import yayauheny.by.importing.provider.optionalText
 import yayauheny.by.model.imports.NormalizedRestroomCandidate
 
 class TwoGisScrapedParser : Parser<TwoGisScrapedPlace> {
@@ -13,14 +16,14 @@ class TwoGisScrapedParser : Parser<TwoGisScrapedPlace> {
     override fun parse(jsonObject: JsonNode): TwoGisScrapedPlace {
         return try {
             val id = jsonObject.get("id")?.asText() ?: throw InvalidImportPayload("Missing id")
-            val title = jsonObject.stringOrNull("title")
-            val category = jsonObject.stringOrNull("category")
+            val title = jsonObject.optionalString("title")
+            val category = jsonObject.optionalString("category")
             val address = parseAddress(jsonObject.get("address"))
-            val street = jsonObject.stringOrNull("street")
-            val houseNumber = jsonObject.stringOrNull("houseNumber")
+            val street = jsonObject.optionalString("street")
+            val houseNumber = jsonObject.optionalString("houseNumber")
             val locationObj = jsonObject.get("location")?.takeIf { it.isObject } ?: throw InvalidImportPayload("Missing location")
             val location = parseLocation(locationObj)
-            val workingHours = jsonObject.get("working_hours")?.takeIf { it.isObject }
+            val workingHours = jsonObject.optionalObject("working_hours")
             val attributeGroups = jsonObject.stringList("attributeGroups")
             val rubrics = jsonObject.stringList("rubrics")
 
@@ -82,13 +85,7 @@ class TwoGisScrapedParser : Parser<TwoGisScrapedPlace> {
     }
 
     private fun parseAddress(addressElem: JsonNode?): String? =
-        addressElem?.takeIf { it.isTextual }?.asText()?.takeIf { it.isNotBlank() && !it.equals("null", ignoreCase = true) }?.trim()
-
-    private fun JsonNode.stringOrNull(key: String): String? =
-        this.get(key)
-            ?.takeIf { it.isTextual }
-            ?.asText()
-            ?.takeIf { it.isNotBlank() && !it.equals("null", ignoreCase = true) }
+        addressElem?.optionalText()
 
     private fun JsonNode.stringList(key: String): List<String> =
         this.get(key)

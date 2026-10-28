@@ -5,10 +5,8 @@ import java.sql.Timestamp
 import java.util.UUID
 import org.springframework.jdbc.core.JdbcTemplate
 import yayauheny.by.analytics.entity.AnalyticsEventEntity
-import yayauheny.by.analytics.entity.UserAnalyticsEntity
 import yayauheny.by.analytics.entity.UserEntity
 import yayauheny.by.analytics.repository.AnalyticsEventJpaRepository
-import yayauheny.by.analytics.repository.UserAnalyticsJpaRepository
 import yayauheny.by.analytics.repository.UserJpaRepository
 import yayauheny.by.importing.dedup.MatchKeyGenerator
 import yayauheny.by.model.enums.AccessibilityType
@@ -53,6 +51,13 @@ private fun JsonObject?.toStringMap(): Map<String, String>? =
 private fun JsonObject?.toStringList(): List<String>? =
     this?.values?.values?.map { it.jsonPrimitive.content }
 
+private fun createDefaultExternalMaps(): JsonObject =
+    buildJsonObject {
+        val suffix = UUID.randomUUID().toString()
+        put("yandex", JsonPrimitive("https://yandex.ru/maps/-/$suffix"))
+        put("google", JsonPrimitive("https://maps.google.com/?q=$suffix"))
+    }
+
 data class TestCountryData(
     val nameRu: String = "Test Country RU",
     val nameEn: String = "Test Country EN",
@@ -82,11 +87,7 @@ data class TestRestroomData(
     val amenities: JsonObject = buildJsonObject { put("wifi", JsonPrimitive("true")) },
     val buildingId: UUID? = null,
     val subwayStationId: UUID? = null,
-    val externalMaps: JsonObject? =
-        buildJsonObject {
-            put("yandex", JsonPrimitive("https://yandex.ru/maps/-/CCUqM0VhXD"))
-            put("google", JsonPrimitive("https://maps.google.com/?q=53.9006,27.5590"))
-        },
+    val externalMaps: JsonObject? = createDefaultExternalMaps(),
     val originProvider: ImportProvider = ImportProvider.MANUAL,
     val originId: String? = null,
     val accessNote: String? = "Доступен для людей с ограниченными возможностями",
@@ -123,7 +124,6 @@ object DatabaseTestHelper {
     lateinit var subwayLineRepository: SubwayLineJpaRepository
     lateinit var subwayStationRepository: SubwayStationJpaRepository
     lateinit var userRepository: UserJpaRepository
-    lateinit var userAnalyticsRepository: UserAnalyticsJpaRepository
     lateinit var analyticsEventRepository: AnalyticsEventJpaRepository
 
     fun createTestCountryData(
@@ -155,11 +155,7 @@ object DatabaseTestHelper {
         amenities: JsonObject = buildJsonObject { put("wifi", JsonPrimitive("true")) },
         buildingId: UUID? = null,
         subwayStationId: UUID? = null,
-        externalMaps: JsonObject? =
-            buildJsonObject {
-                put("yandex", JsonPrimitive("https://yandex.ru/maps/-/CCUqM0VhXD"))
-                put("google", JsonPrimitive("https://maps.google.com/?q=53.9006,27.5590"))
-            },
+        externalMaps: JsonObject? = createDefaultExternalMaps(),
         originProvider: ImportProvider = ImportProvider.MANUAL,
         originId: String? = null,
         accessNote: String? = "Доступен для людей с ограниченными возможностями",
@@ -229,6 +225,7 @@ object DatabaseTestHelper {
                 this.country = country
                 this.nameRu = data.nameRu
                 this.nameEn = data.nameEn
+                this.slug = "${country.code.lowercase()}-${data.nameEn.trim().lowercase().replace(Regex("[^a-z0-9]+"), "-").trim('-')}"
                 this.coordinates = point(data.lon, data.lat)
             }
         return cityRepository.saveAndFlush(entity).id ?: error("Failed to insert test city")
@@ -255,7 +252,11 @@ object DatabaseTestHelper {
                 this.dataSource = data.dataSource
                 this.status = data.status
                 this.amenities = data.amenities.toBooleanMap()?.toMutableMap()
-                this.externalMaps = data.externalMaps.toStringMap()?.toMutableMap()
+                val providerIds = data.externalMaps.toStringMap().orEmpty()
+                this.twoGisId = providerIds["2gis"]
+                this.yandexId = providerIds["yandex"]
+                this.googleId = providerIds["google"]
+                this.appleId = providerIds["apple"]
                 this.accessNote = data.accessNote
                 this.directionGuide = data.directionGuide
                 this.inheritBuildingSchedule = data.inheritBuildingSchedule
@@ -326,33 +327,17 @@ object DatabaseTestHelper {
         val userId =
             jdbcTemplate.queryForObject(
                 """
-                INSERT INTO users (tg_user_id, tg_chat_id, source, username, created_at, updated_at)
-                VALUES (?, ?, ?, ?, ?, ?)
+                INSERT INTO users (tg_user_id, source, username, created_at, updated_at)
+                VALUES (?, ?, ?, ?, ?)
                 RETURNING id
                 """.trimIndent(),
                 UUID::class.java,
                 data.tgUserId,
-                data.tgChatId,
                 data.source,
                 data.username,
                 Timestamp.from(data.createdAt),
                 Timestamp.from(data.updatedAt)
             ) ?: error("Failed to insert analytics user")
-
-        jdbcTemplate.update(
-            """
-            INSERT INTO user_analytics (
-                user_id,
-                searches_count,
-                successful_searches_count,
-                empty_searches_count,
-                details_opened_count,
-                last_event,
-                last_event_at
-            ) VALUES (?, 0, 0, 0, 0, NULL, NULL)
-            """.trimIndent(),
-            userId
-        )
         return userId
     }
 

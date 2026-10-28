@@ -21,6 +21,14 @@ interface RestroomCacheService {
     fun removeRestroom(restroomId: UUID)
 
     fun rebuildNearestCache(items: Collection<NearestRestroomCacheItem>)
+
+    fun beginRebuild(): String?
+
+    fun appendRebuild(version: String, items: Collection<NearestRestroomCacheItem>)
+
+    fun finishRebuild(version: String, itemCount: Long)
+
+    fun abortRebuild(version: String)
 }
 
 object NoopRestroomCacheService : RestroomCacheService {
@@ -39,4 +47,12 @@ object NoopRestroomCacheService : RestroomCacheService {
     override fun removeRestroom(restroomId: UUID) = Unit
 
     override fun rebuildNearestCache(items: Collection<NearestRestroomCacheItem>) = Unit
+
+    override fun beginRebuild(): String? = null
+
+    override fun appendRebuild(version: String, items: Collection<NearestRestroomCacheItem>) = Unit
+
+    override fun finishRebuild(version: String, itemCount: Long) = Unit
+
+    override fun abortRebuild(version: String) = Unit
 }

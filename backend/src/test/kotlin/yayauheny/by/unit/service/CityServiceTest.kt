@@ -99,6 +99,7 @@ class CityServiceTest {
         every { countryRepository.findById(country.id!!) } returns Optional.of(country)
         every { cityRepository.findByCountryIdAndNameRu(country.id!!, createDto.nameRu) } returns null
         every { cityRepository.findByCountryIdAndNameEn(country.id!!, createDto.nameEn) } returns null
+        every { cityRepository.findBySlug("us-minsk") } returns null
         
         val citySlot = slot<CityEntity>()
         every { cityRepository.save(capture(citySlot)) } answers {
@@ -170,6 +171,7 @@ class CityServiceTest {
         every { countryRepository.findById(newCountry.id!!) } returns Optional.of(newCountry)
         every { cityRepository.findByCountryIdAndNameRu(newCountry.id!!, "UpdatedRu") } returns null
         every { cityRepository.findByCountryIdAndNameEn(newCountry.id!!, "UpdatedEn") } returns null
+        every { cityRepository.findBySlug("us-updateden") } returns null
         
         val citySlot = slot<CityEntity>()
         every { cityRepository.save(capture(citySlot)) } answers { firstArg() }

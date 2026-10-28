@@ -136,6 +136,7 @@ class RestroomAvailabilityResolverTest {
             originProvider = originProvider,
             originId = null,
             isHidden = false,
+            moderationStatus = "PENDING",
             createdAt = now,
             updatedAt = now,
             distanceMeters = null,
@@ -154,7 +155,6 @@ class RestroomAvailabilityResolverTest {
             workTime = workTime,
             coordinates = Coordinates(53.91, 27.57),
             externalIds = emptyMap(),
-            isDeleted = false,
             createdAt = Instant.parse("2025-01-01T00:00:00Z"),
             updatedAt = Instant.parse("2025-01-01T00:00:00Z")
         )

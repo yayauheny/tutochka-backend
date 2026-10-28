@@ -22,7 +22,9 @@ import yayauheny.by.model.enums.DataSourceType
 import yayauheny.by.model.enums.ImportProvider
 import yayauheny.by.model.enums.LocationType
 import yayauheny.by.model.enums.RestroomStatus
+import yayauheny.by.testfixtures.OsmOriginalRows
 import java.util.UUID
+import kotlinx.serialization.json.toJacksonNode
 
 @Tag("integration")
 class ImportBatchApiIntegrationTest : BaseIntegrationTest() {
@@ -48,7 +50,7 @@ class ImportBatchApiIntegrationTest : BaseIntegrationTest() {
     }
 
     @Test
-    fun `given real twogis batch fixture when import then create restrooms and expose them in nearest search`() {
+    fun `given real twogis batch fixture with distinct places when import then create both restrooms and expose them in nearest search`() {
         val body = objectMapper.writeValueAsString(listOf(twoGisItem("70000001062416076"), twoGisItem("70000001055539762")))
 
         val response = performImport("TWO_GIS", "TWO_GIS_SCRAPED_PLACE_JSON", body)
@@ -59,16 +61,21 @@ class ImportBatchApiIntegrationTest : BaseIntegrationTest() {
         assertThat(response["results"].map { it["outcome"].asText() }).containsOnly("CREATED")
 
         val imported = restroomRepository.findByOriginProviderAndOriginId(ImportProvider.TWO_GIS, "70000001062416076")
+        val secondImported = restroomRepository.findByOriginProviderAndOriginId(ImportProvider.TWO_GIS, "70000001055539762")
         assertThat(imported).isNotNull
+        assertThat(secondImported).isNotNull
+        assertThat(restroomRepository.count()).isEqualTo(2)
         assertThat(imported!!.city?.id).isEqualTo(minskCityId)
+        assertThat(secondImported!!.city?.id).isEqualTo(minskCityId)
         assertThat(imported.address).isEqualTo("Рудобельская, 3")
         assertThat(imported.coordinates?.y).isEqualTo(53.861329)
         assertThat(imported.coordinates?.x).isEqualTo(27.638588)
         assertThat(imported.dataSource).isEqualTo(DataSourceType.IMPORT)
         assertThat(imported.originProvider).isEqualTo(ImportProvider.TWO_GIS)
         assertThat(imported.originId).isEqualTo("70000001062416076")
-        assertThat(imported.externalMaps?.get("2gis")).isEqualTo("70000001062416076")
+        assertThat(imported.twoGisId).isEqualTo("70000001062416076")
         assertThat(imported.building?.id).isNotNull
+        assertThat(duplicateSuspicionRepository.count()).isEqualTo(0)
 
         val nearest = mockMvc.perform(
             get("/api/v1/restrooms/nearest")
@@ -85,6 +92,61 @@ class ImportBatchApiIntegrationTest : BaseIntegrationTest() {
     }
 
     @Test
+    fun `given real osm fixture with string tags when import then preserve raw amenities in database`() {
+        val payload =
+            OsmOriginalRows.withTags(
+                OsmOriginalRows.accessCustomersWheelchair(),
+                mapOf(
+                    "wheelchair" to "limited",
+                    "phone" to "+375291112233",
+                    "contact:phone" to "+375441112233",
+                    "description" to "Use side entrance",
+                    "designation" to "Customer toilets",
+                    "website" to "https://example.com",
+                    "payment:cash" to "yes"
+                )
+            )
+
+        val response =
+            performImport(
+                "OSM",
+                "OSM_TOILET_JSON",
+                objectMapper.writeValueAsString(listOf(payload.toJacksonNode()))
+            )
+
+        assertThat(response["results"][0]["outcome"].asText()).isEqualTo("CREATED")
+
+        val imported = restroomRepository.findByOriginProviderAndOriginId(ImportProvider.OSM, "4115239922")
+        assertThat(imported).isNotNull
+        assertThat(imported!!.dataSource).isEqualTo(DataSourceType.IMPORT)
+        assertThat(imported.phones).containsExactly("+375291112233", "+375441112233")
+        assertThat(imported.accessNote).isEqualTo("Use side entrance")
+        assertThat(imported.amenities).containsEntry("access", "customers")
+        assertThat(imported.amenities).containsEntry("wheelchair", "limited")
+
+        @Suppress("UNCHECKED_CAST")
+        val osmTags = imported.amenities!!["osm_tags"] as Map<String, Any?>
+        assertThat(osmTags["phone"]).isEqualTo("+375291112233")
+        assertThat(osmTags["contact:phone"]).isEqualTo("+375441112233")
+        assertThat(osmTags["description"]).isEqualTo("Use side entrance")
+        assertThat(osmTags["designation"]).isEqualTo("Customer toilets")
+        assertThat(osmTags["website"]).isEqualTo("https://example.com")
+    }
+
+    @Test
+    fun `given real twogis and yandex toilets when import sequentially then keep them as distinct restrooms`() {
+        val twogisResponse = performImport("TWO_GIS", "TWO_GIS_SCRAPED_PLACE_JSON", objectMapper.writeValueAsString(listOf(twoGisItem("70000001062416076"))))
+        val yandexResponse = performImport("YANDEX_MAPS", "YANDEX_MAPS_SCRAPED_PLACE_JSON", objectMapper.writeValueAsString(mapOf("items" to listOf(yandexItem("239919493009")))))
+
+        assertThat(twogisResponse["results"][0]["outcome"].asText()).isEqualTo("CREATED")
+        assertThat(yandexResponse["results"][0]["outcome"].asText()).isEqualTo("CREATED")
+        assertThat(restroomRepository.count()).isEqualTo(2)
+        assertThat(restroomRepository.findByOriginProviderAndOriginId(ImportProvider.TWO_GIS, "70000001062416076")).isNotNull
+        assertThat(restroomRepository.findByOriginProviderAndOriginId(ImportProvider.YANDEX_MAPS, "239919493009")).isNotNull
+        assertThat(duplicateSuspicionRepository.count()).isEqualTo(0)
+    }
+
+    @Test
     fun `given real yandex batch fixture when import then keep inactive rows out of nearest search`() {
         val body = objectMapper.writeValueAsString(mapOf("items" to listOf(yandexItem("137246000290"), yandexItem("239919493009"))))
 
@@ -97,7 +159,7 @@ class ImportBatchApiIntegrationTest : BaseIntegrationTest() {
         assertThat(inactive!!.status).isEqualTo(RestroomStatus.INACTIVE)
         assertThat(active!!.status).isEqualTo(RestroomStatus.ACTIVE)
         assertThat(active.city?.id).isEqualTo(minskCityId)
-        assertThat(active.externalMaps?.get("yandex")).isEqualTo("239919493009")
+        assertThat(active.yandexId).isEqualTo("239919493009")
 
         val nearest = mockMvc.perform(
             get("/api/v1/restrooms/nearest")
@@ -115,6 +177,21 @@ class ImportBatchApiIntegrationTest : BaseIntegrationTest() {
     }
 
     @Test
+    fun `given real twogis fixture without source city metadata when import then resolve nearest city by coordinates`() {
+        val payload = twoGisItem("70000001062416076").deepCopy().apply {
+            remove("country")
+            remove("city")
+        }
+
+        val response = performImport("TWO_GIS", "TWO_GIS_SCRAPED_PLACE_JSON", objectMapper.writeValueAsString(listOf(payload)))
+
+        assertThat(response["results"][0]["outcome"].asText()).isEqualTo("CREATED")
+        val imported = restroomRepository.findByOriginProviderAndOriginId(ImportProvider.TWO_GIS, "70000001062416076")
+        assertThat(imported).isNotNull
+        assertThat(imported!!.city?.id).isEqualTo(minskCityId)
+    }
+
+    @Test
     fun `given same payload reimport when import then skip duplicate and keep one restroom row`() {
         val item = twoGisItem("70000001062416076")
         performImport("TWO_GIS", "TWO_GIS_SCRAPED_PLACE_JSON", objectMapper.writeValueAsString(listOf(item)))
@@ -124,6 +201,25 @@ class ImportBatchApiIntegrationTest : BaseIntegrationTest() {
         assertThat(secondResponse["results"][0]["outcome"].asText()).isEqualTo("SKIPPED_DUPLICATE")
         assertThat(restroomRepository.count()).isEqualTo(1)
         assertThat(restroomImportRepository.count()).isEqualTo(1)
+    }
+
+    @Test
+    fun `given same toilet from yandex and twogis when import then link duplicate without creating a second restroom`() {
+        val yandexItem = yandexItem("239919493009")
+        val yandexResponse = performImport("YANDEX_MAPS", "YANDEX_MAPS_SCRAPED_PLACE_JSON", objectMapper.writeValueAsString(mapOf("items" to listOf(yandexItem))))
+
+        val duplicate = twoGisDuplicateFromYandexItem(yandexItem, externalId = "70000001999999999")
+        val twogisResponse = performImport("TWO_GIS", "TWO_GIS_SCRAPED_PLACE_JSON", objectMapper.writeValueAsString(listOf(duplicate)))
+
+        assertThat(yandexResponse["results"][0]["outcome"].asText()).isEqualTo("CREATED")
+        assertThat(twogisResponse["results"][0]["outcome"].asText()).isEqualTo("LINKED_DUPLICATE")
+        assertThat(twogisResponse["results"][0]["duplicateReason"].asText()).isEqualTo("EXACT_RESTROOM_MATCH_KEY")
+        assertThat(restroomRepository.count()).isEqualTo(1)
+
+        val imported = restroomRepository.findByOriginProviderAndOriginId(ImportProvider.YANDEX_MAPS, "239919493009")
+        assertThat(imported).isNotNull
+        assertThat(imported!!.yandexId).isEqualTo("239919493009")
+        assertThat(imported.twoGisId).isEqualTo("70000001999999999")
     }
 
     @Test
@@ -168,9 +264,11 @@ class ImportBatchApiIntegrationTest : BaseIntegrationTest() {
 
     @Test
     fun `given mixed valid and invalid items when import then return partial success with failure details`() {
-        val valid = twoGisItem("70000001062416076")
+        val firstValid = twoGisItem("70000001062416076")
+        val secondValid = twoGisItem("70000001055539762")
         val invalid = objectMapper.createObjectNode().apply {
             put("title", "broken")
+            put("address", "Минск, улица Тестовая, 1")
             put("country", "Республика Беларусь")
             put("city", "Минск")
             set<ObjectNode>(
@@ -180,17 +278,18 @@ class ImportBatchApiIntegrationTest : BaseIntegrationTest() {
                     .put("lng", 27.56)
             )
         }
-        val body = objectMapper.writeValueAsString(listOf(valid, invalid))
+        val body = objectMapper.writeValueAsString(listOf(firstValid, secondValid, invalid))
 
         val response = performImport("TWO_GIS", "TWO_GIS_SCRAPED_PLACE_JSON", body)
 
-        assertThat(response["totalProcessed"].asInt()).isEqualTo(2)
-        assertThat(response["successful"].asInt()).isEqualTo(1)
+        assertThat(response["totalProcessed"].asInt()).isEqualTo(3)
+        assertThat(response["successful"].asInt()).isEqualTo(2)
         assertThat(response["failed"].asInt()).isEqualTo(1)
         assertThat(response["results"][0]["outcome"].asText()).isEqualTo("CREATED")
-        assertThat(response["results"][1]["outcome"].asText()).isEqualTo("FAILED")
-        assertThat(response["results"][1]["errorCode"].asText()).isEqualTo("INVALID_PAYLOAD")
-        assertThat(restroomRepository.count()).isEqualTo(1)
+        assertThat(response["results"][1]["outcome"].asText()).isEqualTo("CREATED")
+        assertThat(response["results"][2]["outcome"].asText()).isEqualTo("FAILED")
+        assertThat(response["results"][2]["errorCode"].asText()).isEqualTo("INVALID_PAYLOAD")
+        assertThat(restroomRepository.count()).isEqualTo(2)
     }
 
     @Test
@@ -231,6 +330,24 @@ class ImportBatchApiIntegrationTest : BaseIntegrationTest() {
         val root = readResourceNode("import/2gis/restrooms_2gis_sample.json") as ArrayNode
         return root.first { it["id"].asText() == id }.deepCopy()
     }
+
+    private fun twoGisDuplicateFromYandexItem(yandexPlace: JsonNode, externalId: String): ObjectNode =
+        objectMapper.createObjectNode().apply {
+            put("id", externalId)
+            put("title", yandexPlace["title"].asText())
+            put("address", yandexPlace["address"].asText())
+            put("country", "Беларусь")
+            put("city", "Минск")
+            set<ObjectNode>(
+                "location",
+                objectMapper.createObjectNode().apply {
+                    put("lat", yandexPlace["location"]["lat"].asDouble())
+                    put("lng", yandexPlace["location"]["lng"].asDouble())
+                }
+            )
+            put("url", "https://2gis.by/minsk/firm/$externalId")
+            put("searchUrl", "https://2gis.by/minsk/search/$externalId")
+        }
 
     private fun yandexItem(placeId: String): ObjectNode {
         val root = readResourceNode("import/yandex/yandex_scraped_places.json") as ObjectNode

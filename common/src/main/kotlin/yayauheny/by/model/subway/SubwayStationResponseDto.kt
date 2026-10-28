@@ -11,11 +11,12 @@ import yayauheny.by.model.dto.Coordinates
 data class SubwayStationResponseDto(
      val id: UUID,
      val subwayLineId: UUID?,
+    val lineOrder: Int,
+    val slug: String,
     val nameRu: String,
     val nameEn: String,
     val isTransfer: Boolean = false,
     val coordinates: Coordinates,
-    val isDeleted: Boolean,
      val createdAt: Instant,
     val line: SubwayLineResponseDto? = null
 ) {

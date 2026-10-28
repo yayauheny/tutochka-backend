@@ -1,0 +1,4 @@
+id,city_id,code,name_ru,name_en,hex_color
+55665eb9-1efa-469f-bd14-058e35c4bf75,00000000-0000-0000-0000-0000000000c1,1,Московская линия,Moskovskaya line,#0066CC
+270518e5-df16-4c42-bf9f-21f2f3a8dcbb,00000000-0000-0000-0000-0000000000c1,2,Автозаводская линия,Avtozavodskaya line,#CC0000
+b250dde1-d7cf-486c-8f21-1a3246d4e5a0,00000000-0000-0000-0000-0000000000c1,3,Зеленолужская линия,Zelenoluzhskaya line,#00AA00

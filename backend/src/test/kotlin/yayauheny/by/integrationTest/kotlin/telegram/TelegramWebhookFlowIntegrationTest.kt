@@ -27,7 +27,6 @@ import org.telegram.telegrambots.meta.api.objects.message.Message
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.InlineKeyboardMarkup
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.ReplyKeyboardMarkup
 import yayauheny.by.analytics.repository.AnalyticsEventJpaRepository
-import yayauheny.by.analytics.repository.UserAnalyticsJpaRepository
 import yayauheny.by.analytics.repository.UserJpaRepository
 import yayauheny.by.bot.MessageSender
 import yayauheny.by.bot.handler.UpdateContext
@@ -225,10 +224,7 @@ class TelegramWebhookFlowIntegrationTest : BaseIntegrationTest() {
         val user = users[0]
         assertThat(user.tgUserId).isEqualTo(encryptionService.encrypt("100"))
 
-        val userAnalytics = userAnalyticsRepository.findById(user.id!!).get()
-        assertThat(userAnalytics.searchesCount).isEqualTo(1)
-        assertThat(userAnalytics.successfulSearchesCount).isEqualTo(1)
-        assertThat(userAnalytics.emptySearchesCount).isEqualTo(0)
+        assertThat(userRepository.count()).isEqualTo(1)
         assertThat(analyticsEventRepository.findAll().map { it.event })
             .containsExactly(ProductAnalyticsEvent.NEAREST_RESTROOMS_RETURNED.value)
     }
@@ -265,10 +261,8 @@ class TelegramWebhookFlowIntegrationTest : BaseIntegrationTest() {
         assertThat(calls[0].text).isEqualTo(Messages.NO_TOILETS_FOUND)
 
         val user = userRepository.findByTgUserId(encryptionService.encrypt("200"))!!
-        val analytics = userAnalyticsRepository.findById(user.id!!).get()
-        assertThat(analytics.searchesCount).isEqualTo(1)
-        assertThat(analytics.successfulSearchesCount).isEqualTo(0)
-        assertThat(analytics.emptySearchesCount).isEqualTo(1)
+        assertThat(user.id).isNotNull()
+        assertThat(userRepository.count()).isEqualTo(1)
     }
 
     @Test
@@ -297,8 +291,8 @@ class TelegramWebhookFlowIntegrationTest : BaseIntegrationTest() {
         assertThat(editCall.text).contains("Круглосуточно")
 
         val user = userRepository.findByTgUserId(encryptionService.encrypt("300"))!!
-        val analytics = userAnalyticsRepository.findById(user.id!!).get()
-        assertThat(analytics.detailsOpenedCount).isEqualTo(1)
+        assertThat(user.id).isNotNull()
+        assertThat(userRepository.count()).isEqualTo(1)
         assertThat(analyticsEventRepository.findAll().map { it.event })
             .containsExactly(
                 ProductAnalyticsEvent.NEAREST_RESTROOMS_RETURNED.value,

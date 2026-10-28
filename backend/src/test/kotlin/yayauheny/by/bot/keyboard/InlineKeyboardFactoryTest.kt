@@ -112,6 +112,7 @@ class InlineKeyboardFactoryTest {
             originProvider = ImportProvider.USER,
             originId = null,
             isHidden = false,
+            moderationStatus = "PENDING",
             createdAt = now,
             updatedAt = now,
             distanceMeters = 100,
@@ -125,7 +126,6 @@ class InlineKeyboardFactoryTest {
                     workTime = emptyMap(),
                     coordinates = Coordinates(53.91, 27.57),
                     externalIds = emptyMap(),
-                    isDeleted = false,
                     createdAt = now,
                     updatedAt = now
                 ),
@@ -133,21 +133,21 @@ class InlineKeyboardFactoryTest {
                 SubwayStationResponseDto(
                     id = UUID.randomUUID(),
                     subwayLineId = UUID.randomUUID(),
+                    lineOrder = 1,
+                    slug = "victory-square",
                     nameRu = "Victory Square",
                     nameEn = "Victory Square",
                     isTransfer = false,
                     coordinates = Coordinates(53.92, 27.58),
-                    isDeleted = false,
                     createdAt = now,
                     line =
                         SubwayLineResponseDto(
                             id = UUID.randomUUID(),
                             cityId = UUID.randomUUID(),
+                            code = "1",
                             nameRu = "Red",
                             nameEn = "Red",
-                            shortCode = "1",
                             hexColor = "#FF0000",
-                            isDeleted = false,
                             createdAt = now
                         )
                 )

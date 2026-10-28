@@ -1,1 +1,31 @@
-databaseChangeLog: []
+databaseChangeLog:
+  - changeSet:
+      id: load-reference-subway-lines
+      author: yayauheny
+      changes:
+        - loadData:
+            file: ../reference_data/subway_lines.csv
+            relativeToChangelogFile: true
+            tableName: subway_lines
+            separator: ','
+            quotchar: '"'
+            encoding: UTF-8
+            columns:
+              - column:
+                  header: id
+                  type: STRING
+              - column:
+                  header: city_id
+                  type: STRING
+              - column:
+                  header: code
+                  type: STRING
+              - column:
+                  header: name_ru
+                  type: STRING
+              - column:
+                  header: name_en
+                  type: STRING
+              - column:
+                  header: hex_color
+                  type: STRING

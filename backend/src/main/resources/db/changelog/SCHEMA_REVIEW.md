@@ -8,8 +8,8 @@
 
 ## Главные правила
 
-1. Старую историю миграций не трогать. Она остаётся в `legacy/` как fallback.
-2. Новую clean-схему собирать только через новые `CREATE TABLE` и отдельные data-load файлы.
+1. Active line идёт через `db.changelog.yml`.
+2. Новую схему собирать только через новые `CREATE TABLE` и отдельные data-load файлы.
 3. Не смешивать в одном SQL:
    - базовые справочники и operational-таблицы;
    - users/privacy;
@@ -17,7 +17,7 @@
    - индексы;
    - CSV-данные.
 4. Справочные данные держать отдельно в CSV.
-5. Redis и будущие доработки не включать в текущую реализацию clean-схемы.
+4. Redis и будущие доработки не включать в текущую реализацию схемы.
 
 ## Что должно получиться по файлам
 
@@ -27,11 +27,7 @@
 - `010_core_tables.sql`
 - `011_user_tables.sql`
 - `012_analytics_tables.sql`
-- `020_indexes.sql`
-- `030_constraints.sql`
-- `040_seed_core.sql`
-- `050_checks.sql`
-- `db.changelog-clean.yml`
+- `db.changelog.yml`
 
 Данные справочников:
 
@@ -88,43 +84,6 @@
 - `analytics_aggregates`
 
 `user_analytics` в первую clean-схему не входит.
-
-### `020_indexes.sql`
-
-Сюда вынести все индексы:
-
-- `UNIQUE`
-- btree на FK
-- рабочие составные индексы
-- partial unique индексы
-
-В этом файле не должно быть `CREATE TABLE`.
-
-### `030_constraints.sql`
-
-Сюда вынести ограничения схемы:
-
-- foreign keys
-- `NOT NULL`, если они не заданы сразу при `CREATE TABLE`
-- structural constraints, которые не относятся к enum-like статусам
-
-В этом файле не делать `CHECK` для бизнес-статусов и enum-like полей.
-
-### `040_seed_core.sql`
-
-Только базовые SQL-сиды, если они не относятся к справочникам CSV.
-
-Если данные можно хранить как reference data, они не должны попадать сюда.
-
-### `050_checks.sql`
-
-Только технические проверки после bootstrap:
-
-- контроль наличия обязательных строк
-- сверка связей
-- валидационные select/check SQL
-
-Без создания таблиц, индексов и боевых данных.
 
 ## Что грузить через CSV
 
@@ -430,22 +389,7 @@
 - входит в первую clean-схему
 - строится на типизированных колонках
 
-## Индексы, которые должны быть вынесены в отдельный SQL
-
-Обязательные FK btree-индексы:
-
-- `cities(country_id)`
-- `subway_lines(city_id)`
-- `subway_stations(subway_line_id)`
-- `buildings(city_id)`
-- `restrooms(city_id)`
-- `restrooms(building_id)`
-- `restrooms(subway_station_id)`
-- `restroom_imports(city_id)`
-- `restroom_imports(building_id)`
-- `restroom_imports(restroom_id)`
-
-Обязательные unique-индексы:
+## Критичный набор индексов
 
 - `countries(code)`
 - `cities(slug)`
@@ -453,33 +397,27 @@
 - `subway_stations(subway_line_id, slug)`
 - `subway_stations(subway_line_id, line_order)`
 - `users(tg_user_id)`
+- `cities(coordinates)` as GIST
+- `restrooms(coordinates)` as partial GIST on active visible rows
 - `buildings(two_gis_id)` where not null
 - `buildings(yandex_id)` where not null
 - `buildings(google_id)` where not null
 - `buildings(apple_id)` where not null
+- `buildings(building_match_key)` where not null
 - `restrooms(two_gis_id)` where not null
 - `restrooms(yandex_id)` where not null
 - `restrooms(google_id)` where not null
 - `restrooms(apple_id)` where not null
 - `restrooms(origin_provider, origin_id)` where `origin_id` is not null
-
-Обязательные рабочие индексы:
-
-- `restrooms(city_id, status, is_hidden)`
-- `restroom_duplicate_suspicions(status, created_at)`
-- `analytics_events(created_at)`
-- `analytics_events(user_id, created_at)` если user-bound события остаются в сыром виде до агрегирования
+- `restrooms(restroom_match_key)` where not null
+- `restroom_imports(provider, entity_type, external_id)` where `external_id` is not null
 
 ## Порядок работы для агента
 
-1. Не трогать `legacy/`.
-2. Подготовить новую структуру clean-файлов с разбиением на `core`, `users`, `analytics`, `indexes`, `constraints`.
-3. Заполнить `010_core_tables.sql`.
-4. Заполнить `011_user_tables.sql`.
-5. Заполнить `012_analytics_tables.sql`.
-6. Вынести все индексы в `020_indexes.sql`.
-7. Вынести все FK и structural constraints в `030_constraints.sql`.
-8. Подготовить CSV для `countries`, `cities`, `subway_lines`, `subway_stations`.
-9. Подключить CSV через `reference_load/*.yml`.
-10. Добавить базовые проверки в `050_checks.sql`.
-11. После этого поднимать новую ветку Neon и проверять bootstrap clean БД с нуля.
+1. Подготовить новую структуру clean-файлов с разбиением на `core`, `users`, `analytics`.
+2. Заполнить `010_core_tables.sql`.
+3. Заполнить `011_user_tables.sql`.
+4. Заполнить `012_analytics_tables.sql`.
+5. Встроить критичные индексы и FK inline сразу после соответствующих `CREATE TABLE`.
+6. Подготовить CSV для `countries`, `cities`, `subway_lines`, `subway_stations`.
+7. Подключить CSV через `reference_load/*.yml`.

@@ -32,7 +32,7 @@ class ImportCityResolver(
 
         val cityId = cityRepository.findAll()
             .asSequence()
-            .filter { !it.isDeleted && it.country?.id == countryId }
+            .filter { it.country?.id == countryId }
             .firstOrNull { city ->
                 normalizeCity(city.nameRu) == normalizedCity ||
                     normalizeCity(city.nameEn) == normalizedCity
@@ -57,11 +57,10 @@ class ImportCityResolver(
                     """
                     SELECT id
                     FROM cities
-                    WHERE is_deleted = false
                     """.trimIndent()
                 )
                 if (countryId != null) {
-                    append("\n  AND country_id = CAST(:countryId AS uuid)")
+                    append("\nWHERE country_id = CAST(:countryId AS uuid)")
                 }
                 append(
                     """
@@ -92,7 +91,6 @@ class ImportCityResolver(
     private fun resolveCountryId(normalizedCountry: String): UUID? =
         countryRepository.findAll()
             .asSequence()
-            .filter { !it.isDeleted }
             .firstOrNull { country ->
                 val names =
                     listOfNotNull(

@@ -166,4 +166,21 @@ class YandexNormalizationProfileTest {
 
         assertThat(resolved.rawSchedule?.toString()).isEqualTo("""{"mon":{"from":"09:00","to":"12:00","intervals":[{"from":"09:00","to":"12:00"},{"from":"12:30","to":"21:00"}]}}""")
     }
+
+    @Test
+    fun blank_address_and_empty_working_hours_are_normalized_consistently() {
+        val resolved =
+            YandexNormalizationProfile.resolve(
+                YandexMapsScrapedPlace(
+                    title = "Туалет",
+                    address = " null ",
+                    location = YandexMapsScrapedLocation(53.9, 27.56),
+                    placeId = "yandex-1",
+                    workingHours = emptyList()
+                )
+            )
+
+        assertThat(resolved.address).isNull()
+        assertThat(resolved.rawSchedule).isNull()
+    }
 }

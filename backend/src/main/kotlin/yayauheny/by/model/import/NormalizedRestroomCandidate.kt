@@ -39,7 +39,10 @@ data class NormalizedRestroomCandidate(
     val amenities: JsonNode?,
     val rawSchedule: JsonNode? = null,
     val buildingContext: BuildingContext? = null,
-    val genderType: GenderType? = null
+    val genderType: GenderType? = null,
+    val phones: Map<String, Any>? = null,
+    val accessNote: String? = null,
+    val directionGuide: String? = null
 ) {
     fun toCoordinates(): Coordinates = Coordinates(lat = lat, lon = lng)
 }

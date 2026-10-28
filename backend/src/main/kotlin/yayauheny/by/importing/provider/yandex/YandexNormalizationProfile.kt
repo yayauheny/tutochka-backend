@@ -3,6 +3,7 @@ package yayauheny.by.importing.provider.yandex
 import com.fasterxml.jackson.databind.JsonNode
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
+import yayauheny.by.importing.provider.normalizedProviderText
 import yayauheny.by.importing.provider.ProviderNormalizationProfile
 import yayauheny.by.importing.provider.ProviderResolvedFields
 import yayauheny.by.model.enums.AccessibilityType
@@ -42,7 +43,7 @@ internal object YandexNormalizationProfile : ProviderNormalizationProfile<Yandex
             ?: providerDto.title?.trim().takeUnless { it.isNullOrBlank() }
             ?: "Туалет"
 
-    private fun resolveAddress(providerDto: YandexMapsScrapedPlace): String? = providerDto.address?.trim().takeUnless { it.isNullOrBlank() }
+    private fun resolveAddress(providerDto: YandexMapsScrapedPlace): String? = providerDto.address.normalizedProviderText()
 
     private fun normalizeFeatures(providerDto: YandexMapsScrapedPlace): Set<String> =
         providerDto.features

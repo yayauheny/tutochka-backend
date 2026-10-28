@@ -41,13 +41,9 @@ class AnalyticsUserUpsertIntegrationTest : integration.base.BaseIntegrationTest(
 
         val user = userRepository.findAll().single()
         assertThat(encryptionService.decrypt(user.tgUserId)).isEqualTo("10")
-        assertThat(encryptionService.decrypt(user.tgChatId)).isEqualTo("chat-1")
         assertThat(user.username).isEqualTo("first-user")
         assertThat(user.source).isEqualTo(AnalyticsSource.TELEGRAM_BOT.value)
         assertThat(user.acquisitionTag).isEqualTo(AcquisitionTag.WEBSITE.value)
-
-        val userAnalytics = userAnalyticsRepository.findAll().single()
-        assertThat(userAnalytics.lastEvent).isEqualTo(ProductAnalyticsEvent.BOT_STARTED.value)
         assertThat(analyticsEventRepository.count()).isEqualTo(1)
     }
 
@@ -75,18 +71,13 @@ class AnalyticsUserUpsertIntegrationTest : integration.base.BaseIntegrationTest(
         )
 
         assertThat(userRepository.count()).isEqualTo(1)
-        assertThat(userAnalyticsRepository.count()).isEqualTo(1)
         assertThat(analyticsEventRepository.count()).isEqualTo(2)
 
         val user = userRepository.findAll().single()
         assertThat(encryptionService.decrypt(user.tgUserId)).isEqualTo("10")
-        assertThat(encryptionService.decrypt(user.tgChatId)).isEqualTo("chat-2")
         assertThat(user.username).isEqualTo("second-user")
-        assertThat(user.source).isEqualTo(AnalyticsSource.TELEGRAM_BOT.value)
+        assertThat(user.source).isEqualTo(AnalyticsSource.API.value)
         assertThat(user.acquisitionTag).isEqualTo(AcquisitionTag.WEBSITE.value)
-
-        val userAnalytics = userAnalyticsRepository.findAll().single()
-        assertThat(userAnalytics.lastEvent).isEqualTo(ProductAnalyticsEvent.BOT_STARTED.value)
     }
 
     @Test
@@ -116,7 +107,6 @@ class AnalyticsUserUpsertIntegrationTest : integration.base.BaseIntegrationTest(
 
         assertThat(failures.get()).isNull()
         assertThat(userRepository.count()).isEqualTo(1)
-        assertThat(userAnalyticsRepository.count()).isEqualTo(1)
         assertThat(analyticsEventRepository.count()).isEqualTo(2)
     }
 

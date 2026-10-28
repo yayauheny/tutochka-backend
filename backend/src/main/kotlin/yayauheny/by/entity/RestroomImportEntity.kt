@@ -75,6 +75,18 @@ class RestroomImportEntity {
     @JoinColumn(name = "restroom_id")
     var restroom: RestroomEntity? = null
 
+    @Column(name = "provider_reference")
+    var providerReference: String? = null
+
+    @Column(name = "city_slug")
+    var citySlug: String? = null
+
+    @Column(name = "resolved_building_provider_id")
+    var resolvedBuildingProviderId: String? = null
+
+    @Column(name = "resolved_restroom_origin_key")
+    var resolvedRestroomOriginKey: String? = null
+
     @Enumerated(EnumType.STRING)
     @Column(name = "status", nullable = false, length = 20)
     var status: ImportJobStatus = ImportJobStatus.PENDING

@@ -1,1 +1,37 @@
-databaseChangeLog: []
+databaseChangeLog:
+  - changeSet:
+      id: load-reference-subway-stations
+      author: yayauheny
+      changes:
+        - loadData:
+            file: ../reference_data/subway_stations.csv
+            relativeToChangelogFile: true
+            tableName: subway_stations
+            separator: ','
+            quotchar: '"'
+            encoding: UTF-8
+            columns:
+              - column:
+                  header: id
+                  type: STRING
+              - column:
+                  header: subway_line_id
+                  type: STRING
+              - column:
+                  header: line_order
+                  type: NUMERIC
+              - column:
+                  header: slug
+                  type: STRING
+              - column:
+                  header: name_ru
+                  type: STRING
+              - column:
+                  header: name_en
+                  type: STRING
+              - column:
+                  header: is_transfer
+                  type: BOOLEAN
+              - column:
+                  header: coordinates
+                  type: STRING

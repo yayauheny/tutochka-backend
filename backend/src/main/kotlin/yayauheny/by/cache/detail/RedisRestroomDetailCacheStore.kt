@@ -6,6 +6,9 @@ import org.springframework.data.redis.core.StringRedisTemplate
 import org.springframework.stereotype.Component
 import yayauheny.by.cache.RestroomCacheProperties
 import yayauheny.by.model.restroom.RestroomResponseDto
+import java.time.Clock
+import java.time.Duration
+import java.time.Instant
 import java.util.UUID
 
 @Component
@@ -13,15 +16,18 @@ import java.util.UUID
 class RedisRestroomDetailCacheStore(
     private val properties: RestroomCacheProperties,
     private val redisTemplate: StringRedisTemplate,
-    private val objectMapper: ObjectMapper
+    private val objectMapper: ObjectMapper,
+    private val clock: Clock
 ) : RestroomDetailCacheStore {
     override fun get(restroomId: UUID): RestroomResponseDto? {
+        decayScoresIfNeeded()
         val json = redisTemplate.opsForHash<String, String>().get(itemsKey(), restroomId.toString()) ?: return null
         redisTemplate.opsForZSet().incrementScore(scoreKey(), restroomId.toString(), 1.0)
         return objectMapper.readValue(json, RestroomResponseDto::class.java)
     }
 
     override fun put(restroom: RestroomResponseDto) {
+        decayScoresIfNeeded()
         val id = restroom.id.toString()
         redisTemplate.opsForHash<String, String>().put(itemsKey(), id, objectMapper.writeValueAsString(restroom))
         redisTemplate.opsForZSet().incrementScore(scoreKey(), id, 1.0)
@@ -57,7 +63,34 @@ class RedisRestroomDetailCacheStore(
         redisTemplate.expire(scoreKey(), properties.popularDetails.scoreTtl)
     }
 
+    private fun decayScoresIfNeeded() {
+        if (!properties.popularDetails.algorithm.equals("lfu", ignoreCase = true)) {
+            return
+        }
+
+        val now = clock.instant()
+        val lastDecay = redisTemplate.opsForValue().get(lastDecayKey())?.let { runCatching { Instant.parse(it) }.getOrNull() }
+        if (lastDecay == null) {
+            redisTemplate.opsForValue().set(lastDecayKey(), now.toString())
+            return
+        }
+        if (Duration.between(lastDecay, now) < properties.popularDetails.lfuDecayInterval) {
+            return
+        }
+
+        val members = redisTemplate.opsForZSet().range(scoreKey(), 0, -1).orEmpty()
+        if (members.isNotEmpty()) {
+            members.forEach { member ->
+                val currentScore = redisTemplate.opsForZSet().score(scoreKey(), member) ?: return@forEach
+                redisTemplate.opsForZSet().add(scoreKey(), member, currentScore * properties.popularDetails.lfuDecayFactor)
+            }
+        }
+        redisTemplate.opsForValue().set(lastDecayKey(), now.toString())
+    }
+
     private fun itemsKey(): String = "${properties.popularDetails.keyPrefix}:items"
 
     private fun scoreKey(): String = "${properties.popularDetails.keyPrefix}:scores"
+
+    private fun lastDecayKey(): String = "${properties.popularDetails.keyPrefix}:last-decay"
 }

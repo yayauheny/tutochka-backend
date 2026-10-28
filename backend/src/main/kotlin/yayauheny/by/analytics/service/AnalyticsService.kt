@@ -8,7 +8,6 @@ import yayauheny.by.analytics.entity.AnalyticsEventEntity
 import yayauheny.by.analytics.entity.UserEntity
 import yayauheny.by.analytics.model.EncryptedAnalyticsEventCommand
 import yayauheny.by.analytics.repository.AnalyticsEventJpaRepository
-import yayauheny.by.analytics.repository.UserAnalyticsJpaRepository
 import yayauheny.by.analytics.repository.UserJpaRepository
 import yayauheny.by.model.analytics.AnalyticsEventCommand
 import yayauheny.by.model.analytics.AnalyticsSource
@@ -21,7 +20,6 @@ import java.util.UUID
 @Service
 class AnalyticsService(
     private val userJpaRepository: UserJpaRepository,
-    private val userAnalyticsJpaRepository: UserAnalyticsJpaRepository,
     private val analyticsEventJpaRepository: AnalyticsEventJpaRepository,
     private val encryptionService: EncryptionService
 ) {
@@ -46,33 +44,14 @@ class AnalyticsService(
     private fun trackEncryptedProductEvent(command: EncryptedAnalyticsEventCommand) {
         var user: UserEntity? = null
         if (command.tgUserId != null) {
-            // TODO improve: replace native SQL upsert with cleaner Hibernate/JPA approach when behavior is fully covered.
             val userId =
                 upsertUser(
                     tgUserId = command.tgUserId!!,
-                    tgChatId = requireNotNull(command.tgChatId),
                     source = command.source.value,
                     username = command.username,
                     acquisitionTag = command.acquisitionTag?.value
                 )
             user = userJpaRepository.getReferenceById(userId)
-            userAnalyticsJpaRepository.ensureUserAnalyticsRow(userId)
-
-            val isSearch = command.event == ProductAnalyticsEvent.NEAREST_RESTROOMS_RETURNED ||
-                command.event == ProductAnalyticsEvent.NEAREST_RESTROOMS_NO_RESULTS
-            val isSuccessSearch = command.event == ProductAnalyticsEvent.NEAREST_RESTROOMS_RETURNED
-            val isEmptySearch = command.event == ProductAnalyticsEvent.NEAREST_RESTROOMS_NO_RESULTS
-            val isDetailsOpened = command.event == ProductAnalyticsEvent.RESTROOM_DETAILS_OPENED
-
-            userAnalyticsJpaRepository.incrementMetrics(
-                userId = user.id!!,
-                searchesInc = if (isSearch) 1 else 0,
-                successfulSearchesInc = if (isSuccessSearch) 1 else 0,
-                emptySearchesInc = if (isEmptySearch) 1 else 0,
-                detailsOpenedInc = if (isDetailsOpened) 1 else 0,
-                lastEvent = command.event.value,
-                lastEventAt = Instant.now()
-            )
         }
 
         val eventEntity = AnalyticsEventEntity().apply {
@@ -95,7 +74,7 @@ class AnalyticsService(
         return EncryptedAnalyticsEventCommand(
             event = event,
             tgUserId = encryptionService.encrypt(requireNotNull(tgUserId).toString()),
-            tgChatId = encryptionService.encrypt(requireNotNull(tgChatId)),
+            tgChatId = tgChatId?.let { encryptionService.encrypt(it) },
             username = username,
             source = source,
             lat = lat,
@@ -123,7 +102,6 @@ class AnalyticsService(
 
     private fun upsertUser(
         tgUserId: String,
-        tgChatId: String,
         source: String,
         username: String?,
         acquisitionTag: String?
@@ -132,22 +110,27 @@ class AnalyticsService(
             """
                 INSERT INTO users (
                     tg_user_id,
-                    tg_chat_id,
                     source,
                     username,
-                    acquisition_tag
+                    acquisition_tag,
+                    is_blocked,
+                    account_status,
+                    last_seen_at
                 )
                 VALUES (
                     :tgUserId,
-                    :tgChatId,
                     :source,
                     :username,
-                    COALESCE(:acquisitionTag, 'direct')
+                    COALESCE(:acquisitionTag, 'direct'),
+                    false,
+                    'ACTIVE',
+                    now()
                 )
                 ON CONFLICT (tg_user_id) DO UPDATE
-                SET tg_chat_id = EXCLUDED.tg_chat_id,
-                    username = COALESCE(EXCLUDED.username, users.username),
+                SET username = COALESCE(EXCLUDED.username, users.username),
                     acquisition_tag = COALESCE(CAST(:acquisitionTag AS text), users.acquisition_tag),
+                    source = EXCLUDED.source,
+                    last_seen_at = now(),
                     updated_at = now()
                 RETURNING id
             """.trimIndent()
@@ -155,7 +138,6 @@ class AnalyticsService(
         val result =
             entityManager.createNativeQuery(sql)
                 .setParameter("tgUserId", tgUserId)
-                .setParameter("tgChatId", tgChatId)
                 .setParameter("source", source)
                 .setParameter("username", username)
                 .setParameter("acquisitionTag", acquisitionTag)

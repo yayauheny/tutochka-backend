@@ -99,6 +99,22 @@ class RestroomCacheServiceImpl(
         }
     }
 
+    override fun beginRebuild(): String? {
+        return nearestCacheStore.beginRebuild()
+    }
+
+    override fun appendRebuild(version: String, items: Collection<NearestRestroomCacheItem>) {
+        nearestCacheStore.appendRebuild(version, items)
+    }
+
+    override fun finishRebuild(version: String, itemCount: Long) {
+        nearestCacheStore.finishRebuild(version, itemCount)
+    }
+
+    override fun abortRebuild(version: String) {
+        nearestCacheStore.abortRebuild(version)
+    }
+
     private fun candidateLimit(limit: Int): Int {
         val multiplied = limit * properties.nearest.candidateLimitMultiplier.coerceAtLeast(1)
         return multiplied.coerceAtLeast(limit).coerceAtMost(properties.nearest.maxCandidateLimit)

@@ -29,6 +29,21 @@ import yayauheny.by.model.subway.SubwayLineResponseDto
 import yayauheny.by.model.subway.SubwayStationCreateDto
 import yayauheny.by.model.subway.SubwayStationResponseDto
 
+private fun slugify(value: String): String =
+    value
+        .trim()
+        .lowercase()
+        .replace(Regex("[^a-z0-9]+"), "-")
+        .trim('-')
+
+private fun createDefaultExternalMaps(): Map<String, Any> {
+    val suffix = UUID.randomUUID().toString()
+    return mapOf(
+        "yandex" to "https://yandex.ru/maps/-/$suffix",
+        "google" to "https://maps.google.com/?q=$suffix"
+    )
+}
+
 object TestDataHelpers {
     fun createCountryCreateDto(
         nameRu: String = "Соединенные Штаты",
@@ -105,6 +120,7 @@ object TestDataHelpers {
         countryId: UUID = UUID.randomUUID(),
         nameRu: String = "Минск",
         nameEn: String = "Minsk",
+        slug: String = slugify(nameEn),
         region: String? = "Минская область",
         lat: Double = 53.9006,
         lon: Double = 27.5590
@@ -113,6 +129,7 @@ object TestDataHelpers {
         countryId = countryId,
         nameRu = nameRu,
         nameEn = nameEn,
+        slug = slug,
         region = region,
         coordinates =
             Coordinates(lat = lat, lon = lon)
@@ -150,11 +167,7 @@ object TestDataHelpers {
         dataSource: DataSourceType = DataSourceType.MANUAL,
         status: RestroomStatus = RestroomStatus.ACTIVE,
         amenities: Map<String, Any> = createBasicAmenities(),
-        externalMaps: Map<String, Any>? =
-            mapOf(
-                "yandex" to "https://yandex.ru/maps/-/CCUqM0VhXD",
-                "google" to "https://maps.google.com/?q=53.9006,27.5590"
-            ),
+        externalMaps: Map<String, Any>? = createDefaultExternalMaps(),
         accessNote: String? = "Доступен для людей с ограниченными возможностями",
         directionGuide: String? = "Находится на первом этаже, рядом с главным входом",
         inheritBuildingSchedule: Boolean = false,
@@ -199,11 +212,7 @@ object TestDataHelpers {
             Coordinates(lat = 40.7829, lon = -73.9654),
         status: RestroomStatus? = RestroomStatus.ACTIVE,
         amenities: Map<String, Any>? = createBasicAmenities(),
-        externalMaps: Map<String, Any>? =
-            mapOf(
-                "yandex" to "https://yandex.ru/maps/-/CCUqM0VhXD",
-                "google" to "https://maps.google.com/?q=53.9006,27.5590"
-            ),
+        externalMaps: Map<String, Any>? = createDefaultExternalMaps(),
         accessNote: String? = "Доступен для людей с ограниченными возможностями",
         directionGuide: String? = "Находится на первом этаже, рядом с главным входом",
         inheritBuildingSchedule: Boolean? = false,
@@ -248,11 +257,7 @@ object TestDataHelpers {
         dataSource: DataSourceType = DataSourceType.MANUAL,
         status: RestroomStatus = RestroomStatus.ACTIVE,
         amenities: Map<String, Any>? = createBasicAmenities(),
-        externalMaps: Map<String, Any>? =
-            mapOf(
-                "yandex" to "https://yandex.ru/maps/-/CCUqM0VhXD",
-                "google" to "https://maps.google.com/?q=53.9006,27.5590"
-            ),
+        externalMaps: Map<String, Any>? = createDefaultExternalMaps(),
         accessNote: String? = "Доступен для людей с ограниченными возможностями",
         directionGuide: String? = "Находится на первом этаже, рядом с главным входом",
         inheritBuildingSchedule: Boolean = false,
@@ -261,6 +266,7 @@ object TestDataHelpers {
         originProvider: ImportProvider = ImportProvider.MANUAL,
         originId: String? = null,
         isHidden: Boolean = false,
+        moderationStatus: String = "PENDING",
         createdAt: Instant = Instant.now(),
         updatedAt: Instant = Instant.now()
     ) = RestroomResponseDto(
@@ -290,6 +296,7 @@ object TestDataHelpers {
         originProvider = originProvider,
         originId = originId,
         isHidden = isHidden,
+        moderationStatus = moderationStatus,
         createdAt = createdAt,
         updatedAt = updatedAt
     )
@@ -412,11 +419,10 @@ object TestDataHelpers {
         lat: Double = 53.9006,
         lon: Double = 27.5590,
         workTime: Map<String, Any>? = createBasicWorkTime(),
-        externalIds: Map<String, Any>? =
-            mapOf(
-                "yandex" to "12345",
-                "google" to "67890"
-            )
+        twoGisId: String? = "12345",
+        yandexId: String? = "67890",
+        googleId: String? = null,
+        appleId: String? = null
     ) = BuildingCreateDto(
         cityId = cityId,
         name = name,
@@ -424,7 +430,10 @@ object TestDataHelpers {
         buildingType = buildingType,
         coordinates = Coordinates(lat = lat, lon = lon),
         workTime = workTime,
-        externalIds = externalIds
+        twoGisId = twoGisId,
+        yandexId = yandexId,
+        googleId = googleId,
+        appleId = appleId
     )
 
     fun createBuildingResponseDto(
@@ -436,12 +445,10 @@ object TestDataHelpers {
         lat: Double = 53.9006,
         lon: Double = 27.5590,
         workTime: Map<String, Any>? = createBasicWorkTime(),
-        externalIds: Map<String, Any>? =
-            mapOf(
-                "yandex" to "12345",
-                "google" to "67890"
-            ),
-        isDeleted: Boolean = false,
+        twoGisId: String? = "12345",
+        yandexId: String? = "67890",
+        googleId: String? = null,
+        appleId: String? = null,
         createdAt: Instant = Instant.now(),
         updatedAt: Instant = Instant.now()
     ) = BuildingResponseDto(
@@ -452,8 +459,13 @@ object TestDataHelpers {
         buildingType = buildingType,
         coordinates = Coordinates(lat = lat, lon = lon),
         workTime = workTime,
-        externalIds = externalIds,
-        isDeleted = isDeleted,
+        externalIds =
+            linkedMapOf<String, Any>().apply {
+                twoGisId?.let { put("2gis", it) }
+                yandexId?.let { put("yandex", it) }
+                googleId?.let { put("google", it) }
+                appleId?.let { put("apple", it) }
+            }.takeIf { it.isNotEmpty() },
         createdAt = createdAt,
         updatedAt = updatedAt
     )
@@ -465,10 +477,10 @@ object TestDataHelpers {
         buildingType: PlaceType? = PlaceType.OFFICE,
         coordinates: Coordinates? = Coordinates(lat = 53.9006, lon = 27.5590),
         workTime: Map<String, Any>? = createBasicWorkTime(),
-        externalIds: Map<String, Any>? =
-            mapOf(
-                "yandex" to "99999"
-            )
+        twoGisId: String? = null,
+        yandexId: String? = "99999",
+        googleId: String? = null,
+        appleId: String? = null
     ) = BuildingUpdateDto(
         cityId = cityId,
         name = name,
@@ -476,20 +488,23 @@ object TestDataHelpers {
         buildingType = buildingType,
         coordinates = coordinates,
         workTime = workTime,
-        externalIds = externalIds
+        twoGisId = twoGisId,
+        yandexId = yandexId,
+        googleId = googleId,
+        appleId = appleId
     )
 
     fun createSubwayLineCreateDto(
         cityId: UUID = UUID.randomUUID(),
         nameRu: String = "Автозаводская линия",
         nameEn: String = "Avtozavodskaya Line",
-        shortCode: String? = "2",
+        code: String = "2",
         hexColor: String = "#EF161E"
     ) = SubwayLineCreateDto(
         cityId = cityId,
         nameRu = nameRu,
         nameEn = nameEn,
-        shortCode = shortCode,
+        code = code,
         hexColor = hexColor
     )
 
@@ -498,18 +513,16 @@ object TestDataHelpers {
         cityId: UUID = UUID.randomUUID(),
         nameRu: String = "Автозаводская линия",
         nameEn: String = "Avtozavodskaya Line",
-        shortCode: String? = "2",
+        code: String = "2",
         hexColor: String = "#EF161E",
-        isDeleted: Boolean = false,
         createdAt: Instant = Instant.now()
     ) = SubwayLineResponseDto(
         id = id,
         cityId = cityId,
+        code = code,
         nameRu = nameRu,
         nameEn = nameEn,
-        shortCode = shortCode,
         hexColor = hexColor,
-        isDeleted = isDeleted,
         createdAt = createdAt
     )
 
@@ -517,16 +530,18 @@ object TestDataHelpers {
         subwayLineId: UUID = UUID.randomUUID(),
         nameRu: String = "Площадь Победы",
         nameEn: String = "Victory Square",
+        lineOrder: Int = 1,
+        slug: String = "victory-square",
         isTransfer: Boolean = false,
-        externalIds: Map<String, Any>? = null,
         lat: Double = 53.9006,
         lon: Double = 27.5590
     ) = SubwayStationCreateDto(
         subwayLineId = subwayLineId,
         nameRu = nameRu,
         nameEn = nameEn,
+        lineOrder = lineOrder,
+        slug = slug,
         isTransfer = isTransfer,
-        externalIds = externalIds,
         coordinates = Coordinates(lat = lat, lon = lon)
     )
 
@@ -535,19 +550,21 @@ object TestDataHelpers {
         subwayLineId: UUID = UUID.randomUUID(),
         nameRu: String = "Площадь Победы",
         nameEn: String = "Victory Square",
+        lineOrder: Int = 1,
+        slug: String = "victory-square",
         isTransfer: Boolean = false,
         lat: Double = 53.9006,
         lon: Double = 27.5590,
-        isDeleted: Boolean = false,
         createdAt: Instant = Instant.now()
     ) = SubwayStationResponseDto(
         id = id,
         subwayLineId = subwayLineId,
+        lineOrder = lineOrder,
+        slug = slug,
         nameRu = nameRu,
         nameEn = nameEn,
         isTransfer = isTransfer,
         coordinates = Coordinates(lat = lat, lon = lon),
-        isDeleted = isDeleted,
         createdAt = createdAt
     )
 }

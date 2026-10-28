@@ -25,14 +25,15 @@ class RestroomCacheStartupLoader(
             return
         }
 
+        val rebuildVersion = restroomCacheService.beginRebuild() ?: return
         runCatching {
             val pageSize = properties.nearest.loadPageSize.coerceAtLeast(1)
             var page = 0
-            val items = mutableListOf<NearestRestroomCacheItem>()
+            var totalItems = 0L
 
             while (true) {
                 val result = restroomRepository.findActiveNearestCacheRows(PageRequest.of(page, pageSize))
-                items += result.content.map { row ->
+                val items = result.content.map { row ->
                     NearestRestroomCacheItem(
                         id = row.id,
                         lat = row.lat,
@@ -41,14 +42,19 @@ class RestroomCacheStartupLoader(
                         feeType = runCatching { FeeType.valueOf(row.feeType.uppercase()) }.getOrDefault(FeeType.UNKNOWN)
                     )
                 }
+                if (items.isNotEmpty()) {
+                    restroomCacheService.appendRebuild(rebuildVersion, items)
+                    totalItems += items.size
+                }
                 if (!result.hasNext()) {
                     break
                 }
                 page += 1
             }
 
-            restroomCacheService.rebuildNearestCache(items)
+            restroomCacheService.finishRebuild(rebuildVersion, totalItems)
         }.onFailure {
+            restroomCacheService.abortRebuild(rebuildVersion)
             log.warn("Failed to warm up restroom nearest cache", it)
         }
     }

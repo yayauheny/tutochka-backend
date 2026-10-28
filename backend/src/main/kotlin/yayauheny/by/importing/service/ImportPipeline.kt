@@ -12,7 +12,6 @@ import yayauheny.by.importing.dedup.ProviderKeyResolver
 import yayauheny.by.importing.mapper.RestroomImportMapper
 import yayauheny.by.importing.model.ImportPipelineResult
 import yayauheny.by.importing.provider.ProviderImportEnvelope
-import yayauheny.by.model.enums.BuildingImportStatus
 import yayauheny.by.model.enums.DataSourceType
 import yayauheny.by.model.enums.ImportProvider
 import yayauheny.by.model.imports.NormalizedRestroomCandidate
@@ -74,7 +73,7 @@ class ImportPipeline(
             restroomRepository.findByRestroomMatchKey(key)
         }?.let { existing ->
             if (providerKey != null) {
-                mergeExternalMaps(existing, providerKey, candidate.providerObjectId)
+                existing.applyProviderId(providerKey, candidate.providerObjectId)
                 restroomRepository.saveAndFlush(existing)
             }
             return ImportPipelineResult(
@@ -112,7 +111,7 @@ class ImportPipeline(
             buildingRepository.findByBuildingMatchKey(it)
         }?.let { existing ->
             if (providerKey != null) {
-                mergeExternalIds(existing, providerKey, context.externalId)
+                existing.applyProviderId(providerKey, context.externalId)
                 return buildingRepository.saveAndFlush(existing)
             }
             return existing
@@ -126,8 +125,7 @@ class ImportPipeline(
             buildingType = candidate.placeType.name.lowercase()
             workTime = context.workTime.toMapOrNull()
             coordinates = point(candidate.lng, candidate.lat)
-            externalIds = providerKey?.let { mapOf(it to context.externalId) } ?: emptyMap()
-            importStatus = BuildingImportStatus.COMPLETED
+            applyProviderId(providerKey, context.externalId)
             buildingMatchKey = matchKey
         }
         return buildingRepository.saveAndFlush(entity)
@@ -145,8 +143,6 @@ class ImportPipeline(
             phones = dto.phones?.values?.map { it.toString() }
             subwayStation = null
             isHidden = false
-            hiddenReason = null
-            hiddenAt = null
             accessNote = dto.accessNote
             directionGuide = dto.directionGuide
             this.restroomMatchKey = restroomMatchKey
@@ -190,30 +186,25 @@ class ImportPipeline(
         locationType = dto.locationType
         originProvider = dto.originProvider
         originId = dto.originId
-        externalMaps = mergeProviderMap(externalMaps, providerKey, candidate.providerObjectId)
+        applyProviderId(providerKey, candidate.providerObjectId)
     }
 
-    private fun mergeExternalMaps(entity: RestroomEntity, providerKey: String, externalId: String) {
-        entity.externalMaps = mergeProviderMap(entity.externalMaps, providerKey, externalId)
-    }
-
-    private fun mergeExternalIds(entity: BuildingEntity, providerKey: String, externalId: String) {
-        val merged = (entity.externalIds ?: emptyMap()).toMutableMap()
-        merged.putIfAbsent(providerKey, externalId)
-        entity.externalIds = merged
-    }
-
-    private fun mergeProviderMap(
-        current: Map<String, Any>?,
-        providerKey: String?,
-        externalId: String
-    ): Map<String, Any> {
-        if (providerKey == null) {
-            return current ?: emptyMap()
+    private fun BuildingEntity.applyProviderId(providerKey: String?, externalId: String) {
+        when (providerKey) {
+            "2gis" -> if (twoGisId.isNullOrBlank()) twoGisId = externalId
+            "yandex" -> if (yandexId.isNullOrBlank()) yandexId = externalId
+            "google" -> if (googleId.isNullOrBlank()) googleId = externalId
+            "apple" -> if (appleId.isNullOrBlank()) appleId = externalId
         }
-        val merged = (current ?: emptyMap()).toMutableMap()
-        merged[providerKey] = externalId
-        return merged
+    }
+
+    private fun RestroomEntity.applyProviderId(providerKey: String?, externalId: String) {
+        when (providerKey) {
+            "2gis" -> if (twoGisId.isNullOrBlank()) twoGisId = externalId
+            "yandex" -> if (yandexId.isNullOrBlank()) yandexId = externalId
+            "google" -> if (googleId.isNullOrBlank()) googleId = externalId
+            "apple" -> if (appleId.isNullOrBlank()) appleId = externalId
+        }
     }
 
     private fun logNearbyDuplicateSuspicions(
@@ -231,8 +222,7 @@ class ImportPipeline(
                 ST_SetSRID(ST_MakePoint(?, ?), 4326)::geography
             ) AS distance_m
             FROM restrooms
-            WHERE is_deleted = false
-              AND city_id = ?
+            WHERE city_id = ?
               AND id <> ?
               AND ST_DWithin(
                     coordinates::geography,

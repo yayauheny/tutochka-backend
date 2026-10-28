@@ -1,2 +1,2 @@
--- clean bootstrap placeholder
--- keep extensions for the new canonical schema here
+CREATE EXTENSION IF NOT EXISTS postgis;
+CREATE EXTENSION IF NOT EXISTS pgcrypto;

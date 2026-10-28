@@ -8,4 +8,5 @@ import java.util.UUID
 @Repository
 interface SubwayLineJpaRepository : JpaRepository<SubwayLineEntity, UUID> {
     fun findByCityId(cityId: UUID): List<SubwayLineEntity>
+    fun findByCityIdAndCode(cityId: UUID, code: String): SubwayLineEntity?
 }

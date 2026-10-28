@@ -12,7 +12,6 @@ import jakarta.persistence.Table
 import org.hibernate.annotations.JdbcTypeCode
 import org.hibernate.type.SqlTypes
 import org.locationtech.jts.geom.Point
-import java.time.Instant
 import yayauheny.by.model.enums.AccessibilityType
 import yayauheny.by.model.enums.DataSourceType
 import yayauheny.by.model.enums.FeeType
@@ -21,12 +20,13 @@ import yayauheny.by.model.enums.ImportProvider
 import yayauheny.by.model.enums.LocationType
 import yayauheny.by.model.enums.PlaceType
 import yayauheny.by.model.enums.RestroomStatus
+import yayauheny.by.util.StringListToTextConverter
 
 @Entity
 @Table(name = "restrooms")
 class RestroomEntity : BaseEntity() {
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "city_id")
+    @JoinColumn(name = "city_id", nullable = false)
     var city: CityEntity? = null
 
     @ManyToOne(fetch = FetchType.LAZY)
@@ -36,6 +36,14 @@ class RestroomEntity : BaseEntity() {
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "subway_station_id")
     var subwayStation: SubwayStationEntity? = null
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "created_by_user_id")
+    var createdByUser: yayauheny.by.analytics.entity.UserEntity? = null
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "updated_by_user_id")
+    var updatedByUser: yayauheny.by.analytics.entity.UserEntity? = null
 
     @Column(name = "name")
     var name: String? = null
@@ -69,8 +77,11 @@ class RestroomEntity : BaseEntity() {
     @Column(name = "status", nullable = false, length = 20)
     var status: RestroomStatus = RestroomStatus.ACTIVE
 
-    @JdbcTypeCode(SqlTypes.JSON)
-    @Column(name = "phones", columnDefinition = "jsonb")
+    @Column(name = "moderation_status", nullable = false, length = 20)
+    var moderationStatus: String = "PENDING"
+
+    @Convert(converter = StringListToTextConverter::class)
+    @Column(name = "phones", columnDefinition = "text")
     var phones: List<String>? = null
 
     @JdbcTypeCode(SqlTypes.JSON)
@@ -90,10 +101,6 @@ class RestroomEntity : BaseEntity() {
     @Column(name = "coordinates", nullable = false, columnDefinition = "geometry(Point,4326)")
     var coordinates: Point? = null
 
-    @JdbcTypeCode(SqlTypes.JSON)
-    @Column(name = "external_maps", columnDefinition = "jsonb")
-    var externalMaps: Map<String, Any>? = null
-
     @Enumerated(EnumType.STRING)
     @Column(name = "data_source", nullable = false, length = 50)
     var dataSource: DataSourceType = DataSourceType.MANUAL
@@ -105,18 +112,24 @@ class RestroomEntity : BaseEntity() {
     @Column(name = "is_hidden", nullable = false)
     var isHidden: Boolean = false
 
-    @Column(name = "hidden_reason", columnDefinition = "text")
-    var hiddenReason: String? = null
-
-    @Column(name = "hidden_at")
-    var hiddenAt: Instant? = null
-
     @Enumerated(EnumType.STRING)
     @Column(name = "origin_provider", nullable = false, length = 50)
     var originProvider: ImportProvider = ImportProvider.MANUAL
 
     @Column(name = "origin_id", length = 100)
     var originId: String? = null
+
+    @Column(name = "two_gis_id")
+    var twoGisId: String? = null
+
+    @Column(name = "yandex_id")
+    var yandexId: String? = null
+
+    @Column(name = "google_id")
+    var googleId: String? = null
+
+    @Column(name = "apple_id")
+    var appleId: String? = null
 
     @Column(name = "restroom_match_key", length = 64)
     var restroomMatchKey: String? = null

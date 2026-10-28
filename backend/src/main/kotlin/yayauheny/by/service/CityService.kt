@@ -23,6 +23,7 @@ fun CityEntity.toDto() = CityResponseDto(
     countryId = this.country!!.id!!,
     nameRu = this.nameRu,
     nameEn = this.nameEn,
+    slug = this.slug,
     region = this.region,
     coordinates = this.coordinates.toCoordinates()
 )
@@ -72,10 +73,16 @@ class CityService(
             throw ConflictException("Город с названием '${createDto.nameEn}' уже существует в этой стране")
         }
 
+        val slug = citySlug(country.code, createDto.nameEn)
+        if (cityRepository.findBySlug(slug) != null) {
+            throw ConflictException("Город со slug '${slug}' уже существует")
+        }
+
         val entity = CityEntity().apply {
             this.country = country
             this.nameRu = createDto.nameRu
             this.nameEn = createDto.nameEn
+            this.slug = slug
             this.region = createDto.region
             this.coordinates = createDto.coordinates.toPoint()
         }
@@ -99,9 +106,16 @@ class CityService(
             throw ConflictException("Город с названием '${updateDto.nameEn}' уже существует в этой стране")
         }
 
+        val slug = citySlug(country.code, updateDto.nameEn)
+        val duplicateSlug = cityRepository.findBySlug(slug)
+        if (duplicateSlug != null && duplicateSlug.id != id) {
+            throw ConflictException("Город со slug '${slug}' уже существует")
+        }
+
         entity.country = country
         updateDto.nameRu?.let { entity.nameRu = it }
         updateDto.nameEn?.let { entity.nameEn = it }
+        entity.slug = slug
         updateDto.region?.let { entity.region = it }
         entity.coordinates = updateDto.coordinates.toPoint()
 
@@ -114,5 +128,14 @@ class CityService(
             return true
         }
         return false
+    }
+
+    private fun citySlug(countryCode: String, cityNameEn: String): String {
+        val normalizedCity = cityNameEn
+            .trim()
+            .lowercase()
+            .replace(Regex("[^a-z0-9]+"), "-")
+            .trim('-')
+        return "${countryCode.trim().lowercase()}-${normalizedCity}"
     }
 }

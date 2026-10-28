@@ -1,6 +1,7 @@
 package yayauheny.by.unit.importing.service
 
 import io.mockk.every
+import io.mockk.slot
 import io.mockk.mockk
 import jakarta.persistence.EntityManager
 import jakarta.persistence.Query
@@ -53,13 +54,15 @@ class ImportCityResolverTest {
     fun `given coordinates and country id when resolveNearest then return nearest city id from query`() {
         val cityId = UUID.randomUUID()
         val query = mockk<Query>()
-        every { entityManager.createNativeQuery(any<String>()) } returns query
+        val sql = slot<String>()
+        every { entityManager.createNativeQuery(capture(sql)) } returns query
         every { query.setParameter(any<String>(), any()) } returns query
         every { query.resultList } returns listOf(cityId)
 
         val result = resolver.resolveNearest(53.9, 27.56, UUID.randomUUID())
 
         assertThat(result).isEqualTo(cityId)
+        assertThat(sql.captured).contains("WHERE country_id = CAST(:countryId AS uuid)")
     }
 
     private fun country(id: UUID, code: String, nameRu: String, nameEn: String): CountryEntity =

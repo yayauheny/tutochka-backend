@@ -24,5 +24,8 @@ internal data class ProviderResolvedFields(
     val amenities: JsonNode,
     val rawSchedule: JsonNode?,
     val buildingContext: BuildingContext?,
-    val genderType: GenderType?
+    val genderType: GenderType?,
+    val phones: Map<String, Any>? = null,
+    val accessNote: String? = null,
+    val directionGuide: String? = null
 )

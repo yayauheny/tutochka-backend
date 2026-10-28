@@ -22,6 +22,8 @@ data class CityResponseDto(
     val nameRu: String,
     @field:Schema(description = "City name in English", example = "Moscow")
     val nameEn: String,
+    @field:Schema(description = "Stable city slug", example = "by-minsk")
+    val slug: String,
     @field:Schema(description = "Region/state", example = "Moscow Oblast")
     val region: String? = null,
     @field:Schema(description = "Coordinates", example = "55.7558, 37.6176", required = true)

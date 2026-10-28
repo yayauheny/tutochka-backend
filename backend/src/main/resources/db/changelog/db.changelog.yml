@@ -7,25 +7,25 @@ databaseChangeLog:
             path: 001_extensions.sql
             relativeToChangelogFile: true
   - changeSet:
-      id: clean-bootstrap-tables
+      id: clean-bootstrap-core-tables
       author: yayauheny
       changes:
         - sqlFile:
-            path: 010_tables.sql
+            path: 010_core_tables.sql
             relativeToChangelogFile: true
   - changeSet:
-      id: clean-bootstrap-indexes
+      id: clean-bootstrap-user-tables
       author: yayauheny
       changes:
         - sqlFile:
-            path: 020_indexes.sql
+            path: 011_user_tables.sql
             relativeToChangelogFile: true
   - changeSet:
-      id: clean-bootstrap-constraints
+      id: clean-bootstrap-analytics-tables
       author: yayauheny
       changes:
         - sqlFile:
-            path: 030_constraints.sql
+            path: 012_analytics_tables.sql
             relativeToChangelogFile: true
   - include:
       file: reference_load/031_load_countries.yml
@@ -39,17 +39,3 @@ databaseChangeLog:
   - include:
       file: reference_load/034_load_subway_stations.yml
       relativeToChangelogFile: true
-  - changeSet:
-      id: clean-bootstrap-seed-core
-      author: yayauheny
-      changes:
-        - sqlFile:
-            path: 040_seed_core.sql
-            relativeToChangelogFile: true
-  - changeSet:
-      id: clean-bootstrap-checks
-      author: yayauheny
-      changes:
-        - sqlFile:
-            path: 050_checks.sql
-            relativeToChangelogFile: true

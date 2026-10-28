@@ -4,13 +4,15 @@ import com.fasterxml.jackson.databind.JsonNode
 import yayauheny.by.importing.exception.InvalidImportPayload
 import yayauheny.by.importing.model.ImportAdapterContext
 import yayauheny.by.importing.provider.Parser
+import yayauheny.by.importing.provider.normalizedProviderText
+import yayauheny.by.importing.provider.optionalString
 import yayauheny.by.model.imports.NormalizedRestroomCandidate
 
 class YandexMapsScrapedParser : Parser<YandexMapsScrapedPlace> {
     override fun parse(jsonObject: JsonNode): YandexMapsScrapedPlace {
-        val title = jsonObject.stringOrNull("title")
-        val shortTitle = jsonObject.stringOrNull("shortTitle")
-        val address = jsonObject.stringOrNull("address")
+        val title = jsonObject.optionalString("title")
+        val shortTitle = jsonObject.optionalString("shortTitle")
+        val address = jsonObject.optionalString("address")
 
         val locationObj =
             jsonObject.get("location")?.takeIf { it.isObject }
@@ -23,7 +25,7 @@ class YandexMapsScrapedParser : Parser<YandexMapsScrapedPlace> {
                 ?: throw InvalidImportPayload("Missing or invalid 'location.lng'")
 
         val placeId =
-            jsonObject.stringOrNull("placeId")
+            jsonObject.optionalString("placeId")
                 ?: throw InvalidImportPayload("placeId is required for Yandex place")
 
         return YandexMapsScrapedPlace(
@@ -31,7 +33,7 @@ class YandexMapsScrapedParser : Parser<YandexMapsScrapedPlace> {
             shortTitle = shortTitle,
             address = address,
             location = YandexMapsScrapedLocation(lat = lat, lng = lng),
-            statusText = jsonObject.stringOrNull("statusText"),
+            statusText = jsonObject.optionalString("statusText"),
             isOpenNow = jsonObject.booleanOrNull("isOpenNow"),
             placeId = placeId,
             workingHours = jsonObject.workingHoursOrNull(),
@@ -66,12 +68,6 @@ class YandexMapsScrapedParser : Parser<YandexMapsScrapedPlace> {
         )
     }
 
-    private fun JsonNode.stringOrNull(key: String): String? =
-        this.get(key)
-            ?.takeIf { it.isTextual }
-            ?.asText()
-            ?.takeIf { it.isNotBlank() && !it.equals("null", ignoreCase = true) }
-
     private fun JsonNode.booleanOrNull(key: String): Boolean? =
         this.get(key)?.takeIf { it.isBoolean }?.asBoolean()
             ?: this.get(key)?.takeIf { it.isTextual }?.asText()?.toBooleanStrictOrNull()
@@ -82,7 +78,7 @@ class YandexMapsScrapedParser : Parser<YandexMapsScrapedPlace> {
             ?.mapNotNull { element ->
                 element.takeIf { it.isTextual }
                     ?.asText()
-                    ?.takeIf { it.isNotBlank() && !it.equals("null", ignoreCase = true) }
+                    ?.normalizedProviderText()
             }.orEmpty()
 
     private fun JsonNode.workingHoursOrNull(): List<YandexMapsScrapedWorkingHour>? =
@@ -93,9 +89,9 @@ class YandexMapsScrapedParser : Parser<YandexMapsScrapedPlace> {
 
     private fun JsonNode.toWorkingHourOrNull(): YandexMapsScrapedWorkingHour? {
         if (!this.isObject) return null
-        val day = this.stringOrNull("day") ?: return null
-        val from = this.stringOrNull("from") ?: return null
-        val to = this.stringOrNull("to") ?: return null
+        val day = this.optionalString("day") ?: return null
+        val from = this.optionalString("from") ?: return null
+        val to = this.optionalString("to") ?: return null
 
         return YandexMapsScrapedWorkingHour(
             day = day,
@@ -110,8 +106,8 @@ class YandexMapsScrapedParser : Parser<YandexMapsScrapedPlace> {
             ?.takeIf { it.isArray }
             ?.mapNotNull { element ->
                 if (!element.isObject) return@mapNotNull null
-                val from = element.stringOrNull("from") ?: return@mapNotNull null
-                val to = element.stringOrNull("to") ?: return@mapNotNull null
+                val from = element.optionalString("from") ?: return@mapNotNull null
+                val to = element.optionalString("to") ?: return@mapNotNull null
                 YandexMapsScrapedWorkingInterval(from = from, to = to)
             }.orEmpty()
 }

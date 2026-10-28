@@ -3,6 +3,7 @@ package yayauheny.by.importing.provider.twogis
 import com.fasterxml.jackson.databind.JsonNode
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
+import yayauheny.by.importing.provider.normalizedProviderText
 import yayauheny.by.importing.provider.ProviderNormalizationProfile
 import yayauheny.by.importing.provider.ProviderResolvedFields
 import yayauheny.by.model.enums.AccessibilityType
@@ -48,13 +49,10 @@ internal object TwoGisNormalizationProfile : ProviderNormalizationProfile<TwoGis
             ?: "Туалет"
 
     private fun resolveAddress(providerDto: TwoGisScrapedPlace): String? {
-        providerDto.address
-            ?.trim()
-            ?.takeIf { it.isNotBlank() && !it.equals("null", ignoreCase = true) }
-            ?.let { return it }
+        providerDto.address.normalizedProviderText()?.let { return it }
 
-        val street = providerDto.street?.trim()?.takeIf { it.isNotBlank() && !it.equals("null", ignoreCase = true) }
-        val houseNumber = providerDto.houseNumber?.trim()?.takeIf { it.isNotBlank() && !it.equals("null", ignoreCase = true) }
+        val street = providerDto.street.normalizedProviderText()
+        val houseNumber = providerDto.houseNumber.normalizedProviderText()
 
         return when {
             !street.isNullOrBlank() && !houseNumber.isNullOrBlank() -> "$street, $houseNumber"
@@ -139,7 +137,8 @@ internal object TwoGisNormalizationProfile : ProviderNormalizationProfile<TwoGis
         return node
     }
 
-    private fun resolveRawSchedule(providerDto: TwoGisScrapedPlace): JsonNode? = providerDto.workingHours
+    private fun resolveRawSchedule(providerDto: TwoGisScrapedPlace): JsonNode? =
+        providerDto.workingHours?.takeIf { !it.isEmpty }
 
     private fun resolveBuildingContext(
         providerDto: TwoGisScrapedPlace,

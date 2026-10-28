@@ -1,4 +1,0 @@
-databaseChangeLog:
-  - include:
-      file: legacy/db.changelog-legacy.yml
-      relativeToChangelogFile: true

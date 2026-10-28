@@ -1,6 +1,6 @@
 # Reference Data
 
-This directory is for canonical reference data used by the clean bootstrap.
+This directory is for canonical reference data used by the bootstrap.
 
 Expected files:
 
@@ -9,4 +9,4 @@ Expected files:
 - `subway_lines.csv`
 - `subway_stations.csv`
 
-Current SQL files in this directory are temporary source materials kept during the restructuring and can be replaced by CSV later.
+The bootstrap loads the CSV files through `reference_load/*.yml`.

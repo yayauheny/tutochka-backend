@@ -13,7 +13,6 @@ import org.springframework.test.context.DynamicPropertyRegistry
 import org.springframework.test.context.DynamicPropertySource
 import yayauheny.by.analytics.repository.AnalyticsEventJpaRepository
 import yayauheny.by.analytics.repository.PublicAnalyticsRepositoryImpl
-import yayauheny.by.analytics.repository.UserAnalyticsJpaRepository
 import yayauheny.by.analytics.repository.UserJpaRepository
 import yayauheny.by.helpers.DatabaseTestHelper
 import yayauheny.by.repository.BuildingJpaRepository
@@ -53,9 +52,6 @@ abstract class RepositorySliceTestBase {
     protected lateinit var userRepository: UserJpaRepository
 
     @Autowired
-    protected lateinit var userAnalyticsRepository: UserAnalyticsJpaRepository
-
-    @Autowired
     protected lateinit var analyticsEventRepository: AnalyticsEventJpaRepository
 
     @BeforeEach
@@ -68,7 +64,6 @@ abstract class RepositorySliceTestBase {
         DatabaseTestHelper.subwayLineRepository = subwayLineRepository
         DatabaseTestHelper.subwayStationRepository = subwayStationRepository
         DatabaseTestHelper.userRepository = userRepository
-        DatabaseTestHelper.userAnalyticsRepository = userAnalyticsRepository
         DatabaseTestHelper.analyticsEventRepository = analyticsEventRepository
     }
 

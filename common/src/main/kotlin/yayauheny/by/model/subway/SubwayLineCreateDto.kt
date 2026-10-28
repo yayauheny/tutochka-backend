@@ -15,8 +15,8 @@ data class SubwayLineCreateDto(
     val nameRu: String,
     @field:Schema(description = "English name", required = true)
     val nameEn: String,
-    @field:Schema(description = "Short code for the line (e.g., '1', '2', 'M1')", required = false)
-    val shortCode: String? = null,
+    @field:Schema(description = "Stable line code", required = true)
+    val code: String,
     @field:Schema(description = "Hex color code", example = "#FF0000", required = true)
     val hexColor: String
 )

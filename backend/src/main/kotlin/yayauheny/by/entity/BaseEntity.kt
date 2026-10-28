@@ -16,9 +16,6 @@ abstract class BaseEntity {
     @GeneratedValue(strategy = GenerationType.UUID)
     var id: UUID? = null
 
-    @Column(name = "is_deleted", nullable = false)
-    var isDeleted: Boolean = false
-
     @CreationTimestamp
     @Column(name = "created_at", nullable = false, updatable = false)
     var createdAt: Instant? = null
@@ -26,7 +23,4 @@ abstract class BaseEntity {
     @UpdateTimestamp
     @Column(name = "updated_at", nullable = false)
     var updatedAt: Instant? = null
-
-    @Column(name = "deleted_at")
-    var deletedAt: Instant? = null
 }

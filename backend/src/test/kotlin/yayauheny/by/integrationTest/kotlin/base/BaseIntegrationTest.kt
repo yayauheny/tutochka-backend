@@ -17,7 +17,6 @@ import org.springframework.test.context.DynamicPropertyRegistry
 import org.springframework.test.context.DynamicPropertySource
 import yayauheny.by.Application
 import yayauheny.by.analytics.repository.AnalyticsEventJpaRepository
-import yayauheny.by.analytics.repository.UserAnalyticsJpaRepository
 import yayauheny.by.analytics.repository.UserJpaRepository
 import yayauheny.by.helpers.DatabaseTestHelper
 import yayauheny.by.repository.BuildingJpaRepository
@@ -63,9 +62,6 @@ abstract class BaseIntegrationTest {
     protected lateinit var userRepository: UserJpaRepository
 
     @Autowired
-    protected lateinit var userAnalyticsRepository: UserAnalyticsJpaRepository
-
-    @Autowired
     protected lateinit var analyticsEventRepository: AnalyticsEventJpaRepository
 
     protected val postgres
@@ -82,7 +78,6 @@ abstract class BaseIntegrationTest {
         DatabaseTestHelper.subwayLineRepository = subwayLineRepository
         DatabaseTestHelper.subwayStationRepository = subwayStationRepository
         DatabaseTestHelper.userRepository = userRepository
-        DatabaseTestHelper.userAnalyticsRepository = userAnalyticsRepository
         DatabaseTestHelper.analyticsEventRepository = analyticsEventRepository
     }
 

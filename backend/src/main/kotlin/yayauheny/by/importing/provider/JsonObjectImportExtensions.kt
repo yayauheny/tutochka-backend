@@ -3,6 +3,11 @@ package yayauheny.by.importing.provider
 import com.fasterxml.jackson.databind.JsonNode
 import yayauheny.by.importing.exception.InvalidImportPayload
 
+fun String?.normalizedProviderText(): String? =
+    this
+        ?.trim()
+        ?.takeIf { it.isNotEmpty() && !it.equals("null", ignoreCase = true) }
+
 fun JsonNode.requireString(key: String): String {
     val value = this.get(key)?.takeIf { it.isTextual }?.asText()
     if (value.isNullOrBlank()) throw InvalidImportPayload("Missing or invalid '$key'")
@@ -25,8 +30,16 @@ fun JsonNode.optionalString(key: String): String? =
     this.get(key)
         ?.takeIf { it.isTextual }
         ?.asText()
-        ?.trim()
-        ?.takeIf { it.isNotBlank() && !it.equals("null", ignoreCase = true) }
+        .normalizedProviderText()
+
+fun JsonNode.optionalText(): String? =
+    this.takeIf { it.isTextual }
+        ?.asText()
+        .normalizedProviderText()
+
+fun JsonNode.optionalObject(key: String): JsonNode? =
+    this.get(key)
+        ?.takeIf { it.isObject && !it.isEmpty }
 
 fun JsonNode.optionalArray(key: String): JsonNode? {
     val elem = this.get(key) ?: return null

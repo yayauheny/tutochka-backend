@@ -15,8 +15,12 @@ interface BuildingJpaRepository : JpaRepository<BuildingEntity, UUID> {
         value = """
             SELECT *
             FROM buildings
-            WHERE is_deleted = false
-              AND external_ids ->> :provider = :externalId
+            WHERE (
+                (:provider = '2gis' AND two_gis_id = :externalId)
+                OR (:provider = 'yandex' AND yandex_id = :externalId)
+                OR (:provider = 'google' AND google_id = :externalId)
+                OR (:provider = 'apple' AND apple_id = :externalId)
+            )
             LIMIT 1
         """,
         nativeQuery = true

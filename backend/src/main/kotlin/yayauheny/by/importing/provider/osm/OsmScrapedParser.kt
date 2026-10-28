@@ -52,7 +52,10 @@ class OsmScrapedParser : Parser<OsmScrapedToilet> {
             amenities = resolved.amenities,
             rawSchedule = resolved.rawSchedule,
             buildingContext = resolved.buildingContext,
-            genderType = resolved.genderType
+            genderType = resolved.genderType,
+            phones = resolved.phones,
+            accessNote = resolved.accessNote,
+            directionGuide = resolved.directionGuide
         )
     }
 

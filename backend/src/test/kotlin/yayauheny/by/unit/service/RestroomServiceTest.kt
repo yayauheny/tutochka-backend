@@ -89,7 +89,7 @@ class RestroomServiceTest {
             city = cityEntity()
             nameRu = "Московская"
             nameEn = "Moskovskaya"
-            shortCode = "1"
+            code = "1"
             hexColor = "#FF0000"
             createdAt = java.time.Instant.now()
         }
@@ -98,7 +98,7 @@ class RestroomServiceTest {
                 name = "Mall"
                 address = "Mall address"
                 buildingType = PlaceType.MALL.code
-                externalIds = mapOf("2gis" to "building-1")
+                twoGisId = "building-1"
                 workTime = mapOf("is_24x7" to true)
             }
         val station =
@@ -112,8 +112,8 @@ class RestroomServiceTest {
                 this.building = building
                 this.subwayStation = station
                 this.phones = listOf("+123", "+456")
-                this.amenities = mapOf("soap" to "true", "paper" to false)
-                this.externalMaps = mapOf("yandex" to "map-link")
+                this.amenities = mapOf("access" to "customers", "wheelchair" to "limited")
+                this.yandexId = "map-link"
             }
         every { restroomRepository.findById(restroom.id!!) } returns Optional.of(restroom)
 
@@ -125,8 +125,8 @@ class RestroomServiceTest {
         assertThat(result?.subwayStation?.nameRu).isEqualTo("Восток")
         assertThat(result?.subwayStation?.line?.hexColor).isEqualTo("#FF0000")
         assertThat(result?.phones).containsEntry("+123", "+123")
-        assertThat(result?.amenities).containsEntry("soap", true)
-        assertThat(result?.amenities).containsEntry("paper", false)
+        assertThat(result?.amenities).containsEntry("access", "customers")
+        assertThat(result?.amenities).containsEntry("wheelchair", "limited")
         assertThat(result?.externalMaps).containsEntry("yandex", "map-link")
     }
 
@@ -295,7 +295,7 @@ class RestroomServiceTest {
         assertThat(saved.amenities).containsEntry("soap", true)
         assertThat(saved.amenities).containsEntry("music", false)
         assertThat(saved.amenities).containsEntry("weird", false)
-        assertThat(saved.externalMaps).containsEntry("yandex", "http://yandex")
+        assertThat(saved.yandexId).isEqualTo("http://yandex")
         assertThat(saved.hasPhotos).isTrue()
         assertThat(saved.inheritBuildingSchedule).isFalse()
     }
@@ -324,7 +324,10 @@ class RestroomServiceTest {
 
         val saved = entitySlot.captured
         assertThat(saved.phones).isNull()
-        assertThat(saved.externalMaps).isNull()
+        assertThat(saved.twoGisId).isNull()
+        assertThat(saved.yandexId).isNull()
+        assertThat(saved.googleId).isNull()
+        assertThat(saved.appleId).isNull()
         assertThat(saved.feeType).isEqualTo(yayauheny.by.model.enums.FeeType.UNKNOWN)
         assertThat(saved.genderType).isEqualTo(yayauheny.by.model.enums.GenderType.UNKNOWN)
         assertThat(result.feeType).isEqualTo(yayauheny.by.model.enums.FeeType.UNKNOWN)
@@ -445,7 +448,7 @@ class RestroomServiceTest {
             restroomEntity().apply {
                 accessNote = "keep-note"
                 directionGuide = "keep-guide"
-                externalMaps = mapOf("google" to "keep-map")
+                googleId = "keep-map"
                 originId = "keep-origin"
                 status = RestroomStatus.ACTIVE
                 inheritBuildingSchedule = true
@@ -464,8 +467,8 @@ class RestroomServiceTest {
                 cityId = null,
                 buildingId = null,
                 subwayStationId = null,
-                externalMaps = null,
-                originId = null
+                originId = null,
+                externalMaps = null
             )
 
         every { restroomRepository.findById(id) } returns Optional.of(entity)
@@ -477,7 +480,7 @@ class RestroomServiceTest {
         val saved = entitySlot.captured
         assertThat(saved.accessNote).isEqualTo("keep-note")
         assertThat(saved.directionGuide).isEqualTo("keep-guide")
-        assertThat(saved.externalMaps).containsEntry("google", "keep-map")
+        assertThat(saved.googleId).isEqualTo("keep-map")
         assertThat(saved.originId).isEqualTo("keep-origin")
         assertThat(saved.status).isEqualTo(RestroomStatus.ACTIVE)
         assertThat(saved.inheritBuildingSchedule).isTrue()
@@ -557,6 +560,10 @@ class RestroomServiceTest {
             city = cityEntity()
             name = "Building"
             coordinates = point(27.56, 53.9)
+            twoGisId = null
+            yandexId = null
+            googleId = null
+            appleId = null
             createdAt = java.time.Instant.now()
             updatedAt = java.time.Instant.now()
         }
@@ -564,6 +571,8 @@ class RestroomServiceTest {
     private fun subwayStationEntity(): SubwayStationEntity =
         SubwayStationEntity().apply {
             id = UUID.randomUUID()
+            lineOrder = 1
+            slug = "station"
             nameRu = "Station"
             nameEn = "Station"
             coordinates = point(27.56, 53.9)

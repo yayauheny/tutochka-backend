@@ -6,8 +6,6 @@ import jakarta.persistence.FetchType
 import jakarta.persistence.JoinColumn
 import jakarta.persistence.ManyToOne
 import jakarta.persistence.Table
-import org.hibernate.annotations.JdbcTypeCode
-import org.hibernate.type.SqlTypes
 import org.locationtech.jts.geom.Point
 
 @Entity
@@ -17,6 +15,12 @@ class SubwayStationEntity : BaseEntity() {
     @JoinColumn(name = "subway_line_id", nullable = false)
     var subwayLine: SubwayLineEntity? = null
 
+    @Column(name = "line_order", nullable = false)
+    var lineOrder: Int = 0
+
+    @Column(name = "slug", nullable = false)
+    var slug: String = ""
+
     @Column(name = "name_ru", nullable = false)
     var nameRu: String = ""
 
@@ -25,10 +29,6 @@ class SubwayStationEntity : BaseEntity() {
 
     @Column(name = "is_transfer", nullable = false)
     var isTransfer: Boolean = false
-
-    @JdbcTypeCode(SqlTypes.JSON)
-    @Column(name = "external_ids", columnDefinition = "jsonb")
-    var externalIds: Map<String, String>? = null
 
     @Column(name = "coordinates", nullable = false, columnDefinition = "geometry(Point,4326)")
     var coordinates: Point? = null

@@ -1,2 +1,0 @@
--- clean bootstrap placeholder
--- keep non-table constraints, foreign key refinements, and validation constraints here

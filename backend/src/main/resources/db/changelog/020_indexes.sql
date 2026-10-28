@@ -1,2 +1,0 @@
--- clean bootstrap placeholder
--- keep all CREATE INDEX statements here

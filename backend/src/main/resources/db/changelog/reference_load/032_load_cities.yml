@@ -1,1 +1,34 @@
-databaseChangeLog: []
+databaseChangeLog:
+  - changeSet:
+      id: load-reference-cities
+      author: yayauheny
+      changes:
+        - loadData:
+            file: ../reference_data/cities.csv
+            relativeToChangelogFile: true
+            tableName: cities
+            separator: ','
+            quotchar: '"'
+            encoding: UTF-8
+            columns:
+              - column:
+                  header: id
+                  type: STRING
+              - column:
+                  header: country_id
+                  type: STRING
+              - column:
+                  header: name_ru
+                  type: STRING
+              - column:
+                  header: name_en
+                  type: STRING
+              - column:
+                  header: slug
+                  type: STRING
+              - column:
+                  header: region
+                  type: STRING
+              - column:
+                  header: coordinates
+                  type: STRING

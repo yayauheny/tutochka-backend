@@ -9,4 +9,5 @@ import java.util.UUID
 interface CityJpaRepository : JpaRepository<CityEntity, UUID>, CityFilterRepository {
     fun findByCountryIdAndNameRu(countryId: UUID, nameRu: String): CityEntity?
     fun findByCountryIdAndNameEn(countryId: UUID, nameEn: String): CityEntity?
+    fun findBySlug(slug: String): CityEntity?
 }
